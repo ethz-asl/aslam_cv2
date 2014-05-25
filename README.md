@@ -5,6 +5,7 @@ Refactored computer vision stuff for the ASL.
 
 Before adding to this library, please read the following pages:
 
-Requirements for classes in aslam_cv2
+* [Aslam cv code & devel style](https://github.com/ethz-asl/aslam_cv2/wiki/Aslam%20cv%20specific%20code%20style)
+* [Aslam cv mathematical notation](https://github.com/ethz-asl/aslam_cv2/wiki/Expressing-frame-transformations-in-code.)
 
-Expressing frame transformations in aslam_cv2
+### Please strictly keep to the pull-request & merge workflow.
