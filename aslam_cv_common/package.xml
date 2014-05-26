@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <name>aslam_common</name>
+  <version>0.0.1</version>
+  <description>
+     aslam_common
+  </description>
+  <maintainer email="paul.furgale@mavt.ethz.ch">Paul Furgale</maintainer>
+  <maintainer email="simon.lynen@mavt.ethz.ch">Simon Lynen</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+</package>
+
+
