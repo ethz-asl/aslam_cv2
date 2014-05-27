@@ -11,6 +11,10 @@
 #include <Eigen/Core>
 #include <Eigen/StdVector>
 
+// This file provides helpers type-traits to simplify the aligned allocation
+// requirements for Eigen:
+// See https://github.com/ethz-asl/aslam_cv2/wiki/Eigen-alignment-in-aslam_cv
+
 template<template<typename, typename> class Container, typename Type>
 struct Aligned {
   typedef Container<Type, Eigen::aligned_allocator<Type> > type;
