@@ -1,0 +1,28 @@
+#ifndef ASLAM_CV_COMMON_CHANNEL_DECLARATIONS_H_
+#define ASLAM_CV_COMMON_CHANNEL_DECLARATIONS_H_
+#include <string>
+
+#include <Eigen/Dense>
+#include <aslam/common/channel.h>
+#include <aslam/common/macros.h>
+
+template<typename T> struct ArgumentType;
+template<typename T, typename U> struct ArgumentType<T(U)> { typedef U type; };
+#define GET_TYPE(TYPE) ArgumentType<void(TYPE)>::type
+
+#define DECLARE_CHANNEL_IMPL(NAME, TYPE)             \
+namespace aslam {                                    \
+namespace channels {                                 \
+struct NAME : aslam::Channel<GET_TYPE(TYPE)> {       \
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;                   \
+  typedef typename GET_TYPE(TYPE) Type;              \
+  static std::string name() { return #NAME; }        \
+};                                                   \
+}                                                    \
+}                                                    \
+const std::string NAME##_CHANNEL_NAME = #NAME;       \
+typedef GET_TYPE(TYPE) NAME##_CHANNEL_TYPE;          \
+
+#define DECLARE_CHANNEL(x, ...) DECLARE_CHANNEL_IMPL(x, (__VA_ARGS__))
+
+#endif  // ASLAM_CV_COMMON_CHANNEL_DECLARATIONS_H_
