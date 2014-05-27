@@ -60,15 +60,15 @@ bool serializeToString(const char* const matrix_data,
 template<typename SCALAR>
 bool serializeToString(const char* const matrix_data,
                        int rows, int cols,
-                       char** buffer, size_t* size) {
-  CHECK_NOTNULL(size);
+                       char** buffer, size_t* total_size) {
+  CHECK_NOTNULL(total_size);
   CHECK_NOTNULL(buffer);
   HeaderInformation header;
   makeHeaderInformation<SCALAR>(rows, cols, &header);
   size_t matrix_size = sizeof(SCALAR) * rows * cols;
-  size_t total_size = matrix_size + header.size();
+  *total_size = matrix_size + header.size();
 
-  *buffer = new char[total_size];
+  *buffer = new char[*total_size];
   bool success = header.serializeToString(*buffer, 0);
   if (!success) {
     delete[] *buffer;
