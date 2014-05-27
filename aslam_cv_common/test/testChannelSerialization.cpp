@@ -3,37 +3,56 @@
 #include <aslam/common/channel-definitions.h>
 #include <aslam/common/channel-serialization.h>
 
-#define RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST_IMPL(TEST_NAME, TYPE) \
-  TEST(ChannelSerialization, TEST_NAME) {                             \
-    typedef GET_TYPE(TYPE) MatrixType;                                \
-    aslam::Channel<MatrixType> value_a;                               \
-    static const int num_rows = 15;                                   \
-    static const int num_cols = 20;                                   \
-    if (MatrixType::RowsAtCompileTime == Eigen::Dynamic &&            \
-        MatrixType::ColsAtCompileTime == Eigen::Dynamic) {            \
-      value_a.value_.resize(num_rows, num_cols);                      \
-    } else if (MatrixType::RowsAtCompileTime == Eigen::Dynamic &&     \
-        MatrixType::ColsAtCompileTime != Eigen::Dynamic) {            \
-      value_a.value_.resize(num_rows, Eigen::NoChange);               \
-    }  else if (MatrixType::RowsAtCompileTime != Eigen::Dynamic &&    \
-        MatrixType::ColsAtCompileTime == Eigen::Dynamic) {            \
-      value_a.value_.resize(Eigen::NoChange, num_cols);               \
-    }                                                                 \
-    value_a.value_.setRandom();                                       \
-    aslam::internal::HeaderInformation header_info;                   \
-    std::string serialized_value;                                     \
-    EXPECT_TRUE(value_a.serializeToString(&serialized_value));        \
-    EXPECT_EQ(12u, header_info.size());                               \
-    ASSERT_EQ(header_info.size() + value_a.value_.rows() * value_a.value_.cols() *    \
-        sizeof(MatrixType::Scalar), serialized_value.size());                         \
-    aslam::Channel<MatrixType> value_b;                                               \
-    EXPECT_FALSE(aslam::common::MatricesEqual(value_a.value_, value_b.value_, 1e-4)); \
-    EXPECT_TRUE(value_b.deSerializeFromString(serialized_value));                     \
-    EXPECT_TRUE(aslam::common::MatricesEqual(value_a.value_, value_b.value_, 1e-4));  \
-}
+template <typename TYPE>
+class ChannelSerializationTest : public ::testing::Test {
+ public:
+  typedef TYPE MatrixType;
+  static const int num_rows = 15;
+  static const int num_cols = 20;
 
-#define RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(x, ...) \
-  RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST_IMPL(x, (__VA_ARGS__))
+  virtual void SetUp() {
+    if (MatrixType::RowsAtCompileTime == Eigen::Dynamic &&
+        MatrixType::ColsAtCompileTime == Eigen::Dynamic) {
+      value_a.value_.resize(num_rows, num_cols);
+    } else if (MatrixType::RowsAtCompileTime == Eigen::Dynamic &&
+        MatrixType::ColsAtCompileTime != Eigen::Dynamic) {
+      value_a.value_.resize(num_rows, Eigen::NoChange);
+    }  else if (MatrixType::RowsAtCompileTime != Eigen::Dynamic &&
+        MatrixType::ColsAtCompileTime == Eigen::Dynamic) {
+      value_a.value_.resize(Eigen::NoChange, num_cols);
+    }
+    value_a.value_.setRandom();
+  }
+  aslam::Channel<MatrixType> value_a;
+  aslam::Channel<MatrixType> value_b;
+};
+
+#define MAKE_TYPE_LIST(Scalar) \
+      Eigen::Matrix<Scalar, 20, 15>, \
+      Eigen::Matrix<Scalar, Eigen::Dynamic, 10>, \
+      Eigen::Matrix<Scalar, 25, Eigen::Dynamic>, \
+      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>
+
+typedef ::testing::Types<MAKE_TYPE_LIST(double),
+                         MAKE_TYPE_LIST(float),
+                         MAKE_TYPE_LIST(int),
+                         MAKE_TYPE_LIST(char)> DoubleTests;
+TYPED_TEST_CASE(ChannelSerializationTest, DoubleTests);
+
+TYPED_TEST(ChannelSerializationTest, SerializeDeserialize) {
+  aslam::internal::HeaderInformation header_info;
+  std::string serialized_value;
+  EXPECT_TRUE(this->value_a.serializeToString(&serialized_value));
+  EXPECT_EQ(12u, header_info.size());
+  ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
+            this->value_a.value_.cols() *
+            sizeof(typename TypeParam::Scalar), serialized_value.size());
+  EXPECT_FALSE(aslam::common::MatricesEqual(this->value_a.value_,
+                                            this->value_b.value_, 1e-4));
+  EXPECT_TRUE(this->value_b.deSerializeFromString(serialized_value));
+  EXPECT_TRUE(aslam::common::MatricesEqual(this->value_a.value_,
+                                           this->value_b.value_, 1e-4));
+}
 
 TEST(ChannelSerialization, HeaderInfoSize) {
   aslam::internal::HeaderInformation header_info;
@@ -51,23 +70,6 @@ TEST(ChannelSerialization, HeaderInfoSize) {
   EXPECT_EQ(header_info2.rows, 10);
   EXPECT_EQ(header_info2.type, 4);
 }
-
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DoubleFixedSize, Eigen::Matrix<double, 20, 15>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DoubleDynamicFixedSize, Eigen::Matrix<double, Eigen::Dynamic, 10>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DoubleFixedDynamicSize, Eigen::Matrix<double, 25, Eigen::Dynamic>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DoubleDynamicSize, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FloatFixedSize, Eigen::Matrix<float, 20, 15>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FloatDynamicFixedSize, Eigen::Matrix<float, Eigen::Dynamic, 10>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FloatFixedDynamicSize, Eigen::Matrix<float, 25, Eigen::Dynamic>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FloatDynamicSize, Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(IntFixedSize, Eigen::Matrix<int, 20, 15>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(IntDynamicFixedSize, Eigen::Matrix<int, Eigen::Dynamic, 10>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(IntFixedDynamicSize, Eigen::Matrix<int, 25, Eigen::Dynamic>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(IntDynamicSize, Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(CharFixedSize, Eigen::Matrix<char, 20, 15>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(CharDynamicFixedSize, Eigen::Matrix<char, Eigen::Dynamic, 10>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(CharFixedDynamicSize, Eigen::Matrix<char, 25, Eigen::Dynamic>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(CharDynamicSize, Eigen::Matrix<char, Eigen::Dynamic, Eigen::Dynamic>);
 
 TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
   static const int numKeypoints = 5;

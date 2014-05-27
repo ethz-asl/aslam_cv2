@@ -14,4 +14,12 @@
   return RUN_ALL_TESTS();\
 }
 
+// Make the eclipse parser silent.
+#ifndef TYPED_TEST
+#define TYPED_TEST(x,y) int x##y()
+#endif
+#ifndef TYPED_TEST_CASE
+#define TYPED_TEST_CASE(x,y) int x##y()
+#endif
+
 #endif  // GTEST_CATKIN_ENTRYPOINT_H_
