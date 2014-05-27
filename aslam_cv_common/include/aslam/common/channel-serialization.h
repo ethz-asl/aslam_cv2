@@ -2,6 +2,7 @@
 #define ASLAM_CHANNEL_SERIALIZATION_H_
 
 #include <cstdint>
+#include <iostream>
 #include <Eigen/Dense>
 
 namespace aslam {
@@ -168,6 +169,7 @@ bool deSerializeFromString(const char* const buffer, size_t size,
   CHECK_EQ(size, total_size);
 
   memcpy(matrix->data(), buffer + header.size(), matrix_size);
+  return true;
 }
 
 template<typename SCALAR, int ROWS, int COLS>
