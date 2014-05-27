@@ -94,16 +94,34 @@ class Distortion {
    *
    * @param parameters This vector is resized and filled with parameters representing the full state of the distortion.
    */
-  virtual void getParameters(Eigen::Matrix<double, Eigen::Dynamic, 1>* parameters) const = 0;
+  virtual void getParameters(Eigen::VectorXd* parameters) const = 0;
 
   /**
    * \brief A function for compatibility with the aslam backend.
    *
    * @param parameters The full state of the distortion class is set from the vector of parameters.
    */
-  virtual void setParameters(const Eigen::Matrix<double, Eigen::Dynamic, 1>& parameters) = 0;
+  virtual void setParameters(const Eigen::VectorXd& parameters) = 0;
 
+  /**
+   * \brief A function for compatibility with the ceres solver.
+   *
+   * @return The underlying raw pointer to the distortion parameters.
+   */
+  virtual double* getParametersMutable() = 0;
+
+  /**
+   * \brief Getter for the number of distortion parameters.
+   *
+   * @return The number of distortion parameters.
+   */
   virtual size_t parameterSize() const = 0;
+
+  /**
+   * \brief Getter for the validity of distortion parameters.
+   *
+   * @return If the distortion parameters are valid.
+   */
   virtual bool distortionParametersValid() const = 0;
 };
 }  // namespace cameras
