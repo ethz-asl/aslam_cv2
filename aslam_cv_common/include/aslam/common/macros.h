@@ -11,4 +11,4 @@
   typedef std::shared_ptr<TypeName> Ptr;               \
   typedef std::shared_ptr<const TypeName> ConstPtr     \
 
-#endif ASLAM_COMMON_MACROS_H_
+#endif  // ASLAM_COMMON_MACROS_H_
