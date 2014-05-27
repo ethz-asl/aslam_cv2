@@ -23,6 +23,9 @@ class Channel : public ChannelBase{
   typedef TYPE Type;
   Channel() {}
   virtual ~Channel() {}
+  bool operator==(const Channel<TYPE>& other) {
+    return value_ == other.value_;
+  }
   bool serializeToString(std::string* string) const {
     aslam::internal::serializeToString(value_, string);
   }

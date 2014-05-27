@@ -16,6 +16,7 @@ bool HeaderInformation::serializeToString(char* buffer, size_t offset) const {
   buffer += sizeof(cols);
   memcpy(buffer, &type, sizeof(type));
   buffer += sizeof(type);
+  return true;
 }
 
 bool HeaderInformation::deSerializeFromString(const char* const buffer_in, size_t offset) {
@@ -28,6 +29,7 @@ bool HeaderInformation::deSerializeFromString(const char* const buffer_in, size_
   buffer += sizeof(cols);
   memcpy(&type, buffer, sizeof(type));
   buffer += sizeof(type);
+  return true;
 }
 }  // namespace internal
 }  // namespace aslam
