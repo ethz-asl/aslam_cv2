@@ -24,7 +24,8 @@ class Camera {
   /// Project a point expressed in euclidean coordinates to a 2d image measurement.
   virtual bool euclideanToKeypoint(const Eigen::Vector3d& point,
                                    Eigen::Matrix<double, 2, 1>* out_point) const = 0;
-  /// Project a point expressed in euclidean coordinates to a 2d image measurement and calculate the relevant jacobian.
+  /// Project a point expressed in euclidean coordinates to a 2d image measurement
+  /// and calculate the relevant jacobian.
   virtual bool euclideanToKeypoint(const Eigen::Vector3d & point,
                                    Eigen::Matrix<double, 2, 1>* out_point,
                                    Eigen::Matrix<double, 2, 3>* out_jacobian) const = 0;
@@ -33,7 +34,8 @@ class Camera {
   virtual bool homogeneousToKeypoint(const Eigen::Vector4d& homogeneous_point,
                                      Eigen::Matrix<double, 2, 1>* out_point) const = 0;
 
-  /// Project a point expressed in homogenous coordinates to a 2d image measurement and calculate the relevant jacobian.
+  /// Project a point expressed in homogenous coordinates to a 2d image measurement
+  /// and calculate the relevant jacobian.
   virtual bool homogeneousToKeypoint(const Eigen::Vector4d & homogeneous_point,
                                      Eigen::Matrix<double, 2, 1>* out_point,
                                      Eigen::Matrix<double, 2, 4>* out_jacobian) const = 0;
@@ -43,7 +45,8 @@ class Camera {
                                    Eigen::Matrix<double, 3, 1>* out_point) const = 0;
 
 
-  /// Compute the 3d bearing vector in euclidean coordinates and the relevant jacobian from the 2d image measurement.
+  /// Compute the 3d bearing vector in euclidean coordinates and the relevant jacobian
+  /// from the 2d image measurement.
   virtual bool keypointToEuclidean(const Eigen::Vector2d& keypoint,
                                    Eigen::Matrix<double, 3, 1>* out_point,
                                    Eigen::Matrix<double, 3, 2>* out_jacobian) const = 0;
@@ -52,7 +55,8 @@ class Camera {
   virtual bool keypointToHomogeneous(Eigen::Vector2d const& keypoint,
                                      Eigen::Matrix<double, 4, 1>* out_point) const = 0;
 
-  /// Compute the 3d bearing vector in homogeneous coordinates and the relevant jacobian from the 2d image measurement.
+  /// Compute the 3d bearing vector in homogeneous coordinates and the relevant
+  /// jacobian from the 2d image measurement.
   virtual bool keypointToHomogeneous(Eigen::Vector2d const& keypoint,
                                      Eigen::Matrix<double, 4, 1>* out_point,
                                      Eigen::Matrix<double, 4, 2>* out_jacobian) const = 0;
