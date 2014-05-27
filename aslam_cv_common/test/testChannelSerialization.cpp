@@ -52,10 +52,22 @@ TEST(ChannelSerialization, HeaderInfoSize) {
   EXPECT_EQ(header_info2.type, 4);
 }
 
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FixedSize, Eigen::Matrix<double, 20, 15>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DynamicFixedSize, Eigen::Matrix<double, Eigen::Dynamic, 10>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FixedDynamicSize, Eigen::Matrix<double, 25, Eigen::Dynamic>);
-RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DynamicSize, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DoubleFixedSize, Eigen::Matrix<double, 20, 15>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DoubleDynamicFixedSize, Eigen::Matrix<double, Eigen::Dynamic, 10>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DoubleFixedDynamicSize, Eigen::Matrix<double, 25, Eigen::Dynamic>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(DoubleDynamicSize, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FloatFixedSize, Eigen::Matrix<float, 20, 15>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FloatDynamicFixedSize, Eigen::Matrix<float, Eigen::Dynamic, 10>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FloatFixedDynamicSize, Eigen::Matrix<float, 25, Eigen::Dynamic>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(FloatDynamicSize, Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(IntFixedSize, Eigen::Matrix<int, 20, 15>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(IntDynamicFixedSize, Eigen::Matrix<int, Eigen::Dynamic, 10>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(IntFixedDynamicSize, Eigen::Matrix<int, 25, Eigen::Dynamic>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(IntDynamicSize, Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(CharFixedSize, Eigen::Matrix<char, 20, 15>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(CharDynamicFixedSize, Eigen::Matrix<char, Eigen::Dynamic, 10>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(CharFixedDynamicSize, Eigen::Matrix<char, 25, Eigen::Dynamic>);
+RUN_EIGEN_MATRIX_CHANNEL_DESERIALIZATION_TEST(CharDynamicSize, Eigen::Matrix<char, Eigen::Dynamic, Eigen::Dynamic>);
 
 TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
   static const int numKeypoints = 5;
