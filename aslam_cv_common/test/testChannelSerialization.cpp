@@ -73,7 +73,7 @@ TEST(ChannelSerialization, HeaderInfoSize) {
 
 TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
   static const int numKeypoints = 5;
-  aslam::channels::VISUAL_KEYPOINTS keypoints_a;
+  aslam::channels::VISUAL_KEYPOINT_MEASUREMENTS keypoints_a;
   keypoints_a.value_.resize(Eigen::NoChange, numKeypoints);
   keypoints_a.value_.setRandom();
   std::string serialized_value;
@@ -81,9 +81,9 @@ TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
 
   aslam::internal::HeaderInformation header_info;
   ASSERT_EQ(serialized_value.size(), header_info.size() + 2 * numKeypoints *
-            sizeof(aslam::channels::VISUAL_KEYPOINTS::Type::Scalar));
+            sizeof(aslam::channels::VISUAL_KEYPOINT_MEASUREMENTS::Type::Scalar));
 
-  aslam::channels::VISUAL_KEYPOINTS keypoints_b;
+  aslam::channels::VISUAL_KEYPOINT_MEASUREMENTS keypoints_b;
 
   EXPECT_FALSE(aslam::common::MatricesEqual(keypoints_a.value_,
                                             keypoints_b.value_, 1e-4));
