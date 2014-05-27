@@ -1,0 +1,111 @@
+#ifndef ASLAM_CAMERAS_DISTORTION_H_
+#define ASLAM_CAMERAS_DISTORTION_H_
+
+#include <Eigen/Dense>
+#include <aslam/common/macros.h>
+
+namespace sm {
+class PropertyTree;
+}
+
+namespace aslam {
+namespace cameras {
+class Distortion {
+ public:
+  ASLAM_POINTER_TYPEDEFS(Distortion);
+
+  Distortion();
+  Distortion(const sm::PropertyTree const& property_tree);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Distortion);
+  virtual ~Distortion();
+  virtual bool operator==(const Distortion& other) const;
+
+  /**
+   * \brief Apply distortion to a point in the normalized image plane
+   *
+   * @param y The point in the normalized image plane. After the function, this point is distorted.
+   */
+  void distort(const Eigen::Matrix<double, 2, 1>* y) const = 0;
+
+  /**
+   * \brief Apply distortion to a point in the normalized image plane
+   *
+   * @param y The point in the normalized image plane.
+   * @param outPoint The distorted point.
+   */
+  void distort(const Eigen::Matrix<double, 2, 1>& y,
+               Eigen::Matrix<double, 2, 1>* outPoint) const = 0;
+
+  /**
+   * \brief Apply distortion to a point in the normalized image plane
+   *
+   * @param y The point in the normalized image plane. After the function, this point is distorted.
+   * @param outJy The Jacobian of the distortion function with respect to small changes in the input point.
+   */
+  void distort(const Eigen::Matrix<double, 2, 1>* point,
+               const Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const = 0;
+
+  /**
+   * \brief Apply undistortion to recover a point in the normalized image plane.
+   *
+   * @param y The distorted point. After the function, this point is in the normalized image plane.
+   */
+  void undistort(Eigen::MatrixBase<double, 2, 1>* y) const = 0;
+
+  /**
+   * \brief Apply undistortion to recover a point in the normalized image plane.
+   *
+   * @param y The distorted point. After the function, this point is in the normalized image plane.
+   * @param outJy The Jacobian of the undistortion function with respect to small changes in the input point.
+   */
+  void undistort(Eigen::Matrix<double, 2, 1>* y,
+                 Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const = 0;
+
+  /**
+   * \brief Apply distortion to the point and provide the Jacobian of the
+   * distortion with respect to small changes in the distortion parameters
+   *
+   * @param imageY the point in the normalized image plane.
+   * @param outJd  the Jacobian of the distortion with respect to small changes
+   * in the distortion parameters.
+   */
+  void distortParameterJacobian(
+      Eigen::Matrix<double, 2, 1>* imageY,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const = 0;
+
+  /**
+   * \brief A function for compatibility with the aslam backend.
+   * This implements an update of the distortion parameter.
+   *
+   * @param v A double array representing the update vector.
+   */
+  virtual void update(const double* v) = 0;
+
+  /**
+   * \brief A function for compatibility with the aslam backend.
+   *
+   * @param v The number of parameters expected by the update equation.
+   * This should also define the number of columns in the matrix returned by distortParameterJacobian.
+   */
+  virtual int minimalDimensions() const = 0;
+
+  /**
+   * \brief A function for compatibility with the aslam backend.
+   *
+   * @param parameters This vector is resized and filled with parameters representing the full state of the distortion.
+   */
+  virtual void getParameters(Eigen::Matrix<double, Eigen::Dynamic, 1>* parameters) const = 0;
+
+  /**
+   * \brief A function for compatibility with the aslam backend.
+   *
+   * @param parameters The full state of the distortion class is set from the vector of parameters.
+   */
+  virtual void setParameters(const Eigen::Matrix<double, Eigen::Dynamic, 1>& parameters) = 0;
+
+  virtual size_t parameterSize() const = 0;
+  virtual bool distortionParametersValid() const = 0;
+};
+}  // namespace cameras
+}  // namespace aslam
+#endif  // ASLAM_CAMERAS_DISTORTION_H_
