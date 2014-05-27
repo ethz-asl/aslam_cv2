@@ -21,11 +21,6 @@ class Camera {
 
   virtual bool operator==(const Camera& other) const;
 
-  // The functions below take variable sized matrices and hence they are prefixed by "vs" to avoid confusion with
-  // the fixed-size matrix versions available in derived classes. The default implementation of these "vs" functions
-  // will be inefficient as it will call the fixed-size derived functions and copy the data into the variable size matrices.
-  // Still, this base class is useful as it allows us to maintain a heterogeneous list of camera geometries and simplify the
-  // python interface.
   /// Project a point expressed in euclidean coordinates to a 2d image measurement.
   virtual bool euclideanToKeypoint(const Eigen::Vector3d& point,
                                    Eigen::Matrix<double, 2, 1>* out_point) const = 0;
@@ -42,11 +37,6 @@ class Camera {
   virtual bool homogeneousToKeypoint(const Eigen::Vector4d & homogeneous_point,
                                      Eigen::Matrix<double, 2, 1>* out_point,
                                      Eigen::Matrix<double, 2, 4>* out_jacobian) const = 0;
-
-  // If the camera model is invertible, these functions produce 3d
-  // points.  otherwise they produce points where the length has no
-  // meaning. In that case the points are not necessarily on the
-  // unit sphere in R^3 (that might be expensive to compute).
 
   /// Compute the 3d bearing vector in euclidean coordinates from the 2d image measurement.
   virtual bool keypointToEuclidean(const Eigen::VectorXd& keypoint,
