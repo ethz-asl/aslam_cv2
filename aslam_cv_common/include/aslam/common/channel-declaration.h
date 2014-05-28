@@ -18,9 +18,9 @@ namespace channels {                                 \
 struct NAME : aslam::Channel<GET_TYPE(TYPE)> {       \
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;                   \
   typedef typename GET_TYPE(TYPE) Type;              \
-  static std::string name() { return #NAME; }        \
+  static const std::string& name() { return #NAME; } \
 };                                                   \
-const std::string& NAME##_CHANNEL = #NAME;            \
+const std::string NAME##_CHANNEL = #NAME;            \
 typedef GET_TYPE(TYPE) NAME##_CHANNEL_TYPE;          \
 }                                                    \
 }                                                    \
