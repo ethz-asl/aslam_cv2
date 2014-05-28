@@ -19,20 +19,20 @@ struct HeaderInformation {
   uint32_t type;
   size_t size() const;
   bool serializeToString(char* buffer, size_t offset) const;
-  bool deSerializeFromString(const char* const buffer_in, size_t offset);
+  bool deSerializeFromString(const char* const bufferIn, size_t offset);
 };
 
 template<typename SCALAR>
 void makeHeaderInformation(int rows, int cols,
-                           HeaderInformation* header_information) {
-  CHECK_NOTNULL(header_information);
-  header_information->rows = rows;
-  header_information->cols = cols;
-  header_information->type = MatrixScalarType<SCALAR>::value;
+                           HeaderInformation* headerInformation) {
+  CHECK_NOTNULL(headerInformation);
+  headerInformation->rows = rows;
+  headerInformation->cols = cols;
+  headerInformation->type = MatrixScalarType<SCALAR>::value;
 }
 
 template<typename SCALAR>
-bool serializeToString(const char* const matrix_data,
+bool serializeToString(const char* const matrixData,
                        int rows, int cols,
                        std::string* string) {
   CHECK_NE(rows, -1);
@@ -40,12 +40,12 @@ bool serializeToString(const char* const matrix_data,
   CHECK_NOTNULL(string);
   HeaderInformation header;
   makeHeaderInformation<SCALAR>(rows, cols, &header);
-  size_t matrix_size = sizeof(SCALAR) * rows * cols;
-  size_t total_size = matrix_size + header.size();
+  size_t matrixSize = sizeof(SCALAR) * rows * cols;
+  size_t totalSize = matrixSize + header.size();
 
-  CHECK_GT(total_size, 0u);
+  CHECK_GT(totalSize, 0u);
 
-  string->resize(total_size);
+  string->resize(totalSize);
   char* buffer = &(*string)[0];
   bool success = header.serializeToString(buffer, 0);
   if (!success) {
@@ -53,22 +53,22 @@ bool serializeToString(const char* const matrix_data,
     return false;
   }
   size_t offset = header.size();
-  memcpy(buffer + offset, matrix_data, matrix_size);
+  memcpy(buffer + offset, matrixData, matrixSize);
   return true;
 }
 
 template<typename SCALAR>
-bool serializeToString(const char* const matrix_data,
+bool serializeToString(const char* const matrixData,
                        int rows, int cols,
-                       char** buffer, size_t* total_size) {
-  CHECK_NOTNULL(total_size);
+                       char** buffer, size_t* totalSize) {
+  CHECK_NOTNULL(totalSize);
   CHECK_NOTNULL(buffer);
   HeaderInformation header;
   makeHeaderInformation<SCALAR>(rows, cols, &header);
-  size_t matrix_size = sizeof(SCALAR) * rows * cols;
-  *total_size = matrix_size + header.size();
+  size_t matrixSize = sizeof(SCALAR) * rows * cols;
+  *totalSize = matrixSize + header.size();
 
-  *buffer = new char[*total_size];
+  *buffer = new char[*totalSize];
   bool success = header.serializeToString(*buffer, 0);
   if (!success) {
     delete[] *buffer;
@@ -76,64 +76,24 @@ bool serializeToString(const char* const matrix_data,
     return false;
   }
   size_t offset = header.size();
-  memcpy(*buffer + offset, matrix_data, matrix_size);
+  memcpy(*buffer + offset, matrixData, matrixSize);
   return true;
 }
 
-template<typename SCALAR, int ROWS>
-bool serializeToString(const Eigen::Matrix<SCALAR, ROWS, Eigen::Dynamic>& matrix,
-                       char** buffer, size_t* size) {
-  const char* matrix_data = reinterpret_cast<const char*>(matrix.data());
-  return serializeToString<SCALAR>(matrix_data, ROWS, matrix.cols(), buffer, size);
-}
-
-template<typename SCALAR, int ROWS>
-bool serializeToString(const Eigen::Matrix<SCALAR, ROWS, Eigen::Dynamic>& matrix,
-                       std::string* string) {
-  const char* matrix_data = reinterpret_cast<const char*>(matrix.data());
-  return serializeToString<SCALAR>(matrix_data, ROWS, matrix.cols(), string);
-}
-
-template<typename SCALAR, int COLS>
-bool serializeToString(const Eigen::Matrix<SCALAR, Eigen::Dynamic, COLS>& matrix,
-                       char** buffer, size_t* size) {
-  const char* matrix_data = reinterpret_cast<const char*>(matrix.data());
-  return serializeToString<SCALAR>(matrix_data, matrix.rows(), COLS, buffer, size);
-}
-
-template<typename SCALAR, int COLS>
-bool serializeToString(const Eigen::Matrix<SCALAR, Eigen::Dynamic, COLS>& matrix,
-                       std::string* string) {
-  const char* matrix_data = reinterpret_cast<const char*>(matrix.data());
-  return serializeToString<SCALAR>(matrix_data, matrix.rows(), COLS, string);
-}
-
-template<typename SCALAR>
-bool serializeToString(const Eigen::Matrix<SCALAR, Eigen::Dynamic, Eigen::Dynamic>& matrix,
-                       char** buffer, size_t* size) {
-  const char* matrix_data = reinterpret_cast<const char*>(matrix.data());
-  return serializeToString<SCALAR>(matrix_data, matrix.rows(), matrix.cols(), buffer, size);
-}
-
-template<typename SCALAR>
-bool serializeToString(const Eigen::Matrix<SCALAR, Eigen::Dynamic, Eigen::Dynamic>& matrix,
-                       std::string* string) {
-  const char* matrix_data = reinterpret_cast<const char*>(matrix.data());
-  return serializeToString<SCALAR>(matrix_data, matrix.rows(), matrix.cols(), string);
-}
-
 template<typename SCALAR, int ROWS, int COLS>
 bool serializeToString(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
                        char** buffer, size_t* size) {
-  const char* const matrix_data = reinterpret_cast<const char*>(matrix.data());
-  return serializeToString<SCALAR>(matrix_data, ROWS, COLS, buffer, size);
+  const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
+  return serializeToString<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
+                                   buffer, size);
 }
 
 template<typename SCALAR, int ROWS, int COLS>
 bool serializeToString(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
                        std::string* string) {
-  const char* const matrix_data = reinterpret_cast<const char*>(matrix.data());
-  return serializeToString<SCALAR>(matrix_data, ROWS, COLS, string);
+  const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
+  return serializeToString<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
+                                   string);
 }
 
 template<typename SCALAR, int ROWS, int COLS>
