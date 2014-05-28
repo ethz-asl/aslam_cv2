@@ -4,8 +4,8 @@
 #include <memory>
 
 #define ASLAM_DISALLOW_EVIL_CONSTRUCTORS(TypeName)     \
-  TypeName(const TypeName&);                           \
-  void operator=(const TypeName&)
+  TypeName(const TypeName&) = delete;                  \
+  void operator=(const TypeName&) = delete
 
 #define ASLAM_POINTER_TYPEDEFS(TypeName)               \
   typedef std::shared_ptr<TypeName> Ptr;               \
