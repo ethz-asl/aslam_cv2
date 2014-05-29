@@ -6,6 +6,7 @@
 
 #include <aslam/cameras/Camera.h>
 #include <aslam/common/channel.h>
+#include <aslam/common/channel-declaration.h>
 #include <aslam/common/macros.h>
 #include <Eigen/Dense>
 
@@ -19,6 +20,28 @@ class VisualFrame  {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
   virtual bool operator==(const VisualFrame& other) const;
+
+  template<typename CHANNEL_DATA_TYPE>
+  void addChannel(const std::string& channel) {
+    aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
+  }
+
+  /// \brief Are there keypoint measurements stored in this frame.
+  bool hasKeypointMeasurements() const;
+  /// \brief Are there keypoint measurement uncertainties stored in this frame.
+  bool hasKeypointMeasurementUncertainties() const;
+  /// \brief Are there keypoint orientations stored in this frame.
+  bool hasKeypointOrientations() const;
+  /// \brief Are there keypoint scales stored in this frame.
+  bool hasKeypointScales() const;
+  /// \brief Are there descriptors stored in this frame.
+  bool hasBriskDescriptors() const;
+
+  /// \brief Is a certain channel stored in this frame.
+  bool hasChannel(const std::string& channel) const {
+    return aslam::channels::hasChannel(channel, channels_);
+  }
+
   /// \brief The keypoint measurements stored in a frame.
   const Eigen::Matrix2Xd& getKeypointMeasurements() const;
   /// \brief The keypoint measurement uncertainties stored in a frame.
@@ -29,6 +52,11 @@ class VisualFrame  {
   const Eigen::VectorXd& getKeypointScales() const;
   /// \brief The descriptors stored in a frame.
   const DescriptorsT& getBriskDescriptors() const;
+
+  template<typename CHANNEL_DATA_TYPE>
+  const CHANNEL_DATA_TYPE& getChannelDataByName(const std::string& channel) const {
+    return aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);
+  }
 
   /// \brief A pointer to the keypoint measurements, can be used to swap in new data.
   Eigen::Matrix2Xd* getKeypointMeasurementsMutable();
@@ -41,6 +69,14 @@ class VisualFrame  {
   /// \brief A pointer to the descriptors, can be used to swap in new data.
   DescriptorsT* getBriskDescriptorsMutable();
 
+  template<typename CHANNEL_DATA_TYPE>
+  CHANNEL_DATA_TYPE* getChannelDataMutableByName(
+      const std::string& channel) const {
+    CHANNEL_DATA_TYPE& data =
+        aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel,
+                                                           channels_);
+    return &data;
+  }
 
   /// \brief Return block expression of the keypoint measurement pointed to by index.
   const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(
@@ -55,19 +91,29 @@ class VisualFrame  {
   /// \brief Return pointer location of the descriptor pointed to by index.
   const char* getBriskDescriptor(size_t index) const;
 
-
   /// \brief Replace (copy) the internal keypoint measurements by the passed ones.
-  const void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
+  void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
   /// \brief Replace (copy) the internal keypoint measurement uncertainties
   ///        by the passed ones.
-  const void setKeypointMeasurementUncertainties(
+  void setKeypointMeasurementUncertainties(
       const Eigen::VectorXd& uncertainties);
   /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
-  const void setKeypointOrientations(const Eigen::VectorXd& orientations);
+  void setKeypointOrientations(const Eigen::VectorXd& orientations);
   /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
-  const void setKeypointScales(const Eigen::VectorXd& scales);
+  void setKeypointScales(const Eigen::VectorXd& scales);
   /// \brief Replace (copy) the internal descriptors by the passed ones.
-  const void setBriskDescriptors(const DescriptorsT& descriptors);
+  void setBriskDescriptors(const DescriptorsT& descriptors);
+
+  template<typename CHANNEL_DATA_TYPE>
+  void setChannelDataByName(const std::string& channel,
+                            const CHANNEL_DATA_TYPE& data_new) {
+    if (!aslam::channels::hasChannel(channel, channels_)) {
+      aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
+    }
+    CHANNEL_DATA_TYPE& data =
+        aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);
+    data = data_new;
+  }
 
   /// \brief The camera geometry.
   const Camera::ConstPtr getCameraGeometry() const;

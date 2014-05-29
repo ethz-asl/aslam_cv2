@@ -16,6 +16,13 @@ aslam::channels::add_TEST_Channel(&channels);
 Eigen::Matrix2Xd& data = aslam::channels::get_TEST_Data(channels);
 }
 
+TEST(Channel, DoubleAddChannelDeath) {
+aslam::channels::ChannelGroup channels;
+EXPECT_FALSE(aslam::channels::has_TEST_Channel(channels));
+aslam::channels::add_TEST_Channel(&channels);
+EXPECT_DEATH(aslam::channels::add_TEST_Channel(&channels), "^");
+}
+
 TEST(Channel, HasChannelAddChannelExists) {
 aslam::channels::ChannelGroup channels;
 EXPECT_FALSE(aslam::channels::has_TEST_Channel(channels));
