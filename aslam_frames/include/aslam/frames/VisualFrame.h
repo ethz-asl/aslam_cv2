@@ -10,7 +10,7 @@ namespace cameras {
 class Camera;
 }
 
-class VisualFrame {
+class VisualFrame : public FrameBase {
  public:
   typedef Eigen::Matrix<char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
@@ -43,8 +43,7 @@ class VisualFrame {
   void setCameraGeometry(const std::shared_ptr<cameras::Camera>& camera);
 
  private:
-  Eigen::Matrix2Xd keypoints_;
-  DescriptorsT descriptors_;
+  unordered_map<std::string, std::shared_ptr<aslam::ChannelBase> > channels_;
   std::shared_ptr<cameras::Camera> camera_geometry_;
 };
 }  // namespace aslam

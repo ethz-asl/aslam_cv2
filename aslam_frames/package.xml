@@ -12,6 +12,7 @@
   <buildtool_depend>catkin_simple</buildtool_depend>
   
   <build_depend>aslam_cameras</build_depend>
+  <build_depend>aslam_common</build_depend>
 </package>
 
 

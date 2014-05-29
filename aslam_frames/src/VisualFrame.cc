@@ -13,7 +13,7 @@ virtual bool VisualFrame::operator==(const VisualFrame& other) const {
   return same;
 }
 const Eigen::Matrix2Xd& VisualFrame::getKeypoints() const {
-  return keypoints_;
+  return ;
 }
 const VisualFrame::DescriptorsT& VisualFrame::getDescriptors() const {
   return descriptors_;

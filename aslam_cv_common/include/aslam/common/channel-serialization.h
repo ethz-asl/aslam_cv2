@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <iostream>
+
+#include <glog/logging.h>
 #include <Eigen/Dense>
 
 namespace aslam {

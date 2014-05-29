@@ -1,5 +1,7 @@
 #ifndef ASLAM_CV_COMMON_CHANNEL_H_
 #define ASLAM_CV_COMMON_CHANNEL_H_
+#include <string>
+
 #include <aslam/common/macros.h>
 #include <aslam/common/channel-serialization.h>
 
@@ -14,6 +16,7 @@ class ChannelBase {
   virtual bool deSerializeFromString(const std::string& string) = 0;
   virtual bool serializeToString(char** buffer, size_t* size) const = 0;
   virtual bool deSerializeFromString(const char* const buffer, size_t size) = 0;
+  virtual std::string name() const = 0;
 };
 
 template<typename TYPE>
@@ -23,6 +26,7 @@ class Channel : public ChannelBase{
   typedef TYPE Type;
   Channel() {}
   virtual ~Channel() {}
+  virtual std::string name() const { return "unnamed"; }
   bool operator==(const Channel<TYPE>& other) {
     return value_ == other.value_;
   }
