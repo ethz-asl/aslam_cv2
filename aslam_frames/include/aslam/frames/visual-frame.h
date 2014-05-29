@@ -4,7 +4,7 @@
 #include <memory>
 #include <unordered_map>
 
-#include <aslam/cameras/Camera.h>
+#include <aslam/cameras/camera.h>
 #include <aslam/common/channel.h>
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/macros.h>

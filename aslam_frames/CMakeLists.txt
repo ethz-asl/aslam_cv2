@@ -6,10 +6,10 @@ catkin_simple()
 
 add_definitions(-std=c++11)
 
-cs_add_library(${PROJECT_NAME} src/VisualFrame.cc)
+cs_add_library(${PROJECT_NAME} src/visual-frame.cc)
 
 catkin_add_gtest(${PROJECT_NAME}_test_frames
-  test/testVisualFrame.cpp
+  test/test_visual-frame.cpp
 )
 target_link_libraries(${PROJECT_NAME}_test_frames ${PROJECT_NAME} pthread)
 
