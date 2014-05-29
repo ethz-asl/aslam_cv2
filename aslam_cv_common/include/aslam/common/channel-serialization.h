@@ -20,8 +20,8 @@ struct HeaderInformation {
   uint32_t cols;
   uint32_t type;
   size_t size() const;
-  bool serializeToString(char* buffer, size_t offset) const;
-  bool deSerializeFromString(const char* const bufferIn, size_t offset);
+  bool serializeToBuffer(char* buffer, size_t offset) const;
+  bool deSerializeFromBuffer(const char* const bufferIn, size_t offset);
 };
 
 template<typename SCALAR>
@@ -49,7 +49,7 @@ bool serializeToString(const char* const matrixData,
 
   string->resize(totalSize);
   char* buffer = &(*string)[0];
-  bool success = header.serializeToString(buffer, 0);
+  bool success = header.serializeToBuffer(buffer, 0);
   if (!success) {
     LOG(ERROR) << "Failed to serialize header";
     return false;
@@ -60,7 +60,7 @@ bool serializeToString(const char* const matrixData,
 }
 
 template<typename SCALAR>
-bool serializeToString(const char* const matrixData,
+bool serializeToBuffer(const char* const matrixData,
                        int rows, int cols,
                        char** buffer, size_t* totalSize) {
   CHECK_NOTNULL(totalSize);
@@ -71,7 +71,7 @@ bool serializeToString(const char* const matrixData,
   *totalSize = matrixSize + header.size();
 
   *buffer = new char[*totalSize];
-  bool success = header.serializeToString(*buffer, 0);
+  bool success = header.serializeToBuffer(*buffer, 0);
   if (!success) {
     delete[] *buffer;
     *buffer = nullptr;
@@ -83,10 +83,10 @@ bool serializeToString(const char* const matrixData,
 }
 
 template<typename SCALAR, int ROWS, int COLS>
-bool serializeToString(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
+bool serializeToBuffer(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
                        char** buffer, size_t* size) {
   const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
-  return serializeToString<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
+  return serializeToBuffer<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
                                    buffer, size);
 }
 
@@ -99,12 +99,12 @@ bool serializeToString(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
 }
 
 template<typename SCALAR, int ROWS, int COLS>
-bool deSerializeFromString(const char* const buffer, size_t size,
+bool deSerializeFromBuffer(const char* const buffer, size_t size,
                            Eigen::Matrix<SCALAR, ROWS, COLS>* matrix) {
   CHECK_NOTNULL(matrix);
   HeaderInformation header;
   CHECK_GE(size, header.size());
-  bool success = header.deSerializeFromString(buffer, 0);
+  bool success = header.deSerializeFromBuffer(buffer, 0);
   if (!success) {
     LOG(ERROR) << "Failed to deserialize header from string: " <<
         std::string(buffer, size);
@@ -138,7 +138,7 @@ template<typename SCALAR, int ROWS, int COLS>
 bool deSerializeFromString(const std::string& string,
                            Eigen::Matrix<SCALAR, ROWS, COLS>* matrix) {
   CHECK_NOTNULL(matrix);
-  return deSerializeFromString(string.data(), string.size(), matrix);
+  return deSerializeFromBuffer(string.data(), string.size(), matrix);
 }
 
 }  // namespace internal

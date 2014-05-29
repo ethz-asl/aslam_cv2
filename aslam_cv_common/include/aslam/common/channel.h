@@ -16,8 +16,8 @@ class ChannelBase {
   virtual ~ChannelBase() {};
   virtual bool serializeToString(std::string* string) const = 0;
   virtual bool deSerializeFromString(const std::string& string) = 0;
-  virtual bool serializeToString(char** buffer, size_t* size) const = 0;
-  virtual bool deSerializeFromString(const char* const buffer, size_t size) = 0;
+  virtual bool serializeToBuffer(char** buffer, size_t* size) const = 0;
+  virtual bool deSerializeFromBuffer(const char* const buffer, size_t size) = 0;
   virtual std::string name() const = 0;
 };
 
@@ -35,14 +35,14 @@ class Channel : public ChannelBase{
   bool serializeToString(std::string* string) const {
     aslam::internal::serializeToString(value_, string);
   }
-  bool serializeToString(char** buffer, size_t* size) const {
-    aslam::internal::serializeToString(value_, buffer, size);
+  bool serializeToBuffer(char** buffer, size_t* size) const {
+    aslam::internal::serializeToBuffer(value_, buffer, size);
   }
   bool deSerializeFromString(const std::string& string) {
     aslam::internal::deSerializeFromString(string, &value_);
   }
-  bool deSerializeFromString(const char* const buffer, size_t size) {
-    aslam::internal::deSerializeFromString(buffer, size, &value_);
+  bool deSerializeFromBuffer(const char* const buffer, size_t size) {
+    aslam::internal::deSerializeFromBuffer(buffer, size, &value_);
   }
   TYPE value_;
 };

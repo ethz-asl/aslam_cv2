@@ -58,14 +58,14 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeBuffer) {
   aslam::internal::HeaderInformation header_info;
   char* buffer;
   size_t size;
-  EXPECT_TRUE(this->value_a.serializeToString(&buffer, &size));
+  EXPECT_TRUE(this->value_a.serializeToBuffer(&buffer, &size));
   EXPECT_EQ(12u, header_info.size());
   ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
             this->value_a.value_.cols() *
             sizeof(typename TypeParam::Scalar), size);
   EXPECT_FALSE(aslam::common::MatricesEqual(this->value_a.value_,
                                             this->value_b.value_, 1e-4));
-  EXPECT_TRUE(this->value_b.deSerializeFromString(buffer, size));
+  EXPECT_TRUE(this->value_b.deSerializeFromBuffer(buffer, size));
   EXPECT_TRUE(aslam::common::MatricesEqual(this->value_a.value_,
                                            this->value_b.value_, 1e-4));
 }
@@ -78,10 +78,10 @@ TEST(ChannelSerialization, HeaderInfoSize) {
   EXPECT_EQ(header_info.size(), 12u);
   std::string header_serialized;
   header_serialized.resize(12u);
-  header_info.serializeToString(&header_serialized[0], 0);
+  header_info.serializeToBuffer(&header_serialized[0], 0);
 
   aslam::internal::HeaderInformation header_info2;
-  header_info2.deSerializeFromString(&header_serialized[0], 0);
+  header_info2.deSerializeFromBuffer(&header_serialized[0], 0);
   EXPECT_EQ(header_info2.cols, 12);
   EXPECT_EQ(header_info2.rows, 10);
   EXPECT_EQ(header_info2.type, 4);
