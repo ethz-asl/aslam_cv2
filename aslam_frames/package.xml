@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <name>aslam_frames</name>
+  <version>0.0.1</version>
+  <description>
+     aslam_frames
+  </description>
+  <maintainer email="paul.furgale@mavt.ethz.ch">Paul Furgale</maintainer>
+  <maintainer email="simon.lynen@mavt.ethz.ch">Simon Lynen</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+  
+  <build_depend>aslam_cameras</build_depend>
+  <build_depend>aslam_common</build_depend>
+  <build_depend>eigen_catkin</build_depend>
+  <build_depend>gflags_catkin</build_depend>
+  <build_depend>glog_catkin</build_depend>
+</package>
+
+

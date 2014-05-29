@@ -7,7 +7,7 @@ size_t HeaderInformation::size() const {
   return sizeof(rows) + sizeof(cols) + sizeof(type);
 }
 
-bool HeaderInformation::serializeToString(char* buffer, size_t offset) const {
+bool HeaderInformation::serializeToBuffer(char* buffer, size_t offset) const {
   CHECK_NOTNULL(buffer);
   buffer += offset;
   memcpy(buffer, &rows, sizeof(rows));
@@ -19,7 +19,7 @@ bool HeaderInformation::serializeToString(char* buffer, size_t offset) const {
   return true;
 }
 
-bool HeaderInformation::deSerializeFromString(const char* const buffer_in, size_t offset) {
+bool HeaderInformation::deSerializeFromBuffer(const char* const buffer_in, size_t offset) {
   CHECK_NOTNULL(buffer_in);
   const char* buffer = buffer_in;
   buffer += offset;
