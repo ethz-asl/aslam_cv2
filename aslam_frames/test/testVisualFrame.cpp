@@ -49,7 +49,7 @@ const aslam::VisualFrame::DescriptorsT& data_2 =
     frame.getBriskDescriptors();
 EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getBriskDescriptorsMutable());
-for (size_t i = 0; i < data.cols(); ++i) {
+for (int i = 0; i < data.cols(); ++i) {
   const char* data_ptr = frame.getBriskDescriptor(i);
   EXPECT_EQ(&data_2.coeffRef(0, i), data_ptr);
 }
@@ -64,7 +64,7 @@ frame.setKeypointMeasurements(data);
 const Eigen::Matrix2Xd& data_2 = frame.getKeypointMeasurements();
 EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getKeypointMeasurementsMutable());
-for (size_t i = 0; i < data.cols(); ++i) {
+for (int i = 0; i < data.cols(); ++i) {
   Eigen::Block<Eigen::Matrix2Xd, 2, 1> ref = frame.getKeypointMeasurement(i);
   EXPECT_TRUE(aslam::common::MatricesEqual(data.block<2, 1>(0, i), ref, 1e-6));
 }
@@ -79,7 +79,7 @@ frame.setKeypointMeasurementUncertainties(data);
 const Eigen::VectorXd& data_2 = frame.getKeypointMeasurementUncertainties();
 EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getKeypointMeasurementUncertaintiesMutable());
-for (size_t i = 0; i < data.cols(); ++i) {
+for (int i = 0; i < data.cols(); ++i) {
   double ref = frame.getKeypointMeasurementUncertainty(i);
   EXPECT_NEAR(data(i), ref, 1e-6);
 }
@@ -94,7 +94,7 @@ frame.setKeypointOrientations(data);
 const Eigen::VectorXd& data_2 = frame.getKeypointOrientations();
 EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getKeypointOrientationsMutable());
-for (size_t i = 0; i < data.cols(); ++i) {
+for (int i = 0; i < data.cols(); ++i) {
   double ref = frame.getKeypointOrientation(i);
   EXPECT_NEAR(data(i), ref, 1e-6);
 }
@@ -109,7 +109,7 @@ frame.setKeypointScales(data);
 const Eigen::VectorXd& data_2 = frame.getKeypointScales();
 EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getKeypointScalesMutable());
-for (size_t i = 0; i < data.cols(); ++i) {
+for (int i = 0; i < data.cols(); ++i) {
   double ref = frame.getKeypointScale(i);
   EXPECT_NEAR(data(i), ref, 1e-6);
 }
