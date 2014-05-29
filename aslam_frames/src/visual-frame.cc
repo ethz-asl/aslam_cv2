@@ -1,6 +1,6 @@
 #include <memory>
 
-#include <aslam/frames/VisualFrame.h>
+#include <aslam/frames/visual-frame.h>
 #include <aslam/common/channel-definitions.h>
 
 namespace aslam {
