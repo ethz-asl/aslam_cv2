@@ -1,50 +1,146 @@
+#include <memory>
+
 #include <aslam/frames/VisualFrame.h>
+#include <aslam/common/channel-definitions.h>
 
 namespace aslam {
-virtual bool VisualFrame::operator==(const VisualFrame& other) const {
+bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
-  same &= keypoints_ == other.keypoints_;
-  same &= descriptors_ == other.descriptors_;
+  channels_ == other.channels_;
   same &= static_cast<bool>(camera_geometry_) ==
       static_cast<bool>(other.camera_geometry_);
-  if (same) {
-    same &= *camera_geometry_ == *other.camera_geometry_;
+  if (static_cast<bool>(camera_geometry_) &&
+      static_cast<bool>(other.camera_geometry_)) {
+    same &= (*camera_geometry_) == (*other.camera_geometry_);
   }
   return same;
 }
-const Eigen::Matrix2Xd& VisualFrame::getKeypoints() const {
-  return ;
+
+const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
+  return aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
 }
-const VisualFrame::DescriptorsT& VisualFrame::getDescriptors() const {
-  return descriptors_;
+const Eigen::VectorXd& VisualFrame::getKeypointMeasurementUncertainties() const {
+  return aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
 }
-Eigen::Matrix2Xd* VisualFrame::getKeypointsMutable() {
-  return &keypoints_;
+const Eigen::VectorXd& VisualFrame::getKeypointScales() const {
+  return aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
 }
-DescriptorsT* VisualFrame::getDescriptorsMutable() {
-  return &descriptors_;
+const Eigen::VectorXd& VisualFrame::getKeypointOrientations() const {
+  return aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
+}
+const VisualFrame::DescriptorsT& VisualFrame::getBriskDescriptors() const {
+  return aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
 }
 
-const char* VisualFrame::getDescriptor(size_t index) const {
-  CHECK_LT(index, descriptors_.cols());
-  return &descriptors_.coeffRef(0, index);
+Eigen::Matrix2Xd* VisualFrame::getKeypointMeasurementsMutable() {
+  Eigen::Matrix2Xd& keypoints =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
+    return &keypoints;
 }
-const Eigen::Block<Eigen::Matrix2Xd, 2, 1> VisualFrame::getKeypoint(size_t index) const {
-  CHECK_LT(index, keypoints_.cols());
-  return keypoints_.block<2, 1>(0, index);
+Eigen::VectorXd* VisualFrame::getKeypointMeasurementUncertaintiesMutable() {
+  Eigen::VectorXd& uncertainties =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
+    return &uncertainties;
+}
+Eigen::VectorXd* VisualFrame::getKeypointScalesMutable() {
+  Eigen::VectorXd& scales =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+    return &scales;
+}
+Eigen::VectorXd* VisualFrame::getKeypointOrientationsMutable() {
+  Eigen::VectorXd& orientations =
+      aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
+    return &orientations;
+}
+VisualFrame::DescriptorsT* VisualFrame::getBriskDescriptorsMutable() {
+  VisualFrame::DescriptorsT& descriptors =
+      aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+  return &descriptors;
 }
 
-const void VisualFrame::setKeypoints(const Eigen::Matrix2Xd& keypoints) {
-  keypoints_ = keypoints;
+
+const Eigen::Block<Eigen::Matrix2Xd, 2, 1>
+VisualFrame::getKeypointMeasurement(size_t index) const {
+  Eigen::Matrix2Xd& keypoints =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
+  CHECK_LT(index, keypoints.cols());
+  return keypoints.block<2, 1>(0, index);
 }
-const void VisualFrame::setDescriptors(const DescriptorsT& descriptors) {
-  descriptors_ = descriptors;
+double VisualFrame::getKeypointMeasurementUncertainty(size_t index) const {
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
+  CHECK_LT(index, data.cols());
+  return data.coeff(0, index);
+}
+double VisualFrame::getKeypointScale(size_t index) const {
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  CHECK_LT(index, data.cols());
+  return data.coeff(0, index);
+}
+double VisualFrame::getKeypointOrientation(size_t index) const {
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
+  CHECK_LT(index, data.cols());
+  return data.coeff(0, index);
+}
+const char* VisualFrame::getBriskDescriptor(size_t index) const {
+  VisualFrame::DescriptorsT& descriptors =
+      aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+  CHECK_LT(index, descriptors.cols());
+  return &descriptors.coeffRef(0, index);
 }
 
-const std::shared_ptr<const cameras::Camera> VisualFrame::getCameraGeometry() const {
+const void VisualFrame::setKeypointMeasurements(
+    const Eigen::Matrix2Xd& keypoints_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENTS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_MEASUREMENTS_Channel(&channels_);
+  }
+  Eigen::Matrix2Xd& keypoints =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
+  keypoints = keypoints_new;
+}
+const void VisualFrame::setKeypointMeasurementUncertainties(
+    const Eigen::VectorXd& uncertainties_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
+  data = uncertainties_new;
+}
+const void VisualFrame::setKeypointScales(
+    const Eigen::VectorXd& scales_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  data = scales_new;
+}
+const void VisualFrame::setKeypointOrientations(
+    const Eigen::VectorXd& orientations_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_ORIENTATIONS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_ORIENTATIONS_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
+  data = orientations_new;
+}
+const void VisualFrame::setBriskDescriptors(
+    const DescriptorsT& descriptors_new) {
+  if (!aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_)) {
+    aslam::channels::add_BRISK_DESCRIPTORS_Channel(&channels_);
+  }
+  VisualFrame::DescriptorsT& descriptors =
+      aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+  descriptors = descriptors_new;
+}
+
+const Camera::ConstPtr VisualFrame::getCameraGeometry() const {
   return camera_geometry_;
 }
-void VisualFrame::setCameraGeometry(const std::shared_ptr<cameras::Camera>& camera) {
+void VisualFrame::setCameraGeometry(const Camera::Ptr& camera) {
   camera_geometry_ = camera;
 }
 

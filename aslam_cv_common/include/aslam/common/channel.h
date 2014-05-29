@@ -1,11 +1,13 @@
 #ifndef ASLAM_CV_COMMON_CHANNEL_H_
 #define ASLAM_CV_COMMON_CHANNEL_H_
 #include <string>
+#include <unordered_map>
 
 #include <aslam/common/macros.h>
 #include <aslam/common/channel-serialization.h>
 
 namespace aslam {
+namespace channels {
 class ChannelBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -44,5 +46,8 @@ class Channel : public ChannelBase{
   }
   TYPE value_;
 };
+
+typedef std::unordered_map<std::string, std::shared_ptr<ChannelBase> > ChannelGroup;
+}  // namespace channels
 }  // namespace aslam
 #endif  // ASLAM_CV_COMMON_CHANNEL_H_

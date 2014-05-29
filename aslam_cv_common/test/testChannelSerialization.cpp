@@ -23,8 +23,8 @@ class ChannelSerializationTest : public ::testing::Test {
     }
     value_a.value_.setRandom();
   }
-  aslam::Channel<MatrixType> value_a;
-  aslam::Channel<MatrixType> value_b;
+  aslam::channels::Channel<MatrixType> value_a;
+  aslam::channels::Channel<MatrixType> value_b;
 };
 
 #define MAKE_TYPE_LIST(Scalar) \

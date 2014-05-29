@@ -8,16 +8,10 @@
 #include <aslam/common/channel.h>
 #include <aslam/common/macros.h>
 
-namespace aslam {
-namespace channels {
-typedef std::unordered_map<std::string, std::shared_ptr<aslam::ChannelBase> > ChannelGroup;
-}  // namespace channels
-}  // namespace aslam
-
 #define DECLARE_CHANNEL_IMPL(NAME, TYPE)                     \
 namespace aslam {                                            \
 namespace channels {                                         \
-struct NAME : aslam::Channel<GET_TYPE(TYPE)> {               \
+struct NAME : Channel<GET_TYPE(TYPE)> {               \
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;                           \
   typedef typename GET_TYPE(TYPE) Type;                      \
   virtual std::string name() const { return #NAME; }         \
