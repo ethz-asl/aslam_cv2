@@ -7,7 +7,8 @@ catkin_simple()
 find_package(Boost REQUIRED COMPONENTS system serialization filesystem)
 
 cs_add_library(${PROJECT_NAME} src/camera.cc
-                               src/distortion.cc)
+                               src/distortion.cc
+                               src/pinhole-camera.cc)
 
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
