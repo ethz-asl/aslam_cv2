@@ -80,12 +80,11 @@ class VisualFrame  {
   /// \brief Return block expression of the keypoint measurement pointed to by index.
   const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(
       size_t index) const;
-  /// \brief Return block expression of the keypoint measurement uncertainty to
-  //         by index.
+  /// \brief Return the keypoint measurement uncertainty index.
   double getKeypointMeasurementUncertainty(size_t index) const;
-  /// \brief Return block expression of the keypoint orientation.
+  /// \brief Return the keypoint orientation at index.
   double getKeypointOrientation(size_t index) const;
-  /// \brief Return block expression of the keypoint scale to by index.
+  /// \brief Return the keypoint scale at index.
   double getKeypointScale(size_t index) const;
   /// \brief Return pointer location of the descriptor pointed to by index.
   const char* getBriskDescriptor(size_t index) const;
