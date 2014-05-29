@@ -8,6 +8,7 @@
 #include <aslam/common/channel.h>
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/macros.h>
+#include <aslam/common/unique-id.h>
 #include <Eigen/Dense>
 
 namespace aslam {
@@ -118,7 +119,14 @@ class VisualFrame  {
   /// \brief Set the camera geometry.
   void setCameraGeometry(const Camera::Ptr& camera);
 
+  /// \brief get the frame id.
+  aslam::FrameId getId() const { return id_; }
+
+  /// \brief set the frame id.
+  void setId(aslam::FrameId id) { id_ = id; }
+
  private:
+  aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
   Camera::Ptr camera_geometry_;
 };

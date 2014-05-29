@@ -17,6 +17,22 @@ bool VisualFrame::operator==(const VisualFrame& other) const {
   return same;
 }
 
+bool VisualFrame::hasKeypointMeasurements() const {
+  return aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENTS_Channel(channels_);
+}
+bool VisualFrame::hasKeypointMeasurementUncertainties() const{
+  return aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Channel(channels_);
+}
+bool VisualFrame::hasKeypointOrientations() const{
+  return aslam::channels::has_VISUAL_KEYPOINT_ORIENTATIONS_Channel(channels_);
+}
+bool VisualFrame::hasKeypointScales() const{
+  return aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_);
+}
+bool VisualFrame::hasBriskDescriptors() const{
+  return aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_);
+}
+
 const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
   return aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
 }
@@ -64,31 +80,31 @@ const Eigen::Block<Eigen::Matrix2Xd, 2, 1>
 VisualFrame::getKeypointMeasurement(size_t index) const {
   Eigen::Matrix2Xd& keypoints =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
-  CHECK_LT(index, keypoints.cols());
+  CHECK_LT(static_cast<int>(index), keypoints.cols());
   return keypoints.block<2, 1>(0, index);
 }
 double VisualFrame::getKeypointMeasurementUncertainty(size_t index) const {
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
-  CHECK_LT(index, data.cols());
+  CHECK_LT(static_cast<int>(index), data.cols());
   return data.coeff(0, index);
 }
 double VisualFrame::getKeypointScale(size_t index) const {
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-  CHECK_LT(index, data.cols());
+  CHECK_LT(static_cast<int>(index), data.cols());
   return data.coeff(0, index);
 }
 double VisualFrame::getKeypointOrientation(size_t index) const {
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
-  CHECK_LT(index, data.cols());
+  CHECK_LT(static_cast<int>(index), data.cols());
   return data.coeff(0, index);
 }
 const char* VisualFrame::getBriskDescriptor(size_t index) const {
   VisualFrame::DescriptorsT& descriptors =
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
-  CHECK_LT(index, descriptors.cols());
+  CHECK_LT(static_cast<int>(index), descriptors.cols());
   return &descriptors.coeffRef(0, index);
 }
 

@@ -33,16 +33,16 @@ class Channel : public ChannelBase{
     return value_ == other.value_;
   }
   bool serializeToString(std::string* string) const {
-    aslam::internal::serializeToString(value_, string);
+    return aslam::internal::serializeToString(value_, string);
   }
   bool serializeToBuffer(char** buffer, size_t* size) const {
-    aslam::internal::serializeToBuffer(value_, buffer, size);
+    return aslam::internal::serializeToBuffer(value_, buffer, size);
   }
   bool deSerializeFromString(const std::string& string) {
-    aslam::internal::deSerializeFromString(string, &value_);
+    return aslam::internal::deSerializeFromString(string, &value_);
   }
   bool deSerializeFromBuffer(const char* const buffer, size_t size) {
-    aslam::internal::deSerializeFromBuffer(buffer, size, &value_);
+    return aslam::internal::deSerializeFromBuffer(buffer, size, &value_);
   }
   TYPE value_;
 };

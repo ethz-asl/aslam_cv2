@@ -13,7 +13,7 @@ TEST(Channel, AddChannel) {
 aslam::channels::ChannelGroup channels;
 EXPECT_DEATH(aslam::channels::get_TEST_Data(channels), "^");
 aslam::channels::add_TEST_Channel(&channels);
-Eigen::Matrix2Xd& data = aslam::channels::get_TEST_Data(channels);
+aslam::channels::get_TEST_Data(channels);
 }
 
 TEST(Channel, DoubleAddChannelDeath) {

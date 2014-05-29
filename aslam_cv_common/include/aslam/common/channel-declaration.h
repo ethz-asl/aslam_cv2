@@ -67,6 +67,12 @@ CHANNEL_DATA_TYPE& getChannelData(const std::string& channelName,
   return derived->value_;
 }
 
+inline bool hasChannel(const std::string& channelName,
+                       const ChannelGroup& channels) {
+  ChannelGroup::const_iterator it = channels.find(channelName);
+  return it != channels.end();
+}
+
 template<typename CHANNEL_DATA_TYPE>
 CHANNEL_DATA_TYPE& addChannel(const std::string& channelName,
                               ChannelGroup* channels) {
@@ -78,12 +84,6 @@ CHANNEL_DATA_TYPE& addChannel(const std::string& channelName,
   std::shared_ptr < DerivedChannel > derived(new DerivedChannel);
   (*channels)[channelName] = derived;
   return derived->value_;
-}
-
-inline bool hasChannel(const std::string& channelName,
-                       const ChannelGroup& channels) {
-  ChannelGroup::const_iterator it = channels.find(channelName);
-  return it != channels.end();
 }
 }  // namespace channels
 }  // namespace aslam

@@ -111,10 +111,10 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
     return false;
   }
   if (ROWS != Eigen::Dynamic) {
-    CHECK_EQ(header.rows, ROWS);
+    CHECK_EQ(header.rows, static_cast<uint32_t>(ROWS));
   }
   if (COLS != Eigen::Dynamic) {
-    CHECK_EQ(header.cols, COLS);
+    CHECK_EQ(header.cols, static_cast<uint32_t>(COLS));
   }
   CHECK_EQ(header.type, MatrixScalarType<SCALAR>::value);
 
