@@ -54,7 +54,7 @@ class VisualFrame  {
   const DescriptorsT& getBriskDescriptors() const;
 
   template<typename CHANNEL_DATA_TYPE>
-  const CHANNEL_DATA_TYPE& getChannelDataByName(const std::string& channel) const {
+  const CHANNEL_DATA_TYPE& getChannelData(const std::string& channel) const {
     return aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);
   }
 
@@ -70,8 +70,7 @@ class VisualFrame  {
   DescriptorsT* getBriskDescriptorsMutable();
 
   template<typename CHANNEL_DATA_TYPE>
-  CHANNEL_DATA_TYPE* getChannelDataMutableByName(
-      const std::string& channel) const {
+  CHANNEL_DATA_TYPE* getChannelDataMutable(const std::string& channel) const {
     CHANNEL_DATA_TYPE& data =
         aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel,
                                                            channels_);
@@ -105,8 +104,8 @@ class VisualFrame  {
   void setBriskDescriptors(const DescriptorsT& descriptors);
 
   template<typename CHANNEL_DATA_TYPE>
-  void setChannelDataByName(const std::string& channel,
-                            const CHANNEL_DATA_TYPE& data_new) {
+  void setChannelData(const std::string& channel,
+                      const CHANNEL_DATA_TYPE& data_new) {
     if (!aslam::channels::hasChannel(channel, channels_)) {
       aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
     }

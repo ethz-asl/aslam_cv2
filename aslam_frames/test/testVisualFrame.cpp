@@ -122,14 +122,14 @@ TEST(Frame, NamedChannel) {
   data.setRandom();
   std::string channel_name = "test_channel";
   EXPECT_FALSE(frame.hasChannel(channel_name));
-  EXPECT_DEATH(frame.getChannelDataByName<Eigen::VectorXd>(channel_name), "^");
+  EXPECT_DEATH(frame.getChannelData<Eigen::VectorXd>(channel_name), "^");
 
   frame.addChannel<Eigen::VectorXd>(channel_name);
   EXPECT_TRUE(frame.hasChannel(channel_name));
-  frame.setChannelDataByName(channel_name, data);
+  frame.setChannelData(channel_name, data);
 
   const Eigen::VectorXd& data_2 =
-      frame.getChannelDataByName<Eigen::VectorXd>(channel_name);
+      frame.getChannelData<Eigen::VectorXd>(channel_name);
   EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 }
 
