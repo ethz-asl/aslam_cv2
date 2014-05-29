@@ -8,5 +8,10 @@ add_definitions(-std=c++11)
 
 cs_add_library(${PROJECT_NAME} src/VisualFrame.cc)
 
+catkin_add_gtest(${PROJECT_NAME}_test_frames
+  test/testVisualFrame.cpp
+)
+target_link_libraries(${PROJECT_NAME}_test_frames ${PROJECT_NAME} pthread)
+
 cs_install()
 cs_export()
