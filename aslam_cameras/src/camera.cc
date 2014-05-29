@@ -1,5 +1,4 @@
-
-#include <aslam/cameras/Camera.h>
+#include <aslam/cameras/camera.h>
 #include <glog/logging.h>
 #include <sm/PropertyTree.hpp>
 

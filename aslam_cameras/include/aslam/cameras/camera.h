@@ -46,7 +46,7 @@ class Camera {
                                      Eigen::Matrix<double, 2, 4>* out_jacobian) const = 0;
 
   /// Compute the 3d bearing vector in euclidean coordinates from the 2d image measurement.
-  virtual bool keypointToEuclidean(const Eigen::VectorXd& keypoint,
+  virtual bool keypointToEuclidean(const Eigen::Matrix<double, 2, 1>& keypoint,
                                    Eigen::Matrix<double, 3, 1>* out_point) const = 0;
 
 
@@ -66,6 +66,32 @@ class Camera {
                                      Eigen::Matrix<double, 4, 1>* out_point,
                                      Eigen::Matrix<double, 4, 2>* out_jacobian) const = 0;
 
+  /// Compute the jacobian of the image measurement w.r.t. the intrinsics.
+  virtual bool euclideanToKeypointIntrinsicsJacobian(
+      const Eigen::Matrix<double, 3, 1>& p,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const = 0;
+
+  /// Compute the jacobian of the image measurement w.r.t. the distortion.
+  virtual bool euclideanToKeypointDistortionJacobian(
+      const Eigen::Matrix<double, 3, 1>& p,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const = 0;
+
+  /// Compute the jacobian of the image measurement w.r.t. the intrinsics.
+  virtual bool homogeneousToKeypointIntrinsicsJacobian(
+      const Eigen::Matrix<double, 4, 1>& p,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const = 0;
+
+  /// Compute the jacobian of the image measurement w.r.t. the distortion.
+  virtual bool homogeneousToKeypointDistortionJacobian(
+      const Eigen::Matrix<double, 4, 1>& p,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const = 0;
+
+  // \brief creates a random valid keypoint.
+  virtual Eigen::Matrix<double, 2, 1> createRandomKeypoint() const = 0;
+
+  // \brief creates a random visible point. Negative depth means random between
+  /// 0 and 100 meters.
+  virtual Eigen::Matrix<double, 3, 1> createRandomVisiblePoint(double depth) const = 0;
 
   //////////////////////////////////////////////////////////////
   // SHUTTER SUPPORT
@@ -99,6 +125,8 @@ class Camera {
   virtual bool isEuclideanVisible(const Eigen::Matrix<double, 3, 1>& p) const = 0;
 
   virtual bool isHomogeneousVisible(const Eigen::Matrix<double, 4, 1>& ph) const = 0;
+
+  virtual bool isProjectionInvertible() const = 0;
 
   /// \brief get the camera id.
   aslam::CameraId getId() const { return id_; }

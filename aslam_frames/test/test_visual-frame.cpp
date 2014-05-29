@@ -1,8 +1,8 @@
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/eigen-helpers.h>
-#include <aslam/cameras/Camera.h>
-#include <aslam/frames/VisualFrame.h>
+#include <aslam/cameras/camera.h>
+#include <aslam/frames/visual-frame.h>
 
 TEST(Frame, SetGetCamera) {
 aslam::Camera::Ptr camera;
