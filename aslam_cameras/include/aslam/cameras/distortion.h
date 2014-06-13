@@ -4,9 +4,9 @@
 #include <Eigen/Dense>
 #include <aslam/common/macros.h>
 
-namespace sm {
-class PropertyTree;
-}
+//namespace sm {
+//class PropertyTree;
+//}
 
 namespace aslam {
 class Distortion {
@@ -14,7 +14,7 @@ class Distortion {
   ASLAM_POINTER_TYPEDEFS(Distortion);
 
   Distortion();
-  Distortion(const sm::PropertyTree& property_tree);
+//  Distortion(const sm::PropertyTree& property_tree);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Distortion);
   virtual ~Distortion();
   virtual bool operator==(const Distortion& other) const = 0;
@@ -114,7 +114,7 @@ class Distortion {
    *
    * @return The number of distortion parameters.
    */
-  virtual size_t parameterSize() const = 0;
+  //virtual size_t parameterSize() const = 0;
 
   /**
    * \brief Getter for the validity of distortion parameters.

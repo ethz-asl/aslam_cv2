@@ -7,9 +7,9 @@
 #include <Eigen/Dense>
 #include <glog/logging.h>
 
-namespace sm {
-class PropertyTree;
-}
+//namespace sm {
+//class PropertyTree;
+//}
 
 namespace aslam {
 class Camera {
@@ -18,7 +18,7 @@ class Camera {
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Camera);
 
   Camera();
-  explicit Camera(const sm::PropertyTree& property_tree);
+  //explicit Camera(const sm::PropertyTree& property_tree);
   virtual ~Camera();
 
   virtual bool operator==(const Camera& other) const;

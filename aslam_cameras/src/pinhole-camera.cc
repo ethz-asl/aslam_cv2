@@ -415,38 +415,38 @@ void PinholeProjection<DISTORTION_T>::homogeneousToKeypointDistortionJacobian(
 
 }
 
-template<typename DISTORTION_T>
-template<class Archive>
-void PinholeProjection<DISTORTION_T>::save(Archive & ar,
-                                           const unsigned int /* version */) const {
-  ar << BOOST_SERIALIZATION_NVP(_fu);
-  ar << BOOST_SERIALIZATION_NVP(_fv);
-  ar << BOOST_SERIALIZATION_NVP(_cu);
-  ar << BOOST_SERIALIZATION_NVP(_cv);
-  ar << BOOST_SERIALIZATION_NVP(_ru);
-  ar << BOOST_SERIALIZATION_NVP(_rv);
-  ar << BOOST_SERIALIZATION_NVP(_distortion);
-
-}
-
-template<typename DISTORTION_T>
-template<class Archive>
-void PinholeProjection<DISTORTION_T>::load(Archive & ar,
-                                           const unsigned int version) {
-  SM_ASSERT_LE(std::runtime_error, version,
-               (unsigned int) CLASS_SERIALIZATION_VERSION,
-               "Unsupported serialization version");
-
-  ar >> BOOST_SERIALIZATION_NVP(_fu);
-  ar >> BOOST_SERIALIZATION_NVP(_fv);
-  ar >> BOOST_SERIALIZATION_NVP(_cu);
-  ar >> BOOST_SERIALIZATION_NVP(_cv);
-  ar >> BOOST_SERIALIZATION_NVP(_ru);
-  ar >> BOOST_SERIALIZATION_NVP(_rv);
-  ar >> BOOST_SERIALIZATION_NVP(_distortion);
-
-  updateTemporaries();
-}
+//template<typename DISTORTION_T>
+//template<class Archive>
+//void PinholeProjection<DISTORTION_T>::save(Archive & ar,
+//                                           const unsigned int /* version */) const {
+//  ar << BOOST_SERIALIZATION_NVP(_fu);
+//  ar << BOOST_SERIALIZATION_NVP(_fv);
+//  ar << BOOST_SERIALIZATION_NVP(_cu);
+//  ar << BOOST_SERIALIZATION_NVP(_cv);
+//  ar << BOOST_SERIALIZATION_NVP(_ru);
+//  ar << BOOST_SERIALIZATION_NVP(_rv);
+//  ar << BOOST_SERIALIZATION_NVP(_distortion);
+//
+//}
+//
+//template<typename DISTORTION_T>
+//template<class Archive>
+//void PinholeProjection<DISTORTION_T>::load(Archive & ar,
+//                                           const unsigned int version) {
+//  SM_ASSERT_LE(std::runtime_error, version,
+//               (unsigned int) CLASS_SERIALIZATION_VERSION,
+//               "Unsupported serialization version");
+//
+//  ar >> BOOST_SERIALIZATION_NVP(_fu);
+//  ar >> BOOST_SERIALIZATION_NVP(_fv);
+//  ar >> BOOST_SERIALIZATION_NVP(_cu);
+//  ar >> BOOST_SERIALIZATION_NVP(_cv);
+//  ar >> BOOST_SERIALIZATION_NVP(_ru);
+//  ar >> BOOST_SERIALIZATION_NVP(_rv);
+//  ar >> BOOST_SERIALIZATION_NVP(_distortion);
+//
+//  updateTemporaries();
+//}
 
 // \brief creates a random valid keypoint.
 template<typename DISTORTION_T>
@@ -612,234 +612,234 @@ inline double hypot(double a, double b) {
 ///
 /// These functions were developed with the help of Lionel Heng and the excellent camodocal
 /// https://github.com/hengli/camodocal
-template<typename DISTORTION_T>
-bool PinholeProjection<DISTORTION_T>::initializeIntrinsics(const std::vector<GridCalibrationTargetObservation> &observations) {
-  SM_DEFINE_EXCEPTION(Exception, std::runtime_error);
-  SM_ASSERT_TRUE(Exception, observations.size() != 0, "Need min. one observation");
-
-  if(observations.size()>1)
-    SM_DEBUG_STREAM("pinhole camera model only supports one observation for intrinsics initialization! (using first image)");
-
-  GridCalibrationTargetObservation obs = observations[0];
-
-  using detailPinhole::square;
-  using detailPinhole::hypot;
-  if (!obs.target()) {
-    SM_ERROR("The GridCalibrationTargetObservation has no target object");
-    return false;
-  }
-
-  // First, initialize the image center at the center of the image.
-  _cu = (obs.imCols()-1.0) / 2.0;
-  _cv = (obs.imRows()-1.0) / 2.0;
-  _ru = obs.imCols();
-  _rv = obs.imRows();
-
-  _distortion.clear();
-
-  // Grab a reference to the target for easy access.
-  const GridCalibrationTargetBase & target = *obs.target();
-
-  /// Initialize some temporaries needed.
-  double gamma0 = 0.0;
-  double minReprojErr = std::numeric_limits<double>::max();
-
-  // Now we try to find a non-radial line to initialize the focal length
-  bool success = false;
-  for (size_t r = 0; r < target.rows(); ++r) {
-    // Grab all the valid corner points for this checkerboard observation
-    cv::Mat P(target.cols(), 4, CV_64F);
-    size_t count = 0;
-    for (size_t c = 0; c < target.cols(); ++c) {
-      Eigen::Vector2d imagePoint;
-      Eigen::Vector3d gridPoint;
-      if (obs.imageGridPoint(r, c, imagePoint)) {
-        double u = imagePoint[0] - _cu;
-        double v = imagePoint[1] - _cv;
-        P.at<double>(count, 0) = u;
-        P.at<double>(count, 1) = v;
-        P.at<double>(count, 2) = 0.5;
-        P.at<double>(count, 3) = -0.5 * (square(u) + square(v));
-        ++count;
-      }
-    }
-
-    const size_t MIN_CORNERS = 3;
-    // MIN_CORNERS is an arbitrary threshold for the number of corners
-    if (count > MIN_CORNERS) {
-      // Resize P to fit with the count of valid points.
-      cv::Mat C;
-      cv::SVD::solveZ(P.rowRange(0, count), C);
-
-      double t = square(C.at<double>(0)) + square(C.at<double>(1))
-          + C.at<double>(2) * C.at<double>(3);
-      if (t < 0) {
-        SM_DEBUG_STREAM("Skipping a bad SVD solution on row " << r);
-        continue;
-      }
-
-      // check that line image is not radial
-      double d = sqrt(1.0 / t);
-      double nx = C.at<double>(0) * d;
-      double ny = C.at<double>(1) * d;
-      if (hypot(nx, ny) > 0.95) {
-        SM_DEBUG_STREAM("Skipping a radial line on row " << r);
-        continue;
-      }
-
-      double nz = sqrt(1.0 - square(nx) - square(ny));
-      double gamma = fabs(C.at<double>(2) * d / nz);
-
-      SM_DEBUG_STREAM("Testing a focal length estimate of " << gamma);
-      _fu = gamma;
-      _fv = gamma;
-      updateTemporaries();
-      sm::kinematics::Transformation T_target_camera;
-      if (!estimateTransformation(obs, T_target_camera)) {
-        SM_DEBUG_STREAM(
-            "Skipping row " << r
-                << " as the transformation estimation failed.");
-        continue;
-      }
-
-      double reprojErr = 0.0;
-      size_t numReprojected = computeReprojectionError(obs, T_target_camera,
-                                                       reprojErr);
-
-      if (numReprojected > MIN_CORNERS) {
-        double avgReprojErr = reprojErr / numReprojected;
-
-        if (avgReprojErr < minReprojErr) {
-          SM_DEBUG_STREAM(
-              "Row " << r << " produced the new best estimate: " << avgReprojErr
-                  << " < " << minReprojErr);
-          minReprojErr = avgReprojErr;
-          gamma0 = gamma;
-          success = true;
-        }
-      }
-
-    }  // If this observation has enough valid corners
-    else {
-      SM_DEBUG_STREAM(
-          "Skipping row " << r << " because it only had " << count
-              << " corners. Minimum: " << MIN_CORNERS);
-    }
-  }  // For each row in the image.
-
-  _fu = gamma0;
-  _fv = gamma0;
-  updateTemporaries();
-  return success;
-}
-
-template<typename DISTORTION_T>
-size_t PinholeProjection<DISTORTION_T>::computeReprojectionError(
-    const GridCalibrationTargetObservation & obs,
-    const sm::kinematics::Transformation & T_target_camera,
-    double & outErr) const {
-  outErr = 0.0;
-  size_t count = 0;
-  sm::kinematics::Transformation T_camera_target = T_target_camera.inverse();
-
-  for (size_t i = 0; i < obs.target()->size(); ++i) {
-    Eigen::Vector2d y, yhat;
-    if (obs.imagePoint(i, y)
-        && euclideanToKeypoint(T_camera_target * obs.target()->point(i),
-                               yhat)) {
-      outErr += (y - yhat).norm();
-      ++count;
-    }
-  }
-
-  return count;
-}
-
-/// \brief estimate the transformation of the camera with respect to the calibration target
-///        On success out_T_t_c is filled in with the transformation that takes points from
-///        the camera frame to the target frame
-/// \return true on success
-template<typename DISTORTION_T>
-bool PinholeProjection<DISTORTION_T>::estimateTransformation(
-    const GridCalibrationTargetObservation & obs,
-    sm::kinematics::Transformation & out_T_t_c) const {
-
-  std::vector<cv::Point2f> Ms;
-  std::vector<cv::Point3f> Ps;
-
-  // Get the observed corners in the image and target frame
-  obs.getCornersImageFrame(Ms);
-  obs.getCornersTargetFrame(Ps);
-
-  // Convert all target corners to a fakey pinhole view.
-  size_t count = 0;
-  for (size_t i = 0; i < Ms.size(); ++i) {
-    Eigen::Vector3d targetPoint(Ps[i].x, Ps[i].y, Ps[i].z);
-    Eigen::Vector2d imagePoint(Ms[i].x, Ms[i].y);
-    Eigen::Vector3d backProjection;
-
-    if (keypointToEuclidean(imagePoint, backProjection)
-        && backProjection[2] > 0.0) {
-      double x = backProjection[0];
-      double y = backProjection[1];
-      double z = backProjection[2];
-      Ps.at(count).x = targetPoint[0];
-      Ps.at(count).y = targetPoint[1];
-      Ps.at(count).z = targetPoint[2];
-
-      Ms.at(count).x = x / z;
-      Ms.at(count).y = y / z;
-      ++count;
-    } else {
-      SM_DEBUG_STREAM(
-          "Skipping point " << i << ", point was observed: " << imagePoint
-              << ", projection success: "
-              << keypointToEuclidean(imagePoint, backProjection)
-              << ", in front of camera: " << (backProjection[2] > 0.0)
-              << "image point: " << imagePoint.transpose()
-              << ", backProjection: " << backProjection.transpose()
-              << ", camera params (fu,fv,cu,cv):" << fu() << ", " << fv()
-              << ", " << cu() << ", " << cv());
-    }
-  }
-
-  Ps.resize(count);
-  Ms.resize(count);
-
-  std::vector<double> distCoeffs(4, 0.0);
-
-  cv::Mat rvec(3, 1, CV_64F);
-  cv::Mat tvec(3, 1, CV_64F);
-
-  if (Ps.size() < 4) {
-    SM_DEBUG_STREAM(
-        "At least 4 points are needed for calling PnP. Found " << Ps.size());
-    return false;
-  }
-
-  // Call the OpenCV pnp function.
-  SM_DEBUG_STREAM(
-      "Calling solvePnP with " << Ps.size() << " world points and " << Ms.size()
-          << " image points");
-  cv::solvePnP(Ps, Ms, cv::Mat::eye(3, 3, CV_64F), distCoeffs, rvec, tvec);
-
-  // convert the rvec/tvec to a transformation
-  cv::Mat C_camera_model = cv::Mat::eye(3, 3, CV_64F);
-  Eigen::Matrix4d T_camera_model = Eigen::Matrix4d::Identity();
-  cv::Rodrigues(rvec, C_camera_model);
-  for (int r = 0; r < 3; ++r) {
-    T_camera_model(r, 3) = tvec.at<double>(r, 0);
-    for (int c = 0; c < 3; ++c) {
-      T_camera_model(r, c) = C_camera_model.at<double>(r, c);
-    }
-  }
-
-  out_T_t_c.set(T_camera_model.inverse());
-
-  SM_DEBUG_STREAM("solvePnP solution:" << out_T_t_c.T());
-
-  return true;
-}
+//template<typename DISTORTION_T>
+//bool PinholeProjection<DISTORTION_T>::initializeIntrinsics(const std::vector<GridCalibrationTargetObservation> &observations) {
+//  SM_DEFINE_EXCEPTION(Exception, std::runtime_error);
+//  SM_ASSERT_TRUE(Exception, observations.size() != 0, "Need min. one observation");
+//
+//  if(observations.size()>1)
+//    SM_DEBUG_STREAM("pinhole camera model only supports one observation for intrinsics initialization! (using first image)");
+//
+//  GridCalibrationTargetObservation obs = observations[0];
+//
+//  using detailPinhole::square;
+//  using detailPinhole::hypot;
+//  if (!obs.target()) {
+//    SM_ERROR("The GridCalibrationTargetObservation has no target object");
+//    return false;
+//  }
+//
+//  // First, initialize the image center at the center of the image.
+//  _cu = (obs.imCols()-1.0) / 2.0;
+//  _cv = (obs.imRows()-1.0) / 2.0;
+//  _ru = obs.imCols();
+//  _rv = obs.imRows();
+//
+//  _distortion.clear();
+//
+//  // Grab a reference to the target for easy access.
+//  const GridCalibrationTargetBase & target = *obs.target();
+//
+//  /// Initialize some temporaries needed.
+//  double gamma0 = 0.0;
+//  double minReprojErr = std::numeric_limits<double>::max();
+//
+//  // Now we try to find a non-radial line to initialize the focal length
+//  bool success = false;
+//  for (size_t r = 0; r < target.rows(); ++r) {
+//    // Grab all the valid corner points for this checkerboard observation
+//    cv::Mat P(target.cols(), 4, CV_64F);
+//    size_t count = 0;
+//    for (size_t c = 0; c < target.cols(); ++c) {
+//      Eigen::Vector2d imagePoint;
+//      Eigen::Vector3d gridPoint;
+//      if (obs.imageGridPoint(r, c, imagePoint)) {
+//        double u = imagePoint[0] - _cu;
+//        double v = imagePoint[1] - _cv;
+//        P.at<double>(count, 0) = u;
+//        P.at<double>(count, 1) = v;
+//        P.at<double>(count, 2) = 0.5;
+//        P.at<double>(count, 3) = -0.5 * (square(u) + square(v));
+//        ++count;
+//      }
+//    }
+//
+//    const size_t MIN_CORNERS = 3;
+//    // MIN_CORNERS is an arbitrary threshold for the number of corners
+//    if (count > MIN_CORNERS) {
+//      // Resize P to fit with the count of valid points.
+//      cv::Mat C;
+//      cv::SVD::solveZ(P.rowRange(0, count), C);
+//
+//      double t = square(C.at<double>(0)) + square(C.at<double>(1))
+//          + C.at<double>(2) * C.at<double>(3);
+//      if (t < 0) {
+//        SM_DEBUG_STREAM("Skipping a bad SVD solution on row " << r);
+//        continue;
+//      }
+//
+//      // check that line image is not radial
+//      double d = sqrt(1.0 / t);
+//      double nx = C.at<double>(0) * d;
+//      double ny = C.at<double>(1) * d;
+//      if (hypot(nx, ny) > 0.95) {
+//        SM_DEBUG_STREAM("Skipping a radial line on row " << r);
+//        continue;
+//      }
+//
+//      double nz = sqrt(1.0 - square(nx) - square(ny));
+//      double gamma = fabs(C.at<double>(2) * d / nz);
+//
+//      SM_DEBUG_STREAM("Testing a focal length estimate of " << gamma);
+//      _fu = gamma;
+//      _fv = gamma;
+//      updateTemporaries();
+//      sm::kinematics::Transformation T_target_camera;
+//      if (!estimateTransformation(obs, T_target_camera)) {
+//        SM_DEBUG_STREAM(
+//            "Skipping row " << r
+//                << " as the transformation estimation failed.");
+//        continue;
+//      }
+//
+//      double reprojErr = 0.0;
+//      size_t numReprojected = computeReprojectionError(obs, T_target_camera,
+//                                                       reprojErr);
+//
+//      if (numReprojected > MIN_CORNERS) {
+//        double avgReprojErr = reprojErr / numReprojected;
+//
+//        if (avgReprojErr < minReprojErr) {
+//          SM_DEBUG_STREAM(
+//              "Row " << r << " produced the new best estimate: " << avgReprojErr
+//                  << " < " << minReprojErr);
+//          minReprojErr = avgReprojErr;
+//          gamma0 = gamma;
+//          success = true;
+//        }
+//      }
+//
+//    }  // If this observation has enough valid corners
+//    else {
+//      SM_DEBUG_STREAM(
+//          "Skipping row " << r << " because it only had " << count
+//              << " corners. Minimum: " << MIN_CORNERS);
+//    }
+//  }  // For each row in the image.
+//
+//  _fu = gamma0;
+//  _fv = gamma0;
+//  updateTemporaries();
+//  return success;
+//}
+//
+//template<typename DISTORTION_T>
+//size_t PinholeProjection<DISTORTION_T>::computeReprojectionError(
+//    const GridCalibrationTargetObservation & obs,
+//    const sm::kinematics::Transformation & T_target_camera,
+//    double & outErr) const {
+//  outErr = 0.0;
+//  size_t count = 0;
+//  sm::kinematics::Transformation T_camera_target = T_target_camera.inverse();
+//
+//  for (size_t i = 0; i < obs.target()->size(); ++i) {
+//    Eigen::Vector2d y, yhat;
+//    if (obs.imagePoint(i, y)
+//        && euclideanToKeypoint(T_camera_target * obs.target()->point(i),
+//                               yhat)) {
+//      outErr += (y - yhat).norm();
+//      ++count;
+//    }
+//  }
+//
+//  return count;
+//}
+//
+///// \brief estimate the transformation of the camera with respect to the calibration target
+/////        On success out_T_t_c is filled in with the transformation that takes points from
+/////        the camera frame to the target frame
+///// \return true on success
+//template<typename DISTORTION_T>
+//bool PinholeProjection<DISTORTION_T>::estimateTransformation(
+//    const GridCalibrationTargetObservation & obs,
+//    sm::kinematics::Transformation & out_T_t_c) const {
+//
+//  std::vector<cv::Point2f> Ms;
+//  std::vector<cv::Point3f> Ps;
+//
+//  // Get the observed corners in the image and target frame
+//  obs.getCornersImageFrame(Ms);
+//  obs.getCornersTargetFrame(Ps);
+//
+//  // Convert all target corners to a fakey pinhole view.
+//  size_t count = 0;
+//  for (size_t i = 0; i < Ms.size(); ++i) {
+//    Eigen::Vector3d targetPoint(Ps[i].x, Ps[i].y, Ps[i].z);
+//    Eigen::Vector2d imagePoint(Ms[i].x, Ms[i].y);
+//    Eigen::Vector3d backProjection;
+//
+//    if (keypointToEuclidean(imagePoint, backProjection)
+//        && backProjection[2] > 0.0) {
+//      double x = backProjection[0];
+//      double y = backProjection[1];
+//      double z = backProjection[2];
+//      Ps.at(count).x = targetPoint[0];
+//      Ps.at(count).y = targetPoint[1];
+//      Ps.at(count).z = targetPoint[2];
+//
+//      Ms.at(count).x = x / z;
+//      Ms.at(count).y = y / z;
+//      ++count;
+//    } else {
+//      SM_DEBUG_STREAM(
+//          "Skipping point " << i << ", point was observed: " << imagePoint
+//              << ", projection success: "
+//              << keypointToEuclidean(imagePoint, backProjection)
+//              << ", in front of camera: " << (backProjection[2] > 0.0)
+//              << "image point: " << imagePoint.transpose()
+//              << ", backProjection: " << backProjection.transpose()
+//              << ", camera params (fu,fv,cu,cv):" << fu() << ", " << fv()
+//              << ", " << cu() << ", " << cv());
+//    }
+//  }
+//
+//  Ps.resize(count);
+//  Ms.resize(count);
+//
+//  std::vector<double> distCoeffs(4, 0.0);
+//
+//  cv::Mat rvec(3, 1, CV_64F);
+//  cv::Mat tvec(3, 1, CV_64F);
+//
+//  if (Ps.size() < 4) {
+//    SM_DEBUG_STREAM(
+//        "At least 4 points are needed for calling PnP. Found " << Ps.size());
+//    return false;
+//  }
+//
+//  // Call the OpenCV pnp function.
+//  SM_DEBUG_STREAM(
+//      "Calling solvePnP with " << Ps.size() << " world points and " << Ms.size()
+//          << " image points");
+//  cv::solvePnP(Ps, Ms, cv::Mat::eye(3, 3, CV_64F), distCoeffs, rvec, tvec);
+//
+//  // convert the rvec/tvec to a transformation
+//  cv::Mat C_camera_model = cv::Mat::eye(3, 3, CV_64F);
+//  Eigen::Matrix4d T_camera_model = Eigen::Matrix4d::Identity();
+//  cv::Rodrigues(rvec, C_camera_model);
+//  for (int r = 0; r < 3; ++r) {
+//    T_camera_model(r, 3) = tvec.at<double>(r, 0);
+//    for (int c = 0; c < 3; ++c) {
+//      T_camera_model(r, c) = C_camera_model.at<double>(r, c);
+//    }
+//  }
+//
+//  out_T_t_c.set(T_camera_model.inverse());
+//
+//  SM_DEBUG_STREAM("solvePnP solution:" << out_T_t_c.T());
+//
+//  return true;
+//}
 
 }  // namespace cameras
 

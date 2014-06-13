@@ -1,17 +1,17 @@
 #ifndef ASLAM_CAMERAS_PINHOLE_PROJECTION_HPP
 #define ASLAM_CAMERAS_PINHOLE_PROJECTION_HPP
 
-#include "StaticAssert.hpp"
-#include <boost/serialization/nvp.hpp>
-#include <sm/PropertyTree.hpp>
-#include <boost/serialization/split_member.hpp>
-#include <boost/serialization/version.hpp>
-#include <sm/boost/serialization.hpp>
+//#include "StaticAssert.hpp"
+//#include <boost/serialization/nvp.hpp>
+//#include <sm/PropertyTree.hpp>
+//#include <boost/serialization/split_member.hpp>
+//#include <boost/serialization/version.hpp>
+//#include <sm/boost/serialization.hpp>
 #include <sm/kinematics/Transformation.hpp>
-#include <aslam/cameras/GridCalibrationTargetObservation.hpp>
+//#include <aslam/cameras/GridCalibrationTargetObservation.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/core/eigen.hpp>
-#include <sm/logging.hpp>
+//#include <sm/logging.hpp>
 
 namespace aslam {
 namespace cameras {
@@ -46,7 +46,7 @@ class PinholeProjection {
                     double imageCenterU, double imageCenterV, int resolutionU,
                     int resolutionV);
 
-  PinholeProjection(const sm::PropertyTree & config);
+  //PinholeProjection(const sm::PropertyTree & config);
 
   /// \brief destructor.
   virtual ~PinholeProjection();
@@ -126,14 +126,14 @@ class PinholeProjection {
   void setParameters(const Eigen::MatrixXd & P);
   Eigen::Vector2i parameterSize() const;
 
-  enum {
-    CLASS_SERIALIZATION_VERSION = 0
-  };BOOST_SERIALIZATION_SPLIT_MEMBER();
-
-  template<class Archive>
-  void load(Archive & ar, const unsigned int version);
-  template<class Archive>
-  void save(Archive & ar, const unsigned int version) const;
+//  enum {
+//    CLASS_SERIALIZATION_VERSION = 0
+//  };BOOST_SERIALIZATION_SPLIT_MEMBER();
+//
+//  template<class Archive>
+//  void load(Archive & ar, const unsigned int version);
+//  template<class Archive>
+//  void save(Archive & ar, const unsigned int version) const;
 
   // \brief creates a random valid keypoint.
   virtual Eigen::VectorXd createRandomKeypoint() const;
@@ -226,21 +226,21 @@ class PinholeProjection {
 
   /// \brief initialize the intrinsics based on a list of views of a gridded calibration target
   /// \return true on success
-  bool initializeIntrinsics(const std::vector<GridCalibrationTargetObservation> &observations);
-
-  /// \brief compute the reprojection error based on a checkerboard observation.
-  /// \return the number of corners successfully observed and projected
-  size_t computeReprojectionError(
-      const GridCalibrationTargetObservation & obs,
-      const sm::kinematics::Transformation & T_target_camera,
-      double & outErr) const;
-
-  /// \brief estimate the transformation of the camera with respect to the calibration target
-  ///        On success out_T_t_c is filled in with the transformation that takes points from
-  ///        the camera frame to the target frame
-  /// \return true on success
-  bool estimateTransformation(const GridCalibrationTargetObservation & obs,
-                              sm::kinematics::Transformation & out_T_t_c) const;
+//  bool initializeIntrinsics(const std::vector<GridCalibrationTargetObservation> &observations);
+//
+//  /// \brief compute the reprojection error based on a checkerboard observation.
+//  /// \return the number of corners successfully observed and projected
+//  size_t computeReprojectionError(
+//      const GridCalibrationTargetObservation & obs,
+//      const sm::kinematics::Transformation & T_target_camera,
+//      double & outErr) const;
+//
+//  /// \brief estimate the transformation of the camera with respect to the calibration target
+//  ///        On success out_T_t_c is filled in with the transformation that takes points from
+//  ///        the camera frame to the target frame
+//  /// \return true on success
+//  bool estimateTransformation(const GridCalibrationTargetObservation & obs,
+//                              sm::kinematics::Transformation & out_T_t_c) const;
 
  private:
   void updateTemporaries();
@@ -270,8 +270,8 @@ class PinholeProjection {
 }  // namespace cameras
 }  // namespace aslam
 
-#include "implementation/PinholeProjection.hpp"
+//#include "implementation/PinholeProjection.hpp"
 
-SM_BOOST_CLASS_VERSION_T1 (aslam::cameras::PinholeProjection);
+//SM_BOOST_CLASS_VERSION_T1 (aslam::cameras::PinholeProjection);
 
 #endif /* ASLAM_CAMERAS_PINHOLE_PROJECTION_HPP */
