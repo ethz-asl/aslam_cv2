@@ -26,7 +26,7 @@ class PinholeCamera : public Camera {
   PinholeCamera(double focalLengthU, double focalLengthV,
                 double imageCenterU, double imageCenterV, int resolutionU,
                 int resolutionV);
-  PinholeCamera(const sm::PropertyTree& config);
+//  PinholeCamera(const sm::PropertyTree& config);
 
   virtual ~PinholeCamera();
 

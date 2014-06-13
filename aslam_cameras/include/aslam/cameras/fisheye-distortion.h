@@ -1,18 +1,16 @@
-#ifndef TEST_FISHEYE_DISTORTION_H_
-#define TEST_FISHEYE_DISTORTION_H_
+#ifndef FISHEYE_DISTORTION_H_
+#define FISHEYE_DISTORTION_H_
 
-#include <ceres/ceres.h>
 #include <Eigen/Core>
 #include <glog/logging.h>
-
 #include <aslam/cameras/distortion.h>
 
 namespace aslam {
 
-class TestFisheyeDistortion : public aslam::Distortion {
+class FisheyeDistortion : public aslam::Distortion {
  public:
-  explicit TestFisheyeDistortion(double w) : w_(w) {}
-  explicit TestFisheyeDistortion(const Eigen::VectorXd& params) {
+  explicit FisheyeDistortion(double w) : w_(w) {}
+  explicit FisheyeDistortion(const Eigen::VectorXd& params) {
     setParameters(params);
   }
 
@@ -30,6 +28,12 @@ class TestFisheyeDistortion : public aslam::Distortion {
 
   void setParameters(const Eigen::VectorXd& parameters) {
     w_ = parameters(0);
+  }
+
+  virtual void getParameters(Eigen::VectorXd* params) const {
+    CHECK_NOTNULL(params);
+    params->resize(1);
+    (*params)(0) = w_;
   }
 
   inline double* getParametersMutable() {
@@ -53,18 +57,21 @@ class TestFisheyeDistortion : public aslam::Distortion {
       Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const;
 
   virtual bool operator==(const aslam::Distortion& other) const {
+    // TODO(dymczykm) what should we do here if we need to implement method
+    // comparing it to base reference, cast?
+    return false;
   }
 
-  virtual void distort(const Eigen::Matrix<double, 2, 1>*) const {}
-  virtual void distort(const Eigen::Matrix<double, 2, 1>&,
-                       Eigen::Matrix<double, 2, 1>*) const {}
-  virtual void undistort(Eigen::Matrix<double, 2, 1>*) const {}
-  virtual void update(const double*) {}
+  virtual void distort(const Eigen::Matrix<double, 2, 1>* y) const;
 
-  virtual void getParameters(Eigen::VectorXd* params) const {
-    CHECK_NOTNULL(params);
-    params->resize(1);
-    (*params)(0) = w_;
+  virtual void distort(const Eigen::Matrix<double, 2, 1>& y,
+                       Eigen::Matrix<double, 2, 1>* outPoint) const;
+
+  virtual void undistort(Eigen::Matrix<double, 2, 1>*) const {
+    CHECK(false);
+  }
+  virtual void update(const double*) {
+    CHECK(false);
   }
 
   virtual bool distortionParametersValid() const {
@@ -80,4 +87,4 @@ class TestFisheyeDistortion : public aslam::Distortion {
 
 #include "fisheye-distortion-inl.h"
 
-#endif /* TEST_FISHEYE_DISTORTION_H_ */
+#endif /* FISHEYE_DISTORTION_H_ */

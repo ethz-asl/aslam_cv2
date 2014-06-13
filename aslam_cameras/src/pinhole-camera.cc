@@ -12,22 +12,22 @@ PinholeCamera::PinholeCamera()
   updateTemporaries();
 }
 
-PinholeCamera::PinholeCamera(
-    const sm::PropertyTree & config)
-: Camera(config) {
-  _fu = config.getDouble("fu");
-  _fv = config.getDouble("fv");
-  _cu = config.getDouble("cu");
-  _cv = config.getDouble("cv");
-  _ru = config.getInt("ru");
-  _rv = config.getInt("rv");
-
-  //TODO(slynen): Load and instantiate correct distortion here.
-  // distortion.(config, "distortion")
-  CHECK(false) << "Loading of distortion from property tree not implemented.";
-
-  updateTemporaries();
-}
+//PinholeCamera::PinholeCamera(
+//    const sm::PropertyTree & config)
+//: Camera(config) {
+//  _fu = config.getDouble("fu");
+//  _fv = config.getDouble("fv");
+//  _cu = config.getDouble("cu");
+//  _cv = config.getDouble("cv");
+//  _ru = config.getInt("ru");
+//  _rv = config.getInt("rv");
+//
+//  //TODO(slynen): Load and instantiate correct distortion here.
+//  // distortion.(config, "distortion")
+//  CHECK(false) << "Loading of distortion from property tree not implemented.";
+//
+//  updateTemporaries();
+//}
 
 PinholeCamera::PinholeCamera(double focalLengthU,
                              double focalLengthV,

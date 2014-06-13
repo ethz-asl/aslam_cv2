@@ -114,6 +114,7 @@ class Distortion {
    *
    * @return The number of distortion parameters.
    */
+  // TODO(dymczykm) must be constexpr
   //virtual size_t parameterSize() const = 0;
 
   /**

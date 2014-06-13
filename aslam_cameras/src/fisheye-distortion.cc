@@ -1,11 +1,27 @@
-#include "test_cv_implementation/fisheye-distortion.h"
+#include "aslam/cameras/fisheye-distortion.h"
 
 namespace aslam {
 
-void TestFisheyeDistortion::distort(
+void FisheyeDistortion::distort(const Eigen::Matrix<double, 2, 1>* y) const {
+  CHECK_NOTNULL(y);
+  Eigen::Matrix2Xd outJy;
+  distort(y, &outJy);
+}
+
+void FisheyeDistortion::distort(const Eigen::Matrix<double, 2, 1>& y,
+                                Eigen::Matrix<double, 2, 1>* outPoint) const {
+  CHECK_NOTNULL(outPoint);
+  *outPoint = y;
+  Eigen::Matrix2Xd outJy;
+  distort(outPoint, &outJy);
+}
+
+void FisheyeDistortion::distort(
     const Eigen::Matrix<double, 2, 1>* point,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const {
+  CHECK_NOTNULL(point);
   CHECK_NOTNULL(outJy);
+
   const double r_u = point->norm();
   const double r_u_cubed = r_u * r_u * r_u;
   const double tanwhalf = tan(w_ / 2.);
@@ -50,7 +66,7 @@ void TestFisheyeDistortion::distort(
   *const_cast<Eigen::Matrix<double, 2, 1>*>(point) *= r_rd;
 }
 
-void TestFisheyeDistortion::undistort(
+void FisheyeDistortion::undistort(
     Eigen::Matrix<double, 2, 1>* y,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const {
   CHECK_NOTNULL(y);
@@ -59,7 +75,7 @@ void TestFisheyeDistortion::undistort(
   // TODO(dymczykm) will be needed for tests
 }
 
-void TestFisheyeDistortion::distortParameterJacobian(
+void FisheyeDistortion::distortParameterJacobian(
     Eigen::Matrix<double, 2, 1>* imageY,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const {
   CHECK_NOTNULL(outJd);

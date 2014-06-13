@@ -1,12 +1,14 @@
-#ifndef TEST_FISHEYE_DISTORTION_INL_H_
-#define TEST_FISHEYE_DISTORTION_INL_H_
+#ifndef FISHEYE_DISTORTION_INL_H_
+#define FISHEYE_DISTORTION_INL_H_
 
-#include <Eigen/Core>
+// TODO(dymczykm) it would be better (if not necessary) to drop
+// ceres here
+#include <ceres/ceres.h>
 
 namespace aslam {
 
 template <typename ScalarType>
-void TestFisheyeDistortion::distort(
+void FisheyeDistortion::distort(
     Eigen::Matrix<ScalarType, 2, 1>* keypoint) const {
   CHECK_NOTNULL(keypoint);
 
@@ -34,7 +36,7 @@ void TestFisheyeDistortion::distort(
 }
 
 template <typename ScalarType>
-void TestFisheyeDistortion::undistort(
+void FisheyeDistortion::undistort(
     Eigen::Matrix<ScalarType, 2, 1>* y) const {
   CHECK_NOTNULL(y);
 
@@ -44,4 +46,4 @@ void TestFisheyeDistortion::undistort(
 
 } // namespace aslam
 
-#endif /* TEST_FISHEYE_DISTORTION_INL_H_ */
+#endif /* FISHEYE_DISTORTION_INL_H_ */
