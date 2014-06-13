@@ -1,28 +1,15 @@
-#ifndef ASLAM_CAMERAS_PINHOLE_PROJECTION_HPP
-#define ASLAM_CAMERAS_PINHOLE_PROJECTION_HPP
-
-//#include "StaticAssert.hpp"
-//#include <boost/serialization/nvp.hpp>
-//#include <sm/PropertyTree.hpp>
-//#include <boost/serialization/split_member.hpp>
-//#include <boost/serialization/version.hpp>
-//#include <sm/boost/serialization.hpp>
-#include <sm/kinematics/Transformation.hpp>
-//#include <aslam/cameras/GridCalibrationTargetObservation.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/core/eigen.hpp>
-//#include <sm/logging.hpp>
+#ifndef ASLAM_CAMERAS_PINHOLE_CAMERA_H_
+#define ASLAM_CAMERAS_PINHOLE_CAMERA_H_
+#include <aslam/cameras/camera.h>
+#include <aslam/cameras/distortion.h>
+#include <aslam/common/macros.h>
 
 namespace aslam {
-namespace cameras {
-
-template<typename DISTORTION_T>
-class PinholeProjection {
+class PinholeCamera : public Camera {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  enum {
-    KeypointDimension = 2
-  };
+  ASLAM_POINTER_TYPEDEFS(PinholeCamera);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(PinholeCamera);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
   enum {
     IntrinsicsDimension = 4
@@ -31,138 +18,103 @@ class PinholeProjection {
     DesignVariableDimension = IntrinsicsDimension
   };
 
-  typedef DISTORTION_T distortion_t;
-  typedef Eigen::Matrix<double, KeypointDimension, 1> keypoint_t;
-  typedef Eigen::Matrix<double, KeypointDimension, IntrinsicsDimension> jacobian_intrinsics_t;
+  PinholeCamera();
+  PinholeCamera(double focalLengthU, double focalLengthV,
+                double imageCenterU, double imageCenterV, int resolutionU,
+                int resolutionV, aslam::Distortion::Ptr distortion);
 
-  /// \brief Default constructor
-  PinholeProjection();
+  PinholeCamera(double focalLengthU, double focalLengthV,
+                double imageCenterU, double imageCenterV, int resolutionU,
+                int resolutionV);
+  PinholeCamera(const sm::PropertyTree& config);
 
-  PinholeProjection(double focalLengthU, double focalLengthV,
-                    double imageCenterU, double imageCenterV, int resolutionU,
-                    int resolutionV, distortion_t distortion);
+  virtual ~PinholeCamera();
 
-  PinholeProjection(double focalLengthU, double focalLengthV,
-                    double imageCenterU, double imageCenterV, int resolutionU,
-                    int resolutionV);
+  /// Project a point expressed in euclidean coordinates to a 2d image measurement.
+  virtual bool euclideanToKeypoint(const Eigen::Vector3d& point,
+                                   Eigen::Matrix<double, 2, 1>* out_point) const;
+  /// Project a point expressed in euclidean coordinates to a 2d image measurement
+  /// and calculate the relevant jacobian.
+  virtual bool euclideanToKeypoint(const Eigen::Vector3d & point,
+                                   Eigen::Matrix<double, 2, 1>* out_point,
+                                   Eigen::Matrix<double, 2, 3>* out_jacobian) const;
 
-  //PinholeProjection(const sm::PropertyTree & config);
+  /// Project a point expressed in homogenous coordinates to a 2d image measurement.
+  virtual bool homogeneousToKeypoint(const Eigen::Vector4d& homogeneous_point,
+                                     Eigen::Matrix<double, 2, 1>* out_point) const;
 
-  /// \brief destructor.
-  virtual ~PinholeProjection();
+  /// Project a point expressed in homogenous coordinates to a 2d image measurement
+  /// and calculate the relevant jacobian.
+  virtual bool homogeneousToKeypoint(const Eigen::Vector4d & homogeneous_point,
+                                     Eigen::Matrix<double, 2, 1>* out_point,
+                                     Eigen::Matrix<double, 2, 4>* out_jacobian) const;
 
-  template<typename DERIVED_P, typename DERIVED_K>
-  bool euclideanToKeypoint(
-      const Eigen::MatrixBase<DERIVED_P> & p,
-      const Eigen::MatrixBase<DERIVED_K> & outKeypoint) const;
+  /// Compute the 3d bearing vector in euclidean coordinates from the 2d image measurement.
+  virtual bool keypointToEuclidean(const Eigen::Matrix<double, 2, 1>& keypoint,
+                                   Eigen::Matrix<double, 3, 1>* out_point) const;
 
-  template<typename DERIVED_P, typename DERIVED_K, typename DERIVED_JP>
-  bool euclideanToKeypoint(const Eigen::MatrixBase<DERIVED_P> & p,
-                           const Eigen::MatrixBase<DERIVED_K> & outKeypoint,
-                           const Eigen::MatrixBase<DERIVED_JP> & outJp) const;
 
-  template<typename DERIVED_P, typename DERIVED_K>
-  bool homogeneousToKeypoint(
-      const Eigen::MatrixBase<DERIVED_P> & p,
-      const Eigen::MatrixBase<DERIVED_K> & outKeypoint) const;
+  /// Compute the 3d bearing vector in euclidean coordinates and the relevant jacobian
+  /// from the 2d image measurement.
+  virtual bool keypointToEuclidean(const Eigen::Vector2d& keypoint,
+                                   Eigen::Matrix<double, 3, 1>* out_point,
+                                   Eigen::Matrix<double, 3, 2>* out_jacobian) const;
 
-  template<typename DERIVED_P, typename DERIVED_K, typename DERIVED_JP>
-  bool homogeneousToKeypoint(const Eigen::MatrixBase<DERIVED_P> & p,
-                             const Eigen::MatrixBase<DERIVED_K> & outKeypoint,
-                             const Eigen::MatrixBase<DERIVED_JP> & outJp) const;
+  /// Compute the 3d bearing vector in homogenous coordinates from the 2d image measurement.
+  virtual bool keypointToHomogeneous(Eigen::Vector2d const& keypoint,
+                                     Eigen::Matrix<double, 4, 1>* out_point) const;
 
-  template<typename DERIVED_K, typename DERIVED_P>
-  bool keypointToEuclidean(const Eigen::MatrixBase<DERIVED_K> & keypoint,
-                           const Eigen::MatrixBase<DERIVED_P> & outPoint) const;
+  /// Compute the 3d bearing vector in homogeneous coordinates and the relevant
+  /// jacobian from the 2d image measurement.
+  virtual bool keypointToHomogeneous(Eigen::Vector2d const& keypoint,
+                                     Eigen::Matrix<double, 4, 1>* out_point,
+                                     Eigen::Matrix<double, 4, 2>* out_jacobian) const;
 
-  template<typename DERIVED_K, typename DERIVED_P, typename DERIVED_JK>
-  bool keypointToEuclidean(const Eigen::MatrixBase<DERIVED_K> & keypoint,
-                           const Eigen::MatrixBase<DERIVED_P> & outPoint,
-                           const Eigen::MatrixBase<DERIVED_JK> & outJk) const;
+  virtual bool euclideanToKeypointIntrinsicsJacobian(
+      const Eigen::Matrix<double, 3, 1>& p,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
 
-  template<typename DERIVED_K, typename DERIVED_P>
-  bool keypointToHomogeneous(
-      const Eigen::MatrixBase<DERIVED_K> & keypoint,
-      const Eigen::MatrixBase<DERIVED_P> & outPoint) const;
+  virtual bool euclideanToKeypointDistortionJacobian(
+      const Eigen::Matrix<double, 3, 1>& p,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const;
 
-  template<typename DERIVED_K, typename DERIVED_P, typename DERIVED_JK>
-  bool keypointToHomogeneous(const Eigen::MatrixBase<DERIVED_K> & keypoint,
-                             const Eigen::MatrixBase<DERIVED_P> & outPoint,
-                             const Eigen::MatrixBase<DERIVED_JK> & outJk) const;
+  virtual bool homogeneousToKeypointIntrinsicsJacobian(
+      const Eigen::Matrix<double, 4, 1>& p,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
 
-  template<typename DERIVED_P, typename DERIVED_JI>
-  void euclideanToKeypointIntrinsicsJacobian(
-      const Eigen::MatrixBase<DERIVED_P> & p,
-      const Eigen::MatrixBase<DERIVED_JI> & outJi) const;
+  virtual bool homogeneousToKeypointDistortionJacobian(
+      const Eigen::Matrix<double, 4, 1>& p,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const;
 
-  template<typename DERIVED_P, typename DERIVED_JD>
-  void euclideanToKeypointDistortionJacobian(
-      const Eigen::MatrixBase<DERIVED_P> & p,
-      const Eigen::MatrixBase<DERIVED_JD> & outJd) const;
+  virtual bool operator==(const PinholeCamera& other) const;
 
-  template<typename DERIVED_P, typename DERIVED_JI>
-  void homogeneousToKeypointIntrinsicsJacobian(
-      const Eigen::MatrixBase<DERIVED_P> & p,
-      const Eigen::MatrixBase<DERIVED_JI> & outJi) const;
-
-  template<typename DERIVED_P, typename DERIVED_JD>
-  void homogeneousToKeypointDistortionJacobian(
-      const Eigen::MatrixBase<DERIVED_P> & p,
-      const Eigen::MatrixBase<DERIVED_JD> & outJd) const;
-
-  template<typename DERIVED_K>
-  bool isValid(const Eigen::MatrixBase<DERIVED_K> & keypoint) const;
-
-  template<typename DERIVED_P>
-  bool isEuclideanVisible(const Eigen::MatrixBase<DERIVED_P> & p) const;
-
-  template<typename DERIVED_P>
-  bool isHomogeneousVisible(const Eigen::MatrixBase<DERIVED_P> & ph) const;
-
-  // aslam::backend compatibility
-  void update(const double * v);
-  int minimalDimensions() const;
-  void getParameters(Eigen::MatrixXd & P) const;
-  void setParameters(const Eigen::MatrixXd & P);
-  Eigen::Vector2i parameterSize() const;
-
-//  enum {
-//    CLASS_SERIALIZATION_VERSION = 0
-//  };BOOST_SERIALIZATION_SPLIT_MEMBER();
-//
-//  template<class Archive>
-//  void load(Archive & ar, const unsigned int version);
-//  template<class Archive>
-//  void save(Archive & ar, const unsigned int version) const;
-
-  // \brief creates a random valid keypoint.
-  virtual Eigen::VectorXd createRandomKeypoint() const;
-
-  // \brief creates a random visible point. Negative depth means random between 0 and 100 meters.
-  virtual Eigen::Vector3d createRandomVisiblePoint(double depth = -1.0) const;
-
-  bool isProjectionInvertible() const {
-    return false;
+  /// \brief The horizontal resolution in pixels.
+  virtual uint32_t imageWidth() const {
+    return _ru;
+  }
+  /// \brief The vertical resolution in pixels.
+  virtual uint32_t imageHeight() const {
+    return _rv;
   }
 
-  void setDistortion(const distortion_t & distortion) {
+
+  void setDistortion(const aslam::Distortion::Ptr& distortion) {
     _distortion = distortion;
   }
-  distortion_t & distortion() {
-    return _distortion;
-  }
-  ;
-  const distortion_t & distortion() const {
-    return _distortion;
-  }
-  ;
 
-  Eigen::Matrix3d getCameraMatrix() {
+  aslam::Distortion::Ptr& distortion() {
+    return _distortion;
+  }
+
+  const aslam::Distortion::Ptr distortion() const {
+    return _distortion;
+  }
+
+  Eigen::Matrix3d getCameraMatrix() const {
     Eigen::Matrix3d K;
     K << _fu, 0.0, _cu, 0.0, _fv, _cv, 0.0, 0.0, 1.0;
     return K;
   }
-  ;
 
   double focalLengthCol() const {
     return _fu;
@@ -201,50 +153,61 @@ class PinholeProjection {
   int rv() const {
     return _rv;
   }
-  /// \brief The horizontal resolution in pixels.
-  int width() const {
-    return _ru;
-  }
-  /// \brief The vertical resolution in pixels.
-  int height() const {
-    return _rv;
+
+  // \brief creates a random valid keypoint.
+  virtual Eigen::Matrix<double, 2, 1> createRandomKeypoint() const;
+
+  // \brief creates a random visible point. Negative depth means random between 0 and 100 meters.
+  virtual Eigen::Matrix<double, 3, 1> createRandomVisiblePoint(double depth) const;
+
+  //////////////////////////////////////////////////////////////
+  // VALIDITY TESTING
+  //////////////////////////////////////////////////////////////
+  virtual bool isProjectionInvertible() const {
+    return false;
   }
 
-  int keypointDimension() const {
-    return KeypointDimension;
-  }
+  virtual bool isValid(const Eigen::Matrix<double, 2, 1>& keypoint) const;
 
-  bool isBinaryEqual(const PinholeProjection<distortion_t> & rhs) const;
+  virtual bool isEuclideanVisible(const Eigen::Matrix<double, 3, 1>& p) const;
 
-  static PinholeProjection<distortion_t> getTestProjection();
+  virtual bool isHomogeneousVisible(const Eigen::Matrix<double, 4, 1>& ph) const;
+
+  virtual void update(const double* v);
+  virtual int minimalDimensions() const;
+  virtual void getParameters(Eigen::MatrixXd & P) const;
+  virtual void setParameters(const Eigen::MatrixXd & P);
+  virtual Eigen::Vector2i parameterSize() const;
 
   /// \brief resize the intrinsics based on a scaling of the image.
-  void resizeIntrinsics(double scale);
+  virtual void resizeIntrinsics(double scale);
 
   /// \brief Get a set of border rays
-  void getBorderRays(Eigen::MatrixXd & rays);
+  virtual void getBorderRays(Eigen::MatrixXd & rays);
 
+  // TODO(slynen): Reintegrate once we have the calibration targets.
+/*
   /// \brief initialize the intrinsics based on a list of views of a gridded calibration target
   /// \return true on success
-//  bool initializeIntrinsics(const std::vector<GridCalibrationTargetObservation> &observations);
-//
-//  /// \brief compute the reprojection error based on a checkerboard observation.
-//  /// \return the number of corners successfully observed and projected
-//  size_t computeReprojectionError(
-//      const GridCalibrationTargetObservation & obs,
-//      const sm::kinematics::Transformation & T_target_camera,
-//      double & outErr) const;
-//
-//  /// \brief estimate the transformation of the camera with respect to the calibration target
-//  ///        On success out_T_t_c is filled in with the transformation that takes points from
-//  ///        the camera frame to the target frame
-//  /// \return true on success
-//  bool estimateTransformation(const GridCalibrationTargetObservation & obs,
-//                              sm::kinematics::Transformation & out_T_t_c) const;
+  virtual bool initializeIntrinsics(const std::vector<GridCalibrationTargetObservation> &observations);
+
+  /// \brief compute the reprojection error based on a checkerboard observation.
+  /// \return the number of corners successfully observed and projected
+  virtual size_t computeReprojectionError(
+      const GridCalibrationTargetObservation & obs,
+      const sm::kinematics::Transformation & T_target_camera,
+      double & outErr) const;
+
+  /// \brief estimate the transformation of the camera with respect to the calibration target
+  ///        On success out_T_t_c is filled in with the transformation that takes points from
+  ///        the camera frame to the target frame
+  /// \return true on success
+  virtual bool estimateTransformation(const GridCalibrationTargetObservation & obs,
+                                      sm::kinematics::Transformation & out_T_t_c) const;
+*/
 
  private:
   void updateTemporaries();
-
   /// \brief The horizontal focal length in pixels.
   double _fu;
   /// \brief The vertical focal length in pixels.
@@ -263,15 +226,8 @@ class PinholeProjection {
   double _recip_fv;
   double _fu_over_fv;
 
-  distortion_t _distortion;
-
+  /// \brief The distortion of this camera.
+  aslam::Distortion::Ptr _distortion;
 };
-
-}  // namespace cameras
 }  // namespace aslam
-
-//#include "implementation/PinholeProjection.hpp"
-
-//SM_BOOST_CLASS_VERSION_T1 (aslam::cameras::PinholeProjection);
-
-#endif /* ASLAM_CAMERAS_PINHOLE_PROJECTION_HPP */
+#endif  // ASLAM_CAMERAS_PINHOLE_CAMERA_H_
