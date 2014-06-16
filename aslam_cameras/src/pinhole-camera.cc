@@ -240,7 +240,7 @@ bool PinholeCamera::euclideanToKeypointIntrinsicsJacobian(
     const Eigen::Matrix<double, 3, 1>& p,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const {
   CHECK_NOTNULL(outJi);
-  outJi->resize(Eigen::NoChange, 4);
+  outJi->resize(Eigen::NoChange, this->parameterCount());
   Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJi;
   J.setZero();
 
@@ -263,7 +263,7 @@ bool PinholeCamera::euclideanToKeypointDistortionJacobian(
     const Eigen::Matrix<double, 3, 1>& p,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const {
   CHECK_NOTNULL(outJd);
-  outJd->resize(Eigen::NoChange, 4);
+  outJd->resize(Eigen::NoChange, _distortion->minimalDimensions());
   Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJd;
   J.setZero();
 
@@ -274,7 +274,6 @@ bool PinholeCamera::euclideanToKeypointDistortionJacobian(
 
   _distortion->distortParameterJacobian(kp, &J);
 
-  J.resize(Eigen::NoChange, _distortion->minimalDimensions());
   J.row(0) *= _fu;
   J.row(1) *= _fv;
   return true;
@@ -284,7 +283,7 @@ bool PinholeCamera::homogeneousToKeypointIntrinsicsJacobian(
     const Eigen::Matrix<double, 4, 1>& p,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const {
   CHECK_NOTNULL(outJi);
-  outJi->resize(Eigen::NoChange, 4);
+  outJi->resize(Eigen::NoChange, this->parameterCount());
   Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJi;
   J.setZero();
 
@@ -301,7 +300,7 @@ bool PinholeCamera::homogeneousToKeypointDistortionJacobian(
     const Eigen::Matrix<double, 4, 1>& p,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const {
   CHECK_NOTNULL(outJd);
-  outJd->resize(Eigen::NoChange, 4);
+  outJd->resize(Eigen::NoChange, _distortion->minimalDimensions());
   Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJd;
   J.setZero();
 
