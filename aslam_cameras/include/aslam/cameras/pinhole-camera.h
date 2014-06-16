@@ -9,7 +9,7 @@ class PinholeCamera : public Camera {
  public:
   ASLAM_POINTER_TYPEDEFS(PinholeCamera);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(PinholeCamera);
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   enum {
     IntrinsicsDimension = 4
