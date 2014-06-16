@@ -36,9 +36,14 @@ class PinholeCamera : public Camera {
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement,
   /// works for an arbitrary scalar type
+  // TODO(dymczykm) The problem is that ceres passes also intrinsics/distortion
+  // as Jet types and I'm not sure how to deal with it
   template <typename ScalarType, typename DistortionType>
   bool euclideanToKeypoint(const Eigen::Matrix<ScalarType, 3, 1>& point,
-                           Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+      const Eigen::Matrix<ScalarType, IntrinsicsDimension, 1>& intrinsics,
+      const Eigen::Matrix<
+        ScalarType, DistortionType::parameterSize(), 1>& distortion_params,
+      Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement
   /// and calculate the relevant jacobian.

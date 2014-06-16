@@ -48,6 +48,7 @@ class FisheyeDistortion : public aslam::Distortion {
   // templated versions, e.g. for ceres autodiff
   template <typename ScalarType>
   void distort(const Eigen::Matrix<ScalarType, 2, 1>& point,
+               const Eigen::Matrix<ScalarType, kNumOfParams, 1>& params,
                Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
   void distortParameterJacobian(
