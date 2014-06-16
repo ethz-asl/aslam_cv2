@@ -389,7 +389,11 @@ void PinholeCamera::setParameters(const Eigen::MatrixXd & P) {
 }
 
 Eigen::Vector2i PinholeCamera::parameterSize() const {
-  return Eigen::Vector2i(4, 1);
+  return Eigen::Vector2i(IntrinsicsDimension, 1);
+}
+
+static constexpr int PinholeCamera::parameterCount() const {
+  return IntrinsicsDimension;
 }
 
 void PinholeCamera::updateTemporaries() {

@@ -179,6 +179,8 @@ class PinholeCamera : public Camera {
   virtual void setParameters(const Eigen::MatrixXd & P);
   virtual Eigen::Vector2i parameterSize() const;
 
+  static constexpr int parameterCount() const;
+
   /// \brief resize the intrinsics based on a scaling of the image.
   virtual void resizeIntrinsics(double scale);
 
@@ -209,17 +211,19 @@ class PinholeCamera : public Camera {
  private:
   void updateTemporaries();
   /// \brief The horizontal focal length in pixels.
-  double _fu;
+  double& _fu;
   /// \brief The vertical focal length in pixels.
-  double _fv;
+  double& _fv;
   /// \brief The horizontal image center in pixels.
-  double _cu;
+  double& _cu;
   /// \brief The vertical image center in pixels.
-  double _cv;
+  double& _cv;
   /// \brief The horizontal resolution in pixels.
   int _ru;
   /// \brief The vertical resolution in pixels.
   int _rv;
+
+  double _intrinsics[4];
 
   /// \brief A computed value for speeding up computation.
   double _recip_fu;
