@@ -3,10 +3,11 @@
 
 namespace aslam {
 PinholeCamera::PinholeCamera()
-: _fu(0.0),
-  _fv(0.0),
-  _cu(0.0),
-  _cv(0.0),
+: _intrinsics{0.0, 0.0, 0.0, 0.0},
+  _fu(_intrinsics[0]),
+  _fv(_intrinsics[1]),
+  _cu(_intrinsics[2]),
+  _cv(_intrinsics[3]),
   _ru(0),
   _rv(0) {
   updateTemporaries();
@@ -36,10 +37,11 @@ PinholeCamera::PinholeCamera(double focalLengthU,
                              int resolutionU,
                              int resolutionV,
                              aslam::Distortion::Ptr distortion)
-: _fu(focalLengthU),
-  _fv(focalLengthV),
-  _cu(imageCenterU),
-  _cv(imageCenterV),
+: _intrinsics{focalLengthU, focalLengthV, imageCenterU, imageCenterV},
+  _fu(_intrinsics[0]),
+  _fv(_intrinsics[1]),
+  _cu(_intrinsics[2]),
+  _cv(_intrinsics[3]),
   _ru(resolutionU),
   _rv(resolutionV),
   _distortion(distortion) {
@@ -52,10 +54,11 @@ PinholeCamera::PinholeCamera(double focalLengthU,
                              double imageCenterV,
                              int resolutionU,
                              int resolutionV)
-: _fu(focalLengthU),
-  _fv(focalLengthV),
-  _cu(imageCenterU),
-  _cv(imageCenterV),
+: _intrinsics{focalLengthU, focalLengthV, imageCenterU, imageCenterV},
+  _fu(_intrinsics[0]),
+  _fv(_intrinsics[1]),
+  _cu(_intrinsics[2]),
+  _cv(_intrinsics[3]),
   _ru(resolutionU),
   _rv(resolutionV) {
   updateTemporaries();
@@ -390,10 +393,6 @@ void PinholeCamera::setParameters(const Eigen::MatrixXd & P) {
 
 Eigen::Vector2i PinholeCamera::parameterSize() const {
   return Eigen::Vector2i(IntrinsicsDimension, 1);
-}
-
-static constexpr int PinholeCamera::parameterCount() const {
-  return IntrinsicsDimension;
 }
 
 void PinholeCamera::updateTemporaries() {

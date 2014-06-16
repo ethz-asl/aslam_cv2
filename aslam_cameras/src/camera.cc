@@ -3,7 +3,7 @@
 //#include <sm/PropertyTree.hpp>
 
 namespace aslam {
-Camera::Camera() : line_delay_nano_seconds_(0) { }
+Camera::Camera() : line_delay_nano_seconds_(0) {}
 
 //Camera::Camera(const sm::PropertyTree& property_tree) {
 //  double value = property_tree.getDouble("line_delay_nano_seconds", -1.0);

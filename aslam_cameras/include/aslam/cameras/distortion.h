@@ -32,9 +32,8 @@ class Distortion {
    * @param y The point in the normalized image plane.
    * @param outPoint The distorted point.
    */
-  virtual void distort(const Eigen::Matrix<double, 2, 1>& y,
-               Eigen::Matrix<double, 2, 1>* outPoint) const = 0;
-
+  virtual void distort(const Eigen::Matrix<double, 2, 1>& point,
+               Eigen::Matrix<double, 2, 1>* out_point) const = 0;
   /**
    * \brief Apply distortion to a point in the normalized image plane
    *

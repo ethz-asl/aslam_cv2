@@ -9,11 +9,12 @@ namespace aslam {
 
 template <typename ScalarType>
 void FisheyeDistortion::distort(
-    Eigen::Matrix<ScalarType, 2, 1>* keypoint) const {
-  CHECK_NOTNULL(keypoint);
+    const Eigen::Matrix<ScalarType, 2, 1>& point,
+    Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
+  CHECK_NOTNULL(out_point);
 
   // Evaluate the camera distortion.
-  const ScalarType r_u = (*keypoint).norm();
+  const ScalarType r_u = point.norm();
   ScalarType r_rd;
   if (w_ * w_ < 1e-5) {
     // Limit w->0.
@@ -32,16 +33,8 @@ void FisheyeDistortion::distort(
     }
   }
 
-  *keypoint *= r_rd;
-}
-
-template <typename ScalarType>
-void FisheyeDistortion::undistort(
-    Eigen::Matrix<ScalarType, 2, 1>* y) const {
-  CHECK_NOTNULL(y);
-
-  // TODO(dymczykm) will be needed for tests
-
+  *out_point = point;
+  *out_point *= r_rd;
 }
 
 } // namespace aslam

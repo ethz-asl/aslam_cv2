@@ -33,6 +33,13 @@ class PinholeCamera : public Camera {
   /// Project a point expressed in euclidean coordinates to a 2d image measurement.
   virtual bool euclideanToKeypoint(const Eigen::Vector3d& point,
                                    Eigen::Matrix<double, 2, 1>* out_point) const;
+
+  /// Project a point expressed in euclidean coordinates to a 2d image measurement,
+  /// works for an arbitrary scalar type
+  template <typename ScalarType, typename DistortionType>
+  bool euclideanToKeypoint(const Eigen::Matrix<ScalarType, 3, 1>& point,
+                           Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+
   /// Project a point expressed in euclidean coordinates to a 2d image measurement
   /// and calculate the relevant jacobian.
   virtual bool euclideanToKeypoint(const Eigen::Vector3d & point,
@@ -169,6 +176,9 @@ class PinholeCamera : public Camera {
 
   virtual bool isValid(const Eigen::Matrix<double, 2, 1>& keypoint) const;
 
+  template <typename ScalarType>
+  bool isValid(const Eigen::Matrix<ScalarType, 2, 1>& keypoint) const;
+
   virtual bool isEuclideanVisible(const Eigen::Matrix<double, 3, 1>& p) const;
 
   virtual bool isHomogeneousVisible(const Eigen::Matrix<double, 4, 1>& ph) const;
@@ -179,7 +189,13 @@ class PinholeCamera : public Camera {
   virtual void setParameters(const Eigen::MatrixXd & P);
   virtual Eigen::Vector2i parameterSize() const;
 
-  static constexpr int parameterCount() const;
+  static constexpr int parameterCount() {
+    return IntrinsicsDimension;
+  }
+
+  inline double* getParametersMutable() {
+    return _intrinsics;
+  }
 
   /// \brief resize the intrinsics based on a scaling of the image.
   virtual void resizeIntrinsics(double scale);
@@ -210,6 +226,9 @@ class PinholeCamera : public Camera {
 
  private:
   void updateTemporaries();
+
+  double _intrinsics[4];
+
   /// \brief The horizontal focal length in pixels.
   double& _fu;
   /// \brief The vertical focal length in pixels.
@@ -223,8 +242,6 @@ class PinholeCamera : public Camera {
   /// \brief The vertical resolution in pixels.
   int _rv;
 
-  double _intrinsics[4];
-
   /// \brief A computed value for speeding up computation.
   double _recip_fu;
   double _recip_fv;
@@ -233,5 +250,9 @@ class PinholeCamera : public Camera {
   /// \brief The distortion of this camera.
   aslam::Distortion::Ptr _distortion;
 };
+
 }  // namespace aslam
+
+#include "aslam/cameras/pinhole-camera-inl.h"
+
 #endif  // ASLAM_CAMERAS_PINHOLE_CAMERA_H_
