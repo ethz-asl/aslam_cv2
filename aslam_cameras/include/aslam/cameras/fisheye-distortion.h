@@ -41,9 +41,13 @@ class FisheyeDistortion : public aslam::Distortion {
   }
 
   void distort(const Eigen::Matrix<double, 2, 1>* point,
-               Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const;
-  void undistort(Eigen::Matrix<double, 2, 1>* y,
-                 Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const;
+               Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
+  void undistort(Eigen::Matrix<double, 2, 1>* point,
+                 Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+    CHECK(point);
+    CHECK(out_jacobian);
+    CHECK(false);
+  }
 
   // templated versions, e.g. for ceres autodiff
   template <typename ScalarType>
@@ -52,8 +56,8 @@ class FisheyeDistortion : public aslam::Distortion {
                Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
   void distortParameterJacobian(
-      Eigen::Matrix<double, 2, 1>* imageY,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const;
+      const Eigen::Matrix<double, 2, 1>& point,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
 
   virtual bool operator==(const aslam::Distortion& other) const {
     // TODO(dymczykm) what should we do here if we need to implement method
@@ -61,15 +65,15 @@ class FisheyeDistortion : public aslam::Distortion {
     return false;
   }
 
-  virtual void distort(const Eigen::Matrix<double, 2, 1>* y) const;
+  virtual void distort(const Eigen::Matrix<double, 2, 1>* point) const;
 
-  virtual void distort(const Eigen::Matrix<double, 2, 1>& y,
-                       Eigen::Matrix<double, 2, 1>* outPoint) const;
+  virtual void distort(const Eigen::Matrix<double, 2, 1>& point,
+                       Eigen::Matrix<double, 2, 1>* out_point) const;
 
-  virtual void undistort(Eigen::Matrix<double, 2, 1>*) const {
-    CHECK(false);
-  }
+  virtual void undistort(Eigen::Matrix<double, 2, 1>* point) const;
+
   virtual void update(const double*) {
+    // TODO(dymczykm) what it is meant for?
     CHECK(false);
   }
 
@@ -80,6 +84,8 @@ class FisheyeDistortion : public aslam::Distortion {
 
  private:
   double w_;
+
+  static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
 };
 
 } // namespace aslam

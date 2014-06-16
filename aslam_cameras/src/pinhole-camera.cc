@@ -272,7 +272,7 @@ bool PinholeCamera::euclideanToKeypointDistortionJacobian(
   kp[0] = p[0] * rz;
   kp[1] = p[1] * rz;
 
-  _distortion->distortParameterJacobian(&kp, &J);
+  _distortion->distortParameterJacobian(kp, &J);
 
   J.resize(Eigen::NoChange, _distortion->minimalDimensions());
   J.row(0) *= _fu;

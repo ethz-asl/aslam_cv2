@@ -2,25 +2,26 @@
 
 namespace aslam {
 
-void FisheyeDistortion::distort(const Eigen::Matrix<double, 2, 1>* y) const {
-  CHECK_NOTNULL(y);
-  Eigen::Matrix2Xd outJy;
-  distort(y, &outJy);
+void FisheyeDistortion::distort(
+    const Eigen::Matrix<double, 2, 1>* point) const {
+  CHECK_NOTNULL(point);
+  Eigen::Matrix2Xd jacobian;
+  distort(point, &jacobian);
 }
 
-void FisheyeDistortion::distort(const Eigen::Matrix<double, 2, 1>& y,
-                                Eigen::Matrix<double, 2, 1>* outPoint) const {
-  CHECK_NOTNULL(outPoint);
-  *outPoint = y;
-  Eigen::Matrix2Xd outJy;
-  distort(outPoint, &outJy);
+void FisheyeDistortion::distort(const Eigen::Matrix<double, 2, 1>& point,
+                                Eigen::Matrix<double, 2, 1>* out_point) const {
+  CHECK_NOTNULL(out_point);
+  *out_point = point;
+  Eigen::Matrix2Xd jacobian;
+  distort(out_point, &jacobian);
 }
 
 void FisheyeDistortion::distort(
     const Eigen::Matrix<double, 2, 1>* point,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const {
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
   CHECK_NOTNULL(point);
-  CHECK_NOTNULL(outJy);
+  CHECK_NOTNULL(out_jacobian);
 
   const double r_u = point->norm();
   const double r_u_cubed = r_u * r_u * r_u;
@@ -58,36 +59,46 @@ void FisheyeDistortion::distort(
         - (v * v * atan_w_rd) / (w_ * r_u_cubed)
         + (2 * v * v * tanwhalf)
         / (w_ * (u * u + v * v) * (4 * tanwhalfsq * (u * u + v * v) + 1));
-  outJy->resize(2, 2);
-  *outJy <<
+  out_jacobian->resize(2, 2);
+  *out_jacobian <<
       duf_du, duf_dv,
       dvf_du, dvf_dv;
 
   *const_cast<Eigen::Matrix<double, 2, 1>*>(point) *= r_rd;
 }
 
-void FisheyeDistortion::undistort(
-    Eigen::Matrix<double, 2, 1>* y,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const {
-  CHECK_NOTNULL(y);
-  CHECK_NOTNULL(outJy);
+void FisheyeDistortion::undistort(Eigen::Matrix<double, 2, 1>* point) const {
+  CHECK_NOTNULL(point);
 
-  // TODO(dymczykm) will be needed for tests
+  double mul2tanwby2 = tan(w_ / 2.0) * 2.0;
+
+  // Calculate distance from point to center.
+  double r_d = point->norm();
+
+  // Calculate undistorted radius of point.
+  double r_u;
+  if (fabs(r_d * w_) <= kMaxValidAngle) {
+    r_u = tan(r_d * w_) / (r_d * mul2tanwby2);
+  } else {
+    r_u = std::numeric_limits<double>::infinity();
+  }
+
+  (*point) *= r_u;
 }
 
 void FisheyeDistortion::distortParameterJacobian(
-    Eigen::Matrix<double, 2, 1>* imageY,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const {
-  CHECK_NOTNULL(outJd);
-  CHECK_EQ(outJd->cols(), 1);
+    const Eigen::Matrix<double, 2, 1>& point,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+  CHECK_NOTNULL(out_jacobian);
+  CHECK_EQ(out_jacobian->cols(), 1);
 
   const double tanwhalf = tan(w_ / 2.);
   const double tanwhalfsq = tanwhalf * tanwhalf;
-  const double r_u = imageY->norm();
+  const double r_u = point.norm();
   const double atan_w_rd = atan(2. * tanwhalf * r_u);
 
-  const double& u = (*imageY)(0);
-  const double& v = (*imageY)(1);
+  const double& u = point(0);
+  const double& v = point(1);
 
   const double dxd_d_w = (2 * u * (tanwhalfsq / 2 + 0.5))
       / (w_ * (4 * tanwhalfsq * r_u * r_u + 1))
@@ -97,7 +108,7 @@ void FisheyeDistortion::distortParameterJacobian(
       / (w_ * (4 * tanwhalfsq * r_u * r_u + 1))
       - (v * atan_w_rd) / (w_ * w_ * r_u);
 
-  *outJd << dxd_d_w, dyd_d_w;
+  *out_jacobian << dxd_d_w, dyd_d_w;
 }
 
 } // namespace aslam

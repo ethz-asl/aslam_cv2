@@ -24,7 +24,7 @@ class Distortion {
    *
    * @param y The point in the normalized image plane. After the function, this point is distorted.
    */
-  virtual void distort(const Eigen::Matrix<double, 2, 1>* y) const = 0;
+  virtual void distort(const Eigen::Matrix<double, 2, 1>* point) const = 0;
 
   /**
    * \brief Apply distortion to a point in the normalized image plane
@@ -41,14 +41,14 @@ class Distortion {
    * @param outJy The Jacobian of the distortion function with respect to small changes in the input point.
    */
   virtual void distort(const Eigen::Matrix<double, 2, 1>* point,
-               Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const = 0;
+               Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
   /**
    * \brief Apply undistortion to recover a point in the normalized image plane.
    *
    * @param y The distorted point. After the function, this point is in the normalized image plane.
    */
-  virtual void undistort(Eigen::Matrix<double, 2, 1>* y) const = 0;
+  virtual void undistort(Eigen::Matrix<double, 2, 1>* point) const = 0;
 
   /**
    * \brief Apply undistortion to recover a point in the normalized image plane.
@@ -56,8 +56,8 @@ class Distortion {
    * @param y The distorted point. After the function, this point is in the normalized image plane.
    * @param outJy The Jacobian of the undistortion function with respect to small changes in the input point.
    */
-  virtual void undistort(Eigen::Matrix<double, 2, 1>* y,
-                 Eigen::Matrix<double, 2, Eigen::Dynamic>* outJy) const = 0;
+  virtual void undistort(Eigen::Matrix<double, 2, 1>* point,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
   /**
    * \brief Apply distortion to the point and provide the Jacobian of the
@@ -68,8 +68,8 @@ class Distortion {
    * in the distortion parameters.
    */
   virtual void distortParameterJacobian(
-      Eigen::Matrix<double, 2, 1>* imageY,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const = 0;
+      const Eigen::Matrix<double, 2, 1>& point,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
   /**
    * \brief A function for compatibility with the aslam backend.
