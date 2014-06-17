@@ -112,12 +112,14 @@ void FisheyeDistortion::distortParameterJacobian(
   const double& u = point(0);
   const double& v = point(1);
 
-  if (w_ * w_ < 1e-5 || r_u * r_u < 1e-5) {
+  if (w_ * w_ < 1e-5) {
     out_jacobian->setZero();
   }
-//  else if (r_u * r_u < 1e-5) {
-//    ...
-//  }
+  else if (r_u * r_u < 1e-5) {
+    out_jacobian->setOnes();
+    // d(2. * tanwhalf / w) / dw
+    *out_jacobian *= (w_ - sin(w_)) / (w_ * w_ * cos(w_ / 2) * cos(w_ / 2));
+  }
   else {
     const double dxd_d_w = (2 * u * (tanwhalfsq / 2 + 0.5))
           / (w_ * (4 * tanwhalfsq * r_u * r_u + 1))
