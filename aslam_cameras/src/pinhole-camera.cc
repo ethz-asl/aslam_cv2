@@ -95,7 +95,7 @@ bool PinholeCamera::euclideanToKeypoint(
   (*outKeypoint)[0] = _fu * (*outKeypoint)[0] + _cu;
   (*outKeypoint)[1] = _fv * (*outKeypoint)[1] + _cv;
 
-  return isValid(*outKeypoint) && p[2] > 0;
+  return isValid(*outKeypoint) && (p[2] > kMinimumDepth);
 }
 
 bool PinholeCamera::euclideanToKeypoint(
@@ -110,13 +110,12 @@ bool PinholeCamera::euclideanToKeypoint(
 
   double rz = 1.0 / p[2];
   double rz2 = rz * rz;
-  Eigen::Matrix<double, 2, 1> keypoint;
-  keypoint[0] = p[0] * rz;
-  keypoint[1] = p[1] * rz;
+  (*outKeypoint)[0] = p[0] * rz;
+  (*outKeypoint)[1] = p[1] * rz;
 
   Eigen::Matrix<double, 2, Eigen::Dynamic> Jd;
   CHECK_NOTNULL(_distortion.get());
-  _distortion->distort(&keypoint, &Jd);  // distort and Jacobian wrt. keypoint
+  _distortion->distort(outKeypoint, &Jd);  // distort and Jacobian wrt. keypoint
   CHECK_GE(Jd.cols(), 2);
 
   Eigen::Matrix<double, 2, 3>& J = *outJp;
@@ -131,7 +130,7 @@ bool PinholeCamera::euclideanToKeypoint(
   (*outKeypoint)[0] = _fu * (*outKeypoint)[0] + _cu;
   (*outKeypoint)[1] = _fv * (*outKeypoint)[1] + _cv;
 
-  return isValid(*outKeypoint) && p[2] > 0;
+  return isValid(*outKeypoint) && (p[2] > kMinimumDepth);
 
 }
 

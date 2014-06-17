@@ -254,6 +254,8 @@ class PinholeCamera : public Camera {
 
   /// \brief The distortion of this camera.
   aslam::Distortion::Ptr _distortion;
+
+  static constexpr double kMinimumDepth = 1e-10;
 };
 
 }  // namespace aslam
