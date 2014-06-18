@@ -5,6 +5,7 @@
 namespace aslam {
 Camera::Camera() : line_delay_nano_seconds_(0) {}
 
+// TODO(slynen)
 //Camera::Camera(const sm::PropertyTree& property_tree) {
 //  double value = property_tree.getDouble("line_delay_nano_seconds", -1.0);
 //  if (value == -1.0) {

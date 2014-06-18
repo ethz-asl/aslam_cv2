@@ -13,6 +13,7 @@ PinholeCamera::PinholeCamera()
   updateTemporaries();
 }
 
+// TODO(slynen)
 //PinholeCamera::PinholeCamera(
 //    const sm::PropertyTree & config)
 //: Camera(config) {
@@ -131,7 +132,6 @@ bool PinholeCamera::euclideanToKeypoint(
   (*outKeypoint)[1] = _fv * (*outKeypoint)[1] + _cv;
 
   return isValid(*outKeypoint) && (p[2] > kMinimumDepth);
-
 }
 
 bool PinholeCamera::homogeneousToKeypoint(

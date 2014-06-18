@@ -8,15 +8,20 @@
 namespace aslam {
 
 class FisheyeDistortion : public aslam::Distortion {
- public:
-  explicit FisheyeDistortion(double w) : w_(w) {}
-  explicit FisheyeDistortion(const Eigen::VectorXd& params) {
-    setParameters(params);
-  }
-
+ private:
   enum {
     kNumOfParams = 1
   };
+
+ public:
+  explicit FisheyeDistortion(double w) {
+    params_.resize(1, 1);
+    params_(0) = w;
+  }
+
+  explicit FisheyeDistortion(const Eigen::VectorXd& params) {
+    setParameters(params);
+  }
 
   inline static constexpr size_t parameterSize() {
     return kNumOfParams;
@@ -27,17 +32,17 @@ class FisheyeDistortion : public aslam::Distortion {
   }
 
   void setParameters(const Eigen::VectorXd& parameters) {
-    w_ = parameters(0);
+    CHECK_EQ(parameters.rows(), 1);
+    params_ = parameters;
   }
 
-  virtual void getParameters(Eigen::VectorXd* params) const {
-    CHECK_NOTNULL(params);
-    params->resize(1);
-    (*params)(0) = w_;
+  virtual void getParameters(Eigen::VectorXd* parameters) const {
+    CHECK_NOTNULL(parameters);
+    *parameters = params_;
   }
 
   inline double* getParametersMutable() {
-    return &w_;
+    return params_.data();
   }
 
   void distort(const Eigen::Matrix<double, 2, 1>* point,
@@ -72,20 +77,30 @@ class FisheyeDistortion : public aslam::Distortion {
 
   virtual void undistort(Eigen::Matrix<double, 2, 1>* point) const;
 
-  virtual void update(const double*) {
-    // TODO(dymczykm) what it is meant for?
-    CHECK(false);
+  virtual void update(const double* d_w) {
+    CHECK_NOTNULL(d_w);
+    params_[0] += d_w[0];
   }
 
   virtual bool distortionParametersValid() const {
-    // TODO(dymczykm) any constraints on w? positive?
+    CHECK_EQ(params_.rows(), 1)
+        << "Invalid number of distortion coefficients (found "
+        << params_.rows() << ", expected 1).";
+
+    // Expect w to have sane magnitude.
+    double w = params_(0);
+    CHECK(w >= kMinValidW && w <= kMaxValidW)
+        << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
+        << ", " << kMaxValidW << "].";
     return true;
   }
 
  private:
-  double w_;
+  Eigen::VectorXd params_;
 
   static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
+  static constexpr double kMinValidW = 0.5;
+  static constexpr double kMaxValidW = 1.5;
 };
 
 } // namespace aslam

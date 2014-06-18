@@ -26,7 +26,8 @@ class PinholeCamera : public Camera {
   PinholeCamera(double focalLengthU, double focalLengthV,
                 double imageCenterU, double imageCenterV, int resolutionU,
                 int resolutionV);
-//  PinholeCamera(const sm::PropertyTree& config);
+  // TODO(slynen)
+  // PinholeCamera(const sm::PropertyTree& config);
 
   virtual ~PinholeCamera();
 
@@ -36,8 +37,8 @@ class PinholeCamera : public Camera {
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement,
   /// works for an arbitrary scalar type
-  // TODO(dymczykm) The problem is that ceres passes also intrinsics/distortion
-  // as Jet types and I'm not sure how to deal with it
+  // TODO(dymczykm) stop templating on DistortionType after we'll able
+  // to get derived type from this class member ('_distortion')
   template <typename ScalarType, typename DistortionType>
   bool euclideanToKeypoint(const Eigen::Matrix<ScalarType, 3, 1>& point,
       const Eigen::Matrix<ScalarType, IntrinsicsDimension, 1>& intrinsics,

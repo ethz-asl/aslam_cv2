@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 #include <glog/logging.h>
 
+// TODO(slynen)
 //namespace sm {
 //class PropertyTree;
 //}
@@ -18,6 +19,7 @@ class Camera {
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Camera);
 
   Camera();
+  // TODO(slynen)
   //explicit Camera(const sm::PropertyTree& property_tree);
   virtual ~Camera();
 

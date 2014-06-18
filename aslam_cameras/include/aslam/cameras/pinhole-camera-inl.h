@@ -11,9 +11,6 @@ namespace aslam {
 // to template the whole class on ScalarType (or at least intrinsics and few
 // methods).
 
-// TODO(dymczykm) Pretty annoying that we need to pass intrinsics here, but
-// the class members are doubles and ceres wants us to use its Jet types.
-
 template <typename ScalarType, typename DistortionType>
 bool PinholeCamera::euclideanToKeypoint(
     const Eigen::Matrix<ScalarType, 3, 1>& point,
