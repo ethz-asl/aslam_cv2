@@ -3,7 +3,7 @@
 namespace aslam {
 
 void FisheyeDistortion::distort(
-    const Eigen::Matrix<double, 2, 1>* point) const {
+    Eigen::Matrix<double, 2, 1>* point) const {
   CHECK_NOTNULL(point);
   Eigen::Matrix2Xd jacobian;
   distort(point, &jacobian);
@@ -18,7 +18,7 @@ void FisheyeDistortion::distort(const Eigen::Matrix<double, 2, 1>& point,
 }
 
 void FisheyeDistortion::distort(
-    const Eigen::Matrix<double, 2, 1>* point,
+    Eigen::Matrix<double, 2, 1>* point,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
   CHECK_NOTNULL(point);
   CHECK_NOTNULL(out_jacobian);
@@ -77,7 +77,7 @@ void FisheyeDistortion::distort(
         dvf_du, dvf_dv;
   }
 
-  *const_cast<Eigen::Matrix<double, 2, 1>*>(point) *= r_rd;
+  *point *= r_rd;
 }
 
 void FisheyeDistortion::undistort(Eigen::Matrix<double, 2, 1>* point) const {

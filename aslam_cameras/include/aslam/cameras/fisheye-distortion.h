@@ -41,16 +41,21 @@ class FisheyeDistortion : public aslam::Distortion {
     *parameters = params_;
   }
 
-  inline double* getParametersMutable() {
+  virtual Eigen::VectorXd& getParametersMutable() {
+    return params_;
+  }
+
+  virtual double* getParameterMutablePtr() {
     return params_.data();
   }
 
-  void distort(const Eigen::Matrix<double, 2, 1>* point,
+  void distort(Eigen::Matrix<double, 2, 1>* point,
                Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
   void undistort(Eigen::Matrix<double, 2, 1>* point,
                  Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
     CHECK(point);
     CHECK(out_jacobian);
+    // TODO(dymczykm) to be implemented at some point
     CHECK(false);
   }
 
@@ -65,12 +70,12 @@ class FisheyeDistortion : public aslam::Distortion {
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
 
   virtual bool operator==(const aslam::Distortion& other) const {
-    // TODO(dymczykm) what should we do here if we need to implement method
-    // comparing it to base reference, cast?
+    // TODO(dymczykm) to be implemented at some point
+    CHECK(false);
     return false;
   }
 
-  virtual void distort(const Eigen::Matrix<double, 2, 1>* point) const;
+  virtual void distort(Eigen::Matrix<double, 2, 1>* point) const;
 
   virtual void distort(const Eigen::Matrix<double, 2, 1>& point,
                        Eigen::Matrix<double, 2, 1>* out_point) const;
@@ -79,7 +84,7 @@ class FisheyeDistortion : public aslam::Distortion {
 
   virtual void update(const double* d_w) {
     CHECK_NOTNULL(d_w);
-    params_[0] += d_w[0];
+    params_(0) += d_w[0];
   }
 
   virtual bool distortionParametersValid() const {

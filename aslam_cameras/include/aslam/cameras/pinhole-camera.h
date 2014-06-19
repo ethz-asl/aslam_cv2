@@ -6,17 +6,18 @@
 
 namespace aslam {
 class PinholeCamera : public Camera {
+ private:
+  enum {
+     IntrinsicsDimension = 4
+   };
+   enum {
+     DesignVariableDimension = IntrinsicsDimension
+   };
+
  public:
   ASLAM_POINTER_TYPEDEFS(PinholeCamera);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(PinholeCamera);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-  enum {
-    IntrinsicsDimension = 4
-  };
-  enum {
-    DesignVariableDimension = IntrinsicsDimension
-  };
 
   PinholeCamera();
   PinholeCamera(double focalLengthU, double focalLengthV,
@@ -199,8 +200,12 @@ class PinholeCamera : public Camera {
     return IntrinsicsDimension;
   }
 
-  inline double* getParametersMutable() {
+  virtual Eigen::VectorXd& getParametersMutable() {
     return _intrinsics;
+  }
+
+  virtual double* getParameterMutablePtr() {
+    return _intrinsics.data();
   }
 
   /// \brief resize the intrinsics based on a scaling of the image.
@@ -233,7 +238,7 @@ class PinholeCamera : public Camera {
  private:
   void updateTemporaries();
 
-  double _intrinsics[4];
+  Eigen::VectorXd _intrinsics;
 
   /// \brief The horizontal focal length in pixels.
   double& _fu;

@@ -3,13 +3,14 @@
 
 namespace aslam {
 PinholeCamera::PinholeCamera()
-: _intrinsics{0.0, 0.0, 0.0, 0.0},
+: _intrinsics(IntrinsicsDimension),
   _fu(_intrinsics[0]),
   _fv(_intrinsics[1]),
   _cu(_intrinsics[2]),
   _cv(_intrinsics[3]),
   _ru(0),
   _rv(0) {
+  _intrinsics << 0, 0, 0, 0;
   updateTemporaries();
 }
 
@@ -38,7 +39,7 @@ PinholeCamera::PinholeCamera(double focalLengthU,
                              int resolutionU,
                              int resolutionV,
                              aslam::Distortion::Ptr distortion)
-: _intrinsics{focalLengthU, focalLengthV, imageCenterU, imageCenterV},
+: _intrinsics(IntrinsicsDimension),
   _fu(_intrinsics[0]),
   _fv(_intrinsics[1]),
   _cu(_intrinsics[2]),
@@ -46,6 +47,7 @@ PinholeCamera::PinholeCamera(double focalLengthU,
   _ru(resolutionU),
   _rv(resolutionV),
   _distortion(distortion) {
+  _intrinsics << focalLengthU, focalLengthV, imageCenterU, imageCenterV;
   updateTemporaries();
 }
 
@@ -55,13 +57,14 @@ PinholeCamera::PinholeCamera(double focalLengthU,
                              double imageCenterV,
                              int resolutionU,
                              int resolutionV)
-: _intrinsics{focalLengthU, focalLengthV, imageCenterU, imageCenterV},
+: _intrinsics(IntrinsicsDimension),
   _fu(_intrinsics[0]),
   _fv(_intrinsics[1]),
   _cu(_intrinsics[2]),
   _cv(_intrinsics[3]),
   _ru(resolutionU),
   _rv(resolutionV) {
+  _intrinsics << focalLengthU, focalLengthV, imageCenterU, imageCenterV;
   updateTemporaries();
 }
 

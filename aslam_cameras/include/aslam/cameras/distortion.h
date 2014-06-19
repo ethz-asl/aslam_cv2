@@ -26,7 +26,7 @@ class Distortion {
    *
    * @param y The point in the normalized image plane. After the function, this point is distorted.
    */
-  virtual void distort(const Eigen::Matrix<double, 2, 1>* point) const = 0;
+  virtual void distort(Eigen::Matrix<double, 2, 1>* point) const = 0;
 
   /**
    * \brief Apply distortion to a point in the normalized image plane
@@ -35,15 +35,15 @@ class Distortion {
    * @param outPoint The distorted point.
    */
   virtual void distort(const Eigen::Matrix<double, 2, 1>& point,
-               Eigen::Matrix<double, 2, 1>* out_point) const = 0;
+                       Eigen::Matrix<double, 2, 1>* out_point) const = 0;
   /**
    * \brief Apply distortion to a point in the normalized image plane
    *
    * @param y The point in the normalized image plane. After the function, this point is distorted.
    * @param outJy The Jacobian of the distortion function with respect to small changes in the input point.
    */
-  virtual void distort(const Eigen::Matrix<double, 2, 1>* point,
-               Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
+  virtual void distort(Eigen::Matrix<double, 2, 1>* point,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
   /**
    * \brief Apply undistortion to recover a point in the normalized image plane.
@@ -106,9 +106,16 @@ class Distortion {
   /**
    * \brief A function for compatibility with the ceres solver.
    *
+   * @return The non-const reference to distortion parameter vector.
+   */
+  virtual Eigen::VectorXd& getParametersMutable() = 0;
+
+  /**
+   * \brief A function for compatibility with the ceres solver.
+   *
    * @return The underlying raw pointer to the distortion parameters.
    */
-  virtual double* getParametersMutable() = 0;
+  virtual double* getParameterMutablePtr() = 0;
 
   /**
    * \brief Getter for the number of distortion parameters.
