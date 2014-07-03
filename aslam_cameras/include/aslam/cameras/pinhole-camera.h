@@ -126,38 +126,43 @@ class PinholeCamera : public Camera {
 
   Eigen::Matrix3d getCameraMatrix() const {
     Eigen::Matrix3d K;
-    K << _fu, 0.0, _cu, 0.0, _fv, _cv, 0.0, 0.0, 1.0;
+    const double& fu = _intrinsics(0);
+    const double& fv = _intrinsics(1);
+    const double& cu = _intrinsics(2);
+    const double& cv = _intrinsics(3);
+
+    K << fu, 0.0, cu, 0.0, fv, cv, 0.0, 0.0, 1.0;
     return K;
   }
 
   double focalLengthCol() const {
-    return _fu;
+    return _intrinsics[0];
   }
   double focalLengthRow() const {
-    return _fv;
+    return _intrinsics[1];
   }
   double opticalCenterCol() const {
-    return _cu;
+    return _intrinsics[2];
   }
   double opticalCenterRow() const {
-    return _cv;
+    return _intrinsics[3];
   }
 
   /// \brief The horizontal focal length in pixels.
   double fu() const {
-    return _fu;
+    return _intrinsics[0];
   }
   /// \brief The vertical focal length in pixels.
   double fv() const {
-    return _fv;
+    return _intrinsics[1];
   }
   /// \brief The horizontal image center in pixels.
   double cu() const {
-    return _cu;
+    return _intrinsics[2];
   }
   /// \brief The vertical image center in pixels.
   double cv() const {
-    return _cv;
+    return _intrinsics[3];
   }
   /// \brief The horizontal resolution in pixels.
   int ru() const {
@@ -238,16 +243,10 @@ class PinholeCamera : public Camera {
  private:
   void updateTemporaries();
 
+  // Vector storing intrinsic parameters in a contiguous block of memory.
+  // Ordering: fu, fv, cu, cv
   Eigen::VectorXd _intrinsics;
 
-  /// \brief The horizontal focal length in pixels.
-  double& _fu;
-  /// \brief The vertical focal length in pixels.
-  double& _fv;
-  /// \brief The horizontal image center in pixels.
-  double& _cu;
-  /// \brief The vertical image center in pixels.
-  double& _cv;
   /// \brief The horizontal resolution in pixels.
   int _ru;
   /// \brief The vertical resolution in pixels.
