@@ -6,17 +6,18 @@
 
 namespace aslam {
 class PinholeCamera : public Camera {
+ private:
+  enum {
+     IntrinsicsDimension = 4
+   };
+   enum {
+     DesignVariableDimension = IntrinsicsDimension
+   };
+
  public:
   ASLAM_POINTER_TYPEDEFS(PinholeCamera);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(PinholeCamera);
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-
-  enum {
-    IntrinsicsDimension = 4
-  };
-  enum {
-    DesignVariableDimension = IntrinsicsDimension
-  };
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   PinholeCamera();
   PinholeCamera(double focalLengthU, double focalLengthV,
@@ -26,14 +27,26 @@ class PinholeCamera : public Camera {
   PinholeCamera(double focalLengthU, double focalLengthV,
                 double imageCenterU, double imageCenterV, int resolutionU,
                 int resolutionV);
-  PinholeCamera(const sm::PropertyTree& config);
+  // TODO(slynen)
+  // PinholeCamera(const sm::PropertyTree& config);
 
   virtual ~PinholeCamera();
-
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement.
   virtual bool euclideanToKeypoint(const Eigen::Vector3d& point,
                                    Eigen::Matrix<double, 2, 1>* out_point) const;
+
+  /// Project a point expressed in euclidean coordinates to a 2d image measurement,
+  /// works for an arbitrary scalar type
+  // TODO(dymczykm) stop templating on DistortionType after we'll able
+  // to get derived type from this class member ('_distortion')
+  template <typename ScalarType, typename DistortionType>
+  bool euclideanToKeypoint(const Eigen::Matrix<ScalarType, 3, 1>& point,
+      const Eigen::Matrix<ScalarType, IntrinsicsDimension, 1>& intrinsics,
+      const Eigen::Matrix<
+        ScalarType, DistortionType::parameterSize(), 1>& distortion_params,
+      Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+
   /// Project a point expressed in euclidean coordinates to a 2d image measurement
   /// and calculate the relevant jacobian.
   virtual bool euclideanToKeypoint(const Eigen::Vector3d & point,
@@ -113,38 +126,43 @@ class PinholeCamera : public Camera {
 
   Eigen::Matrix3d getCameraMatrix() const {
     Eigen::Matrix3d K;
-    K << _fu, 0.0, _cu, 0.0, _fv, _cv, 0.0, 0.0, 1.0;
+    const double& fu = _intrinsics(0);
+    const double& fv = _intrinsics(1);
+    const double& cu = _intrinsics(2);
+    const double& cv = _intrinsics(3);
+
+    K << fu, 0.0, cu, 0.0, fv, cv, 0.0, 0.0, 1.0;
     return K;
   }
 
   double focalLengthCol() const {
-    return _fu;
+    return _intrinsics[0];
   }
   double focalLengthRow() const {
-    return _fv;
+    return _intrinsics[1];
   }
   double opticalCenterCol() const {
-    return _cu;
+    return _intrinsics[2];
   }
   double opticalCenterRow() const {
-    return _cv;
+    return _intrinsics[3];
   }
 
   /// \brief The horizontal focal length in pixels.
   double fu() const {
-    return _fu;
+    return _intrinsics[0];
   }
   /// \brief The vertical focal length in pixels.
   double fv() const {
-    return _fv;
+    return _intrinsics[1];
   }
   /// \brief The horizontal image center in pixels.
   double cu() const {
-    return _cu;
+    return _intrinsics[2];
   }
   /// \brief The vertical image center in pixels.
   double cv() const {
-    return _cv;
+    return _intrinsics[3];
   }
   /// \brief The horizontal resolution in pixels.
   int ru() const {
@@ -170,6 +188,9 @@ class PinholeCamera : public Camera {
 
   virtual bool isValid(const Eigen::Matrix<double, 2, 1>& keypoint) const;
 
+  template <typename ScalarType>
+  bool isValid(const Eigen::Matrix<ScalarType, 2, 1>& keypoint) const;
+
   virtual bool isEuclideanVisible(const Eigen::Matrix<double, 3, 1>& p) const;
 
   virtual bool isHomogeneousVisible(const Eigen::Matrix<double, 4, 1>& ph) const;
@@ -179,6 +200,18 @@ class PinholeCamera : public Camera {
   virtual void getParameters(Eigen::MatrixXd & P) const;
   virtual void setParameters(const Eigen::MatrixXd & P);
   virtual Eigen::Vector2i parameterSize() const;
+
+  static constexpr int parameterCount() {
+    return IntrinsicsDimension;
+  }
+
+  virtual Eigen::VectorXd& getParametersMutable() {
+    return _intrinsics;
+  }
+
+  virtual double* getParameterMutablePtr() {
+    return _intrinsics.data();
+  }
 
   /// \brief resize the intrinsics based on a scaling of the image.
   virtual void resizeIntrinsics(double scale);
@@ -209,14 +242,11 @@ class PinholeCamera : public Camera {
 
  private:
   void updateTemporaries();
-  /// \brief The horizontal focal length in pixels.
-  double _fu;
-  /// \brief The vertical focal length in pixels.
-  double _fv;
-  /// \brief The horizontal image center in pixels.
-  double _cu;
-  /// \brief The vertical image center in pixels.
-  double _cv;
+
+  // Vector storing intrinsic parameters in a contiguous block of memory.
+  // Ordering: fu, fv, cu, cv
+  Eigen::VectorXd _intrinsics;
+
   /// \brief The horizontal resolution in pixels.
   int _ru;
   /// \brief The vertical resolution in pixels.
@@ -229,6 +259,12 @@ class PinholeCamera : public Camera {
 
   /// \brief The distortion of this camera.
   aslam::Distortion::Ptr _distortion;
+
+  static constexpr double kMinimumDepth = 1e-10;
 };
+
 }  // namespace aslam
+
+#include "aslam/cameras/pinhole-camera-inl.h"
+
 #endif  // ASLAM_CAMERAS_PINHOLE_CAMERA_H_
