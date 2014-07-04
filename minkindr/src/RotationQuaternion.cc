@@ -7,46 +7,45 @@ namespace minimal {
 
 /// \brief initialize to identity
 RotationQuaternion::RotationQuaternion() : 
-    quaternion_(Implementation::Identity()) {
+    q_A_B_(Implementation::Identity()) {
 }
-
 
 /// \brief initialize from real and imaginary components (real first)
 RotationQuaternion::RotationQuaternion(Scalar w, Scalar x, Scalar y, Scalar z) :
-    quaternion_(w,x,y,z) {
-    CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), 1e-4);
+    q_A_B_(w,x,y,z) {
+  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), static_cast<Scalar>(1e-4));
 }
 
   
 /// \brief initialize from real and imaginary components
 RotationQuaternion::RotationQuaternion(Scalar real, const Eigen::Vector3d& imaginary) :
-    quaternion_(real, imaginary[0], imaginary[1], imaginary[2]){
-  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), 1e-4);
+    q_A_B_(real, imaginary[0], imaginary[1], imaginary[2]){
+  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), static_cast<Scalar>(1e-4));
 }
 
 
 /// \brief initialize from an Eigen quaternion
 RotationQuaternion::RotationQuaternion(const Implementation& quaternion) :
-    quaternion_(quaternion){
-  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), 1e-4);
+    q_A_B_(quaternion){
+  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), static_cast<Scalar>(1e-4));
 }
 
 /// \brief initialize from real and imaginary components (real first)
 RotationQuaternion::RotationQuaternion(const Vector4& quat) :
-    quaternion_(quat[0], quat[1], quat[2], quat[3])
+    q_A_B_(quat[0], quat[1], quat[2], quat[3])
 {
-  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), 1e-4);
+  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), static_cast<Scalar>(1e-4));
 }
 
 /// \brief initialize from a rotation matrix
 RotationQuaternion::RotationQuaternion(const RotationMatrix& matrix) :
-    quaternion_(matrix) {
+    q_A_B_(matrix) {
   // \todo furgalep check that this was a real rotation matrix
 }
 
 
 RotationQuaternion::RotationQuaternion(const AngleAxis& angleAxis) :
-    quaternion_(angleAxis.toImplementation()){
+    q_A_B_(angleAxis.toImplementation()){
 
 }
 
@@ -58,56 +57,52 @@ RotationQuaternion::~RotationQuaternion() {
 
 /// \brief the real component of the quaternion
 RotationQuaternion::Scalar RotationQuaternion::w() const {
-  return quaternion_.w();
+  return q_A_B_.w();
 }
 
 /// \brief the first imaginary component of the quaternion
 RotationQuaternion::Scalar RotationQuaternion::x() const {
-  return quaternion_.x();
+  return q_A_B_.x();
 }
 
 /// \brief the second imaginary component of the quaternion
 RotationQuaternion::Scalar RotationQuaternion::y() const {
-  return quaternion_.y();
+  return q_A_B_.y();
 }
 
 /// \brief the third imaginary component of the quaternion
 RotationQuaternion::Scalar RotationQuaternion::z() const {
-  return quaternion_.z();
+  return q_A_B_.z();
 }
 
 /// \brief assignment operator
 RotationQuaternion& RotationQuaternion::operator=(const RotationQuaternion& rhs) {
   if(this != &rhs) {
-    quaternion_ = rhs.quaternion_;
+    q_A_B_ = rhs.q_A_B_;
   }
   return *this;
 }
 
-
 /// \brief the imaginary components of the quaterion.
 RotationQuaternion::Imaginary RotationQuaternion::imaginary() const {
-  return Imaginary(quaternion_.x(),quaternion_.y(),quaternion_.z());
+  return Imaginary(q_A_B_.x(),q_A_B_.y(),q_A_B_.z());
 }
-
 
 /// \brief get the components of the quaternion as a vector (real first)
 RotationQuaternion::Vector4 RotationQuaternion::vector() const {
-  return Vector4(quaternion_.w(), quaternion_.x(),quaternion_.y(),quaternion_.z());
+  return Vector4(q_A_B_.w(), q_A_B_.x(),q_A_B_.y(),q_A_B_.z());
 }
-
 
 /// \brief set the quaternion by its values (real, imaginary)
 void RotationQuaternion::setValues(Scalar w, Scalar x, Scalar y, Scalar z) {
-  quaternion_ = Implementation(w,x,y,z);
-  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), 1e-4);
+  q_A_B_ = Implementation(w,x,y,z);
+  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), static_cast<Scalar>(1e-4));
 }
-
 
 /// \brief set the quaternion by its real and imaginary parts
 void RotationQuaternion::setParts(Scalar real, const Imaginary& imag) {
-  quaternion_ = Implementation(real, imag[0], imag[1], imag[2]);
-  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), 1e-4);
+  q_A_B_ = Implementation(real, imag[0], imag[1], imag[2]);
+  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), static_cast<Scalar>(1e-4));
 }
 
 
@@ -138,20 +133,17 @@ RotationQuaternion RotationQuaternion::getUnique() const {
   }
 }
 
-
 /// \brief set the quaternion to its unique representation
 RotationQuaternion& RotationQuaternion::setUnique() {
   *this = getUnique();
   return *this;
 }
 
-
 /// \brief set the quaternion to identity
 RotationQuaternion& RotationQuaternion::setIdentity() {
-  quaternion_.setIdentity();
+  q_A_B_.setIdentity();
   return *this;
 }
-
 
 /// \brief invert the quaternion
 RotationQuaternion& RotationQuaternion::invert() {
@@ -167,22 +159,22 @@ RotationQuaternion RotationQuaternion::inverted() const {
 
 /// \brief conjugate the quaternion
 RotationQuaternion& RotationQuaternion::conjugate() {
-  quaternion_.x() = -quaternion_.x();
-  quaternion_.y() = -quaternion_.y();
-  quaternion_.z() = -quaternion_.z();
+  q_A_B_.x() = -q_A_B_.x();
+  q_A_B_.y() = -q_A_B_.y();
+  q_A_B_.z() = -q_A_B_.z();
   return *this;
 }
 
 
 /// \brief get a copy of the conjugate of the quaternion.
 RotationQuaternion RotationQuaternion::conjugated() const {
-  return RotationQuaternion(quaternion_.inverse());
+  return RotationQuaternion(q_A_B_.inverse());
 }
 
 
 /// \brief rotate a vector, v
 Eigen::Vector3d RotationQuaternion::rotate(const Eigen::Vector3d& v) const {
-  return quaternion_*v;
+  return q_A_B_*v;
 }
 
 
@@ -190,14 +182,14 @@ Eigen::Vector3d RotationQuaternion::rotate(const Eigen::Vector3d& v) const {
 Eigen::Vector4d RotationQuaternion::rotate4(const Eigen::Vector4d& v) const {
   Eigen::Vector4d vprime;
   vprime[3] = v[3];
-  vprime.head<3>() = quaternion_*v.head<3>();
+  vprime.head<3>() = q_A_B_*v.head<3>();
   return vprime;
 }
 
 
 /// \brief rotate a vector, v
 Eigen::Vector3d RotationQuaternion::inverseRotate(const Eigen::Vector3d& v) const {
-  return quaternion_.inverse()*v;
+  return q_A_B_.inverse()*v;
 }
 
 
@@ -205,57 +197,50 @@ Eigen::Vector3d RotationQuaternion::inverseRotate(const Eigen::Vector3d& v) cons
 Eigen::Vector4d RotationQuaternion::inverseRotate4(const Eigen::Vector4d& v) const {
   Eigen::Vector4d vprime;
   vprime[3] = v[3];
-  vprime.head<3>() = quaternion_.inverse()*v.head<3>();
+  vprime.head<3>() = q_A_B_.inverse()*v.head<3>();
   return vprime;
 }
 
 
 /// \brief cast to the implementation type
 RotationQuaternion::Implementation& RotationQuaternion::toImplementation() {
-  return quaternion_;
+  return q_A_B_;
 }
-
 
 /// \brief cast to the implementation type
 const RotationQuaternion::Implementation& RotationQuaternion::toImplementation() const {
-  return quaternion_;
+  return q_A_B_;
 }
-
 
 /// \brief get the norm of the quaternion
 RotationQuaternion::Scalar RotationQuaternion::norm() const {
-  return quaternion_.norm();
+  return q_A_B_.norm();
 }
-
 
 /// \brief get the squared norm of the quaternion
 RotationQuaternion::Scalar RotationQuaternion::squaredNorm() const {
-  return quaternion_.squaredNorm();
+  return q_A_B_.squaredNorm();
 }
-
 
 /// \brief enforce the unit length constraint
 RotationQuaternion& RotationQuaternion::fix() {
-  quaternion_.normalize();
+  q_A_B_.normalize();
   return *this;
 }
 
-
 /// \brief compose two quaternions
 RotationQuaternion RotationQuaternion::operator*(const RotationQuaternion& rhs) const {
-  return RotationQuaternion(quaternion_ * rhs.quaternion_);
+  return RotationQuaternion(q_A_B_ * rhs.q_A_B_);
 }
-
 
 std::ostream& operator<<(std::ostream& out, const RotationQuaternion& rhs) {
   out << rhs.vector();
   return out;
 }
 
-
 /// \brief get the rotation matrix
 RotationQuaternion::RotationMatrix RotationQuaternion::getRotationMatrix() const {
-  return quaternion_.matrix();
+  return q_A_B_.matrix();
 }
 
 /// \brief get the angle between this and the other quaternion

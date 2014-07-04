@@ -7,6 +7,18 @@
 namespace kindr {
 namespace minimal {
 
+/// \class QuatTransformation
+/// \brief A frame transformation built from a quaternion and a point
+///
+/// This transformation takes points from frame B to frame A, written
+/// as \f${}_{A}\mathbf{p} = \mathbf{T}_{AB} {}_{B}\mathbf{p}\f$
+///
+/// In code, we write:
+///
+/// \code{.cpp}
+/// A_p = T_A_B.transform(B_p);
+/// \endcode
+///
 class QuatTransformation
 {
  public:
@@ -17,7 +29,7 @@ class QuatTransformation
 
   QuatTransformation();
 
-  QuatTransformation(const RotationQuaternion& rotation, const Position& translation);
+  QuatTransformation(const RotationQuaternion& q_A_B, const Position& A_t_A_B);
   
   virtual ~QuatTransformation();
 
@@ -65,8 +77,15 @@ class QuatTransformation
   QuatTransformation& invert();
 
  private:
-  Rotation rotation_;
-  Position translation_;
+  /// The quaternion that takes vectors from B to A
+  ///
+  /// \code{.cpp}
+  /// A_v = q_A_B_.rotate(B_v);
+  /// \endcode
+  Rotation q_A_B_;
+  /// The vector from the origin of A to the origin of B
+  /// expressed in A
+  Position A_t_A_B_;
 };
 
 

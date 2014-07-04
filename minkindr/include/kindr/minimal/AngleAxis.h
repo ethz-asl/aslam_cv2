@@ -10,6 +10,15 @@ class RotationQuaternion;
 
 /// \class AngleAxis
 /// \brief a minimal implementation of an angle and axis representation of rotation
+/// This rotation takes vectors from frame B to frame A, written
+/// as \f${}_{A}\mathbf{v} = \mathbf{C}_{AB} {}_{B}\mathbf{v}\f$
+///
+/// In code, we write:
+///
+/// \code{.cpp}
+/// A_v = C_A_B.rotate(B_v);
+/// \endcode
+///
 class AngleAxis
 {
  public:
@@ -37,7 +46,7 @@ class AngleAxis
   /// \brief initialize from an Eigen angleAxis
   AngleAxis(const Implementation& angleAxis);
 
-  /// \brief initialize from an Eigen quaternion
+  /// \brief initialize from an Eigen angle/axis
   AngleAxis(const Vector4& angleAxis);
 
   /// \brief initialize from a rotation matrix
@@ -63,29 +72,23 @@ class AngleAxis
   /// \brief Sets the rotation axis.
   void setAxis(Scalar v1, Scalar v2, Scalar v3);
 
-  /// \brief get the components of the quaternion as a vector (real first)
+  /// \brief get the components of the angle/axis as a vector (angle first)
   Vector4 vector() const;
 
   /// \brief get a copy of the representation that is unique
   AngleAxis getUnique() const;
 
-  /// \brief set the quaternion to its unique representation
+  /// \brief set the angle/axis to its unique representation
   AngleAxis& setUnique();
 
-  /// \brief set the quaternion to identity
+  /// \brief set the rotation to identity
   AngleAxis& setIdentity();
 
-  /// \brief invert the quaternion
+  /// \brief invert the rotation
   AngleAxis& invert();
 
-  /// \brief get a copy of the quaternion inverted.
+  /// \brief get a copy of the rotation inverted.
   AngleAxis inverted() const;
-
-  /// \brief conjugate the quaternion
-  AngleAxis& conjugate();
-
-  /// \brief get a copy of the conjugate of the quaternion.
-  AngleAxis conjugated() const;
 
   /// \brief rotate a vector, v
   Eigen::Vector3d rotate(const Eigen::Vector3d& v) const;
@@ -105,13 +108,13 @@ class AngleAxis
   /// \brief cast to the implementation type
   const Implementation& toImplementation() const;
 
-  /// \brief get the angle between this and the other quaternion
+  /// \brief get the angle between this and the other rotation
   Scalar getDisparityAngle(const AngleAxis& rhs) const;
 
   /// \brief enforce the unit length constraint
   AngleAxis& fix();
 
-  /// \brief compose two quaternions
+  /// \brief compose two rotations
   AngleAxis operator*(const AngleAxis& rhs) const;
 
   /// \brief assignment operator
@@ -121,7 +124,7 @@ class AngleAxis
   RotationMatrix getRotationMatrix() const;
 
  private:
-  Implementation angleAxis_;
+  Implementation C_A_B_;
   
 };
 
