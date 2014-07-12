@@ -147,6 +147,7 @@ class Camera {
 
   /// \brief set a label for the camera
   void setLabel(const std::string& label) {label_ = label;}
+
  private:
   /// The delay per scan line for a rolling shutter camera.
   uint64_t line_delay_nano_seconds_;

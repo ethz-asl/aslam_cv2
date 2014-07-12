@@ -140,6 +140,9 @@ class RotationQuaternion
   /// \brief get the rotation matrix
   RotationMatrix getRotationMatrix() const;
 
+  /// \brief check for binary equality
+  bool operator==(const RotationQuaternion& rhs) const { return vector() == rhs.vector(); }
+
  private:
   Implementation q_A_B_;
   

@@ -119,5 +119,11 @@ std::ostream & operator<<(std::ostream & out, const QuatTransformation& pose) {
   return out;
 }
 
+/// \brief check for binary equality
+bool QuatTransformation::operator==(const QuatTransformation& rhs) const {
+  return q_A_B_ == rhs.q_A_B_ && A_t_A_B_ == rhs.A_t_A_B_;
+}
+
+
 } // namespace minimal
 } // namespace kindr
