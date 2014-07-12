@@ -120,10 +120,9 @@ class Distortion {
   /**
    * \brief Getter for the number of distortion parameters.
    *
-   * @return The number of distortion parameters.
+   * @return The 2-element of distortion parameters.
    */
-  // TODO(dymczykm) must be constexpr
-  //virtual size_t parameterSize() const = 0;
+  virtual Eigen::Vector2i parameterSize() const = 0;
 
   /**
    * \brief Getter for the validity of distortion parameters.
