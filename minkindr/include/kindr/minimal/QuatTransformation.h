@@ -76,6 +76,9 @@ class QuatTransformation
   /// \brief invert the transformation
   QuatTransformation& invert();
 
+  /// \brief check for binary equality
+  bool operator==(const QuatTransformation& rhs) const;
+
  private:
   /// The quaternion that takes vectors from B to A
   ///
