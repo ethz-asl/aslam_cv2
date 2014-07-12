@@ -10,6 +10,16 @@ class AngleAxis;
 
 /// \class RotationQuaternion
 /// \brief a minimal implementation of a passive Hamiltonian rotation (unit-length) quaternion
+///
+/// This rotation takes vectors from frame B to frame A, written
+/// as \f${}_{A}\mathbf{v} = \mathbf{C}_{AB} {}_{B}\mathbf{v}\f$
+///
+/// In code, we write:
+///
+/// \code{.cpp}
+/// A_v = q_A_B.rotate(B_v);
+/// \endcode
+///
 class RotationQuaternion
 {
  public:
@@ -131,7 +141,7 @@ class RotationQuaternion
   RotationMatrix getRotationMatrix() const;
 
  private:
-  Implementation quaternion_;
+  Implementation q_A_B_;
   
 };
 
