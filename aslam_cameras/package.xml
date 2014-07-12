@@ -17,6 +17,7 @@
   <build_depend>glog_catkin</build_depend>
   <build_depend>opencv2_catkin</build_depend>
   <build_depend>sm_property_tree</build_depend>
+  <build_depend>minkindr</build_depend>
 </package>
 
 
