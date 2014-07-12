@@ -13,6 +13,7 @@ class VisualMultiFrame {
  public:
   ASLAM_POINTER_TYPEDEFS(VisualMultiFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualMultiFrame);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /// \brief creates an empty visual multi frame
   VisualMultiFrame();
