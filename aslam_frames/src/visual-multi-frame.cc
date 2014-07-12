@@ -14,6 +14,8 @@ VisualMultiFrame::~VisualMultiFrame() {
 /// \brief set the camera rig
 void VisualMultiFrame::setCameraRig(CameraRig::Ptr rig) {
   cameraRig_ = rig;
+  // \todo (PTF) set the frame cameras as well...
+  // Maybe this should be disallowed?
 }
 
 /// \brief get the camera rig
