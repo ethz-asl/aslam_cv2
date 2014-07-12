@@ -14,7 +14,6 @@ class PropertyTree;
 
 namespace aslam {
 
-///
 /// \class CameraRig
 /// \brief A class representing a calibrated multi-camera system
 ///

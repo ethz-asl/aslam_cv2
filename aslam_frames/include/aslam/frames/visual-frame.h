@@ -10,6 +10,7 @@
 #include <aslam/common/macros.h>
 #include <aslam/common/unique-id.h>
 #include <Eigen/Dense>
+#include <cstdint>
 
 namespace aslam {
 class Camera;
@@ -19,6 +20,9 @@ class VisualFrame  {
   typedef Eigen::Matrix<char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+  VisualFrame();
+  virtual ~VisualFrame();
 
   virtual bool operator==(const VisualFrame& other) const;
 
@@ -125,7 +129,15 @@ class VisualFrame  {
   /// \brief set the frame id.
   void setId(aslam::FrameId id) { id_ = id; }
 
+  /// \brief get the timestamp
+  uint64_t getTimestamp() const{ return stamp_; }
+  
+  /// \brief set the timestamp
+  void setTimestamp(uint64_t stamp){ stamp_ = stamp; }
+  
  private:
+  /// integer nanosecond timestamp
+  uint64_t stamp_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
   Camera::Ptr camera_geometry_;

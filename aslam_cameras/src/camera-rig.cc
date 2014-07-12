@@ -123,7 +123,7 @@ bool CameraRig::operator==(const CameraRig& other) const {
   same &= id_ == other.id_;
   if(same) {
     for(size_t i = 0; i < getNumCameras(); ++i) {
-      same &= (*camera_[i]) == (*other.camera_[i]);
+      same &= (*cameras_[i]) == (*other.cameras_[i]);
       same &= (*T_C_B_[i]) == (*other.T_C_B_[i]);
     }
   }
