@@ -1,7 +1,6 @@
 #ifndef KINDR_MINIMAL_QUAT_TRANSFORMATION_H
 #define KINDR_MINIMAL_QUAT_TRANSFORMATION_H
 
-#include "Position.h"
 #include "RotationQuaternion.h"
 
 namespace kindr {
@@ -22,8 +21,10 @@ namespace minimal {
 class QuatTransformation
 {
  public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   typedef double Scalar;
-  typedef Position Position;
+  typedef Eigen::Vector3d Position;
   typedef RotationQuaternion Rotation;
   typedef Eigen::Matrix4d TransformationMatrix;
 
