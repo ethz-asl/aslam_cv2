@@ -23,7 +23,11 @@ class FisheyeDistortion : public aslam::Distortion {
     setParameters(params);
   }
 
-  inline static constexpr size_t parameterSize() {
+  virtual Eigen::Vector2i parameterSize() const {
+    return Eigen::Vector2i(kNumOfParams, 1);
+  }
+
+  inline static constexpr size_t parameterCount() {
     return kNumOfParams;
   }
 
