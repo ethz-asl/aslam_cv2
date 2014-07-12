@@ -6,6 +6,9 @@ catkin_simple()
 
 find_package(Boost REQUIRED COMPONENTS system serialization filesystem)
 
+if(APPLE)
+  add_definitions(-std=c++11)
+endif()
 cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/distortion.cc
                                src/pinhole-camera.cc)
