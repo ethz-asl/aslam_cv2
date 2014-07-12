@@ -139,5 +139,4 @@ TEST_P(FisheyeParam, DistortAndUndistort) {
   EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
 }
 
-
 ASLAM_UNITTEST_ENTRYPOINT
