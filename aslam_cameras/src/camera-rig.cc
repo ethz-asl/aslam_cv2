@@ -2,12 +2,10 @@
 #include <glog/logging.h>
 #include <sm/PropertyTree.hpp>
 
-
 namespace aslam {
 
 /// \brief default constructor builds an empty camera rig
 CameraRig::CameraRig() { }
-
 
 CameraRig::CameraRig(const CameraRigId& id,
                      const TransformationVector& T_C_B, 
@@ -117,6 +115,5 @@ size_t CameraRig::getCameraIndex(const CameraId& id) const {
     return it->second;
   }
 }
-
 
 } // namespace aslam
