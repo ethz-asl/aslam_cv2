@@ -2,6 +2,20 @@
 
 namespace aslam {
 
+bool FisheyeDistortion::operator==(
+    const aslam::Distortion& other) const {
+  const aslam::Distortion* other_fisheye_distortion =
+      dynamic_cast<const aslam::Distortion*>(&other);
+  if (other_fisheye_distortion) {
+    Eigen::VectorXd other_parameters;
+    other_fisheye_distortion->getParameters(&other_parameters);
+    if (this->params_ == other_parameters) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void FisheyeDistortion::distort(
     Eigen::Matrix<double, 2, 1>* point) const {
   CHECK_NOTNULL(point);
@@ -99,6 +113,8 @@ void FisheyeDistortion::undistort(Eigen::Matrix<double, 2, 1>* point) const {
   (*point) *= r_u;
 }
 
+// Passing NULL as *out_jacobian is admissible and makes the routine
+// skip Jacobian calculation.
 void FisheyeDistortion::distortParameterJacobian(
     const Eigen::Matrix<double, 2, 1>& point,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
