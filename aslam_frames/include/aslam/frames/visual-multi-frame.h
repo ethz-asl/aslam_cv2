@@ -11,7 +11,6 @@ namespace aslam {
 ///        calibration data from a multi-camera system
 class VisualMultiFrame {
  public:
-  
   ASLAM_POINTER_TYPEDEFS(VisualMultiFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualMultiFrame);
 
@@ -21,16 +20,16 @@ class VisualMultiFrame {
   virtual ~VisualMultiFrame();
 
   /// \brief get the multiframe id.
-  aslam::MultiFrameId getId() const { return id_; }
+  inline aslam::MultiFrameId getId() const { return id_; }
   
   /// \brief set the multiframe id.
-  void setId(aslam::MultiFrameId id) { id_ = id; }
+  inline void setId(aslam::MultiFrameId id) { id_ = id; }
 
   /// \brief get the timestamp
-  uint64_t getTimestamp() const{ return stamp_; }
+  inline uint64_t getTimestamp() const{ return stamp_; }
   
   /// \brief set the timestamp
-  void setTimestamp(uint64_t stamp){ stamp_ = stamp; }
+  inline void setTimestamp(uint64_t stamp){ stamp_ = stamp; }
 
   /// \brief set the camera rig
   void setCameraRig(CameraRig::Ptr rig);
@@ -39,7 +38,7 @@ class VisualMultiFrame {
   const CameraRig& getCameraRig() const;
   
   /// \brief get the camera rig
-  const CameraRig::Ptr & getCameraRigMutable();
+  CameraRig::Ptr getCameraRigMutable();
   
   /// \brief get one frame
   const VisualFrame& getFrame(size_t frameIndex) const;
@@ -73,6 +72,7 @@ class VisualMultiFrame {
   bool operator==(const VisualMultiFrame& other) const;
 
  private:
+  /// integer nanoseconds since epoch
   uint64_t stamp_;
   
   /// \brief the cs frame id
@@ -82,7 +82,7 @@ class VisualMultiFrame {
   CameraRig::Ptr cameraRig_;
   
   /// \brief the list of individual image frames
-  std::vector< VisualFrame::Ptr > frames_;
+  std::vector<VisualFrame::Ptr> frames_;
 };
 
 } // namespace aslam

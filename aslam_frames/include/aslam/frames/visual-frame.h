@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <cstdint>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/common/channel.h>
@@ -10,7 +11,7 @@
 #include <aslam/common/macros.h>
 #include <aslam/common/unique-id.h>
 #include <Eigen/Dense>
-#include <cstdint>
+
 
 namespace aslam {
 class Camera;
@@ -19,6 +20,7 @@ class VisualFrame  {
  public:
   typedef Eigen::Matrix<char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
   VisualFrame();
@@ -124,19 +126,19 @@ class VisualFrame  {
   void setCameraGeometry(const Camera::Ptr& camera);
 
   /// \brief get the frame id.
-  aslam::FrameId getId() const { return id_; }
+  inline aslam::FrameId getId() const { return id_; }
 
   /// \brief set the frame id.
-  void setId(aslam::FrameId id) { id_ = id; }
+  inline void setId(aslam::FrameId id) { id_ = id; }
 
   /// \brief get the timestamp
-  uint64_t getTimestamp() const{ return stamp_; }
+  inline uint64_t getTimestamp() const { return stamp_; }
   
   /// \brief set the timestamp
-  void setTimestamp(uint64_t stamp){ stamp_ = stamp; }
+  inline void setTimestamp(uint64_t stamp){ stamp_ = stamp; }
   
  private:
-  /// integer nanosecond timestamp
+  /// integer nanoseconds since epoch
   uint64_t stamp_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
