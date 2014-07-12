@@ -7,7 +7,7 @@ namespace aslam {
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
   // TODO(slynen): Better iterate over channels and compare data instead of pointers.
-  channels_ == other.channels_;
+  same &= channels_ == other.channels_;
   same &= static_cast<bool>(camera_geometry_) ==
       static_cast<bool>(other.camera_geometry_);
   if (static_cast<bool>(camera_geometry_) &&
