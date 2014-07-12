@@ -6,7 +6,7 @@
 #include <aslam/common/types.h>
 #include <vector>
 #include <unordered_map>
-#include <aslam/cameras/Camera.h>
+#include <aslam/cameras/camera.h>
 
 namespace sm {
 class PropertyTree;
