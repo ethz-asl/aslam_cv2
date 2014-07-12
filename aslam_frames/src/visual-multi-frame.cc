@@ -25,7 +25,7 @@ const CameraRig& VisualMultiFrame::getCameraRig() const {
 }
   
 /// \brief get the camera rig
-const CameraRig::Ptr & VisualMultiFrame::getCameraRigMutable() {
+CameraRig::Ptr VisualMultiFrame::getCameraRigMutable() {
   return cameraRig_;
 }
   

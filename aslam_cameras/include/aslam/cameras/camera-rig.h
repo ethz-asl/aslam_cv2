@@ -1,12 +1,15 @@
 #ifndef ASLAM_CAMERA_RIG_H_
 #define ASLAM_CAMERA_RIG_H_
+
 #include <cstdint>
+#include <vector>
+#include <unordered_map>
+#include <memory>
 
 #include <aslam/common/macros.h>
 #include <aslam/common/types.h>
-#include <vector>
-#include <unordered_map>
 #include <aslam/cameras/camera.h>
+#include <sm/aligned_allocation.h>
 
 namespace sm {
 class PropertyTree;
@@ -26,9 +29,9 @@ class CameraRig
  public:
   ASLAM_POINTER_TYPEDEFS(CameraRig);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(CameraRig);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef std::vector<TransformationPtr> TransformationVector;
-  typedef std::vector<Camera::Ptr> CameraVector;
+  typedef Aligned<std::vector, Transformation>::type TransformationVector;
 
   /// \brief default constructor builds an empty camera rig
   CameraRig();
@@ -44,7 +47,7 @@ class CameraRig
   /// @param label a human-readable name for this camera rig
   CameraRig(const CameraRigId& id, 
             const TransformationVector& T_C_B, 
-            const CameraVector& cameras,
+            const std::vector<Camera::Ptr>& cameras,
             const std::string& label);
 
   /// \brief initialize from a property tree
@@ -59,16 +62,13 @@ class CameraRig
   const Transformation& get_T_C_B(size_t cameraIndex) const;
 
   /// \brief get the pose of body frame with respect to the camera i
-  TransformationPtr get_T_C_B_mutable(size_t cameraIndex);
+  Transformation& get_T_C_B_mutable(size_t cameraIndex);
 
   /// \brief set the pose of body frame with respect to the camera i
   void set_T_C_B(size_t cameraIndex, const Transformation& T_Ci_B);
 
-  /// \brief set the pose of body frame with respect to the camera i
-  void set_T_C_B(size_t cameraIndex, TransformationPtr T_Ci_B);
-
   /// \brief get all transformations
-  const TransformationVector& getTransformationVector();
+  const TransformationVector& getTransformationVector() const;
 
   /// \brief get the geometry object for camera i
   const Camera& getCamera(size_t cameraIndex) const;
@@ -83,7 +83,7 @@ class CameraRig
   size_t numCameras() const;
 
   /// \brief get all cameras
-  const CameraVector& getCameraVector() const;
+  const std::vector<Camera::Ptr>& getCameraVector() const;
 
   /// \brief gets the id for the camera at index i
   CameraId getCameraId(size_t cameraIndex) const;
@@ -96,19 +96,19 @@ class CameraRig
   size_t getCameraIndex(const CameraId& id) const;
   
   /// \brief get the camera id.
-  aslam::CameraRigId getId() const { return id_; }
+  inline aslam::CameraRigId getId() const { return id_; }
   
   /// \brief set the camera id.
-  void setId(aslam::CameraRigId id) { id_ = id; }
+  inline void setId(aslam::CameraRigId id) { id_ = id; }
 
   /// \brief equality
   bool operator==(const CameraRig& other) const;
   
   /// \brief get a label for the camera
-  const std::string& getLabel() const {return label_;}
+  inline const std::string& getLabel() const {return label_;}
 
   /// \brief set a label for the camera
-  void setLabel(const std::string& label) {label_ = label;}
+  inline void setLabel(const std::string& label) {label_ = label;}
 
  private:
 
@@ -122,17 +122,15 @@ class CameraRig
   TransformationVector T_C_B_;
 
   /// \brief The camera geometries
-  CameraVector cameras_;
+  std::vector<Camera::Ptr> cameras_;
 
   /// \brief a map from camera id to index
   std::unordered_map<CameraId, size_t> idToIndex_;
 
   /// A label for this camera rig, a name.
   std::string label_;
-
 };
 
 } // namespace aslam
-
 
 #endif /* ASLAM_CAMERA_RIG_H_ */
