@@ -3,31 +3,30 @@
 
 namespace aslam {
 PinholeCamera::PinholeCamera()
-: _fu(0.0),
-  _fv(0.0),
-  _cu(0.0),
-  _cv(0.0),
+: _intrinsics(IntrinsicsDimension),
   _ru(0),
   _rv(0) {
+  _intrinsics << 0, 0, 0, 0;
   updateTemporaries();
 }
 
-PinholeCamera::PinholeCamera(
-    const sm::PropertyTree & config)
-: Camera(config) {
-  _fu = config.getDouble("fu");
-  _fv = config.getDouble("fv");
-  _cu = config.getDouble("cu");
-  _cv = config.getDouble("cv");
-  _ru = config.getInt("ru");
-  _rv = config.getInt("rv");
-
-  //TODO(slynen): Load and instantiate correct distortion here.
-  // distortion.(config, "distortion")
-  CHECK(false) << "Loading of distortion from property tree not implemented.";
-
-  updateTemporaries();
-}
+// TODO(slynen)
+//PinholeCamera::PinholeCamera(
+//    const sm::PropertyTree & config)
+//: Camera(config) {
+//  _fu = config.getDouble("fu");
+//  _fv = config.getDouble("fv");
+//  _cu = config.getDouble("cu");
+//  _cv = config.getDouble("cv");
+//  _ru = config.getInt("ru");
+//  _rv = config.getInt("rv");
+//
+//  //TODO(slynen): Load and instantiate correct distortion here.
+//  // distortion.(config, "distortion")
+//  CHECK(false) << "Loading of distortion from property tree not implemented.";
+//
+//  updateTemporaries();
+//}
 
 PinholeCamera::PinholeCamera(double focalLengthU,
                              double focalLengthV,
@@ -36,13 +35,11 @@ PinholeCamera::PinholeCamera(double focalLengthU,
                              int resolutionU,
                              int resolutionV,
                              aslam::Distortion::Ptr distortion)
-: _fu(focalLengthU),
-  _fv(focalLengthV),
-  _cu(imageCenterU),
-  _cv(imageCenterV),
+: _intrinsics(IntrinsicsDimension),
   _ru(resolutionU),
   _rv(resolutionV),
   _distortion(distortion) {
+  _intrinsics << focalLengthU, focalLengthV, imageCenterU, imageCenterV;
   updateTemporaries();
 }
 
@@ -52,12 +49,10 @@ PinholeCamera::PinholeCamera(double focalLengthU,
                              double imageCenterV,
                              int resolutionU,
                              int resolutionV)
-: _fu(focalLengthU),
-  _fv(focalLengthV),
-  _cu(imageCenterU),
-  _cv(imageCenterV),
+: _intrinsics(IntrinsicsDimension),
   _ru(resolutionU),
   _rv(resolutionV) {
+  _intrinsics << focalLengthU, focalLengthV, imageCenterU, imageCenterV;
   updateTemporaries();
 }
 
@@ -65,10 +60,9 @@ PinholeCamera::~PinholeCamera() {}
 
 bool PinholeCamera::operator==(const PinholeCamera& other) const {
   bool same = true;
-  same &= _fu == other._fu;
-  same &= _fv == other._fv;
-  same &= _cu == other._cu;
-  same &= _cv == other._cv;
+  same &= _intrinsics == other._intrinsics;
+  same &= _ru == other._ru;
+  same &= _rv == other._rv;
   same &= static_cast<bool>(_distortion) == static_cast<bool>(other._distortion);
   if (static_cast<bool>(_distortion) && static_cast<bool>(other._distortion)) {
     same &= *_distortion == *other._distortion;
@@ -80,6 +74,10 @@ bool PinholeCamera::euclideanToKeypoint(
     const Eigen::Matrix<double, 3, 1>& p,
     Eigen::Matrix<double, 2, 1>* outKeypoint) const {
   CHECK_NOTNULL(outKeypoint);
+  const double& fu = _intrinsics(0);
+  const double& fv = _intrinsics(1);
+  const double& cu = _intrinsics(2);
+  const double& cv = _intrinsics(3);
 
   double rz = 1.0 / p[2];
   Eigen::Matrix<double, 2, 1> keypoint;
@@ -89,10 +87,10 @@ bool PinholeCamera::euclideanToKeypoint(
   CHECK_NOTNULL(_distortion.get());
   _distortion->distort(keypoint, outKeypoint);
 
-  (*outKeypoint)[0] = _fu * (*outKeypoint)[0] + _cu;
-  (*outKeypoint)[1] = _fv * (*outKeypoint)[1] + _cv;
+  (*outKeypoint)[0] = fu * (*outKeypoint)[0] + cu;
+  (*outKeypoint)[1] = fv * (*outKeypoint)[1] + cv;
 
-  return isValid(*outKeypoint) && p[2] > 0;
+  return isValid(*outKeypoint) && (p[2] > kMinimumDepth);
 }
 
 bool PinholeCamera::euclideanToKeypoint(
@@ -101,35 +99,37 @@ bool PinholeCamera::euclideanToKeypoint(
     Eigen::Matrix<double, 2, 3>* outJp) const {
   CHECK_NOTNULL(outKeypoint);
   CHECK_NOTNULL(outJp);
+  const double& fu = _intrinsics(0);
+  const double& fv = _intrinsics(1);
+  const double& cu = _intrinsics(2);
+  const double& cv = _intrinsics(3);
 
   // Jacobian:
   outJp->setZero();
 
   double rz = 1.0 / p[2];
   double rz2 = rz * rz;
-  Eigen::Matrix<double, 2, 1> keypoint;
-  keypoint[0] = p[0] * rz;
-  keypoint[1] = p[1] * rz;
+  (*outKeypoint)[0] = p[0] * rz;
+  (*outKeypoint)[1] = p[1] * rz;
 
   Eigen::Matrix<double, 2, Eigen::Dynamic> Jd;
   CHECK_NOTNULL(_distortion.get());
-  _distortion->distort(&keypoint, &Jd);  // distort and Jacobian wrt. keypoint
+  _distortion->distort(outKeypoint, &Jd);  // distort and Jacobian wrt. keypoint
   CHECK_GE(Jd.cols(), 2);
 
   Eigen::Matrix<double, 2, 3>& J = *outJp;
   // Jacobian including distortion
-  J(0, 0) = _fu * Jd(0, 0) * rz;
-  J(0, 1) = _fu * Jd(0, 1) * rz;
-  J(0, 2) = -_fu * (p[0] * Jd(0, 0) + p[1] * Jd(0, 1)) * rz2;
-  J(1, 0) = _fv * Jd(1, 0) * rz;
-  J(1, 1) = _fv * Jd(1, 1) * rz;
-  J(1, 2) = -_fv * (p[0] * Jd(1, 0) + p[1] * Jd(1, 1)) * rz2;
+  J(0, 0) = fu * Jd(0, 0) * rz;
+  J(0, 1) = fu * Jd(0, 1) * rz;
+  J(0, 2) = -fu * (p[0] * Jd(0, 0) + p[1] * Jd(0, 1)) * rz2;
+  J(1, 0) = fv * Jd(1, 0) * rz;
+  J(1, 1) = fv * Jd(1, 1) * rz;
+  J(1, 2) = -fv * (p[0] * Jd(1, 0) + p[1] * Jd(1, 1)) * rz2;
 
-  (*outKeypoint)[0] = _fu * (*outKeypoint)[0] + _cu;
-  (*outKeypoint)[1] = _fv * (*outKeypoint)[1] + _cv;
+  (*outKeypoint)[0] = fu * (*outKeypoint)[0] + cu;
+  (*outKeypoint)[1] = fv * (*outKeypoint)[1] + cv;
 
-  return isValid(*outKeypoint) && p[2] > 0;
-
+  return isValid(*outKeypoint) && (p[2] > kMinimumDepth);
 }
 
 bool PinholeCamera::homogeneousToKeypoint(
@@ -161,10 +161,15 @@ bool PinholeCamera::keypointToEuclidean(
     const Eigen::Matrix<double, 2, 1>& keypoint,
     Eigen::Matrix<double, 3, 1>* outPoint) const {
   CHECK_NOTNULL(outPoint);
+  const double& fu = _intrinsics(0);
+  const double& fv = _intrinsics(1);
+  const double& cu = _intrinsics(2);
+  const double& cv = _intrinsics(3);
+
 
   Eigen::Matrix<double, 2, 1> kp = keypoint;
-  kp[0] = (kp[0] - _cu) / _fu;
-  kp[1] = (kp[1] - _cv) / _fv;
+  kp[0] = (kp[0] - cu) / fu;
+  kp[1] = (kp[1] - cv) / fv;
 
   _distortion->undistort(&kp);  // revert distortion
 
@@ -181,10 +186,15 @@ bool PinholeCamera::keypointToEuclidean(
     Eigen::Matrix<double, 3, 2>* outJk) const {
   CHECK_NOTNULL(outPoint);
   CHECK_NOTNULL(outJk);
+  const double& fu = _intrinsics(0);
+  const double& fv = _intrinsics(1);
+  const double& cu = _intrinsics(2);
+  const double& cv = _intrinsics(3);
+
   Eigen::Matrix<double, 2, 1> kp = keypoint;
 
-  kp[0] = (kp[0] - _cu) / _fu;
-  kp[1] = (kp[1] - _cv) / _fv;
+  kp[0] = (kp[0] - cu) / fu;
+  kp[1] = (kp[1] - cv) / fv;
 
   Eigen::Matrix<double, 2, Eigen::Dynamic> Jd;
   _distortion->undistort(&kp, &Jd);  // revert distortion
@@ -237,7 +247,7 @@ bool PinholeCamera::euclideanToKeypointIntrinsicsJacobian(
     const Eigen::Matrix<double, 3, 1>& p,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const {
   CHECK_NOTNULL(outJi);
-  outJi->resize(Eigen::NoChange, 4);
+  outJi->resize(Eigen::NoChange, this->parameterCount());
   Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJi;
   J.setZero();
 
@@ -260,20 +270,22 @@ bool PinholeCamera::euclideanToKeypointDistortionJacobian(
     const Eigen::Matrix<double, 3, 1>& p,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const {
   CHECK_NOTNULL(outJd);
-  outJd->resize(Eigen::NoChange, 4);
+  outJd->resize(Eigen::NoChange, _distortion->minimalDimensions());
   Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJd;
   J.setZero();
+
+  const double& fu = _intrinsics(0);
+  const double& fv = _intrinsics(1);
 
   double rz = 1.0 / p[2];
   Eigen::Matrix<double, 2, 1> kp;
   kp[0] = p[0] * rz;
   kp[1] = p[1] * rz;
 
-  _distortion->distortParameterJacobian(&kp, &J);
+  _distortion->distortParameterJacobian(kp, &J);
 
-  J.resize(Eigen::NoChange, _distortion->minimalDimensions());
-  J.row(0) *= _fu;
-  J.row(1) *= _fv;
+  J.row(0) *= fu;
+  J.row(1) *= fv;
   return true;
 }
 
@@ -281,7 +293,7 @@ bool PinholeCamera::homogeneousToKeypointIntrinsicsJacobian(
     const Eigen::Matrix<double, 4, 1>& p,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const {
   CHECK_NOTNULL(outJi);
-  outJi->resize(Eigen::NoChange, 4);
+  outJi->resize(Eigen::NoChange, this->parameterCount());
   Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJi;
   J.setZero();
 
@@ -298,7 +310,7 @@ bool PinholeCamera::homogeneousToKeypointDistortionJacobian(
     const Eigen::Matrix<double, 4, 1>& p,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* outJd) const {
   CHECK_NOTNULL(outJd);
-  outJd->resize(Eigen::NoChange, 4);
+  outJd->resize(Eigen::NoChange, _distortion->minimalDimensions());
   Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJd;
   J.setZero();
 
@@ -359,13 +371,18 @@ bool PinholeCamera::isHomogeneousVisible(
 }
 
 void PinholeCamera::update(const double* v) {
-  _fu += v[0];
-  _fv += v[1];
-  _cu += v[2];
-  _cv += v[3];
-  _recip_fu = 1.0 / _fu;
-  _recip_fv = 1.0 / _fv;
-  _fu_over_fv = _fu / _fv;
+  double& fu = _intrinsics[0];
+  double& fv = _intrinsics[1];
+  double& cu = _intrinsics[2];
+  double& cv = _intrinsics[3];
+
+  fu += v[0];
+  fv += v[1];
+  cu += v[2];
+  cv += v[3];
+  _recip_fu = 1.0 / fu;
+  _recip_fv = 1.0 / fv;
+  _fu_over_fv = fu / fv;
 }
 
 int PinholeCamera::minimalDimensions() const {
@@ -373,37 +390,47 @@ int PinholeCamera::minimalDimensions() const {
 }
 
 void PinholeCamera::getParameters(Eigen::MatrixXd & P) const {
+  const double& fu = _intrinsics(0);
+  const double& fv = _intrinsics(1);
+  const double& cu = _intrinsics(2);
+  const double& cv = _intrinsics(3);
+
   P.resize(4, 1);
-  P(0, 0) = _fu;
-  P(1, 0) = _fv;
-  P(2, 0) = _cu;
-  P(3, 0) = _cv;
+  P(0, 0) = fu;
+  P(1, 0) = fv;
+  P(2, 0) = cu;
+  P(3, 0) = cv;
 }
 
 void PinholeCamera::setParameters(const Eigen::MatrixXd & P) {
-  _fu = P(0, 0);
-  _fv = P(1, 0);
-  _cu = P(2, 0);
-  _cv = P(3, 0);
+  double& fu = _intrinsics[0];
+  double& fv = _intrinsics[1];
+  double& cu = _intrinsics[2];
+  double& cv = _intrinsics[3];
+
+  fu = P(0, 0);
+  fv = P(1, 0);
+  cu = P(2, 0);
+  cv = P(3, 0);
   updateTemporaries();
 }
 
 Eigen::Vector2i PinholeCamera::parameterSize() const {
-  return Eigen::Vector2i(4, 1);
+  return Eigen::Vector2i(IntrinsicsDimension, 1);
 }
 
 void PinholeCamera::updateTemporaries() {
-  _recip_fu = 1.0 / _fu;
-  _recip_fv = 1.0 / _fv;
-  _fu_over_fv = _fu / _fv;
+  const double& fu = _intrinsics(0);
+  const double& fv = _intrinsics(1);
+
+  _recip_fu = 1.0 / fu;
+  _recip_fv = 1.0 / fv;
+  _fu_over_fv = fu / fv;
 
 }
 
 void PinholeCamera::resizeIntrinsics(double scale) {
-  _fu *= scale;
-  _fv *= scale;
-  _cu *= scale;
-  _cv *= scale;
+  _intrinsics *= scale;
   _ru = _ru * scale;
   _rv = _rv * scale;
 
