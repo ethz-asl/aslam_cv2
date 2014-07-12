@@ -116,4 +116,17 @@ size_t CameraRig::getCameraIndex(const CameraId& id) const {
   }
 }
 
+bool CameraRig::operator==(const CameraRig& other) const {
+  bool same = true;
+  same &= getNumCameras() == other.getNumCameras();
+  same &= label_ == other.label_;
+  same &= id_ == other.id_;
+  if(same) {
+    for(size_t i = 0; i < getNumCameras(); ++i) {
+      same &= (*camera_[i]) == (*other.camera_[i]);
+      same &= (*T_C_B_[i]) == (*other.T_C_B_[i]);
+    }
+  }
+}
+
 } // namespace aslam
