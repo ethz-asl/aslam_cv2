@@ -121,7 +121,6 @@ void FisheyeDistortion::distortParameterJacobian(
   }
   else if (r_u * r_u < 1e-5) {
     out_jacobian->setOnes();
-    // d(2. * tanwhalf / w) / dw
     *out_jacobian *= (w - sin(w)) / (w * w * cos(w / 2) * cos(w / 2));
   }
   else {

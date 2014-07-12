@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 #include <aslam/common/macros.h>
 
-  // TODO(slynen)
+  // TODO(slynen) Enable commented out PropertyTree support
 //namespace sm {
 //class PropertyTree;
 //}
@@ -15,7 +15,7 @@ class Distortion {
   ASLAM_POINTER_TYPEDEFS(Distortion);
 
   Distortion();
-  // TODO(slynen)
+  // TODO(slynen) Enable commented out PropertyTree support
 //  Distortion(const sm::PropertyTree& property_tree);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Distortion);
   virtual ~Distortion();
