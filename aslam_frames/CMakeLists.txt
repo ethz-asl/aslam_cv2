@@ -8,6 +8,7 @@ add_definitions(-std=c++11)
 
 cs_add_library(${PROJECT_NAME} 
   src/visual-frame.cc
+  src/visual-multi-frame.cc
   )
 
 catkin_add_gtest(${PROJECT_NAME}_test_frames

@@ -1,4 +1,5 @@
 #include <aslam/cameras/camera-rig.h>
+#include <aslam/common/predicates.h>
 #include <glog/logging.h>
 #include <sm/PropertyTree.hpp>
 
@@ -40,6 +41,7 @@ size_t CameraRig::getNumCameras() const {
 /// \brief get the pose of body frame with respect to the camera i
 const Transformation& CameraRig::get_T_C_B(size_t cameraIndex) const {
   CHECK_LT(cameraIndex, cameras_.size());
+  CHECK_NOTNULL(T_C_B_[cameraIndex].get());
   return *T_C_B_[cameraIndex];
 }
 
@@ -52,7 +54,11 @@ TransformationPtr CameraRig::get_T_C_B_mutable(size_t cameraIndex) {
 /// \brief set the pose of body frame with respect to the camera i
 void CameraRig::set_T_C_B(size_t cameraIndex, const Transformation& T_Ci_B) {
   CHECK_LT(cameraIndex, cameras_.size());
-  *T_C_B_[cameraIndex] = T_Ci_B;
+  if(T_C_B_[cameraIndex].get()) {
+    *T_C_B_[cameraIndex] = T_Ci_B;
+  } else {
+    T_C_B_[cameraIndex] = std::make_shared<Transformation>(T_Ci_B);
+  }
 }
 
 /// \brief set the pose of body frame with respect to the camera i
@@ -69,6 +75,7 @@ const CameraRig::TransformationVector& CameraRig::getTransformationVector() {
 /// \brief get the geometry object for camera i
 const Camera& CameraRig::getCamera(size_t cameraIndex) const {
   CHECK_LT(cameraIndex, cameras_.size());
+  CHECK_NOTNULL(cameras_[cameraIndex].get());
   return *cameras_[cameraIndex];
 }
 
@@ -123,8 +130,8 @@ bool CameraRig::operator==(const CameraRig& other) const {
   same &= id_ == other.id_;
   if(same) {
     for(size_t i = 0; i < getNumCameras(); ++i) {
-      same &= (*cameras_[i]) == (*other.cameras_[i]);
-      same &= (*T_C_B_[i]) == (*other.T_C_B_[i]);
+      same &= aslam::checkSharedEqual(cameras_[i], other.cameras_[i]);
+      same &= aslam::checkSharedEqual(T_C_B_[i], other.T_C_B_[i]);
     }
   }
 }
