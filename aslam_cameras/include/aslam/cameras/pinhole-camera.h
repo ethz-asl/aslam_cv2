@@ -202,7 +202,7 @@ class PinholeCamera : public Camera {
   virtual void setParameters(const Eigen::MatrixXd & P);
   virtual Eigen::Vector2i parameterSize() const;
 
-  static constexpr int parameterCount() {
+  static constexpr size_t parameterCount() {
     return IntrinsicsDimension;
   }
 
