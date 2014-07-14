@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <cstdint>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/common/channel.h>
@@ -11,6 +12,7 @@
 #include <aslam/common/unique-id.h>
 #include <Eigen/Dense>
 
+
 namespace aslam {
 class Camera;
 
@@ -18,7 +20,11 @@ class VisualFrame  {
  public:
   typedef Eigen::Matrix<char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  VisualFrame();
+  virtual ~VisualFrame();
 
   virtual bool operator==(const VisualFrame& other) const;
 
@@ -120,12 +126,20 @@ class VisualFrame  {
   void setCameraGeometry(const Camera::Ptr& camera);
 
   /// \brief get the frame id.
-  aslam::FrameId getId() const { return id_; }
+  inline aslam::FrameId getId() const { return id_; }
 
   /// \brief set the frame id.
-  void setId(aslam::FrameId id) { id_ = id; }
+  inline void setId(aslam::FrameId id) { id_ = id; }
 
+  /// \brief get the timestamp
+  inline uint64_t getTimestamp() const { return stamp_; }
+  
+  /// \brief set the timestamp
+  inline void setTimestamp(uint64_t stamp){ stamp_ = stamp; }
+  
  private:
+  /// integer nanoseconds since epoch
+  uint64_t stamp_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
   Camera::Ptr camera_geometry_;
