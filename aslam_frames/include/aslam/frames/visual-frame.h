@@ -21,7 +21,7 @@ class VisualFrame  {
   typedef Eigen::Matrix<char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualFrame);
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   VisualFrame();
   virtual ~VisualFrame();
