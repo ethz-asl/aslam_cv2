@@ -1,5 +1,6 @@
 #ifndef ASLAM_CV_COMMON_CHANNEL_H_
 #define ASLAM_CV_COMMON_CHANNEL_H_
+
 #include <string>
 #include <unordered_map>
 
