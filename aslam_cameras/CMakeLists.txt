@@ -11,7 +11,8 @@ add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=0 -std=c++11)
 cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/distortion.cc
                                src/pinhole-camera.cc
-                               src/fisheye-distortion.cc)
+                               src/fisheye-distortion.cc
+                               src/camera-rig.cc)
 
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
