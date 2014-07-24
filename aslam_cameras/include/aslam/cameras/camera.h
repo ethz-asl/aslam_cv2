@@ -1,5 +1,6 @@
 #ifndef ASLAM_CAMERAS_CAMERA_H_
 #define ASLAM_CAMERAS_CAMERA_H_
+
 #include <cstdint>
 
 #include <aslam/common/macros.h>
@@ -7,7 +8,7 @@
 #include <Eigen/Dense>
 #include <glog/logging.h>
 
-// TODO(slynen)
+// TODO(slynen) Enable commented out PropertyTree support
 //namespace sm {
 //class PropertyTree;
 //}
@@ -19,7 +20,7 @@ class Camera {
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Camera);
 
   Camera();
-  // TODO(slynen)
+  // TODO(slynen) Enable commented out PropertyTree support
   //explicit Camera(const sm::PropertyTree& property_tree);
   virtual ~Camera();
 
@@ -98,6 +99,8 @@ class Camera {
   virtual Eigen::VectorXd& getParametersMutable() = 0;
 
   virtual double* getParameterMutablePtr() = 0;
+
+  virtual Eigen::Vector2i parameterSize() const = 0;
 
   //////////////////////////////////////////////////////////////
   // SHUTTER SUPPORT

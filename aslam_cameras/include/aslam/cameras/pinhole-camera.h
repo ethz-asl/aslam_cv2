@@ -1,5 +1,6 @@
 #ifndef ASLAM_CAMERAS_PINHOLE_CAMERA_H_
 #define ASLAM_CAMERAS_PINHOLE_CAMERA_H_
+
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
@@ -27,7 +28,7 @@ class PinholeCamera : public Camera {
   PinholeCamera(double focalLengthU, double focalLengthV,
                 double imageCenterU, double imageCenterV, int resolutionU,
                 int resolutionV);
-  // TODO(slynen)
+  // TODO(slynen) Enable commented out PropertyTree support
   // PinholeCamera(const sm::PropertyTree& config);
 
   virtual ~PinholeCamera();
@@ -201,7 +202,7 @@ class PinholeCamera : public Camera {
   virtual void setParameters(const Eigen::MatrixXd & P);
   virtual Eigen::Vector2i parameterSize() const;
 
-  static constexpr int parameterCount() {
+  static constexpr size_t parameterCount() {
     return IntrinsicsDimension;
   }
 
