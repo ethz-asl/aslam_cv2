@@ -23,7 +23,11 @@ class FisheyeDistortion : public aslam::Distortion {
     setParameters(params);
   }
 
-  inline static constexpr size_t parameterSize() {
+  virtual Eigen::Vector2i parameterSize() const {
+    return Eigen::Vector2i(kNumOfParams, 1);
+  }
+
+  inline static constexpr size_t parameterCount() {
     return kNumOfParams;
   }
 
@@ -69,11 +73,7 @@ class FisheyeDistortion : public aslam::Distortion {
       const Eigen::Matrix<double, 2, 1>& point,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
 
-  virtual bool operator==(const aslam::Distortion& other) const {
-    // TODO(dymczykm) to be implemented at some point
-    CHECK(false);
-    return false;
-  }
+  virtual bool operator==(const aslam::Distortion& other) const;
 
   virtual void distort(Eigen::Matrix<double, 2, 1>* point) const;
 

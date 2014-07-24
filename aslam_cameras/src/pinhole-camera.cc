@@ -1,5 +1,6 @@
 #include <aslam/cameras/pinhole-camera.h>
-#include <sm/PropertyTree.hpp>
+// TODO(slynen) Enable commented out PropertyTree support
+//#include <sm/PropertyTree.hpp>
 
 namespace aslam {
 PinholeCamera::PinholeCamera()
@@ -10,7 +11,7 @@ PinholeCamera::PinholeCamera()
   updateTemporaries();
 }
 
-// TODO(slynen)
+// TODO(slynen) Enable commented out PropertyTree support
 //PinholeCamera::PinholeCamera(
 //    const sm::PropertyTree & config)
 //: Camera(config) {
