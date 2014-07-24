@@ -26,7 +26,5 @@
   <run_depend>opencv2_catkin</run_depend>
   <run_depend>sm_property_tree</run_depend>
   <run_depend>minkindr</run_depend>
-
+  
 </package>
-
-
