@@ -45,7 +45,7 @@ class PinholeCamera : public Camera {
   bool euclideanToKeypoint(const Eigen::Matrix<ScalarType, 3, 1>& point,
       const Eigen::Matrix<ScalarType, IntrinsicsDimension, 1>& intrinsics,
       const Eigen::Matrix<
-        ScalarType, DistortionType::parameterSize(), 1>& distortion_params,
+        ScalarType, DistortionType::parameterCount(), 1>& distortion_params,
       Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement
