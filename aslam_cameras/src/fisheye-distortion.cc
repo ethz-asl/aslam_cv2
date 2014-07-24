@@ -4,12 +4,10 @@ namespace aslam {
 
 bool FisheyeDistortion::operator==(
     const aslam::Distortion& other) const {
-  const aslam::Distortion* other_fisheye_distortion =
-      dynamic_cast<const aslam::Distortion*>(&other);
+  const aslam::FisheyeDistortion* other_fisheye_distortion =
+      dynamic_cast<const aslam::FisheyeDistortion*>(&other);
   if (other_fisheye_distortion) {
-    Eigen::VectorXd other_parameters;
-    other_fisheye_distortion->getParameters(&other_parameters);
-    if (this->params_ == other_parameters) {
+    if (this->params_ == other_fisheye_distortion->params_) {
       return true;
     }
   }
