@@ -6,23 +6,23 @@
 namespace aslam {
 
 namespace jet_trig {
-double tan(double x) {
+inline double tan(double x) {
   return std::tan(x);
 }
 
-double atan(double x) {
+inline double atan(double x) {
   return std::atan(x);
 }
 
 template <template <typename, int> class JetType, typename T, int N>
-JetType<T, N> tan(const JetType<T, N>& f) {
+inline JetType<T, N> tan(const JetType<T, N>& f) {
   const T tan_a = tan(f.a);
   const T tmp = T(1.0) + tan_a * tan_a;
   return JetType<T, N>(tan_a, tmp * f.v);
 }
 
 template <template <typename, int> class JetType, typename T, int N>
-JetType<T, N> atan(const JetType<T, N>& f) {
+inline JetType<T, N> atan(const JetType<T, N>& f) {
   const T tmp = T(1.0) / (T(1.0) + f.a * f.a);
   return JetType<T, N>(atan(f.a), tmp * f.v);
 }
