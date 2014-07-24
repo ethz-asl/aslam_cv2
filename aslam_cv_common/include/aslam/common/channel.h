@@ -11,7 +11,7 @@ namespace aslam {
 namespace channels {
 class ChannelBase {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(ChannelBase);
   ChannelBase() {}
   virtual ~ChannelBase() {};
@@ -25,7 +25,7 @@ class ChannelBase {
 template<typename TYPE>
 class Channel : public ChannelBase{
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef TYPE Type;
   Channel() {}
   virtual ~Channel() {}
