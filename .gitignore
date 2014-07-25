@@ -20,3 +20,8 @@
 *.out
 *.app
 *~
+
+# Eclipse project files
+.project
+.cproject
+.settings
