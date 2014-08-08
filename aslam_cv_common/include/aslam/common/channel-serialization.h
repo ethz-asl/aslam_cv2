@@ -10,7 +10,7 @@
 namespace aslam {
 namespace internal {
 template<typename T> struct MatrixScalarType;
-template<> struct MatrixScalarType<char>   { enum {value = 0}; };
+template<> struct MatrixScalarType<unsigned char>   { enum {value = 0}; };
 template<> struct MatrixScalarType<int>    { enum {value = 1}; };
 template<> struct MatrixScalarType<float>  { enum {value = 2}; };
 template<> struct MatrixScalarType<double> { enum {value = 3}; };

@@ -94,7 +94,7 @@ class VisualFrame  {
   /// \brief Return the keypoint scale at index.
   double getKeypointScale(size_t index) const;
   /// \brief Return pointer location of the descriptor pointed to by index.
-  const char* getBriskDescriptor(size_t index) const;
+  const unsigned char* getBriskDescriptor(size_t index) const;
 
   /// \brief Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
