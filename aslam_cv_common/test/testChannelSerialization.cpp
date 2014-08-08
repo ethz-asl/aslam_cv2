@@ -36,7 +36,7 @@ class ChannelSerializationTest : public ::testing::Test {
 typedef ::testing::Types<MAKE_TYPE_LIST(double),
                          MAKE_TYPE_LIST(float),
                          MAKE_TYPE_LIST(int),
-                         MAKE_TYPE_LIST(char)> DoubleTests;
+                         MAKE_TYPE_LIST(unsigned char)> DoubleTests;
 TYPED_TEST_CASE(ChannelSerializationTest, DoubleTests);
 
 TYPED_TEST(ChannelSerializationTest, SerializeDeserializeString) {
