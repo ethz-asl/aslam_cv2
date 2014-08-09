@@ -18,7 +18,7 @@ class Camera;
 
 class VisualFrame  {
  public:
-  typedef Eigen::Matrix<char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
+  typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -94,7 +94,7 @@ class VisualFrame  {
   /// \brief Return the keypoint scale at index.
   double getKeypointScale(size_t index) const;
   /// \brief Return pointer location of the descriptor pointed to by index.
-  const char* getBriskDescriptor(size_t index) const;
+  const unsigned char* getBriskDescriptor(size_t index) const;
 
   /// \brief Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);

@@ -50,7 +50,7 @@ const aslam::VisualFrame::DescriptorsT& data_2 =
 EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getBriskDescriptorsMutable());
 for (int i = 0; i < data.cols(); ++i) {
-  const char* data_ptr = frame.getBriskDescriptor(i);
+  const unsigned char* data_ptr = frame.getBriskDescriptor(i);
   EXPECT_EQ(&data_2.coeffRef(0, i), data_ptr);
 }
 }
