@@ -109,7 +109,7 @@ double VisualFrame::getKeypointOrientation(size_t index) const {
   CHECK_LT(static_cast<int>(index), data.cols());
   return data.coeff(0, index);
 }
-const char* VisualFrame::getBriskDescriptor(size_t index) const {
+const unsigned char* VisualFrame::getBriskDescriptor(size_t index) const {
   VisualFrame::DescriptorsT& descriptors =
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
   CHECK_LT(static_cast<int>(index), descriptors.cols());
