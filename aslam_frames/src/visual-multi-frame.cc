@@ -3,13 +3,9 @@
 namespace aslam {
 
 /// \brief creates an empty visual multi frame
-VisualMultiFrame::VisualMultiFrame() : stamp_(0){
-
-}
+VisualMultiFrame::VisualMultiFrame() { }
   
-VisualMultiFrame::~VisualMultiFrame() {
-
-}
+VisualMultiFrame::~VisualMultiFrame() { }
 
 /// \brief set the camera rig
 void VisualMultiFrame::setCameraRig(CameraRig::Ptr rig) {
@@ -88,7 +84,6 @@ size_t VisualMultiFrame::getCameraIndex(const CameraId& id) const {
 bool VisualMultiFrame::operator==(const VisualMultiFrame& other) const {
   bool same = true;
   
-  same &= stamp_ == other.stamp_;
   same &= id_ == other.id_;
   same &= aslam::checkSharedEqual(cameraRig_, other.cameraRig_);
   same &= frames_.size() == other.frames_.size();
