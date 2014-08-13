@@ -26,12 +26,6 @@ class VisualMultiFrame {
   /// \brief set the multiframe id.
   inline void setId(aslam::MultiFrameId id) { id_ = id; }
 
-  /// \brief get the timestamp
-  inline uint64_t getTimestamp() const{ return stamp_; }
-  
-  /// \brief set the timestamp
-  inline void setTimestamp(uint64_t stamp){ stamp_ = stamp; }
-
   /// \brief set the camera rig
   void setCameraRig(CameraRig::Ptr rig);
 
@@ -73,9 +67,6 @@ class VisualMultiFrame {
   bool operator==(const VisualMultiFrame& other) const;
 
  private:
-  /// integer nanoseconds since epoch
-  uint64_t stamp_;
-  
   /// \brief the cs frame id
   MultiFrameId id_;
 

@@ -4,12 +4,9 @@
 #include <aslam/common/channel-definitions.h>
 
 namespace aslam {
-VisualFrame::VisualFrame() : stamp_(0) {
-
-}
+VisualFrame::VisualFrame() : stamp_(0) {}
 
 VisualFrame::~VisualFrame(){}
-
 
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
