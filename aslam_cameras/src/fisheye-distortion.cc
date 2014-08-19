@@ -96,6 +96,9 @@ void FisheyeDistortion::undistort(Eigen::Matrix<double, 2, 1>* point) const {
 
   const double& w = params_(0);
   double mul2tanwby2 = tan(w / 2.0) * 2.0;
+  if (mul2tanwby2 == 0) {
+    return;
+  }
 
   // Calculate distance from point to center.
   double r_d = point->norm();
