@@ -100,6 +100,10 @@ void FisheyeDistortion::undistort(Eigen::Matrix<double, 2, 1>* point) const {
   // Calculate distance from point to center.
   double r_d = point->norm();
 
+  if (mul2tanwby2 == 0 || r_d == 0) {
+    return;
+  }
+
   // Calculate undistorted radius of point.
   double r_u;
   if (fabs(r_d * w) <= kMaxValidAngle) {
