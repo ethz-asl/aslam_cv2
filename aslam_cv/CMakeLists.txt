@@ -4,7 +4,6 @@ project(aslam_cv)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
-
 cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/distortion.cc
                                src/pinhole-camera.cc
@@ -39,7 +38,6 @@ catkin_add_gtest(${PROJECT_NAME}_test_frames
   test/test-visual-frame.cc
 )
 target_link_libraries(${PROJECT_NAME}_test_frames ${PROJECT_NAME})
-
 
 cs_install()
 cs_export()
