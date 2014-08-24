@@ -5,5 +5,3 @@ TEST(PinHoleCamera, SetGetLineDelay) {
   aslam::PinholeCamera camera;
 
 }
-
-ASLAM_UNITTEST_ENTRYPOINT

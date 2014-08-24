@@ -6,7 +6,6 @@
 
 #include <aslam/cameras/fisheye-distortion.h>
 #include <aslam/cameras/pinhole-camera.h>
-#include <aslam/common/entrypoint.h>
 #include <aslam/common/eigen-predicates.h>
 
 class PosegraphErrorTerms : public ::testing::Test {
@@ -15,8 +14,7 @@ class PosegraphErrorTerms : public ::testing::Test {
   typedef aslam::PinholeCamera CameraType;
 
   virtual void SetUp() {
-    distortion_param_ = 0;
-    distortion_param_vec_ << distortion_param_;
+    distortion_param_ = 0.0;
 
     fu_ = 1;
     fv_ = 1;
@@ -30,15 +28,16 @@ class PosegraphErrorTerms : public ::testing::Test {
 
   void constructCamera() {
     distortion_ = std::shared_ptr<DistortionType>(new DistortionType());
+    Eigen::VectorXd dvec(1);
+    dvec[0] = distortion_param_;
     camera_ = std::shared_ptr<CameraType>(new CameraType(
-        fu_, fv_, cu_, cv_, res_u_, res_v_, distortion_, distortion_param_vec_));
+        fu_, fv_, cu_, cv_, res_u_, res_v_, distortion_, dvec));
   }
 
   std::shared_ptr<CameraType> camera_;
   std::shared_ptr<DistortionType> distortion_;
 
   double distortion_param_;
-  Eigen::VectorXd distortion_param_vec_;
 
   double fu_, fv_;
   double cu_, cv_;
@@ -61,7 +60,7 @@ TEST_F(PosegraphErrorTerms, CameraTest_EuclideanToOnAxisKeypoint) {
 }
 
 TEST_F(PosegraphErrorTerms, CameraTest_EuclideanToOnAxisKeypointDistorted) {
-  distortion_param_ = 5;
+  distortion_param_ = 1.3;
   constructCamera();
 
   Eigen::Vector3d euclidean(0, 0, 1);
@@ -75,22 +74,22 @@ TEST_F(PosegraphErrorTerms, CameraTest_isVisible) {
   constructCamera();
 
   Eigen::Vector2d keypoint1(0, 0);
-  EXPECT_TRUE(camera_->isVisible(keypoint1));
+  EXPECT_TRUE(camera_->isVisible(keypoint1)) << "Keypoint1: " << keypoint1;
 
   Eigen::Vector2d keypoint2(res_u_ - 1, res_v_ - 1);
-  EXPECT_TRUE(camera_->isVisible(keypoint2));
+  EXPECT_TRUE(camera_->isVisible(keypoint2)) << "Keypoint2: " << keypoint2;
 
   Eigen::Vector2d keypoint3(cu_, cv_);
-  EXPECT_TRUE(camera_->isVisible(keypoint3));
+  EXPECT_TRUE(camera_->isVisible(keypoint3)) << "Keypoint3: " << keypoint3;
 
   Eigen::Vector2d keypoint4(-1, 0);
-  EXPECT_FALSE(camera_->isVisible(keypoint4));
+  EXPECT_FALSE(camera_->isVisible(keypoint4)) << "Keypoint4: " << keypoint4;
 
   Eigen::Vector2d keypoint5(-1, -1);
-  EXPECT_FALSE(camera_->isVisible(keypoint5));
+  EXPECT_FALSE(camera_->isVisible(keypoint5)) << "Keypoint5: " << keypoint5;
 
   Eigen::Vector2d keypoint6(res_u_, res_v_);
-  EXPECT_FALSE(camera_->isVisible(keypoint6));
+  EXPECT_FALSE(camera_->isVisible(keypoint6)) << "Keypoint6: " << keypoint6;
 }
 
 TEST_F(PosegraphErrorTerms, CameraTest_IsVisible) {
@@ -123,12 +122,13 @@ TEST_F(PosegraphErrorTerms, CameraTest_OffAxisProjectionWithoutDistortion) {
 
 INSTANTIATE_TEST_CASE_P(PosegraphErrorTerms,
                         FisheyeParam,
-                        ::testing::Range(0.2, 2.0, 0.2));
+                        ::testing::Range(0.5, 1.5, 0.2));
 
 TEST_P(FisheyeParam, DistortAndUndistort) {
   fu_ = 80;
   fv_ = 75;
   distortion_param_ = GetParam();
+  LOG(INFO) << "param: " << GetParam();
   Eigen::Map<const Eigen::VectorXd> dvec(&distortion_param_, 1);
   constructCamera();
 
@@ -140,4 +140,4 @@ TEST_P(FisheyeParam, DistortAndUndistort) {
   EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
 }
 
-ASLAM_UNITTEST_ENTRYPOINT
+
