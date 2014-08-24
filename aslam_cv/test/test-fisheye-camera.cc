@@ -16,6 +16,7 @@ class PosegraphErrorTerms : public ::testing::Test {
 
   virtual void SetUp() {
     distortion_param_ = 0;
+    distortion_param_vec_ << distortion_param_;
 
     fu_ = 1;
     fv_ = 1;
@@ -28,17 +29,16 @@ class PosegraphErrorTerms : public ::testing::Test {
   }
 
   void constructCamera() {
-    distortion_ = std::shared_ptr<DistortionType>(new DistortionType(
-        distortion_param_));
-
+    distortion_ = std::shared_ptr<DistortionType>(new DistortionType());
     camera_ = std::shared_ptr<CameraType>(new CameraType(
-        fu_, fv_, cu_, cv_, res_u_, res_v_, distortion_));
+        fu_, fv_, cu_, cv_, res_u_, res_v_, distortion_, distortion_param_vec_));
   }
 
   std::shared_ptr<CameraType> camera_;
   std::shared_ptr<DistortionType> distortion_;
 
   double distortion_param_;
+  Eigen::VectorXd distortion_param_vec_;
 
   double fu_, fv_;
   double cu_, cv_;
@@ -55,7 +55,7 @@ TEST_F(PosegraphErrorTerms, CameraTest_EuclideanToOnAxisKeypoint) {
 
   Eigen::Vector3d euclidean(0, 0, 1);
   Eigen::Vector2d keypoint;
-  camera_->euclideanToKeypoint(euclidean, &keypoint);
+  camera_->project3(euclidean, &keypoint);
 
   EXPECT_NEAR_EIGEN(Eigen::Vector2d(cu_, cv_), keypoint, 1e-15);
 }
@@ -66,41 +66,41 @@ TEST_F(PosegraphErrorTerms, CameraTest_EuclideanToOnAxisKeypointDistorted) {
 
   Eigen::Vector3d euclidean(0, 0, 1);
   Eigen::Vector2d keypoint;
-  camera_->euclideanToKeypoint(euclidean, &keypoint);
+  camera_->project3(euclidean, &keypoint);
 
   EXPECT_NEAR_EIGEN(Eigen::Vector2d(cu_, cv_), keypoint, 1e-15);
 }
 
-TEST_F(PosegraphErrorTerms, CameraTest_IsValid) {
+TEST_F(PosegraphErrorTerms, CameraTest_isVisible) {
   constructCamera();
 
   Eigen::Vector2d keypoint1(0, 0);
-  EXPECT_TRUE(camera_->isValid(keypoint1));
+  EXPECT_TRUE(camera_->isVisible(keypoint1));
 
   Eigen::Vector2d keypoint2(res_u_ - 1, res_v_ - 1);
-  EXPECT_TRUE(camera_->isValid(keypoint2));
+  EXPECT_TRUE(camera_->isVisible(keypoint2));
 
   Eigen::Vector2d keypoint3(cu_, cv_);
-  EXPECT_TRUE(camera_->isValid(keypoint3));
+  EXPECT_TRUE(camera_->isVisible(keypoint3));
 
   Eigen::Vector2d keypoint4(-1, 0);
-  EXPECT_FALSE(camera_->isValid(keypoint4));
+  EXPECT_FALSE(camera_->isVisible(keypoint4));
 
   Eigen::Vector2d keypoint5(-1, -1);
-  EXPECT_FALSE(camera_->isValid(keypoint5));
+  EXPECT_FALSE(camera_->isVisible(keypoint5));
 
   Eigen::Vector2d keypoint6(res_u_, res_v_);
-  EXPECT_FALSE(camera_->isValid(keypoint6));
+  EXPECT_FALSE(camera_->isVisible(keypoint6));
 }
 
 TEST_F(PosegraphErrorTerms, CameraTest_IsVisible) {
   constructCamera();
 
-  EXPECT_TRUE(camera_->isEuclideanVisible(Eigen::Vector3d(0, 0, 1)));
-  EXPECT_TRUE(camera_->isEuclideanVisible(Eigen::Vector3d(-cu_, -cv_, 1)));
-  EXPECT_FALSE(camera_->isEuclideanVisible(Eigen::Vector3d(
+  EXPECT_TRUE(camera_->isProjectable3(Eigen::Vector3d(0, 0, 1)));
+  EXPECT_TRUE(camera_->isProjectable3(Eigen::Vector3d(-cu_, -cv_, 1)));
+  EXPECT_FALSE(camera_->isProjectable3(Eigen::Vector3d(
       -cu_ - 1, -cv_ - 1, 1)));
-  EXPECT_FALSE(camera_->isEuclideanVisible(Eigen::Vector3d(
+  EXPECT_FALSE(camera_->isProjectable3(Eigen::Vector3d(
       res_u_ - cu_, res_v_ - cv_, 1)));
 }
 
@@ -115,7 +115,7 @@ TEST_F(PosegraphErrorTerms, CameraTest_OffAxisProjectionWithoutDistortion) {
 
   Eigen::Vector3d euclidean(kx, ky, kz);
   Eigen::Vector2d keypoint;
-  camera_->euclideanToKeypoint(euclidean, &keypoint);
+  camera_->project3(euclidean, &keypoint);
 
   EXPECT_NEAR_EIGEN(Eigen::Vector2d(
       fu_ * (kx / kz) + cu_, fv_ * (ky / kz) + cv_), keypoint, 1e-15);
@@ -129,12 +129,13 @@ TEST_P(FisheyeParam, DistortAndUndistort) {
   fu_ = 80;
   fv_ = 75;
   distortion_param_ = GetParam();
+  Eigen::Map<const Eigen::VectorXd> dvec(&distortion_param_, 1);
   constructCamera();
 
   Eigen::Vector2d keypoint((100 - cu_) / fu_, (300 - cv_) / fv_);
   Eigen::Vector2d keypoint2 = keypoint;
-  distortion_->distort(&keypoint2);
-  distortion_->undistort(&keypoint2);
+  distortion_->distort(dvec, &keypoint2);
+  distortion_->undistort(dvec, &keypoint2);
 
   EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
 }

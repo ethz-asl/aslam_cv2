@@ -17,7 +17,15 @@ Camera::Camera() : line_delay_nano_seconds_(0) {}
 
 Camera::~Camera() { }
 
-bool Camera::operator==(const Camera& other) const {
-  return line_delay_nano_seconds_ == other.line_delay_nano_seconds_;
+void Camera::print(std::ostream& out, const std::string& text) {
+  out << text << std::endl;
+  out << "Camera(" << this->id_ << "): " << this->label_ << std::endl;
+  out << "  line delay: " << this->line_delay_nano_seconds_ << std::endl;
 }
+
+bool Camera::operator==(const Camera& other) const {
+  // \todo(slynen) should we include the id and name here?
+  return this->line_delay_nano_seconds_ == other.line_delay_nano_seconds_;
+}
+
 }  // namespace aslam

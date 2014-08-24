@@ -30,8 +30,8 @@ inline JetType<T, N> atan(const JetType<T, N>& f) {
 
 template <typename ScalarType>
 void FisheyeDistortion::distort(
+    const Eigen::Map<Eigen::Matrix<ScalarType, Eigen::Dynamic,1>>& params,
     const Eigen::Matrix<ScalarType, 2, 1>& point,
-    const Eigen::Matrix<ScalarType, kNumOfParams, 1>& params,
     Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
   CHECK_NOTNULL(out_point);
 

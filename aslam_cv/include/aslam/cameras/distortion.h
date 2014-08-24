@@ -20,46 +20,46 @@ class Distortion {
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Distortion);
   virtual ~Distortion();
 
-  ///
+  /// Because the distortion is stateless, this simply
+  /// checks if they are the same type.
+  virtual bool operator==(const Distortion& rhs) const = 0;
+
   /// \brief Apply distortion to a point in the normalized image plane
   ///
   /// @param[in] params The distortion parameters.
   /// @param[in,out] y The point in the normalized image plane. After the function, this point is distorted.
   ///
-  virtual void distort(const Eigen::Map<Eigen::VectorXd>& params, 
+  virtual void distort(const Eigen::Map<const Eigen::VectorXd>& params,
                        Eigen::Vector2d* point) const = 0;
 
-  ///
   /// \brief Apply distortion to a point in the normalized image plane
   ///
   /// @param[in] params The distortion parameters.
   /// @param[in] y The point in the normalized image plane.
   /// @param[out] outPoint The distorted point.
   ///
-  virtual void distort(const Eigen::Map<Eigen::VectorXd>& params,
+  virtual void distort(const Eigen::Map<const Eigen::VectorXd>& params,
                        const Eigen::Vector2d& point,
                        Eigen::Vector2d* out_point) const = 0;
-  ///
+
   /// \brief Apply distortion to a point in the normalized image plane
   ///
   /// @param[in] params The distortion parameters.
   /// @param[in,out] y The point in the normalized image plane. After the function, this point is distorted.
   /// @param[out] outJy The Jacobian of the distortion function with respect to small changes in the input point.
   ///
-  virtual void distort(const Eigen::Map<Eigen::VectorXd>& params,
+  virtual void distort(const Eigen::Map<const Eigen::VectorXd>& params,
                        Eigen::Vector2d* point,
                        Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
-  ///
   /// \brief Apply undistortion to recover a point in the normalized image plane.
   ///
   /// @param[in] params The distortion parameters.
   /// @param[in,out] y The distorted point. After the function, this point is in the normalized image plane.
   ///
-  virtual void undistort(const Eigen::Map<Eigen::VectorXd>& params,
+  virtual void undistort(const Eigen::Map<const Eigen::VectorXd>& params,
                          Eigen::Vector2d* point) const = 0;
 
-  ///
   /// \brief Apply undistortion to recover a point in the normalized image plane.
   ///
   /// @param[in] params The distortion parameters.
@@ -67,11 +67,10 @@ class Distortion {
   /// @param[out] outJy The Jacobian of the undistortion function with respect to small changes in the input point.
   ///
   virtual void undistort(
-      const Eigen::Map<Eigen::VectorXd>& params,
+      const Eigen::Map<const Eigen::VectorXd>& params,
       Eigen::Vector2d* point,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
-  ///
   /// \brief Apply distortion to the point and provide the Jacobian of the
   ///distortion with respect to small changes in the distortion parameters
   ///
@@ -81,24 +80,21 @@ class Distortion {
   ///                    in the distortion parameters.
   ///
   virtual void distortParameterJacobian(
-      const Eigen::Map<Eigen::VectorXd>& params,
+      const Eigen::Map<const Eigen::VectorXd>& params,
       const Eigen::Vector2d& point,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
-
-  ///
   /// \brief Getter for the number of distortion parameters.
   ///
   /// @return The 2-element of distortion parameters.
   ///
   virtual size_t getParameterSize() const = 0;
 
-  ///
   /// \brief Getter for the validity of distortion parameters.
   ///
   /// @return If the distortion parameters are valid.
   ///
-  virtual bool distortionParametersValid(const Eigen::Map<Eigen::VectorXd>& params) const = 0;
+  virtual bool distortionParametersValid(const Eigen::Map<const Eigen::VectorXd>& params) const = 0;
 };
 }  // namespace aslam
 #endif  // ASLAM_CAMERAS_DISTORTION_H_
