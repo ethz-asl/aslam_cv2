@@ -67,10 +67,10 @@ class FisheyeDistortion : public aslam::Distortion {
 
     // Expect w to have sane magnitude.
     double w = params(0);
-    CHECK(w >= kMinValidW && w <= kMaxValidW)
-        << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
+    bool valid = std::abs(w) < 1e-16 || (w >= kMinValidW && w <= kMaxValidW);
+    LOG_IF(INFO, !valid) << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
         << ", " << kMaxValidW << "].";
-    return true;
+    return valid;
   }
 
  private:
