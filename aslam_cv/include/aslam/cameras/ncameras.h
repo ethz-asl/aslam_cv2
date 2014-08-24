@@ -17,24 +17,24 @@ class PropertyTree;
 
 namespace aslam {
 
-/// \class CameraRig
+/// \class NCameras
 /// \brief A class representing a calibrated multi-camera system
 ///
 /// Coordinate frames involved:
 /// - B  : The body frame of the camera rig
 /// - Ci : A coordinate frame attached to camera i. 
 ///
-class CameraRig
+class NCameras
 {
  public:
-  ASLAM_POINTER_TYPEDEFS(CameraRig);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(CameraRig);
+  ASLAM_POINTER_TYPEDEFS(NCameras);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(NCameras);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef Aligned<std::vector, Transformation>::type TransformationVector;
 
   /// \brief default constructor builds an empty camera rig
-  CameraRig();
+  NCameras();
 
   /// \brief initialize from a list of transformations and a list of cameras
   ///
@@ -45,15 +45,15 @@ class CameraRig
   /// @param T_C_B a list of transformations that take poinst from B to Ci
   /// @param cameras a list cameras
   /// @param label a human-readable name for this camera rig
-  CameraRig(const CameraRigId& id, 
+  NCameras(const NCamerasId& id,
             const TransformationVector& T_C_B, 
             const std::vector<Camera::Ptr>& cameras,
             const std::string& label);
 
   /// \brief initialize from a property tree
-  CameraRig(const sm::PropertyTree& propertyTree);
+  NCameras(const sm::PropertyTree& propertyTree);
   
-  virtual ~CameraRig();
+  virtual ~NCameras();
 
   /// \brief get the number of cameras
   size_t getNumCameras() const;
@@ -96,13 +96,13 @@ class CameraRig
   size_t getCameraIndex(const CameraId& id) const;
   
   /// \brief get the camera id.
-  inline aslam::CameraRigId getId() const { return id_; }
+  inline aslam::NCamerasId getId() const { return id_; }
   
   /// \brief set the camera id.
-  inline void setId(aslam::CameraRigId id) { id_ = id; }
+  inline void setId(aslam::NCamerasId id) { id_ = id; }
 
   /// \brief equality
-  bool operator==(const CameraRig& other) const;
+  bool operator==(const NCameras& other) const;
   
   /// \brief get a label for the camera
   inline const std::string& getLabel() const {return label_;}
@@ -116,7 +116,7 @@ class CameraRig
   void initInternal();
 
   /// \brief A unique id for this camera system
-  CameraRigId id_;
+  NCamerasId id_;
 
   /// \brief The mounting transformations
   TransformationVector T_C_B_;

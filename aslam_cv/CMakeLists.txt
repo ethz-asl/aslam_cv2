@@ -8,10 +8,10 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/distortion.cc
                                src/pinhole-camera.cc
                                src/fisheye-distortion.cc
-                               src/camera-rig.cc
+                               src/ncameras.cc
                                src/channel-serialization.cc
                                src/visual-frame.cc
-                               src/visual-multi-frame.cc
+                               src/visual-nframes.cc
 )
 
 add_doxygen(NOT_AUTOMATIC)
