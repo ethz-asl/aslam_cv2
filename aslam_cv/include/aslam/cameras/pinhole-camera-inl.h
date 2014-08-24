@@ -12,11 +12,9 @@ namespace aslam {
 // methods).
 
 template <typename ScalarType, typename DistortionType>
-bool PinholeCamera::euclideanToKeypoint(
+bool PinholeCamera::project3(
     const Eigen::Matrix<ScalarType, 3, 1>& point,
-    const Eigen::Matrix<ScalarType, IntrinsicsDimension, 1>& intrinsics,
-    const Eigen::Matrix<
-      ScalarType, DistortionType::parameterCount(), 1>& distortion_params,
+    const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics,
     Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
   CHECK_NOTNULL(out_point);
 
@@ -29,7 +27,10 @@ bool PinholeCamera::euclideanToKeypoint(
   std::shared_ptr<DistortionType> distortion_ptr =
       std::dynamic_pointer_cast<DistortionType>(_distortion);
   CHECK(distortion_ptr);
-  distortion_ptr->distort(keypoint, distortion_params, out_point);
+  distortion_ptr->distort(
+      Eigen::Map<Eigen::VectorXd>(intrinsics.tail(distortion_ptr->getParameterSize()).data(), distortion_ptr->getParameterSize()),
+      keypoint,
+      out_point);
 
   (*out_point)[0] = intrinsics(0) * (*out_point)[0] + intrinsics(2);
   (*out_point)[1] = intrinsics(1) * (*out_point)[1] + intrinsics(3);
@@ -38,7 +39,7 @@ bool PinholeCamera::euclideanToKeypoint(
 }
 
 template <typename ScalarType>
-bool PinholeCamera::isValid(
+bool PinholeCamera::isKeypointVisible(
     const Eigen::Matrix<ScalarType, 2, 1>& keypoint) const {
   return keypoint[0] >= static_cast<ScalarType>(0)
       && keypoint[1] >= static_cast<ScalarType>(0)

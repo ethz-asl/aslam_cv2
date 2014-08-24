@@ -11,11 +11,15 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/camera-rig.cc
                                src/channel-serialization.cc
                                src/visual-frame.cc
-                               src/visual-multi-frame.cc)
+                               src/visual-multi-frame.cc
+)
 
-add_doxygen()
+add_doxygen(NOT_AUTOMATIC)
 
-add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=0 -std=c++11)
+add_definitions(-std=c++11)
+if(APPLE)
+  add_definitions(-DGTEST_HAS_TR1_TUPLE=0)
+endif()
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 catkin_add_gtest(${PROJECT_NAME}_test_pinhole_camera test/test-pinhole-camera.cc)

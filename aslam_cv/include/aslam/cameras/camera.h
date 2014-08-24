@@ -59,26 +59,26 @@ class Camera {
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement.
   virtual bool project3(const Eigen::Vector3d& point,
-                                   Eigen::Eigen::Vector2d* out_keypoint) const = 0;
+                                   Eigen::Vector2d* out_keypoint) const = 0;
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement
   /// and calculate the relevant jacobian.
   virtual bool project3(const Eigen::Vector3d & point,
-                                   Eigen::Eigen::Vector2d* out_keypoint,
+                                   Eigen::Vector2d* out_keypoint,
                                    Eigen::Matrix<double, 2, 3>* out_jacobian) const = 0;
 
   /// Project a point expressed in homogenous coordinates to a 2d image measurement.
   virtual bool project4(const Eigen::Vector4d& point,
-                        Eigen::Eigen::Vector2d* out_keypoint) const = 0;
+                        Eigen::Vector2d* out_keypoint) const = 0;
 
   /// Project a point expressed in homogenous coordinates to a 2d image measurement
   /// and calculate the relevant jacobian.
   virtual bool project4(const Eigen::Vector4d & point,
-                        Eigen::Eigen::Vector2d* out_keypoint,
+                        Eigen::Vector2d* out_keypoint,
                         Eigen::Matrix<double, 2, 4>* out_jacobian) const = 0;
 
   /// Compute the 3d bearing vector in euclidean coordinates from the 2d image measurement.
-  virtual bool backProject3(const Eigen::Eigen::Vector2d& keypoint,
+  virtual bool backProject3(const Eigen::Vector2d& keypoint,
                             Eigen::Vector3d* out_keypoint) const = 0;
 
 
@@ -103,18 +103,8 @@ class Camera {
       const Eigen::Vector3d& point,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
   
-  /// Compute the jacobian of the image measurement w.r.t. the distortion.
-  virtual bool project3DistortionJacobian(
-      const Eigen::Vector3d& point,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
-  
   /// Compute the jacobian of the image measurement w.r.t. the intrinsics.
-  virtual bool project3IntrinsicsJacobian(
-      const Eigen::Vector4d& point,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
-
-  /// Compute the jacobian of the image measurement w.r.t. the distortion.
-  virtual bool project3DistortionJacobian(
+  virtual bool project4IntrinsicsJacobian(
       const Eigen::Vector4d& point,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
@@ -130,11 +120,9 @@ class Camera {
   /// they should be filled in with the Jacobian with respect to
   /// small changes in the argument.
   virtual bool project3Functional(const Eigen::VectorXd& intrinsics_params,
-                                  const Eigen::VectorXd& distortion_params,
                                   const Eigen::Vector3d& point,
                                   Eigen::Vector2d * out_point,
                                   Eigen::Matrix<double, 2, Eigen::Dynamic>* out_intrinsics_jacobian,
-                                  Eigen::Matrix<double, 2, Eigen::Dynamic>* out_distortion_jacobian,
                                   Eigen::Matrix<double, 2, Eigen::Dynamic>* out_point_jacobian) const = 0;
                          
   /// @}
@@ -156,7 +144,7 @@ class Camera {
   // The amount of time elapsed between the first row of the image and the
   // keypoint. For a global shutter camera, this can return Duration(0).
   inline int64_t temporalOffsetNanoSeconds(
-      const Eigen::Eigen::Vector2d& keypoint) const {
+      const Eigen::Vector2d& keypoint) const {
     // Don't check validity. This allows points to wander in and out
     // of the frame during optimization
     return static_cast<int64_t>(keypoint(1)) * line_delay_nano_seconds_;
@@ -165,7 +153,7 @@ class Camera {
   // The amount of time elapsed between the first row of the image and the
   // last row of the image. For a global shutter camera, this can return 0.
   inline int64_t maxTemporalOffsetNanoSeconds() const {
-    return this->imageHeight() * line_delay_nano_seconds_
+    return this->imageHeight() * line_delay_nano_seconds_;
   }
 
 
@@ -176,7 +164,7 @@ class Camera {
   /// @{
 
   /// Is the image point within the image bounds?
-  virtual bool isVisible(const Eigen::Eigen::Vector2d& keypoint) const = 0;
+  virtual bool isVisible(const Eigen::Vector2d& keypoint) const = 0;
 
   /// Can the projection function be run on this point?
   /// This doesn't test if the projected point is visible, only
@@ -200,14 +188,14 @@ class Camera {
   /// @{
 
   /// \brief creates a random valid keypoint.
-  virtual Eigen::Eigen::Vector2d createRandomKeypoint() const = 0;
+  virtual Eigen::Vector2d createRandomKeypoint() const = 0;
   
   /// \brief creates a random visible point. Negative depth means random between
   /// 0 and 100 meters.
   virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const = 0;
 
   /// \brief is this camera equal to another
-  virtual bool isEqual(const Camera& other, double tolerance=1e-9) const;
+  virtual bool operator==(const Camera& other) const;
   
   /// @}
 
@@ -216,7 +204,10 @@ class Camera {
 
   /// Get the intrinsic parameters. 
   /// This should include distortion parameters
-  virtual Eigen::VectorXd& getParameters() const = 0;
+  virtual const Eigen::VectorXd& getParameters() const = 0;
+
+  /// Set the intrinsic parameters.
+  virtual void setParameters(const Eigen::VectorXd& params) = 0;
 
   /// Get the intrinsic parameters (mutable).
   virtual Eigen::VectorXd& getParametersMutable() = 0;
