@@ -8,36 +8,29 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/distortion.cc
                                src/pinhole-camera.cc
                                src/fisheye-distortion.cc
-                               src/camera-rig.cc
+                               src/ncameras.cc
                                src/channel-serialization.cc
                                src/visual-frame.cc
-                               src/visual-multi-frame.cc)
+                               src/visual-nframes.cc
+)
 
-add_doxygen()
+add_doxygen(NOT_AUTOMATIC)
 
-add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=0 -std=c++11)
+add_definitions(-std=c++11)
+if(APPLE)
+  add_definitions(-DGTEST_HAS_TR1_TUPLE=0)
+endif()
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
-catkin_add_gtest(${PROJECT_NAME}_test_pinhole_camera test/test-pinhole-camera.cc)
-target_link_libraries(${PROJECT_NAME}_test_pinhole_camera ${PROJECT_NAME})
-
-catkin_add_gtest(test_fisheye_camera test/test-fisheye-camera.cc)
-target_link_libraries(test_fisheye_camera ${PROJECT_NAME})
-
-catkin_add_gtest(${PROJECT_NAME}_test_serialization
-  test/test-channel-serialization.cc
-)
-target_link_libraries(${PROJECT_NAME}_test_serialization ${PROJECT_NAME})
-
-catkin_add_gtest(${PROJECT_NAME}_test_channel
-  test/test-channels.cc
-)
-target_link_libraries(${PROJECT_NAME}_test_channel ${PROJECT_NAME})
-
-catkin_add_gtest(${PROJECT_NAME}_test_frames
-  test/test-visual-frame.cc
-)
-target_link_libraries(${PROJECT_NAME}_test_frames ${PROJECT_NAME})
+catkin_add_gtest(${PROJECT_NAME}_tests 
+    test/test-pinhole-camera.cc
+    test/test-fisheye-camera.cc
+    test/test-channel-serialization.cc
+    test/test-channels.cc
+    test/test-visual-frame.cc
+    test/entry-point.cc
+    )
+target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 
 cs_install()
 cs_export()

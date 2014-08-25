@@ -108,4 +108,3 @@ TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
                                            keypoints_b.value_, 1e-4));
 }
 
-ASLAM_UNITTEST_ENTRYPOINT

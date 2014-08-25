@@ -133,4 +133,3 @@ TEST(Frame, NamedChannel) {
   EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 }
 
-ASLAM_UNITTEST_ENTRYPOINT

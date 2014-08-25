@@ -1,7 +1,7 @@
 #ifndef ASLAM_VISUAL_MULTI_FRAME_H
 #define ASLAM_VISUAL_MULTI_FRAME_H
 
-#include <aslam/cameras/camera-rig.h>
+#include <aslam/cameras/ncameras.h>
 #include <aslam/frames/visual-frame.h>
 
 namespace aslam {
@@ -9,31 +9,31 @@ namespace aslam {
 /// \class VisualMultiFrame
 /// \brief A class representing images and keypoints and 
 ///        calibration data from a multi-camera system
-class VisualMultiFrame {
+class VisualNFrames {
  public:
-  ASLAM_POINTER_TYPEDEFS(VisualMultiFrame);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualMultiFrame);
+  ASLAM_POINTER_TYPEDEFS(VisualNFrames);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNFrames);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /// \brief creates an empty visual multi frame
-  VisualMultiFrame();
+  VisualNFrames();
   
-  virtual ~VisualMultiFrame();
+  virtual ~VisualNFrames();
 
   /// \brief get the multiframe id.
-  inline aslam::MultiFrameId getId() const { return id_; }
+  inline const aslam::NFramesId& getId() const { return id_; }
   
   /// \brief set the multiframe id.
-  inline void setId(aslam::MultiFrameId id) { id_ = id; }
+  inline void setId(const aslam::NFramesId& id) { id_ = id; }
 
   /// \brief set the camera rig
-  void setCameraRig(CameraRig::Ptr rig);
+  void setNCameras(NCameras::Ptr rig);
 
   /// \brief get the camera rig
-  const CameraRig& getCameraRig() const;
+  const NCameras& getNCameras() const;
   
   /// \brief get the camera rig
-  CameraRig::Ptr getCameraRigMutable();
+  NCameras::Ptr getNCamerasMutable();
   
   /// \brief get one frame
   const VisualFrame& getFrame(size_t frameIndex) const;
@@ -54,7 +54,7 @@ class VisualMultiFrame {
   const Camera& getCamera(size_t cameraIndex) const;
 
   /// \brief gets the id for the camera at index i
-  CameraId getCameraId(size_t cameraIndex) const;
+  const CameraId& getCameraId(size_t cameraIndex) const;
   
   /// \brief does this rig have a camera with this id
   bool hasCameraWithId(const CameraId& id) const;
@@ -64,14 +64,14 @@ class VisualMultiFrame {
   size_t getCameraIndex(const CameraId& id) const;
 
   /// \brief binary equality
-  bool operator==(const VisualMultiFrame& other) const;
+  bool operator==(const VisualNFrames& other) const;
 
  private:
   /// \brief the cs frame id
-  MultiFrameId id_;
+  NFramesId id_;
 
   /// \brief the frame id
-  CameraRig::Ptr cameraRig_;
+  NCameras::Ptr cameraRig_;
   
   /// \brief the list of individual image frames
   std::vector<VisualFrame::Ptr> frames_;

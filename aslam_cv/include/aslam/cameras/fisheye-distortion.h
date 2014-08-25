@@ -3,59 +3,35 @@
 
 #include <Eigen/Core>
 #include <glog/logging.h>
-#include <aslam/cameras/distortion.h>
+#include "distortion.h"
 
 namespace aslam {
 
 class FisheyeDistortion : public aslam::Distortion {
  private:
-  enum {
-    kNumOfParams = 1
-  };
+  enum { kNumOfParams = 1 };
 
  public:
-  explicit FisheyeDistortion(double w) {
-    params_.resize(1, 1);
-    params_(0) = w;
-  }
+  enum { CLASS_SERIALIZATION_VERSION = 1 };
 
-  explicit FisheyeDistortion(const Eigen::VectorXd& params) {
-    setParameters(params);
-  }
+  explicit FisheyeDistortion() { }
 
-  virtual Eigen::Vector2i parameterSize() const {
-    return Eigen::Vector2i(kNumOfParams, 1);
+  virtual size_t getParameterSize() const {
+    return kNumOfParams;
   }
 
   inline static constexpr size_t parameterCount() {
     return kNumOfParams;
   }
 
-  inline int minimalDimensions() const {
-    return kNumOfParams;
-  }
+  bool operator==(const Distortion& rhs) const;
 
-  void setParameters(const Eigen::VectorXd& parameters) {
-    CHECK_EQ(parameters.rows(), 1);
-    params_ = parameters;
-  }
-
-  virtual void getParameters(Eigen::VectorXd* parameters) const {
-    CHECK_NOTNULL(parameters);
-    *parameters = params_;
-  }
-
-  virtual Eigen::VectorXd& getParametersMutable() {
-    return params_;
-  }
-
-  virtual double* getParameterMutablePtr() {
-    return params_.data();
-  }
-
-  void distort(Eigen::Matrix<double, 2, 1>* point,
+  void distort(const Eigen::Map<const Eigen::VectorXd>& params,
+               Eigen::Matrix<double, 2, 1>* point,
                Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
-  void undistort(Eigen::Matrix<double, 2, 1>* point,
+
+  void undistort(const Eigen::Map<const Eigen::VectorXd>& /* params */,
+                 Eigen::Matrix<double, 2, 1>* point,
                  Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
     CHECK(point);
     CHECK(out_jacobian);
@@ -65,44 +41,39 @@ class FisheyeDistortion : public aslam::Distortion {
 
   // templated versions, e.g. for ceres autodiff
   template <typename ScalarType>
-  void distort(const Eigen::Matrix<ScalarType, 2, 1>& point,
-               const Eigen::Matrix<ScalarType, kNumOfParams, 1>& params,
+  void distort(const Eigen::Map<Eigen::Matrix<ScalarType,Eigen::Dynamic,1>>& params,
+               const Eigen::Matrix<ScalarType, 2, 1>& point,
                Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
   void distortParameterJacobian(
+      const Eigen::Map<const Eigen::VectorXd>& params,
       const Eigen::Matrix<double, 2, 1>& point,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
 
-  virtual bool operator==(const aslam::Distortion& other) const;
+  virtual void distort(const Eigen::Map<const Eigen::VectorXd>& params,
+                       Eigen::Matrix<double, 2, 1>* point) const;
 
-  virtual void distort(Eigen::Matrix<double, 2, 1>* point) const;
-
-  virtual void distort(const Eigen::Matrix<double, 2, 1>& point,
+  virtual void distort(const Eigen::Map<const Eigen::VectorXd>& params,
+                       const Eigen::Matrix<double, 2, 1>& point,
                        Eigen::Matrix<double, 2, 1>* out_point) const;
 
-  virtual void undistort(Eigen::Matrix<double, 2, 1>* point) const;
+  virtual void undistort(const Eigen::Map<const Eigen::VectorXd>& params,
+                         Eigen::Matrix<double, 2, 1>* point) const;
 
-  virtual void update(const double* d_w) {
-    CHECK_NOTNULL(d_w);
-    params_(0) += d_w[0];
-  }
-
-  virtual bool distortionParametersValid() const {
-    CHECK_EQ(params_.rows(), 1)
+  virtual bool distortionParametersValid(const Eigen::Map<const Eigen::VectorXd>& params) const {
+    CHECK_EQ(params.size(), 1)
         << "Invalid number of distortion coefficients (found "
-        << params_.rows() << ", expected 1).";
+        << params.size() << ", expected 1).";
 
     // Expect w to have sane magnitude.
-    double w = params_(0);
-    CHECK(w >= kMinValidW && w <= kMaxValidW)
-        << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
+    double w = params(0);
+    bool valid = std::abs(w) < 1e-16 || (w >= kMinValidW && w <= kMaxValidW);
+    LOG_IF(INFO, !valid) << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
         << ", " << kMaxValidW << "].";
-    return true;
+    return valid;
   }
 
  private:
-  Eigen::VectorXd params_;
-
   static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
   static constexpr double kMinValidW = 0.5;
   static constexpr double kMaxValidW = 1.5;
