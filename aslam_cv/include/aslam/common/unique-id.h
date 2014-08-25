@@ -8,9 +8,9 @@ class FrameId : public sm::HashId {
   FrameId() = default;
 };
 
-class MultiFrameId : public sm::HashId {
+class NFramesId : public sm::HashId {
  public:
-  MultiFrameId() = default;
+  NFramesId() = default;
 };
 
 class CameraId : public sm::HashId {
@@ -18,9 +18,9 @@ class CameraId : public sm::HashId {
   CameraId() = default;
 };
 
-class CameraRigId : public sm::HashId {
+class NCamerasId : public sm::HashId {
  public:
-  CameraRigId() = default;
+  NCamerasId() = default;
 };
 
 class LandmarkId : public sm::HashId {
@@ -31,9 +31,9 @@ class LandmarkId : public sm::HashId {
 }  // namespace aslam
 
 SM_DEFINE_HASHID_HASH(aslam::FrameId);
-SM_DEFINE_HASHID_HASH(aslam::MultiFrameId);
+SM_DEFINE_HASHID_HASH(aslam::NFramesId);
 SM_DEFINE_HASHID_HASH(aslam::CameraId);
-SM_DEFINE_HASHID_HASH(aslam::CameraRigId);
+SM_DEFINE_HASHID_HASH(aslam::NCamerasId);
 SM_DEFINE_HASHID_HASH(aslam::LandmarkId);
 
 #endif  // ASLAM_COMMON_UNIQUE_ID_H_

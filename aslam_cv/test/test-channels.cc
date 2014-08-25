@@ -40,4 +40,3 @@ Eigen::Matrix2Xd& data3 = aslam::channels::get_TEST_Data(channels);
 EXPECT_TRUE(aslam::common::MatricesEqual(data3, data2, 1e-8));
 }
 
-ASLAM_UNITTEST_ENTRYPOINT
