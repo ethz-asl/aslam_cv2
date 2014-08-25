@@ -4,7 +4,10 @@
 //#include <sm/PropertyTree.hpp>
 
 namespace aslam {
-Camera::Camera() : line_delay_nano_seconds_(0) {}
+Camera::Camera() :
+    line_delay_nano_seconds_(0),
+    image_width_(0),
+    image_height_(0){}
 
 // TODO(slynen) Enable commented out PropertyTree support
 //Camera::Camera(const sm::PropertyTree& property_tree) {
@@ -17,10 +20,11 @@ Camera::Camera() : line_delay_nano_seconds_(0) {}
 
 Camera::~Camera() { }
 
-void Camera::print(std::ostream& out, const std::string& text) {
+void Camera::printParameters(std::ostream& out, const std::string& text) {
   out << text << std::endl;
   out << "Camera(" << this->id_ << "): " << this->label_ << std::endl;
   out << "  line delay: " << this->line_delay_nano_seconds_ << std::endl;
+  out << "  image (cols,rows): " << imageWidth() << ", " << imageHeight() << std::endl;
 }
 
 bool Camera::operator==(const Camera& other) const {

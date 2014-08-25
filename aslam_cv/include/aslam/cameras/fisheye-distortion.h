@@ -9,11 +9,11 @@ namespace aslam {
 
 class FisheyeDistortion : public aslam::Distortion {
  private:
-  enum {
-    kNumOfParams = 1
-  };
+  enum { kNumOfParams = 1 };
 
  public:
+  enum { CLASS_SERIALIZATION_VERSION = 1 };
+
   explicit FisheyeDistortion() { }
 
   virtual size_t getParameterSize() const {
