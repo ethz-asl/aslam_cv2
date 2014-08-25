@@ -218,14 +218,16 @@ class Camera {
   /// Get the intrinsic parameters (memory pointer).
   virtual double* getParameterMutablePtr() = 0;
 
-  /// How many intrinsic parameters are there?
+  /// How many intrinsic parameters are there (including distortion parameters)?
   virtual size_t getParameterSize() const = 0;
 
   /// @}
 
  protected:
+  /// Set the image width. Only accessible by derived classes.
   inline void setImageWidth(uint32_t width){ image_width_ = width; }
 
+  /// Set the image height. Only accessible by derived classes.
   inline void setImageHeight(uint32_t height){ image_height_ = height; }
 
  private:
