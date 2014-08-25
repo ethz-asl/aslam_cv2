@@ -4,9 +4,7 @@
 
 namespace aslam {
 PinholeCamera::PinholeCamera()
-: _intrinsics(kNumOfParams),
-  _ru(0),
-  _rv(0) {
+: _intrinsics(kNumOfParams){
   _intrinsics << 0, 0, 0, 0;
   // TODO(PTF) make sure this can work with null distortion
   updateTemporaries();
@@ -20,8 +18,8 @@ PinholeCamera::PinholeCamera()
 //  _fv = config.getDouble("fv");
 //  _cu = config.getDouble("cu");
 //  _cv = config.getDouble("cv");
-//  _ru = config.getInt("ru");
-//  _rv = config.getInt("rv");
+//  imageWidth() = config.getInt("ru");
+//  imageHeight() = config.getInt("rv");
 //
 //  //TODO(slynen): Load and instantiate correct distortion here.
 //  // distortion.(config, "distortion")
@@ -30,44 +28,36 @@ PinholeCamera::PinholeCamera()
 //  updateTemporaries();
 //}
 
-PinholeCamera::PinholeCamera(double focalLengthU,
-                             double focalLengthV,
-                             double imageCenterU,
-                             double imageCenterV,
-                             int resolutionU,
-                             int resolutionV,
+PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
+                             double imageCenterCols, double imageCenterRows,
+                             uint32_t imageWidth, uint32_t imageHeight,
                              aslam::Distortion::Ptr distortion,
                              const Eigen::VectorXd& distortionParams)
 : _intrinsics(kNumOfParams + (distortion? distortion->getParameterSize() : 0)),
-  _ru(resolutionU),
-  _rv(resolutionV),
   _distortion(distortion) {
   CHECK_NOTNULL(distortion.get());
   CHECK(distortion->distortionParametersValid(vecmap(distortionParams)));
-  _intrinsics << focalLengthU, focalLengthV, imageCenterU, imageCenterV, distortionParams;
+  _intrinsics << focalLengthCols, focalLengthRows, imageCenterCols, imageCenterRows, distortionParams;
+  setImageWidth(imageWidth);
+  setImageHeight(imageHeight);
   updateTemporaries();
 }
 
-PinholeCamera::PinholeCamera(double focalLengthU,
-                             double focalLengthV,
-                             double imageCenterU,
-                             double imageCenterV,
-                             int resolutionU,
-                             int resolutionV)
-: _intrinsics(kNumOfParams),
-  _ru(resolutionU),
-  _rv(resolutionV) {
-  _intrinsics << focalLengthU, focalLengthV, imageCenterU, imageCenterV;
+PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
+                             double imageCenterCols, double imageCenterRows,
+                             uint32_t imageWidth, uint32_t imageHeight)
+: _intrinsics(kNumOfParams) {
+  _intrinsics << focalLengthCols, focalLengthRows, imageCenterCols, imageCenterRows;
+  setImageWidth(imageWidth);
+  setImageHeight(imageHeight);
   updateTemporaries();
 }
 
 PinholeCamera::~PinholeCamera() {}
 
 bool PinholeCamera::operator==(const PinholeCamera& other) const {
-  bool same = true;
+  bool same = Camera::operator==(other);
   same &= _intrinsics == other._intrinsics;
-  same &= _ru == other._ru;
-  same &= _rv == other._rv;
   same &= static_cast<bool>(_distortion) == static_cast<bool>(other._distortion);
   if (static_cast<bool>(_distortion) && static_cast<bool>(other._distortion)) {
     same &= *_distortion == *other._distortion;
@@ -294,8 +284,8 @@ bool PinholeCamera::project4IntrinsicsJacobian(
 Eigen::Matrix<double, 2, 1> PinholeCamera::createRandomKeypoint() const {
   Eigen::Matrix<double, 2, 1> out;
   out.setRandom();
-  out(0) = std::abs(out(0)) * _ru;
-  out(1) = std::abs(out(1)) * _rv;
+  out(0) = std::abs(out(0)) * imageWidth();
+  out(1) = std::abs(out(1)) * imageHeight();
   return out;
 }
 
@@ -354,33 +344,25 @@ void PinholeCamera::updateTemporaries() {
 
 }
 
-void PinholeCamera::resizeIntrinsics(double scale) {
-  _intrinsics *= scale;
-  _ru = _ru * scale;
-  _rv = _rv * scale;
-
-  updateTemporaries();
-}
-
 /// \brief Get a set of border rays
 void PinholeCamera::getBorderRays(Eigen::MatrixXd& rays) {
   rays.resize(4, 8);
   Eigen::Matrix<double, 4, 1> ray;
   backProject4(Eigen::Vector2d(0.0, 0.0), &ray);
   rays.col(0) = ray;
-  backProject4(Eigen::Vector2d(0.0, _rv * 0.5), &ray);
+  backProject4(Eigen::Vector2d(0.0, imageHeight() * 0.5), &ray);
   rays.col(1) = ray;
-  backProject4(Eigen::Vector2d(0.0, _rv - 1.0), &ray);
+  backProject4(Eigen::Vector2d(0.0, imageHeight() - 1.0), &ray);
   rays.col(2) = ray;
-  backProject4(Eigen::Vector2d(_ru - 1.0, 0.0), &ray);
+  backProject4(Eigen::Vector2d(imageWidth() - 1.0, 0.0), &ray);
   rays.col(3) = ray;
-  backProject4(Eigen::Vector2d(_ru - 1.0, _rv * 0.5), &ray);
+  backProject4(Eigen::Vector2d(imageWidth() - 1.0, imageHeight() * 0.5), &ray);
   rays.col(4) = ray;
-  backProject4(Eigen::Vector2d(_ru - 1.0, _rv - 1.0), &ray);
+  backProject4(Eigen::Vector2d(imageWidth() - 1.0, imageHeight() - 1.0), &ray);
   rays.col(5) = ray;
-  backProject4(Eigen::Vector2d(_ru * 0.5, 0.0), &ray);
+  backProject4(Eigen::Vector2d(imageWidth() * 0.5, 0.0), &ray);
   rays.col(6) = ray;
-  backProject4(Eigen::Vector2d(_ru * 0.5, _rv - 1.0), &ray);
+  backProject4(Eigen::Vector2d(imageWidth() * 0.5, imageHeight() - 1.0), &ray);
   rays.col(7) = ray;
 }
 
@@ -391,6 +373,15 @@ bool PinholeCamera::project3Functional(
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_point_jacobian) const {
   // TODO(PTF) implement
   CHECK(false) << "Not Implemented";
+}
+
+void PinholeCamera::printParameters(std::ostream& out,
+                                    const std::string& text) {
+  Camera::printParameters(out,text);
+  out << "  focal length (cols,rows): "
+      << focalLengthCol() << ", " << focalLengthRow() << std::endl;
+  out << "  optical center (cols,rows): "
+      << opticalCenterCol() << ", " << opticalCenterRow() << std::endl;
 }
 
 Eigen::Map<const Eigen::VectorXd> PinholeCamera::getDistortionParameters() const {

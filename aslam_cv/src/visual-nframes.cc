@@ -62,7 +62,7 @@ const Camera& VisualNFrames::getCamera(size_t cameraIndex) const {
 }
 
 /// \brief gets the id for the camera at index i
-CameraId VisualNFrames::getCameraId(size_t cameraIndex) const {
+const CameraId& VisualNFrames::getCameraId(size_t cameraIndex) const {
   CHECK_NOTNULL(cameraRig_.get());
   return cameraRig_->getCameraId(cameraIndex);
 }

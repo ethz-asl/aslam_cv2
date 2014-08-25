@@ -126,10 +126,10 @@ class VisualFrame  {
   void setCameraGeometry(const Camera::Ptr& camera);
 
   /// \brief get the frame id.
-  inline aslam::FrameId getId() const { return id_; }
+  inline const aslam::FrameId& getId() const { return id_; }
 
   /// \brief set the frame id.
-  inline void setId(aslam::FrameId id) { id_ = id; }
+  inline void setId(const aslam::FrameId& id) { id_ = id; }
 
   /// \brief get the timestamp
   inline uint64_t getTimestamp() const { return stamp_; }

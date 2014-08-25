@@ -21,10 +21,10 @@ class VisualNFrames {
   virtual ~VisualNFrames();
 
   /// \brief get the multiframe id.
-  inline aslam::NFramesId getId() const { return id_; }
+  inline const aslam::NFramesId& getId() const { return id_; }
   
   /// \brief set the multiframe id.
-  inline void setId(aslam::NFramesId id) { id_ = id; }
+  inline void setId(const aslam::NFramesId& id) { id_ = id; }
 
   /// \brief set the camera rig
   void setNCameras(NCameras::Ptr rig);
@@ -54,7 +54,7 @@ class VisualNFrames {
   const Camera& getCamera(size_t cameraIndex) const;
 
   /// \brief gets the id for the camera at index i
-  CameraId getCameraId(size_t cameraIndex) const;
+  const CameraId& getCameraId(size_t cameraIndex) const;
   
   /// \brief does this rig have a camera with this id
   bool hasCameraWithId(const CameraId& id) const;

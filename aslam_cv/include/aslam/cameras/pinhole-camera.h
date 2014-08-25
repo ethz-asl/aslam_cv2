@@ -17,21 +17,28 @@ class PinholeCamera : public Camera {
  public:
   ASLAM_POINTER_TYPEDEFS(PinholeCamera);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(PinholeCamera);
+  enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   PinholeCamera();
-  PinholeCamera(double focalLengthU, double focalLengthV,
-                double imageCenterU, double imageCenterV, int resolutionU,
-                int resolutionV, aslam::Distortion::Ptr distortion,
+  PinholeCamera(double focalLengthCols, double focalLengthRows,
+                double imageCenterCols, double imageCenterRows,
+                uint32_t imageWidth, uint32_t imageHeight,
+                aslam::Distortion::Ptr distortion,
                 const Eigen::VectorXd& distortionParameters);
 
-  PinholeCamera(double focalLengthU, double focalLengthV,
-                double imageCenterU, double imageCenterV, int resolutionU,
-                int resolutionV);
+  PinholeCamera(double focalLengthCols, double focalLengthRows,
+                double imageCenterCols, double imageCenterRows,
+                uint32_t resolutionWidth, uint32_t resolutionHeight);
   // TODO(slynen) Enable commented out PropertyTree support
   // PinholeCamera(const sm::PropertyTree& config);
 
   virtual ~PinholeCamera();
+
+  /// \brief Print the internal parameters of the camera in a human-readable form
+  /// Print to the ostream that is passed in. The text is extra
+  /// text used by the calling function to distinguish cameras
+  virtual void printParameters(std::ostream& out, const std::string& text);
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement.
   virtual bool project3(const Eigen::Vector3d& point,
@@ -93,15 +100,6 @@ class PinholeCamera : public Camera {
 
   virtual bool operator==(const PinholeCamera& other) const;
 
-  /// \brief The horizontal resolution in pixels.
-  virtual uint32_t imageWidth() const {
-    return _ru;
-  }
-  /// \brief The vertical resolution in pixels.
-  virtual uint32_t imageHeight() const {
-    return _rv;
-  }
-
   void setDistortion(const aslam::Distortion::Ptr& distortion, 
                      const Eigen::VectorXd& params) {
     _distortion = distortion;
@@ -160,14 +158,6 @@ class PinholeCamera : public Camera {
   double cv() const {
     return _intrinsics[3];
   }
-  /// \brief The horizontal resolution in pixels.
-  int ru() const {
-    return _ru;
-  }
-  /// \brief The vertical resolution in pixels.
-  int rv() const {
-    return _rv;
-  }
 
   // \brief creates a random valid keypoint.
   virtual Eigen::Matrix<double, 2, 1> createRandomKeypoint() const;
@@ -209,9 +199,6 @@ class PinholeCamera : public Camera {
     return _intrinsics.data();
   }
 
-  /// \brief resize the intrinsics based on a scaling of the image.
-  virtual void resizeIntrinsics(double scale);
-
   /// \brief Get a set of border rays
   virtual void getBorderRays(Eigen::MatrixXd & rays);
 
@@ -245,11 +232,6 @@ class PinholeCamera : public Camera {
   // Vector storing intrinsic parameters in a contiguous block of memory.
   // Ordering: fu, fv, cu, cv
   Eigen::VectorXd _intrinsics;
-
-  /// \brief The horizontal resolution in pixels.
-  int _ru;
-  /// \brief The vertical resolution in pixels.
-  int _rv;
 
   /// \brief A computed value for speeding up computation.
   double _recip_fu;

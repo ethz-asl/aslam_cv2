@@ -43,8 +43,8 @@ bool PinholeCamera::isKeypointVisible(
     const Eigen::Matrix<ScalarType, 2, 1>& keypoint) const {
   return keypoint[0] >= static_cast<ScalarType>(0)
       && keypoint[1] >= static_cast<ScalarType>(0)
-      && keypoint[0] < static_cast<ScalarType>(_ru)
-      && keypoint[1] < static_cast<ScalarType>(_rv);
+      && keypoint[0] < static_cast<ScalarType>(imageWidth())
+      && keypoint[1] < static_cast<ScalarType>(imageHeight());
 }
 
 }  // namespace aslam

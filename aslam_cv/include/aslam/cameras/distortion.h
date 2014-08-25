@@ -13,6 +13,7 @@ namespace aslam {
 class Distortion {
  public:
   ASLAM_POINTER_TYPEDEFS(Distortion);
+  enum { CLASS_SERIALIZATION_VERSION = 1 };
 
   Distortion();
   // TODO(slynen) Enable commented out PropertyTree support

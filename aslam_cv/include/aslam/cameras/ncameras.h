@@ -29,6 +29,7 @@ class NCameras
  public:
   ASLAM_POINTER_TYPEDEFS(NCameras);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(NCameras);
+  enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef Aligned<std::vector, Transformation>::type TransformationVector;
@@ -86,7 +87,7 @@ class NCameras
   const std::vector<Camera::Ptr>& getCameraVector() const;
 
   /// \brief gets the id for the camera at index i
-  CameraId getCameraId(size_t cameraIndex) const;
+  const CameraId& getCameraId(size_t cameraIndex) const;
   
   /// \brief does this rig have a camera with this id
   bool hasCameraWithId(const CameraId& id) const;
@@ -96,10 +97,10 @@ class NCameras
   size_t getCameraIndex(const CameraId& id) const;
   
   /// \brief get the camera id.
-  inline aslam::NCamerasId getId() const { return id_; }
+  inline const aslam::NCamerasId& getId() const { return id_; }
   
   /// \brief set the camera id.
-  inline void setId(aslam::NCamerasId id) { id_ = id; }
+  inline void setId(const aslam::NCamerasId& id) { id_ = id; }
 
   /// \brief equality
   bool operator==(const NCameras& other) const;

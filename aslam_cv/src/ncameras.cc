@@ -20,6 +20,7 @@ NCameras::NCameras(const NCamerasId& id,
 /// \brief initialize from a property tree
 NCameras::NCameras(const sm::PropertyTree& /* propertyTree */) {
   // \todo(PTF) fill in
+  CHECK(false) << "Not implemented";
 }
   
 NCameras::~NCameras() {}
@@ -91,7 +92,7 @@ const std::vector<Camera::Ptr>& NCameras::getCameraVector() const {
 }
 
 /// \brief gets the id for the camera at index i
-CameraId NCameras::getCameraId(size_t cameraIndex) const {
+const CameraId& NCameras::getCameraId(size_t cameraIndex) const {
   CHECK_LT(cameraIndex, cameras_.size());
   return cameras_[cameraIndex]->getId();
 }
