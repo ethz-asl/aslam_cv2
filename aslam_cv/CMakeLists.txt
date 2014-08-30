@@ -32,6 +32,8 @@ catkin_add_gtest(${PROJECT_NAME}_tests
     )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 
+eclipsify()
+
 cs_install()
 cs_export()
 

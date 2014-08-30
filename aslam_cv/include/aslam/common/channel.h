@@ -1,6 +1,20 @@
 #ifndef ASLAM_CV_COMMON_CHANNEL_H_
 #define ASLAM_CV_COMMON_CHANNEL_H_
 
+/// \addtogroup Frames
+/// @{
+/// \defgroup Channels
+/// @{
+///
+/// Channels are key/value pairs that can be added to a frame. We have support
+/// for several common channel types like Eigen::Matrices.
+///
+/// To implement a new channel type simply...
+/// TODO(slynen) please describe what to do to implement a new channel type
+///
+/// @}
+/// @}
+
 #include <string>
 #include <unordered_map>
 

@@ -6,43 +6,40 @@
 
 #include <glog/logging.h>
 #include <Eigen/Dense>
+#include <opencv2/core/core.hpp>
 
 namespace aslam {
 namespace internal {
-template<typename T> struct MatrixScalarType;
-template<> struct MatrixScalarType<unsigned char>   { enum {value = 0}; };
-template<> struct MatrixScalarType<int>    { enum {value = 1}; };
-template<> struct MatrixScalarType<float>  { enum {value = 2}; };
-template<> struct MatrixScalarType<double> { enum {value = 3}; };
 
 struct HeaderInformation {
   uint32_t rows;
   uint32_t cols;
   uint32_t type;
+  uint32_t channels; ///< Needed for opencv support
   size_t size() const;
   bool serializeToBuffer(char* buffer, size_t offset) const;
   bool deSerializeFromBuffer(const char* const bufferIn, size_t offset);
 };
 
 template<typename SCALAR>
-void makeHeaderInformation(int rows, int cols,
+void makeHeaderInformation(int rows, int cols, int channels,
                            HeaderInformation* headerInformation) {
   CHECK_NOTNULL(headerInformation);
   headerInformation->rows = rows;
   headerInformation->cols = cols;
-  headerInformation->type = MatrixScalarType<SCALAR>::value;
+  headerInformation->channels = channels;
+  headerInformation->type = cv::DataType<SCALAR>::type;
 }
 
 template<typename SCALAR>
 bool serializeToString(const char* const matrixData,
-                       int rows, int cols,
-                       std::string* string) {
-  CHECK_NE(rows, -1);
-  CHECK_NE(cols, -1);
+                       int rows, int cols, int channels, std::string* string) {
+  CHECK_GE(rows, 0);
+  CHECK_GE(cols, 0);
   CHECK_NOTNULL(string);
   HeaderInformation header;
-  makeHeaderInformation<SCALAR>(rows, cols, &header);
-  size_t matrixSize = sizeof(SCALAR) * rows * cols;
+  makeHeaderInformation<SCALAR>(rows, cols, channels, &header);
+  size_t matrixSize = sizeof(SCALAR) * rows * cols * channels;
   size_t totalSize = matrixSize + header.size();
 
   CHECK_GT(totalSize, 0u);
@@ -60,14 +57,13 @@ bool serializeToString(const char* const matrixData,
 }
 
 template<typename SCALAR>
-bool serializeToBuffer(const char* const matrixData,
-                       int rows, int cols,
-                       char** buffer, size_t* totalSize) {
+bool serializeToBuffer(const char* const matrixData, int rows, int cols,
+                       int channels, char** buffer, size_t* totalSize) {
   CHECK_NOTNULL(totalSize);
   CHECK_NOTNULL(buffer);
   HeaderInformation header;
-  makeHeaderInformation<SCALAR>(rows, cols, &header);
-  size_t matrixSize = sizeof(SCALAR) * rows * cols;
+  makeHeaderInformation<SCALAR>(rows, cols, channels, &header);
+  size_t matrixSize = sizeof(SCALAR) * rows * cols * channels;
   *totalSize = matrixSize + header.size();
 
   *buffer = new char[*totalSize];
@@ -87,7 +83,7 @@ bool serializeToBuffer(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
                        char** buffer, size_t* size) {
   const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
   return serializeToBuffer<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
-                                   buffer, size);
+                                   1, buffer, size);
 }
 
 template<typename SCALAR, int ROWS, int COLS>
@@ -95,7 +91,7 @@ bool serializeToString(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
                        std::string* string) {
   const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
   return serializeToString<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
-                                   string);
+                                   1, string);
 }
 
 template<typename SCALAR, int ROWS, int COLS>
@@ -116,7 +112,8 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
   if (COLS != Eigen::Dynamic) {
     CHECK_EQ(header.cols, static_cast<uint32_t>(COLS));
   }
-  CHECK_EQ(header.type, MatrixScalarType<SCALAR>::value);
+  CHECK_EQ(header.type, cv::DataType<SCALAR>::type);
+  CHECK_EQ(header.channels, 1) << "Eigen matrices must have one channel.";
 
   if (ROWS == Eigen::Dynamic && COLS == Eigen::Dynamic) {
     matrix->resize(header.rows, header.cols);
@@ -129,7 +126,6 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
   size_t matrix_size = sizeof(SCALAR) * matrix->rows() * matrix->cols();
   size_t total_size = matrix_size + header.size();
   CHECK_EQ(size, total_size);
-
   memcpy(matrix->data(), buffer + header.size(), matrix_size);
   return true;
 }
@@ -141,6 +137,17 @@ bool deSerializeFromString(const std::string& string,
   return deSerializeFromBuffer(string.data(), string.size(), matrix);
 }
 
+bool serializeToString(const cv::Mat& image,
+                       std::string* string);
+
+bool deSerializeFromString(const std::string& string,
+                           cv::Mat* image);
+
+bool deSerializeFromBuffer(const char* const buffer, size_t size,
+                           cv::Mat* image);
+
+bool serializeToBuffer(const cv::Mat& matrix,
+                       char** buffer, size_t* size);
 }  // namespace internal
 }  // namespace aslam
 
