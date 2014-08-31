@@ -205,7 +205,7 @@ class Camera {
   /// \name Methods to support optimizaiton
   /// @{
 
-  /// Get the intrinsic parameters. 
+  /// Get the intrinsic parameters.
   /// This must include distortion parameters
   virtual const Eigen::VectorXd& getParameters() const = 0;
 

@@ -367,10 +367,10 @@ void PinholeCamera::getBorderRays(Eigen::MatrixXd& rays) {
 }
 
 bool PinholeCamera::project3Functional(
-    const Eigen::VectorXd& intrinsics_params, const Eigen::Vector3d& point,
-    Eigen::Vector2d* out_point,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_intrinsics_jacobian,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_point_jacobian) const {
+    const Eigen::VectorXd& /*intrinsics_params*/, const Eigen::Vector3d& /*point*/,
+    Eigen::Vector2d* /* out_point */,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* /* out_intrinsics_jacobian */,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* /* out_point_jacobian */) const {
   // TODO(PTF) implement
   CHECK(false) << "Not Implemented";
 }
