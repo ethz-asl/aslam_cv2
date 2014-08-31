@@ -16,8 +16,22 @@
   ASSERT_TRUE(gtest_catkin::ImagesEqual(image_A, image_B, precision))
 
 namespace gtest_catkin {
-// Default tolerance for MatricesEqual.
-static const double kImDefaultTolerance = 1e-8;
+
+// Most types are integral. Set the default tolerance to zero.
+template<typename T>
+struct TestTolerance {
+  static constexpr T kDiffTolerance = 0;
+};
+
+// Specialize the tolerance for floating point types.
+template<>
+struct TestTolerance<float> {
+  static constexpr float kDiffTolerance = 1e-8;
+};
+template<>
+struct TestTolerance<double> {
+  static constexpr double kDiffTolerance = 1e-15;
+};
 
 template< typename SCALAR >
 testing::AssertionResult ImagesEqualTyped(const cv::Mat& A,
@@ -30,6 +44,10 @@ testing::AssertionResult ImagesEqualTyped(const cv::Mat& A,
       << "Image size mismatch: "
       << A.rows << "x" << A.cols << "x" << A.channels() << " != "
       << B.rows << "x" << B.cols << "x" << B.channels();
+  }
+
+  if(tolerance < 0.0) {
+    tolerance = TestTolerance<Scalar>::kDiffTolerance;
   }
 
   std::stringstream spy_difference;
@@ -88,6 +106,7 @@ testing::AssertionResult ImagesEqual(const cv::Mat& A,
     return testing::AssertionFailure() << "Image type mismatch"
         << A.type() << " != " << B.type();
   }
+
   // http://docs.opencv.org/modules/core/doc/basic_structures.html#mat-depth
   switch(A.depth()) {
     case cv::DataType<uint8_t>::depth:
@@ -123,8 +142,8 @@ testing::AssertionResult ImagesEqual(const cv::Mat& A,
 // message is returned. Use like this:
 //   EXPECT_TRUE(ImagesEqual(first_matrix, second_matrix));
 testing::AssertionResult ImagesEqual(const cv::Mat& A,
-                                       const cv::Mat& B) {
-  return ImagesEqual(A, B, kImDefaultTolerance);
+                                     const cv::Mat& B) {
+  return ImagesEqual(A, B, -1.0);
 }
 }  // namespace gtest_catkin
 
