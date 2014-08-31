@@ -47,7 +47,6 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeString) {
   ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
             this->value_a.value_.cols() *
             sizeof(typename TypeParam::Scalar), serialized_value.size());
-  ASSERT_EQ(0, header_info.channels);
   EXPECT_FALSE(aslam::common::MatricesEqual(this->value_a.value_,
                                             this->value_b.value_, 1e-4));
   EXPECT_TRUE(this->value_b.deSerializeFromString(serialized_value));
@@ -61,7 +60,6 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeBuffer) {
   size_t size;
   EXPECT_TRUE(this->value_a.serializeToBuffer(&buffer, &size));
   EXPECT_EQ(16u, header_info.size());
-  ASSERT_EQ(0, header_info.channels);
   ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
             this->value_a.value_.cols() *
             sizeof(typename TypeParam::Scalar), size);
