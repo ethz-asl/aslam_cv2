@@ -4,7 +4,7 @@
 namespace aslam {
 namespace internal {
 size_t HeaderInformation::size() const {
-  return sizeof(rows) + sizeof(cols) + sizeof(type) + sizeof(channels);
+  return sizeof(rows) + sizeof(cols) + sizeof(depth) + sizeof(channels);
 }
 
 bool HeaderInformation::serializeToBuffer(char* buffer, size_t offset) const {
@@ -14,8 +14,8 @@ bool HeaderInformation::serializeToBuffer(char* buffer, size_t offset) const {
   buffer += sizeof(rows);
   memcpy(buffer, &cols, sizeof(cols));
   buffer += sizeof(cols);
-  memcpy(buffer, &type, sizeof(type));
-  buffer += sizeof(type);
+  memcpy(buffer, &depth, sizeof(depth));
+  buffer += sizeof(depth);
   memcpy(buffer, &channels, sizeof(channels));
   buffer += sizeof(channels);
   return true;
@@ -29,8 +29,8 @@ bool HeaderInformation::deSerializeFromBuffer(const char* const buffer_in, size_
   buffer += sizeof(rows);
   memcpy(&cols, buffer, sizeof(cols));
   buffer += sizeof(cols);
-  memcpy(&type, buffer, sizeof(type));
-  buffer += sizeof(type);
+  memcpy(&depth, buffer, sizeof(depth));
+  buffer += sizeof(depth);
   memcpy(&channels, buffer, sizeof(channels));
   buffer += sizeof(channels);
   return true;
@@ -40,50 +40,50 @@ bool serializeToString(const cv::Mat& image,
                        std::string* string) {
   CHECK(image.isContinuous()) << "This method only works if the image is stored "
       "in contiguous memory.";
-  CHECK_EQ(image.total(), static_cast<size_t>(image.rows * image.cols * image.channels())) <<
+  CHECK_EQ(image.total(), static_cast<size_t>(image.rows * image.cols)) <<
       "Unexpected number of pixels in the image.";
   CHECK_EQ(image.dims, 2) << "This method only works for 2D arrays";
   const char* const matrixData = reinterpret_cast<const char*>(image.data);
   bool success = false;
   // http://docs.opencv.org/modules/core/doc/basic_structures.html#mat-depth
-  switch(image.type()) {
-    case cv::DataType<uint8_t>::type:
+  switch(image.depth()) {
+    case cv::DataType<uint8_t>::depth:
     success = serializeToString<uint8_t>(matrixData, image.rows,
                                          image.cols, image.channels(),
                                          string);
     break;
-    case cv::DataType<int8_t>::type:
+    case cv::DataType<int8_t>::depth:
     success = serializeToString<int8_t>(matrixData, image.rows,
                                         image.cols, image.channels(),
                                         string);
     break;
-    case cv::DataType<uint16_t>::type:
+    case cv::DataType<uint16_t>::depth:
     success = serializeToString<uint16_t>(matrixData, image.rows,
                                           image.cols, image.channels(),
                                           string);
     break;
-    case cv::DataType<int16_t>::type:
+    case cv::DataType<int16_t>::depth:
     success = serializeToString<int16_t>(matrixData, image.rows,
                                          image.cols, image.channels(),
                                          string);
     break;
-    case cv::DataType<int>::type:
-    success = serializeToString<int>(matrixData, image.rows,
+    case cv::DataType<int32_t>::depth:
+    success = serializeToString<int32_t>(matrixData, image.rows,
                                      image.cols, image.channels(),
                                      string);
     break;
-    case cv::DataType<double>::type:
+    case cv::DataType<double>::depth:
     success = serializeToString<double>(matrixData, image.rows,
                                         image.cols, image.channels(),
                                         string);
     break;
-    case cv::DataType<float>::type:
+    case cv::DataType<float>::depth:
     success = serializeToString<float>(matrixData, image.rows,
                                        image.cols, image.channels(),
                                        string);
     break;
     default:
-      LOG(FATAL) << "cv::Mat type " << image.type() << " is not supported for "
+      LOG(FATAL) << "cv::Mat depth " << image.depth() << " is not supported for "
       << "serialization.";
       success = false;
       break;
@@ -123,30 +123,30 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size, cv::Mat* image
   }
 
   // http://docs.opencv.org/modules/core/doc/basic_structures.html#mat-depth
-  switch(header.type) {
-    case cv::DataType<uint8_t>::type:
+  switch(header.depth) {
+    case cv::DataType<uint8_t>::depth:
     deSerializeTypedFromBuffer<uint8_t>(buffer, size, header, image);
     break;
-    case cv::DataType<int8_t>::type:
+    case cv::DataType<int8_t>::depth:
     deSerializeTypedFromBuffer<int8_t>(buffer, size, header, image);
     break;
-    case cv::DataType<uint16_t>::type:
+    case cv::DataType<uint16_t>::depth:
     deSerializeTypedFromBuffer<uint16_t>(buffer, size, header, image);
     break;
-    case cv::DataType<int16_t>::type:
+    case cv::DataType<int16_t>::depth:
     deSerializeTypedFromBuffer<int16_t>(buffer, size, header, image);
     break;
-    case cv::DataType<int>::type:
-    deSerializeTypedFromBuffer<int>(buffer, size, header, image);
+    case cv::DataType<int32_t>::depth:
+    deSerializeTypedFromBuffer<int32_t>(buffer, size, header, image);
     break;
-    case cv::DataType<double>::type:
+    case cv::DataType<double>::depth:
     deSerializeTypedFromBuffer<double>(buffer, size, header, image);
     break;
-    case cv::DataType<float>::type:
+    case cv::DataType<float>::depth:
     deSerializeTypedFromBuffer<float>(buffer, size, header, image);
     break;
     default:
-      LOG(FATAL) << "cv::Mat type " << header.type << " is not supported for "
+      LOG(FATAL) << "cv::Mat depth " << header.depth << " is not supported for "
       << "serialization.";
       success = false;
       break;
@@ -166,44 +166,44 @@ bool serializeToBuffer(const cv::Mat& image, char** buffer, size_t* size) {
   const char* const matrixData = reinterpret_cast<const char*>(image.data);
   bool success = false;
   // http://docs.opencv.org/modules/core/doc/basic_structures.html#mat-depth
-  switch(image.type()) {
-    case cv::DataType<uint8_t>::type:
+  switch(image.depth()) {
+    case cv::DataType<uint8_t>::depth:
     success = serializeToBuffer<uint8_t>(matrixData, image.rows,
                                          image.cols, image.channels(),
                                          buffer, size);
     break;
-    case cv::DataType<int8_t>::type:
+    case cv::DataType<int8_t>::depth:
     success = serializeToBuffer<int8_t>(matrixData, image.rows,
                                         image.cols, image.channels(),
                                         buffer, size);
     break;
-    case cv::DataType<uint16_t>::type:
+    case cv::DataType<uint16_t>::depth:
     success = serializeToBuffer<uint16_t>(matrixData, image.rows,
                                           image.cols, image.channels(),
                                           buffer, size);
     break;
-    case cv::DataType<int16_t>::type:
+    case cv::DataType<int16_t>::depth:
     success = serializeToBuffer<int16_t>(matrixData, image.rows,
                                          image.cols, image.channels(),
                                          buffer, size);
     break;
-    case cv::DataType<int>::type:
-    success = serializeToBuffer<int>(matrixData, image.rows,
+    case cv::DataType<int32_t>::depth:
+    success = serializeToBuffer<int32_t>(matrixData, image.rows,
                                      image.cols, image.channels(),
                                      buffer, size);
     break;
-    case cv::DataType<double>::type:
+    case cv::DataType<double>::depth:
     success = serializeToBuffer<double>(matrixData, image.rows,
                                         image.cols, image.channels(),
                                         buffer, size);
     break;
-    case cv::DataType<float>::type:
+    case cv::DataType<float>::depth:
     success = serializeToBuffer<float>(matrixData, image.rows,
                                        image.cols, image.channels(),
                                        buffer, size);
     break;
     default:
-      LOG(FATAL) << "cv::Mat type " << image.type() << " is not supported for "
+      LOG(FATAL) << "cv::Mat depth " << image.depth() << " is not supported for "
       << "serialization.";
       success = false;
       break;

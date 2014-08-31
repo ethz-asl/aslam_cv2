@@ -14,7 +14,7 @@ namespace internal {
 struct HeaderInformation {
   uint32_t rows;
   uint32_t cols;
-  uint32_t type;
+  uint32_t depth;
   uint32_t channels; ///< Needed for opencv support
   size_t size() const;
   bool serializeToBuffer(char* buffer, size_t offset) const;
@@ -28,7 +28,7 @@ void makeHeaderInformation(int rows, int cols, int channels,
   headerInformation->rows = rows;
   headerInformation->cols = cols;
   headerInformation->channels = channels;
-  headerInformation->type = cv::DataType<SCALAR>::type;
+  headerInformation->depth = cv::DataType<SCALAR>::depth;
 }
 
 template<typename SCALAR>
@@ -116,7 +116,7 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
   if (COLS != Eigen::Dynamic) {
     CHECK_EQ(header.cols, static_cast<uint32_t>(COLS));
   }
-  CHECK_EQ(header.type, cv::DataType<SCALAR>::type);
+  CHECK_EQ(header.depth, cv::DataType<SCALAR>::depth);
   CHECK_EQ(1u, header.channels) << "Eigen matrices must have one channel.";
 
   if (ROWS == Eigen::Dynamic && COLS == Eigen::Dynamic) {
