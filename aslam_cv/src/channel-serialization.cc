@@ -158,7 +158,7 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size, cv::Mat* image
 bool serializeToBuffer(const cv::Mat& image, char** buffer, size_t* size) {
   CHECK(image.isContinuous()) << "This method only works if the image is stored "
       "in contiguous memory.";
-  CHECK_EQ(image.total(), static_cast<size_t>(image.rows * image.cols * image.channels())) <<
+  CHECK_EQ(image.total(), static_cast<size_t>(image.rows * image.cols)) <<
       "Unexpected number of pixels in the image.";
   CHECK_EQ(image.dims, 2) << "This method only works for 2D arrays";
   CHECK_NOTNULL(buffer);
