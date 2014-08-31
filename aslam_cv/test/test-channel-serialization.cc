@@ -34,12 +34,13 @@ class CvMatSerializationTest : public ::testing::Test {
       int type = CV_MAKETYPE(cv::DataType<SCALAR>::type, i);
       // http://docs.opencv.org/modules/core/doc/basic_structures.html#mat-create
       // Create should only allocate if necessary.
-      imagesA_[i].create(num_rows, num_cols, type);
-      fill(&(imagesA_[i]));
+      imagesA_[i].value_.create(num_rows, num_cols, type);
+      fill(&(imagesA_[i].value_));
     }
   }
-  cv::Mat imagesA_[num_channels];
-  cv::Mat imagesB_[num_channels];
+  // TODO(PTF) Change to channels.
+  aslam::channels::Channel<cv::Mat> imagesA_[num_channels];
+  aslam::channels::Channel<cv::Mat> imagesB_[num_channels];
 };
 
 typedef ::testing::Types< int32_t, uint8_t,  int8_t, uint16_t, int16_t,
@@ -153,21 +154,37 @@ TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
                                            keypoints_b.value_, 1e-4));
 }
 
-
 TYPED_TEST(CvMatSerializationTest, SerializeDeserializeString) {
   for(int ch = 0; ch < this->num_channels; ++ch) {
     std::string serialized_value;
-    EXPECT_TRUE(aslam::internal::serializeToString(this->imagesA_[ch], &serialized_value));
-    EXPECT_FALSE(gtest_catkin::ImagesEqual(this->imagesA_[ch],
-                                           this->imagesB_[ch], 1e-4));
-    EXPECT_TRUE(aslam::internal::deSerializeFromString(serialized_value, &this->imagesB_[ch]));
-    EXPECT_TRUE(gtest_catkin::ImagesEqual(this->imagesA_[ch],
-                                          this->imagesB_[ch], 1e-4));
+    EXPECT_TRUE(this->imagesA_[ch].serializeToString(&serialized_value));
+    EXPECT_FALSE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
+                                           this->imagesB_[ch].value_, 1e-4));
+    EXPECT_TRUE(this->imagesB_[ch].deSerializeFromString(serialized_value));
+    EXPECT_TRUE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
+                                          this->imagesB_[ch].value_, 1e-4));
     typedef TypeParam Scalar;
     // Unit test the comparison function
-    this->imagesB_[ch].template at<Scalar>(1,1) = this->imagesB_[ch].template at<Scalar>(1,1) + 1;
-    EXPECT_FALSE(gtest_catkin::ImagesEqual(this->imagesA_[ch],
-                                          this->imagesB_[ch], 1e-4));
+    this->imagesB_[ch].value_.template at<Scalar>(1,1) = this->imagesB_[ch].value_.template at<Scalar>(1,1) + 1;
+    EXPECT_FALSE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
+                                          this->imagesB_[ch].value_, 1e-4));
   }
 }
 
+TYPED_TEST(CvMatSerializationTest, SerializeDeserializeBuffer) {
+  for(int ch = 0; ch < this->num_channels; ++ch) {
+    aslam::internal::HeaderInformation header_info;
+    char* buffer;
+    size_t size;
+    EXPECT_TRUE(this->imagesA_[ch].serializeToBuffer(&buffer, &size));
+    EXPECT_EQ(16u, header_info.size());
+    ASSERT_EQ(header_info.size() + this->imagesA_[ch].value_.rows *
+              this->imagesA_[ch].value_.cols * this->imagesA_[ch].value_.channels() *
+              sizeof(TypeParam), size);
+    EXPECT_FALSE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
+                                           this->imagesB_[ch].value_, 1e-4));
+    EXPECT_TRUE(this->imagesB_[ch].deSerializeFromBuffer(buffer, size));
+    EXPECT_TRUE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
+                                          this->imagesB_[ch].value_, 1e-4));
+  }
+}
