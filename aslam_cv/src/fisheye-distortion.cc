@@ -111,7 +111,7 @@ void FisheyeDistortion::undistort(
   if (fabs(r_d * w) <= kMaxValidAngle) {
     r_u = tan(r_d * w) / (r_d * mul2tanwby2);
   } else {
-    r_u = std::numeric_limits<double>::infinity();
+    return;
   }
 
   (*point) *= r_u;
