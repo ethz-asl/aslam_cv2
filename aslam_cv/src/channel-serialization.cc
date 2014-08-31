@@ -36,10 +36,8 @@ bool HeaderInformation::deSerializeFromBuffer(const char* const buffer_in, size_
   return true;
 }
 
-
 bool serializeToString(const cv::Mat& image,
                        std::string* string) {
-
   CHECK(image.isContinuous()) << "This method only works if the image is stored "
       "in contiguous memory.";
   CHECK_EQ(image.total(), static_cast<size_t>(image.rows * image.cols * image.channels())) <<
@@ -53,6 +51,7 @@ bool serializeToString(const cv::Mat& image,
     success = serializeToString<uint8_t>(matrixData, image.rows,
                                          image.cols, image.channels(),
                                          string);
+    break;
     case cv::DataType<int8_t>::type:
     success = serializeToString<int8_t>(matrixData, image.rows,
                                         image.cols, image.channels(),
@@ -84,7 +83,7 @@ bool serializeToString(const cv::Mat& image,
                                        string);
     break;
     default:
-      LOG(ERROR) << "cv::Mat type " << image.type() << " is not supported for "
+      LOG(FATAL) << "cv::Mat type " << image.type() << " is not supported for "
       << "serialization.";
       success = false;
       break;
@@ -98,8 +97,10 @@ bool deSerializeFromString(const std::string& string, cv::Mat* image) {
 }
 
 template<typename SCALAR>
-bool deSerializeTypedFromBuffer(const char* const buffer, size_t size,
+void deSerializeTypedFromBuffer(const char* const buffer, size_t size,
                                 const HeaderInformation& header, cv::Mat* image) {
+  CHECK_NOTNULL(buffer);
+  CHECK_NOTNULL(image);
   size_t matrix_size = sizeof(SCALAR) * header.rows * header.cols * header.channels;
   size_t total_size = matrix_size + header.size();
   CHECK_EQ(size, total_size);
@@ -108,7 +109,6 @@ bool deSerializeTypedFromBuffer(const char* const buffer, size_t size,
   // Create should only allocate if necessary.
   image->create(header.rows, header.cols, type);
   memcpy(image->data, buffer + header.size(), matrix_size);
-  return true;
 }
 
 bool deSerializeFromBuffer(const char* const buffer, size_t size, cv::Mat* image) {
@@ -117,7 +117,7 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size, cv::Mat* image
   CHECK_GE(size, header.size());
   bool success = header.deSerializeFromBuffer(buffer, 0);
   if (!success) {
-    LOG(ERROR) << "Failed to deserialize header from string: " <<
+    LOG(FATAL) << "Failed to deserialize header from string: " <<
         std::string(buffer, size);
     return false;
   }
@@ -125,28 +125,28 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size, cv::Mat* image
   // http://docs.opencv.org/modules/core/doc/basic_structures.html#mat-depth
   switch(header.type) {
     case cv::DataType<uint8_t>::type:
-    success = deSerializeTypedFromBuffer<uint8_t>(buffer, size, header, image);
+    deSerializeTypedFromBuffer<uint8_t>(buffer, size, header, image);
     break;
     case cv::DataType<int8_t>::type:
-    success = deSerializeTypedFromBuffer<int8_t>(buffer, size, header, image);
+    deSerializeTypedFromBuffer<int8_t>(buffer, size, header, image);
     break;
     case cv::DataType<uint16_t>::type:
-    success = deSerializeTypedFromBuffer<uint16_t>(buffer, size, header, image);
+    deSerializeTypedFromBuffer<uint16_t>(buffer, size, header, image);
     break;
     case cv::DataType<int16_t>::type:
-    success = deSerializeTypedFromBuffer<int16_t>(buffer, size, header, image);
+    deSerializeTypedFromBuffer<int16_t>(buffer, size, header, image);
     break;
     case cv::DataType<int>::type:
-    success = deSerializeTypedFromBuffer<int>(buffer, size, header, image);
+    deSerializeTypedFromBuffer<int>(buffer, size, header, image);
     break;
     case cv::DataType<double>::type:
-    success = deSerializeTypedFromBuffer<double>(buffer, size, header, image);
+    deSerializeTypedFromBuffer<double>(buffer, size, header, image);
     break;
     case cv::DataType<float>::type:
-    success = deSerializeTypedFromBuffer<float>(buffer, size, header, image);
+    deSerializeTypedFromBuffer<float>(buffer, size, header, image);
     break;
     default:
-      LOG(ERROR) << "cv::Mat type " << header.type << " is not supported for "
+      LOG(FATAL) << "cv::Mat type " << header.type << " is not supported for "
       << "serialization.";
       success = false;
       break;
@@ -161,6 +161,8 @@ bool serializeToBuffer(const cv::Mat& image, char** buffer, size_t* size) {
   CHECK_EQ(image.total(), static_cast<size_t>(image.rows * image.cols * image.channels())) <<
       "Unexpected number of pixels in the image.";
   CHECK_EQ(image.dims, 2) << "This method only works for 2D arrays";
+  CHECK_NOTNULL(buffer);
+  CHECK_NOTNULL(size);
   const char* const matrixData = reinterpret_cast<const char*>(image.data);
   bool success = false;
   // http://docs.opencv.org/modules/core/doc/basic_structures.html#mat-depth
@@ -169,6 +171,7 @@ bool serializeToBuffer(const cv::Mat& image, char** buffer, size_t* size) {
     success = serializeToBuffer<uint8_t>(matrixData, image.rows,
                                          image.cols, image.channels(),
                                          buffer, size);
+    break;
     case cv::DataType<int8_t>::type:
     success = serializeToBuffer<int8_t>(matrixData, image.rows,
                                         image.cols, image.channels(),
@@ -200,14 +203,13 @@ bool serializeToBuffer(const cv::Mat& image, char** buffer, size_t* size) {
                                        buffer, size);
     break;
     default:
-      LOG(ERROR) << "cv::Mat type " << image.type() << " is not supported for "
+      LOG(FATAL) << "cv::Mat type " << image.type() << " is not supported for "
       << "serialization.";
       success = false;
       break;
   }
   return success;
 }
-
 
 }  // namespace internal
 }  // namespace aslam

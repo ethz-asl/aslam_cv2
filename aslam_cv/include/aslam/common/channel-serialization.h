@@ -82,16 +82,20 @@ template<typename SCALAR, int ROWS, int COLS>
 bool serializeToBuffer(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
                        char** buffer, size_t* size) {
   const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
+  // Eigen matrices have only one channel
+  constexpr int numChannels = 1;
   return serializeToBuffer<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
-                                   1, buffer, size);
+                                   numChannels, buffer, size);
 }
 
 template<typename SCALAR, int ROWS, int COLS>
 bool serializeToString(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
                        std::string* string) {
   const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
+  // Eigen matrices have only one channel
+  constexpr int numChannels = 1;
   return serializeToString<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
-                                   1, string);
+                                   numChannels, string);
 }
 
 template<typename SCALAR, int ROWS, int COLS>
@@ -113,7 +117,7 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
     CHECK_EQ(header.cols, static_cast<uint32_t>(COLS));
   }
   CHECK_EQ(header.type, cv::DataType<SCALAR>::type);
-  CHECK_EQ(header.channels, 1) << "Eigen matrices must have one channel.";
+  CHECK_EQ(1u, header.channels) << "Eigen matrices must have one channel.";
 
   if (ROWS == Eigen::Dynamic && COLS == Eigen::Dynamic) {
     matrix->resize(header.rows, header.cols);
