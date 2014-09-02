@@ -1,10 +1,3 @@
-///
-/// \file visual-pipeline.h
-///
-/// \date   Sep 2, 2014
-/// \author paul.furgale@gmail.com
-///
-
 #ifndef VISUAL_PIPELINE_H_
 #define VISUAL_PIPELINE_H_
 
@@ -18,11 +11,14 @@ namespace aslam {
 /// or rectification, image constrast enhancement, feature detection and
 /// descriptor computation, or other operations.
 ///
-/// The class has an input NCameras calibration struct that represents the
-/// intrinsic and extrinsic calibration of the raw camera system. The output
-/// NCameras struct represents the calibration parameters of the images and
-/// keypoints that are in the VisualNFrames struct. This is the calibration after
-/// undistortion, etc.
+/// The class has two NCameras calibration structs that represent the
+/// intrinsic and extrinsic calibration of the camera system.
+/// The "input" calibration (getInputNCameras()) represents the calibration of
+/// raw camera system, before any image processing, resizing, or undistortion
+/// has taken place. The "output" calibration (getOutputNCameras())
+/// represents the calibration parameters of the images and keypoints that get
+/// set in the VisualNFrames struct. These are the camera parameters after
+/// image processing, resizing, undistortion, etc.
 ///
 /// The class should synchronize images with nearby timestamps and handle
 /// out-of-order images. When all frames of a VisualNFrame are complete,
@@ -73,16 +69,14 @@ public:
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  virtual std::shared_ptr<NCameras> getInputCameraSystem() const = 0;
+  virtual std::shared_ptr<NCameras> getInputNCameras() const = 0;
 
   /// \brief Get the output camera system that corresponds to the VisualNFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  virtual std::shared_ptr<NCameras> getOutputcameraSystem() const = 0;
-
-private:
+  virtual std::shared_ptr<NCameras> getOutputNCameras() const = 0;
 };
 
 }  // namespace aslam
