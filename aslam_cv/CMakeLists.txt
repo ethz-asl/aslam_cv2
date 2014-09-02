@@ -14,6 +14,7 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/visual-nframes.cc
                                src/visual-pipeline.cc
                                src/visual-npipeline.cc
+                               src/null-visual-pipeline.cc
 )
 
 add_doxygen(NOT_AUTOMATIC)

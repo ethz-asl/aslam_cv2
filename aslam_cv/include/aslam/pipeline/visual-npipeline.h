@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include <aslam/common/macros.h>
+
 namespace cv { class Mat; }
 
 namespace aslam {
@@ -37,6 +39,9 @@ class NCameras;
 /// anything older.
 class VisualNPipeline {
 public:
+  ASLAM_POINTER_TYPEDEFS(VisualNPipeline);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNPipeline);
+
   VisualNPipeline();
   virtual ~VisualNPipeline();
 
