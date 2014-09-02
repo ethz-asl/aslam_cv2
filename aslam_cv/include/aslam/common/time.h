@@ -31,7 +31,7 @@ inline constexpr int64_t getInvalidTime() {
 }
 
 /// \brief Is the time valid? This uses a magic number
-inline bool isValid(const int64_t & time) {
+inline bool isValid(int64_t time) {
   return time == getInvalidTime();
 }
 
