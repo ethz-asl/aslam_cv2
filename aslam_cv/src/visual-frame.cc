@@ -1,10 +1,10 @@
 #include <memory>
-
 #include <aslam/frames/visual-frame.h>
 #include <aslam/common/channel-definitions.h>
 
 namespace aslam {
-VisualFrame::VisualFrame() : stamp_(0) {}
+VisualFrame::VisualFrame() :
+    stamp_(0), hardwareStamp_(0), systemStamp_(0) {}
 
 VisualFrame::~VisualFrame(){}
 
@@ -12,6 +12,8 @@ bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
   // TODO(slynen): Better iterate over channels and compare data instead of pointers.
   same &= stamp_ == other.stamp_;
+  same &= hardwareStamp_ == other.hardwareStamp_;
+  same &= systemStamp_ == other.systemStamp_;
   same &= channels_ == other.channels_;
   same &= static_cast<bool>(camera_geometry_) ==
       static_cast<bool>(other.camera_geometry_);
