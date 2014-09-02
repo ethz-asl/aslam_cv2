@@ -34,7 +34,7 @@ public:
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualPipeline);
 
   VisualPipeline();
-  ~VisualPipeline();
+  virtual ~VisualPipeline();
 
   /// \brief Add an image to the visual processor.
   ///
