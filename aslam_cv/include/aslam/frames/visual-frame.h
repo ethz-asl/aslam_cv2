@@ -61,7 +61,7 @@ class VisualFrame  {
   /// \brief Is there an image stored in this frame?
   bool hasImage() const;
 
-  /// \brief Is a certain channel stored in this frame.
+  /// \brief Is a certain channel stored in this frame?
   bool hasChannel(const std::string& channel) const {
     return aslam::channels::hasChannel(channel, channels_);
   }
@@ -76,7 +76,7 @@ class VisualFrame  {
   const Eigen::VectorXd& getKeypointScales() const;
   /// \brief The descriptors stored in a frame.
   const DescriptorsT& getBriskDescriptors() const;
-  /// \brief The image stored in a frame
+  /// \brief The image stored in a frame.
   const cv::Mat& getImage() const;
 
   template<typename CHANNEL_DATA_TYPE>
@@ -130,6 +130,8 @@ class VisualFrame  {
   /// \brief Replace (copy) the internal descriptors by the passed ones.
   void setBriskDescriptors(const DescriptorsT& descriptors);
   /// \brief Replace (copy) the internal image by the passed ones.
+  ///        This is a shallow copy by default. Please clone the image if it
+  ///        should be owned by the VisualFrame.
   void setImage(const cv::Mat& image);
 
   template<typename CHANNEL_DATA_TYPE>
@@ -154,25 +156,25 @@ class VisualFrame  {
   /// \brief set the frame id.
   inline void setId(const aslam::FrameId& id) { id_ = id; }
 
-  /// \brief get the timestamp
+  /// \brief get the timestamp.
   inline int64_t getTimestamp() const { return stamp_; }
   
-  /// \brief set the timestamp
+  /// \brief set the timestamp.
   inline void setTimestamp(int64_t stamp){ stamp_ = stamp; }
   
-  /// \brief get the hardware timestamp
+  /// \brief get the hardware timestamp.
   inline int64_t getHardwareTimestamp() const { return hardwareStamp_; }
 
-  /// \brief set the hardware timestamp
-  inline void setHardwareTimestamp(int64_t stamp){ hardwareStamp_ = stamp; }
+  /// \brief set the hardware timestamp.
+  inline void setHardwareTimestamp(int64_t stamp) { hardwareStamp_ = stamp; }
 
-  /// \brief get the system (host computer) timestamp
+  /// \brief get the system (host computer) timestamp.
   inline int64_t getSystemTimestamp() const { return systemStamp_; }
 
-  /// \brief set the system (host computer) timestamp
-  inline void setSystemTimestamp(int64_t stamp){ systemStamp_ = stamp; }
+  /// \brief set the system (host computer) timestamp.
+  inline void setSystemTimestamp(int64_t stamp) { systemStamp_ = stamp; }
  private:
-  /// \brief integer nanoseconds since epoch
+  /// \brief integer nanoseconds since epoch.
   int64_t stamp_;
   /// hardware timestamp. The scale and offset will be different for every device.
   int64_t hardwareStamp_;
