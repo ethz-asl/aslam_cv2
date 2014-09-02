@@ -36,7 +36,7 @@ public:
   VisualPipeline();
   ~VisualPipeline();
 
-  /// \brief Add an image to the visual processor
+  /// \brief Add an image to the visual processor.
   ///
   /// This function is called by a user when an image is received.
   /// The processor then processes the images and constructs a VisualFrame.
