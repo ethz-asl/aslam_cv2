@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include <aslam/common/macros.h>
+
 namespace cv { class Mat; }
 
 namespace aslam {
@@ -28,6 +30,9 @@ class Camera;
 /// image processing, resizing, undistortion, etc.
 class VisualPipeline {
 public:
+  ASLAM_POINTER_TYPEDEFS(VisualPipeline);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualPipeline);
+
   VisualPipeline();
   ~VisualPipeline();
 
@@ -51,7 +56,7 @@ public:
   /// rectification, the input and output camera may not be the same.
   virtual std::shared_ptr<Camera> getInputCamera() const = 0;
 
-  /// \brief Get the output camerathat corresponds to the VisualFrame
+  /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
