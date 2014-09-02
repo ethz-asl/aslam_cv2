@@ -1,10 +1,11 @@
 #include <memory>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/common/channel-definitions.h>
+#include <aslam/common/time.h>
 
 namespace aslam {
 VisualFrame::VisualFrame() :
-    stamp_(0), hardwareStamp_(0), systemStamp_(0) {}
+    stamp_(getInvalidTime()), hardwareStamp_(getInvalidTime()), systemStamp_(getInvalidTime()) {}
 
 VisualFrame::~VisualFrame(){}
 
