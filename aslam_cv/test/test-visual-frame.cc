@@ -1,6 +1,7 @@
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/eigen-helpers.h>
+#include <aslam/common/opencv-predicates.h>
 #include <aslam/cameras/camera.h>
 #include <aslam/frames/visual-frame.h>
 
@@ -28,6 +29,7 @@ EXPECT_DEATH(frame.getKeypointMeasurements(), "^");
 EXPECT_DEATH(frame.getKeypointMeasurementUncertainties(), "^");
 EXPECT_DEATH(frame.getKeypointScales(), "^");
 EXPECT_DEATH(frame.getKeypointOrientations(), "^");
+EXPECT_DEATH(frame.getImage(), "^");
 }
 
 TEST(Frame, DeathOnGetMutableUnsetData) {
@@ -37,6 +39,7 @@ EXPECT_DEATH(frame.getKeypointMeasurementsMutable(), "^");
 EXPECT_DEATH(frame.getKeypointMeasurementUncertaintiesMutable(), "^");
 EXPECT_DEATH(frame.getKeypointScalesMutable(), "^");
 EXPECT_DEATH(frame.getKeypointOrientationsMutable(), "^");
+EXPECT_DEATH(frame.getImageMutable(), "^");
 }
 
 TEST(Frame, SetGetDescriptors) {
@@ -133,3 +136,11 @@ TEST(Frame, NamedChannel) {
   EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 }
 
+TEST(Frame, SetGetImage) {
+  aslam::VisualFrame frame;
+  cv::Mat data(10,10,CV_8SC3,uint8_t(7));
+
+  frame.setImage(data);
+  const cv::Mat& data_2 = frame.getImage();
+  EXPECT_TRUE(gtest_catkin::ImagesEqual(data, data_2));
+}

@@ -37,6 +37,9 @@ bool VisualFrame::hasKeypointScales() const{
 bool VisualFrame::hasBriskDescriptors() const{
   return aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_);
 }
+bool VisualFrame::hasImage() const {
+  return aslam::channels::has_IMAGE_Channel(channels_);
+}
 
 const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
   return aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
@@ -52,6 +55,9 @@ const Eigen::VectorXd& VisualFrame::getKeypointOrientations() const {
 }
 const VisualFrame::DescriptorsT& VisualFrame::getBriskDescriptors() const {
   return aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+}
+const cv::Mat& VisualFrame::getImage() const {
+  return aslam::channels::get_IMAGE_Data(channels_);
 }
 
 Eigen::Matrix2Xd* VisualFrame::getKeypointMeasurementsMutable() {
@@ -79,7 +85,11 @@ VisualFrame::DescriptorsT* VisualFrame::getBriskDescriptorsMutable() {
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
   return &descriptors;
 }
-
+cv::Mat* VisualFrame::getImageMutable() {
+  cv::Mat& image =
+      aslam::channels::get_IMAGE_Data(channels_);
+  return &image;
+}
 
 const Eigen::Block<Eigen::Matrix2Xd, 2, 1>
 VisualFrame::getKeypointMeasurement(size_t index) const {
@@ -158,10 +168,21 @@ void VisualFrame::setBriskDescriptors(
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
+void VisualFrame::setImage(const cv::Mat& image_new) {
+  if (!aslam::channels::has_IMAGE_Channel(channels_)) {
+    aslam::channels::add_IMAGE_Channel(&channels_);
+  }
+  cv::Mat& image =
+      aslam::channels::get_IMAGE_Data(channels_);
+  image = image_new;
+}
 
 const Camera::ConstPtr VisualFrame::getCameraGeometry() const {
   return camera_geometry_;
 }
+
+
+
 void VisualFrame::setCameraGeometry(const Camera::Ptr& camera) {
   camera_geometry_ = camera;
 }
