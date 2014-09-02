@@ -16,6 +16,21 @@
 namespace aslam {
 class Camera;
 
+/// \class VisualFrame
+/// \brief An image and keypoints from a single camera.
+///
+/// This class stores data from an image and keypoints taken from a single
+/// camera. It stores a pointer to the camera's intrinsic calibration,
+/// an id that uniquely identifies this frame, and a measurement timestamp.
+///
+/// The class also stores a ChannelGroup object that can be used to hold
+/// keypoint data, the raw image, and other associated information.
+///
+/// The frame stores three timestamps. The stamp_ field stores the current
+/// timestamp that is being used in processing. This can be a derived value
+/// based on timestamp correction. To save the raw data, the class also stores
+/// the hardware timestamp, and the system timestamp (the time the image was
+/// received at the host computer).
 class VisualFrame  {
  public:
   typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
@@ -33,16 +48,18 @@ class VisualFrame  {
     aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
   }
 
-  /// \brief Are there keypoint measurements stored in this frame.
+  /// \brief Are there keypoint measurements stored in this frame?
   bool hasKeypointMeasurements() const;
-  /// \brief Are there keypoint measurement uncertainties stored in this frame.
+  /// \brief Are there keypoint measurement uncertainties stored in this frame?
   bool hasKeypointMeasurementUncertainties() const;
-  /// \brief Are there keypoint orientations stored in this frame.
+  /// \brief Are there keypoint orientations stored in this frame?
   bool hasKeypointOrientations() const;
-  /// \brief Are there keypoint scales stored in this frame.
+  /// \brief Are there keypoint scales stored in this frame?
   bool hasKeypointScales() const;
-  /// \brief Are there descriptors stored in this frame.
+  /// \brief Are there descriptors stored in this frame?
   bool hasBriskDescriptors() const;
+  /// \brief Is there an image stored in this frame?
+  bool hasImage() const;
 
   /// \brief Is a certain channel stored in this frame.
   bool hasChannel(const std::string& channel) const {
@@ -59,6 +76,8 @@ class VisualFrame  {
   const Eigen::VectorXd& getKeypointScales() const;
   /// \brief The descriptors stored in a frame.
   const DescriptorsT& getBriskDescriptors() const;
+  /// \brief The image stored in a frame
+  const cv::Mat& getImage() const;
 
   template<typename CHANNEL_DATA_TYPE>
   const CHANNEL_DATA_TYPE& getChannelData(const std::string& channel) const {
@@ -75,6 +94,8 @@ class VisualFrame  {
   Eigen::VectorXd* getKeypointScalesMutable();
   /// \brief A pointer to the descriptors, can be used to swap in new data.
   DescriptorsT* getBriskDescriptorsMutable();
+  /// \brief A pointer to the image, can be used to swap in new data.
+  cv::Mat* getImageMutable();
 
   template<typename CHANNEL_DATA_TYPE>
   CHANNEL_DATA_TYPE* getChannelDataMutable(const std::string& channel) const {
@@ -108,6 +129,8 @@ class VisualFrame  {
   void setKeypointScales(const Eigen::VectorXd& scales);
   /// \brief Replace (copy) the internal descriptors by the passed ones.
   void setBriskDescriptors(const DescriptorsT& descriptors);
+  /// \brief Replace (copy) the internal image by the passed ones.
+  void setImage(const cv::Mat& image);
 
   template<typename CHANNEL_DATA_TYPE>
   void setChannelData(const std::string& channel,
@@ -132,14 +155,29 @@ class VisualFrame  {
   inline void setId(const aslam::FrameId& id) { id_ = id; }
 
   /// \brief get the timestamp
-  inline uint64_t getTimestamp() const { return stamp_; }
+  inline int64_t getTimestamp() const { return stamp_; }
   
   /// \brief set the timestamp
-  inline void setTimestamp(uint64_t stamp){ stamp_ = stamp; }
+  inline void setTimestamp(int64_t stamp){ stamp_ = stamp; }
   
+  /// \brief get the hardware timestamp
+  inline int64_t getHardwareTimestamp() const { return hardwareStamp_; }
+
+  /// \brief set the hardware timestamp
+  inline void setHardwareTimestamp(int64_t stamp){ hardwareStamp_ = stamp; }
+
+  /// \brief get the system (host computer) timestamp
+  inline int64_t getSystemTimestamp() const { return systemStamp_; }
+
+  /// \brief set the system (host computer) timestamp
+  inline void setSystemTimestamp(int64_t stamp){ systemStamp_ = stamp; }
  private:
-  /// integer nanoseconds since epoch
-  uint64_t stamp_;
+  /// \brief integer nanoseconds since epoch
+  int64_t stamp_;
+  /// hardware timestamp. The scale and offset will be different for every device.
+  int64_t hardwareStamp_;
+  /// \brief host system timestamp in integer nanoseconds since epoch.
+  int64_t systemStamp_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
   Camera::Ptr camera_geometry_;
