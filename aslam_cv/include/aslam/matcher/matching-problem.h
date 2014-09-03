@@ -1,7 +1,7 @@
 #ifndef ASLAM_CV_MATCHING_PROBLEM_H_
 #define ASLAM_CV_MATCHING_PROBLEM_H_
 
-/// \addtogroup Matcher
+/// \addtogroup Matching
 /// @{
 ///
 /// @}
@@ -47,11 +47,9 @@ public:
   virtual int getLengthA() = 0;
   virtual int getLengthB() = 0;
 
-  /// get a short list of candidates in list a for index b
-  /// \param[in] b The index of b queried for candidates.
-  /// \param[out] candidates Candidates from the A-list that could potentially match this element of B
+  /// Get a short list of candidates in list a for index b
   ///
-  /// return all indices of list a for n^2 matching; or use something
+  /// Return all indices of list a for n^2 matching; or use something
   /// smarter like nabo to get nearest neighbors.  Can also be used to
   /// mask out invalid elements in the lists, or an invalid b, by
   /// returning and empty candidate list.  
@@ -59,19 +57,21 @@ public:
   /// The score for each candidate is a rough score that can be used
   /// for sorting, pre-filtering, and will be explicitly recomputed
   /// using the computeScore function.
+  ///
+  /// \param[in] b The index of b queried for candidates.
+  /// \param[out] candidates Candidates from the A-list that could potentially match this element of B.
   virtual int getCandidatesOfB(int b, Candidates_t *candidates) = 0;
 
   /// \brief compute the match score between items referenced by a and b.
-  /// note: will be called multilple times from different threads.
+  /// Note: this will be called multilple times from different threads.
   virtual Score_t computeScore(int a, int b) = 0;
 
-  /// gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever
+  /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
 
-  /// called at the end of the matching process to set the output 
+  /// Called at the end of the matching process to set the output. 
   virtual void setBestMatches(const Matches_t &bestMatches) = 0;
 
 };
-
 }
 #endif //ASLAM_CV_MATCHING_PROBLEM_H_

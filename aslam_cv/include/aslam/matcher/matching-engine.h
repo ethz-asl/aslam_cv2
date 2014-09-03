@@ -1,11 +1,10 @@
 #ifndef ASLAM_CV_MATCHINGENGINE_H_
 #define ASLAM_CV_MATCHINGENGINE_H_
 
-/// \addtogroup MatchingEngine
+/// \addtogroup Matching
 /// @{
 ///
 /// @}
-
 
 namespace aslam {
 
@@ -19,8 +18,5 @@ public:
   virtual bool match(Matching_Problem &problem) = 0;
 
 };
-
-
-
 }
 #endif //ASLAM_CV_MATCHINGENGINE_H_
