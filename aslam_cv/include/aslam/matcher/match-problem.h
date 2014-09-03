@@ -1,5 +1,5 @@
-#ifndef ASLAM_CV_MATCH_VARIANT_H_
-#define ASLAM_CV_MATCH_VARIANT_H_
+#ifndef ASLAM_CV_MATCHING_PROBLEM_H_
+#define ASLAM_CV_MATCHING_PROBLEM_H_
 
 /// \addtogroup Matcher
 /// @{
@@ -12,7 +12,7 @@
 
 namespace aslam {
 
-/// \class MatchProblem
+/// \class MatchingProblem
 ///
 /// \brief defines the specifics of a matching problem
 ///
@@ -23,47 +23,55 @@ namespace aslam {
 /// of list B.
 ///
 template <typename SCORE_T>
-class MatchProblem {
+class MatchingProblem {
 public:
-  typedef SCORE_T score_t;
+  typedef SCORE_T Score_t;
     
   struct Match {
     int correspondence[2];
-    score_t score;
+    Score_t score;
     int getIndexA() const { return correspondence[0]; }
     int getIndexB() const { return correspondence[1]; }
   };
 
   struct Candidate {
     int index;
-    score_t score;
+    Score_t score; /// a preliminary score that can be used for
+                   /// sorting, rough thresholding; but actuall match
+                   /// score will get recomputed.
   };
 
   typedef std::vector<Match> Matches_t;
   typedef std::vector<Candidate> Candidates_t;
 
-  virtual int getLengthA() =0;
-  virtual int getLengthB() =0;
+  virtual int getLengthA() = 0;
+  virtual int getLengthB() = 0;
 
   /// get a short list of candidates in list a for index b
-  /// return all indices of list a for n^2 matching; 
-  /// or use something smarter like nabo to get nearest neighbors.
-  /// can also be used to mask out invalid elements in the lists 
-  /// or an invalid b, by returning and empty candidate list
-  virtual int getCandidatesOfB(int b, Candidates_t *candidates)=0;
-  virtual score_t computeScore(int a, int b)=0;
+  /// \param[in] b The index of b queried for candidates.
+  /// \param[out] candidates Candidates from the A-list that could potentially match this element of B
+  ///
+  /// return all indices of list a for n^2 matching; or use something
+  /// smarter like nabo to get nearest neighbors.  Can also be used to
+  /// mask out invalid elements in the lists, or an invalid b, by
+  /// returning and empty candidate list.  
+  ///
+  /// The score for each candidate is a rough score that can be used
+  /// for sorting, pre-filtering, and will be explicitly recomputed
+  /// using the computeScore function.
+  virtual int getCandidatesOfB(int b, Candidates_t *candidates) = 0;
+
+  /// \brief compute the match score between items referenced by a and b.
+  /// note: will be called multilple times from different threads.
+  virtual Score_t computeScore(int a, int b) = 0;
 
   /// gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever
-  virtual void doSetup()=0;
+  virtual bool doSetup() = 0;
 
   /// called at the end of the matching process to set the output 
-  virtual void setBestMatches(const Matches_t &bestMatches)=0;
-
-private:
-  matches_t matches_;
-
+  virtual void setBestMatches(const Matches_t &bestMatches) = 0;
 
 };
 
 }
-#endif //ASLAM_CV_MATCH_VARIANT_H_
+#endif //ASLAM_CV_MATCHING_PROBLEM_H_
