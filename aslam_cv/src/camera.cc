@@ -28,8 +28,13 @@ void Camera::printParameters(std::ostream& out, const std::string& text) {
 }
 
 bool Camera::operator==(const Camera& other) const {
+
+  //test if internal state is equal
   // \todo(slynen) should we include the id and name here?
-  return this->line_delay_nano_seconds_ == other.line_delay_nano_seconds_;
+  return (this->line_delay_nano_seconds_ == other.line_delay_nano_seconds_) &&
+         (this->image_width_ == other.image_width_) &&
+         (this->image_height_ == other.image_height_);
+
 }
 
 }  // namespace aslam

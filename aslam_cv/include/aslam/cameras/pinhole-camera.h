@@ -7,11 +7,6 @@
 
 namespace aslam {
 
-template<typename Derived>
-Eigen::Map<const Eigen::VectorXd> vecmap(const Eigen::MatrixBase<Derived>& vec){
-  return Eigen::Map<const Eigen::VectorXd>(static_cast<const Derived&>(vec).data(),vec.size());
-}
-
 class PinholeCamera : public Camera {
   enum { kNumOfParams = 4 };
  public:
@@ -24,8 +19,7 @@ class PinholeCamera : public Camera {
   PinholeCamera(double focalLengthCols, double focalLengthRows,
                 double imageCenterCols, double imageCenterRows,
                 uint32_t imageWidth, uint32_t imageHeight,
-                aslam::Distortion::Ptr distortion,
-                const Eigen::VectorXd& distortionParameters);
+                aslam::Distortion::Ptr distortion);
 
   PinholeCamera(double focalLengthCols, double focalLengthRows,
                 double imageCenterCols, double imageCenterRows,
@@ -90,25 +84,13 @@ class PinholeCamera : public Camera {
                                      Eigen::Matrix<double, 4, 1>* out_point,
                                      Eigen::Matrix<double, 4, 2>* out_jacobian) const;
 
-  virtual bool project3IntrinsicsJacobian(
-      const Eigen::Matrix<double, 3, 1>& p,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
+  virtual bool project3IntrinsicsJacobian(const Eigen::Matrix<double, 3, 1>& p,
+                                          Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
 
-  virtual bool project4IntrinsicsJacobian(
-      const Eigen::Matrix<double, 4, 1>& p,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
+  virtual bool project4IntrinsicsJacobian(const Eigen::Matrix<double, 4, 1>& p,
+                                          Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
 
-  virtual bool operator==(const PinholeCamera& other) const;
-
-  void setDistortion(const aslam::Distortion::Ptr& distortion, 
-                     const Eigen::VectorXd& params) {
-    _distortion = distortion;
-    if (distortion) {
-      CHECK(distortion->distortionParametersValid(vecmap(params)));
-      _intrinsics.conservativeResize(kNumOfParams + distortion->getParameterSize());
-      _intrinsics.tail(distortion->getParameterSize()) = params;
-    }
-  }
+  virtual bool operator==(const Camera& other) const;
 
   aslam::Distortion::Ptr& distortion() {
     return _distortion;
