@@ -1,5 +1,5 @@
-#ifndef FISHEYE_DISTORTION_H_
-#define FISHEYE_DISTORTION_H_
+#ifndef ASLAM_FISHEYE_DISTORTION_H_
+#define ASLAM_FISHEYE_DISTORTION_H_
 
 #include <Eigen/Core>
 #include <glog/logging.h>
@@ -8,79 +8,128 @@
 namespace aslam {
 
 class FisheyeDistortion : public aslam::Distortion {
+
  private:
+  /** \brief Number of parameters used for this distortion model. */
   enum { kNumOfParams = 1 };
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
 
-  explicit FisheyeDistortion() { }
+//////////////////////////////////////////////////////////////////
+/** \name Constructors/destructors and operators
+ *  @{
+ */
 
-  virtual size_t getParameterSize() const {
-    return kNumOfParams;
-  }
+  /// \brief FisheyeDistortion Ctor.
+  ///
+  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=1)
+  ///
+  explicit FisheyeDistortion(const Eigen::VectorXd& distortionParams);
 
-  inline static constexpr size_t parameterCount() {
-    return kNumOfParams;
-  }
-
+  /// \brief Checks for same distortion type and same parameters.
+  ///
+  /// @return Same distortion?
+  ///
   bool operator==(const Distortion& rhs) const;
 
-  void distort(const Eigen::Map<const Eigen::VectorXd>& params,
-               Eigen::Matrix<double, 2, 1>* point,
-               Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
+/** @} *///////////////////////////////////////////////////////////////////
 
-  void undistort(const Eigen::Map<const Eigen::VectorXd>& /* params */,
-                 Eigen::Matrix<double, 2, 1>* point,
-                 Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
-    CHECK(point);
-    CHECK(out_jacobian);
-    // TODO(dymczykm) to be implemented at some point
-    CHECK(false);
-  }
 
-  // templated versions, e.g. for ceres autodiff
+//////////////////////////////////////////////////////////////////
+/** \name Distort methods: applies the distortion model to a point.
+ *  @{
+ */
+
+  /// \brief Apply distortion to a point in the normalized image plane using provided distortion coefficients.
+  ///        External distortion coefficients can be specified using this function. (Ignores the internally
+  ///        stored parameters.
+  /// @param[in] dist_coeffs Vector containing the coefficients for the distortion model.
+  /// @param[in,out] point The point in the normalized image plane. After the function, this point is distorted.
+  /// @param[out] out_jacobian The Jacobian of the distortion function with respect to small changes in the input point.
+  ///                   If NULL is passed, the Jacobian calculation is skipped.
+  ///
+  virtual void distortExternalCoeffs(const Eigen::VectorXd& dist_coeffs,
+                                     Eigen::Vector2d* point,
+                                     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
+
+  /// \brief Templated version of the distortExternalCoeffs function.
+  /// @param[in] dist_coeffs Vector containing the coefficients for the distortion model.
+  /// @param[in] point The point in the normalized image plane. After the function, this point is distorted.
+  /// @param[out] out_point The distorted point.
+  ///
   template <typename ScalarType>
-  void distort(const Eigen::Map<Eigen::Matrix<ScalarType,Eigen::Dynamic,1>>& params,
-               const Eigen::Matrix<ScalarType, 2, 1>& point,
-               Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+  void distortExternalCoeffs(const Eigen::Map<Eigen::Matrix<ScalarType, Eigen::Dynamic,1>>& dist_coeffs,
+                             const Eigen::Matrix<ScalarType, 2, 1>& point,
+                             Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
-  void distortParameterJacobian(
-      const Eigen::Map<const Eigen::VectorXd>& params,
-      const Eigen::Matrix<double, 2, 1>& point,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
 
-  virtual void distort(const Eigen::Map<const Eigen::VectorXd>& params,
-                       Eigen::Matrix<double, 2, 1>* point) const;
+  virtual void distortParameterJacobian(const Eigen::VectorXd& dist_coeffs,
+                                        const Eigen::Vector2d& point,
+                                        Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
 
-  virtual void distort(const Eigen::Map<const Eigen::VectorXd>& params,
-                       const Eigen::Matrix<double, 2, 1>& point,
-                       Eigen::Matrix<double, 2, 1>* out_point) const;
+/** @} *///////////////////////////////////////////////////////////////////
 
-  virtual void undistort(const Eigen::Map<const Eigen::VectorXd>& params,
-                         Eigen::Matrix<double, 2, 1>* point) const;
 
-  virtual bool distortionParametersValid(const Eigen::Map<const Eigen::VectorXd>& params) const {
-    CHECK_EQ(params.size(), 1)
-        << "Invalid number of distortion coefficients (found "
-        << params.size() << ", expected 1).";
+///////////////////////////////////////////////////////////////////////////
+/** \name Undistort methods: Removes the modeled distortion effects from a point.
+ *  @{
+ */
 
-    // Expect w to have sane magnitude.
-    double w = params(0);
-    bool valid = std::abs(w) < 1e-16 || (w >= kMinValidW && w <= kMaxValidW);
-    LOG_IF(INFO, !valid) << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
-        << ", " << kMaxValidW << "].";
-    return valid;
-  }
+  /// \brief Apply undistortion to recover a point in the normalized image plane using provided distortion
+  ///        coefficients. External distortion coefficients can be specified using this function. Ignores
+  ///        the internally  stored parameters.
+  ///
+  /// @param[in] dist_coeffs Vector containing the coefficients for the distortion model.
+  /// @param[in,out] y The distorted point. After the function, this point is in the normalized image plane.
+  /// @param[out] outJy The Jacobian of the distortion function with respect to small changes in the input point.
+  ///                   If NULL is passed, the Jacobian calculation is skipped.
+  ///
+  virtual void undistortExternalCoeffs(const Eigen::VectorXd& dist_coeffs,
+                                       Eigen::Vector2d* point,
+                                       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
+
+/** @} *///////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////
+/** \name Methods to set/get distortion parameters
+ *  @{
+ */
+
+  /// \brief Check the validity of distortion parameters.
+  ///
+  /// @param[in] dist_coeffs Vector containing the coefficients.
+  ///            Parameters will NOT be stored.
+  /// @return If the distortion parameters are valid.
+  ///
+  virtual bool distortionParametersValid(const Eigen::VectorXd& params) const;
+
+  /// \brief Returns the number of parameters used in this distortion model.
+  ///
+  /// @return Number of parameters.
+  ///
+  inline static constexpr size_t parameterCount() {
+      return kNumOfParams;
+   }
+
+/** @} *///////////////////////////////////////////////////////////////////
 
  private:
+
+///////////////////////////////////////////////////////////////////////////
+/** \name Valid parameter range definition.
+ *  @{
+ */
   static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
   static constexpr double kMinValidW = 0.5;
   static constexpr double kMaxValidW = 1.5;
+/** @} *///////////////////////////////////////////////////////////////////
+
 };
 
 } // namespace aslam
 
 #include "fisheye-distortion-inl.h"
 
-#endif /* FISHEYE_DISTORTION_H_ */
+#endif /* ASLAM_FISHEYE_DISTORTION_H_ */
