@@ -2,7 +2,7 @@
 #include <aslam/common/thread-pool.h>
 
 int increment(int a){
-  std::chrono::milliseconds dura( a );
+  std::chrono::milliseconds dura(a);
   std::this_thread::sleep_for(dura);
   ++a;
   return a;
