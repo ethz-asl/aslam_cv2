@@ -7,21 +7,17 @@
 
 namespace aslam {
 Distortion::Distortion(const Eigen::VectorXd& dist_coeffs)
-    : dist_coeffs_(dist_coeffs) {
-}
+    : distortion_coefficients_(dist_coeffs) {}
 
 // TODO(slynen) Enable commented out PropertyTree support
 //Distortion::Distortion(const sm::PropertyTree& /*property_tree*/) { }
-Distortion::~Distortion() {
-}
 
 bool Distortion::operator==(const Distortion& rhs) const {
   //check for same distortion type
-  if(typeid(*this) != typeid(rhs))
+  if (typeid(*this) != typeid(rhs))
     return false;
 
-  //check for same distortion parameters
-  if(dist_coeffs_ != rhs.dist_coeffs_)
+  if (distortion_coefficients_ != rhs.distortion_coefficients_)
     return false;
 
   return true;
@@ -29,14 +25,14 @@ bool Distortion::operator==(const Distortion& rhs) const {
 
 void Distortion::distort(Eigen::Vector2d* point) const {
   CHECK_NOTNULL(point);
-  distortExternalCoeffs(dist_coeffs_, point, NULL);
+  distortUsingExternalCoefficients(distortion_coefficients_, point, nullptr);
 }
 
 void Distortion::distort(const Eigen::Vector2d& point,
                          Eigen::Vector2d* out_point) const {
   CHECK_NOTNULL(out_point);
   *out_point = point;
-  distortExternalCoeffs(dist_coeffs_, out_point, NULL);
+  distortUsingExternalCoefficients(distortion_coefficients_, out_point, nullptr);
 }
 
 void Distortion::distort(
@@ -44,36 +40,28 @@ void Distortion::distort(
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
   CHECK_NOTNULL(point);
   CHECK_NOTNULL(out_jacobian);
-  distortExternalCoeffs(dist_coeffs_, point, out_jacobian);
+  distortUsingExternalCoefficients(distortion_coefficients_, point, out_jacobian);
 }
 
 void Distortion::undistort(Eigen::Vector2d* point) const {
   CHECK_NOTNULL(point);
-  undistortExternalCoeffs(dist_coeffs_, point, NULL);
+  undistortUsingExternalCoefficients(distortion_coefficients_, point);
 }
 
 void Distortion::undistort(const Eigen::Vector2d& point,
                            Eigen::Vector2d* out_point) const {
   CHECK_NOTNULL(out_point);
   *out_point = point;
-  undistortExternalCoeffs(dist_coeffs_, out_point, NULL);
+  undistortUsingExternalCoefficients(distortion_coefficients_, out_point);
 }
 
-void Distortion::undistort(
-    Eigen::Vector2d* point,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
-  CHECK_NOTNULL(point);
-  CHECK_NOTNULL(out_jacobian);
-  distortExternalCoeffs(dist_coeffs_, point, out_jacobian);
-}
-
-void Distortion::setParameters(const Eigen::VectorXd& params) {
-  CHECK(distortionParametersValid(params)) << "Distortion parameters invalid!";
-  dist_coeffs_ = params;
+void Distortion::setParameters(const Eigen::VectorXd& dist_coeffs) {
+  CHECK(distortionParametersValid(dist_coeffs)) << "Distortion parameters invalid!";
+  distortion_coefficients_ = dist_coeffs;
 }
 
 Eigen::VectorXd Distortion::getParameters() const {
-  return dist_coeffs_;
+  return distortion_coefficients_;
 }
 
 }  // namespace aslam

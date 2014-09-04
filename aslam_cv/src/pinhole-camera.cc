@@ -54,23 +54,21 @@ PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
 PinholeCamera::~PinholeCamera() {}
 
 bool PinholeCamera::operator==(const Camera& other) const {
-
   //check if the camera models are the same
   const PinholeCamera* rhs = dynamic_cast<const PinholeCamera*>(&other);
 
-  if(!rhs)
+  if (!rhs)
     return false;
 
-  //check if the base stuff is equal
-  if(!Camera::operator==(other))
+  // Verify that the base class members are equal.
+  if (!Camera::operator==(other))
     return false;
 
-  //compare the distortion model (if set)
-  if(_distortion && rhs->_distortion) {
-    if( !(*(this->_distortion) == *(rhs->_distortion)) )
+  // Compare the distortion model (if set).
+  if (_distortion && rhs->_distortion) {
+    if ( !(*(this->_distortion) == *(rhs->_distortion)) )
       return false;
-  }
-  else {
+  } else {
     return false;
   }
 
@@ -204,7 +202,9 @@ bool PinholeCamera::backProject3(
   kp[1] = (kp[1] - cv) / fv;
 
   Eigen::Matrix<double, 2, Eigen::Dynamic> Jd;
-  _distortion->undistort(&kp, &Jd);  // revert distortion
+
+  _distortion->undistort(&kp);
+  CHECK(false) << "undistort: Jacobian not implemented!";
 
   (*outPoint)[0] = kp[0];
   (*outPoint)[1] = kp[1];

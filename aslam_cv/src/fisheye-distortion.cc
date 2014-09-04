@@ -7,9 +7,11 @@ FisheyeDistortion::FisheyeDistortion(const Eigen::VectorXd& dist_coeffs)
   CHECK(distortionParametersValid(dist_coeffs)) << "Invalid distortion parameters!";
 }
 
-void FisheyeDistortion::distortExternalCoeffs(const Eigen::VectorXd& dist_coeffs,
-                                              Eigen::Vector2d* point,
-                                              Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+void FisheyeDistortion::distortUsingExternalCoefficients(
+    const Eigen::VectorXd& dist_coeffs,
+    Eigen::Vector2d* point,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
 
   const double& w = dist_coeffs(0);
@@ -73,6 +75,7 @@ void FisheyeDistortion::distortExternalCoeffs(const Eigen::VectorXd& dist_coeffs
 void FisheyeDistortion::distortParameterJacobian(const Eigen::VectorXd& dist_coeffs,
                                                  const Eigen::Vector2d& point,
                                                  Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(out_jacobian);
   CHECK_EQ(out_jacobian->cols(), 1);
 
@@ -106,9 +109,9 @@ void FisheyeDistortion::distortParameterJacobian(const Eigen::VectorXd& dist_coe
   }
 }
 
-void FisheyeDistortion::undistortExternalCoeffs(const Eigen::VectorXd& dist_coeffs,
-                                                Eigen::Vector2d* point,
-                                                Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+void FisheyeDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
+                                                           Eigen::Vector2d* point) const {
+  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
 
   const double& w = dist_coeffs(0);
@@ -130,20 +133,14 @@ void FisheyeDistortion::undistortExternalCoeffs(const Eigen::VectorXd& dist_coef
   }
 
   (*point) *= r_u;
-
-  if(out_jacobian)
-  {
-    // TODO(dymczykm) to be implemented at some point
-    CHECK(false) << "Jacobian calculation not yet implemented...";
-  }
 }
 
-bool FisheyeDistortion::distortionParametersValid(const Eigen::VectorXd& params) const {
-  CHECK_EQ(params.size(), kNumOfParams) << "Invalid number of distortion coefficients (found "
-        << params.size() << ", expected 1).";
+bool FisheyeDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
+  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "Invalid number of distortion coefficients (found "
+        << dist_coeffs.size() << ", expected 1).";
 
   // Expect w to have sane magnitude.
-  double w = params(0);
+  double w = dist_coeffs(0);
   bool valid = std::abs(w) < 1e-16 || (w >= kMinValidW && w <= kMaxValidW);
   LOG_IF(INFO, !valid) << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
       << ", " << kMaxValidW << "].";

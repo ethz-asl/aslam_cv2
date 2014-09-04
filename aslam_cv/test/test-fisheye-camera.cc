@@ -29,8 +29,8 @@ class PosegraphErrorTerms : public ::testing::Test {
   void constructCamera() {
     Eigen::VectorXd dvec(1);
     dvec[0] = distortion_param_;
-    distortion_ = std::shared_ptr<DistortionType>(new DistortionType(dvec));
-    camera_ = std::shared_ptr<CameraType>(new CameraType(fu_, fv_, cu_, cv_, res_u_, res_v_, distortion_));
+    distortion_.reset(new DistortionType(dvec));
+    camera_.reset(new CameraType(fu_, fv_, cu_, cv_, res_u_, res_v_, distortion_));
   }
 
   std::shared_ptr<CameraType> camera_;
@@ -157,8 +157,8 @@ TEST_P(FisheyeParam, DistortAndUndistortUsingExternalParameters) {
 
   Eigen::Vector2d keypoint((100 - cu_) / fu_, (300 - cv_) / fv_);
   Eigen::Vector2d keypoint2 = keypoint;
-  distortion_->distortExternalCoeffs(dvec, &keypoint2, NULL);
-  distortion_->undistortExternalCoeffs(dvec, &keypoint2, NULL);
+  distortion_->distortUsingExternalCoefficients(dvec, &keypoint2, nullptr);
+  distortion_->undistortUsingExternalCoefficients(dvec, &keypoint2);
 
   EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
 }

@@ -48,7 +48,7 @@ class PinholeCamera : public Camera {
                 Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement
-  /// and calculate the relevant jacobian.
+  /// and calculate the relevant Jacobian.
   virtual bool project3(const Eigen::Vector3d & point,
                         Eigen::Matrix<double, 2, 1>* out_point,
                         Eigen::Matrix<double, 2, 3>* out_jacobian) const;
@@ -58,7 +58,7 @@ class PinholeCamera : public Camera {
                         Eigen::Matrix<double, 2, 1>* out_point) const;
 
   /// Project a point expressed in homogenous coordinates to a 2d image measurement
-  /// and calculate the relevant jacobian.
+  /// and calculate the relevant Jacobian.
   virtual bool project4(const Eigen::Vector4d & homogeneous_point,
                         Eigen::Matrix<double, 2, 1>* out_point,
                         Eigen::Matrix<double, 2, 4>* out_jacobian) const;
@@ -68,7 +68,7 @@ class PinholeCamera : public Camera {
                             Eigen::Matrix<double, 3, 1>* out_point) const;
 
 
-  /// Compute the 3d bearing vector in euclidean coordinates and the relevant jacobian
+  /// Compute the 3d bearing vector in euclidean coordinates and the relevant Jacobian.
   /// from the 2d image measurement.
   virtual bool backProject3(const Eigen::Vector2d& keypoint,
                                    Eigen::Matrix<double, 3, 1>* out_point,
@@ -76,13 +76,13 @@ class PinholeCamera : public Camera {
 
   /// Compute the 3d bearing vector in homogenous coordinates from the 2d image measurement.
   virtual bool backProject4(Eigen::Vector2d const& keypoint,
-                                     Eigen::Matrix<double, 4, 1>* out_point) const;
+                            Eigen::Matrix<double, 4, 1>* out_point) const;
 
   /// Compute the 3d bearing vector in homogeneous coordinates and the relevant
-  /// jacobian from the 2d image measurement.
+  /// Jacobian from the 2d image measurement.
   virtual bool backProject4(Eigen::Vector2d const& keypoint,
-                                     Eigen::Matrix<double, 4, 1>* out_point,
-                                     Eigen::Matrix<double, 4, 2>* out_jacobian) const;
+                            Eigen::Matrix<double, 4, 1>* out_point,
+                            Eigen::Matrix<double, 4, 2>* out_jacobian) const;
 
   virtual bool project3IntrinsicsJacobian(const Eigen::Matrix<double, 3, 1>& p,
                                           Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
@@ -208,8 +208,8 @@ class PinholeCamera : public Camera {
  private:
   void updateTemporaries();
 
-   /// Get the distortion parameters from the intrinsics vector
-   Eigen::Map<const Eigen::VectorXd> getDistortionParameters() const;
+  /// Get the distortion parameters from the intrinsics vector
+  Eigen::Map<const Eigen::VectorXd> getDistortionParameters() const;
 
   // Vector storing intrinsic parameters in a contiguous block of memory.
   // Ordering: fu, fv, cu, cv
