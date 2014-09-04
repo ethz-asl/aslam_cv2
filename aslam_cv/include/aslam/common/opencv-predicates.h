@@ -34,9 +34,9 @@ struct TestTolerance<double> {
 };
 
 template< typename SCALAR >
-testing::AssertionResult ImagesEqualTyped(const cv::Mat& A,
-                                          const cv::Mat& B,
-                                          double tolerance) {
+inline testing::AssertionResult ImagesEqualTyped(const cv::Mat& A,
+                                                 const cv::Mat& B,
+                                                 double tolerance) {
   typedef SCALAR Scalar;
   bool success = true;
   if (A.rows != B.rows || A.cols != B.cols || A.channels() != B.channels()) {
@@ -99,9 +99,9 @@ testing::AssertionResult ImagesEqualTyped(const cv::Mat& A,
 // between any two elements exceeds a threshold. On failure, a helpful error
 // message is returned. Use like this:
 //   EXPECT_TRUE(MatricesEqual(first_matrix, second_matrix, tolerance));
-testing::AssertionResult ImagesEqual(const cv::Mat& A,
-                                     const cv::Mat& B,
-                                     double tolerance) {
+inline testing::AssertionResult ImagesEqual(const cv::Mat& A,
+                                            const cv::Mat& B,
+                                            double tolerance) {
   if(A.type() != B.type()) {
     return testing::AssertionFailure() << "Image type mismatch"
         << A.type() << " != " << B.type();
@@ -141,8 +141,8 @@ testing::AssertionResult ImagesEqual(const cv::Mat& A,
 // between any two elements exceeds a threshold. On failure, a helpful error
 // message is returned. Use like this:
 //   EXPECT_TRUE(ImagesEqual(first_matrix, second_matrix));
-testing::AssertionResult ImagesEqual(const cv::Mat& A,
-                                     const cv::Mat& B) {
+inline testing::AssertionResult ImagesEqual(const cv::Mat& A,
+                                            const cv::Mat& B) {
   return ImagesEqual(A, B, -1.0);
 }
 }  // namespace gtest_catkin
