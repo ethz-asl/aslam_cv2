@@ -24,15 +24,17 @@
 //
 //   3. This notice may not be removed or altered from any source
 //   distribution.
-#include <memory>
-#include <thread>
-#include <mutex>
 #include <condition_variable>
 #include <future>
 #include <functional>
-#include <stdexcept>
-#include <vector>
+#include <memory>
+#include <mutex>
 #include <queue>
+#include <stdexcept>
+#include <thread>
+#include <vector>
+#include <glog/logging.h>
+
 namespace aslam {
 
 class ThreadPool {
@@ -47,43 +49,48 @@ class ThreadPool {
   ///
   /// Pass in a function and its arguments to enqueue work in the thread pool
   /// \param[in] function A function pointer to be called by a thread.
-  /// \returns a std::future with that will return the result of calling function
-  template<class F, class... Args>
-  std::future<typename std::result_of<F(Args...)>::type> enqueue(F&& function,
-                                                                 Args&&... args);
+  /// \returns A std::future that will return the result of calling function.
+  ///          If this function is called after the thread pool has been stopped,
+  ///          it will return an uninitialized future that will return
+  ///          future.valid() == false
+  template<class Function, class... Args>
+  std::future<typename std::result_of<Function(Args...)>::type>
+  enqueue(Function&& function, Args&&... args);
 
  private:
   /// \brief Run a single thread.
   void run();
   /// Need to keep track of threads so we can join them.
-  std::vector< std::thread > workers_;
+  std::vector<std::thread> workers_;
   /// The task queue.
-  std::queue< std::function<void()> > tasks_;
+  std::queue<std::function<void()>> tasks_;
 
   // synchronization
-  std::mutex queueMutex_;
+  std::mutex queue_mutex_;
   std::condition_variable condition_;
   bool stop_;
 };
 
 
-// add new work item to the pool
-template<class F, class... Args>
-std::future<typename std::result_of<F(Args...)>::type>
-ThreadPool::enqueue(F&& f, Args&&... args) {
-  typedef typename std::result_of<F(Args...)>::type return_type;
-  // don't allow enqueueing after stopping the pool
+// Add new work item to the pool.
+template<class Function, class... Args>
+std::future<typename std::result_of<Function(Args...)>::type>
+ThreadPool::enqueue(Function&& function, Args&&... args) {
+  typedef typename std::result_of<Function(Args...)>::type return_type;
+  // Don't allow enqueueing after stopping the pool.
   if(stop_) {
-    throw std::runtime_error("enqueue on stopped ThreadPool");
+    LOG(ERROR) << "enqueue() called on stopped ThreadPool";
+    // An empty future will return valid() == false.
+    return std::future<typename std::result_of<Function(Args...)>::type>();
   }
 
-  auto task = std::make_shared< std::packaged_task<return_type()> >(
-      std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+  auto task = std::make_shared<std::packaged_task<return_type()>>(
+      std::bind(std::forward<Function>(function), std::forward<Args>(args)...)
   );
 
   std::future<return_type> res = task->get_future();
   {
-    std::unique_lock<std::mutex> lock(queueMutex_);
+    std::unique_lock<std::mutex> lock(queue_mutex_);
     tasks_.push([task](){ (*task)(); });
   }
   condition_.notify_one();

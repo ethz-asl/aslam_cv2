@@ -2,16 +2,16 @@
 
 namespace aslam {
 
-// the constructor just launches some amount of workers
+// The constructor just launches some amount of workers.
 ThreadPool::ThreadPool(size_t threads) : stop_(false) {
   for(size_t i = 0; i < threads; ++i)
-    workers_.emplace_back( std::bind(&ThreadPool::run, this) );
+    workers_.emplace_back(std::bind(&ThreadPool::run, this));
 }
 
-// the destructor joins all threads
+// The destructor joins all threads.
 ThreadPool::~ThreadPool() {
   {
-    std::unique_lock<std::mutex> lock(queueMutex_);
+    std::unique_lock<std::mutex> lock(queue_mutex_);
     stop_ = true;
   }
   condition_.notify_all();
@@ -22,7 +22,7 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::run() {
     while(true) {
-      std::unique_lock<std::mutex> lock(this->queueMutex_);
+      std::unique_lock<std::mutex> lock(this->queue_mutex_);
       while(!this->stop_ && this->tasks_.empty()) {
         this->condition_.wait(lock);
       }
