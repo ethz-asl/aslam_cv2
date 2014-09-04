@@ -12,6 +12,7 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/channel-serialization.cc
                                src/visual-frame.cc
                                src/visual-nframes.cc
+                               src/thread-pool.cc
                                src/visual-pipeline.cc
                                src/visual-npipeline.cc
 )
@@ -30,6 +31,7 @@ catkin_add_gtest(${PROJECT_NAME}_tests
     test/test-channel-serialization.cc
     test/test-channels.cc
     test/test-visual-frame.cc
+    test/test-thread-pool.cc
     test/entry-point.cc
     )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
