@@ -27,11 +27,6 @@ class FisheyeDistortion : public aslam::Distortion {
   ///
   explicit FisheyeDistortion(const Eigen::VectorXd& distortionParams);
 
-  /// \brief Checks for same distortion type and same parameters.
-  ///
-  /// @return Same distortion?
-  ///
-  bool operator==(const Distortion& rhs) const;
 
 /** @} *///////////////////////////////////////////////////////////////////
 

@@ -42,7 +42,7 @@ class Distortion {
   ///
   /// @return Same distortion?
   ///
-  bool operator==(const Distortion& rhs) const;
+  virtual bool operator==(const Distortion& rhs) const;
 
 /** @} *///////////////////////////////////////////////////////////////////
 

@@ -25,6 +25,9 @@ class Camera {
   //explicit Camera(const sm::PropertyTree& property_tree);
   virtual ~Camera();
 
+  /// \brief compare the camera to another camera object
+  virtual bool operator==(const Camera& other) const;
+
   //////////////////////////////////////////////////////////////
   /// \name Information about the camera
   /// @{
@@ -59,18 +62,15 @@ class Camera {
   /// @{
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement.
-  virtual bool project3(const Eigen::Vector3d& point,
-                        Eigen::Vector2d* out_keypoint) const = 0;
+  virtual bool project3(const Eigen::Vector3d& point, Eigen::Vector2d* out_keypoint) const = 0;
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement
   /// and calculate the relevant jacobian.
-  virtual bool project3(const Eigen::Vector3d& point,
-                        Eigen::Vector2d* out_keypoint,
+  virtual bool project3(const Eigen::Vector3d& point, Eigen::Vector2d* out_keypoint,
                         Eigen::Matrix<double, 2, 3>* out_jacobian) const = 0;
 
   /// Project a point expressed in homogenous coordinates to a 2d image measurement.
-  virtual bool project4(const Eigen::Vector4d& point,
-                        Eigen::Vector2d* out_keypoint) const = 0;
+  virtual bool project4(const Eigen::Vector4d& point, Eigen::Vector2d* out_keypoint) const = 0;
 
   /// Project a point expressed in homogenous coordinates to a 2d image measurement
   /// and calculate the relevant jacobian.
@@ -79,8 +79,7 @@ class Camera {
                         Eigen::Matrix<double, 2, 4>* out_jacobian) const = 0;
 
   /// Compute the 3d bearing vector in euclidean coordinates from the 2d image measurement.
-  virtual bool backProject3(const Eigen::Vector2d& keypoint,
-                            Eigen::Vector3d* out_keypoint) const = 0;
+  virtual bool backProject3(const Eigen::Vector2d& keypoint, Eigen::Vector3d* out_keypoint) const = 0;
 
 
   /// Compute the 3d bearing vector in euclidean coordinates and the relevant jacobian
@@ -96,13 +95,12 @@ class Camera {
   /// Compute the 3d bearing vector in homogeneous coordinates and the relevant
   /// jacobian from the 2d image measurement.
   virtual bool backProject4(const Eigen::Vector2d& keypoint,
-                            Eigen::Vector4d* out_point,
+		  	  	  	  	  	Eigen::Vector4d* out_point,
                             Eigen::Matrix<double, 4, 2>* out_jacobian) const = 0;
 
   /// Compute the jacobian of the image measurement w.r.t. the intrinsics.
-  virtual bool project3IntrinsicsJacobian(
-      const Eigen::Vector3d& point,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
+  virtual bool project3IntrinsicsJacobian(const Eigen::Vector3d& point,
+		  	  	  	  	  	  	  	  	  Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
   /// Compute the jacobian of the image measurement w.r.t. the intrinsics.
   virtual bool project4IntrinsicsJacobian(
@@ -146,8 +144,7 @@ class Camera {
 
   // The amount of time elapsed between the first row of the image and the
   // keypoint. For a global shutter camera, this can return Duration(0).
-  inline int64_t temporalOffsetNanoSeconds(
-      const Eigen::Vector2d& keypoint) const {
+  inline int64_t temporalOffsetNanoSeconds(const Eigen::Vector2d& keypoint) const {
     // Don't check validity. This allows points to wander in and out
     // of the frame during optimization
     return static_cast<int64_t>(keypoint(1)) * line_delay_nano_seconds_;
@@ -173,15 +170,13 @@ class Camera {
   /// This doesn't test if the projected point is visible, only
   /// if the projection function can be run without numerical
   /// errors or singularities..
-  virtual bool isProjectable3(
-      const Eigen::Vector3d& point) const = 0;
+  virtual bool isProjectable3(const Eigen::Vector3d& point) const = 0;
 
   /// Can the projection function be run on this point?
   /// This doesn't test if the projected point is visible, only
   /// if the projection function can be run without numerical
   /// errors or singularities.
-  virtual bool isProjectable4(
-      const Eigen::Vector4d& point) const = 0;
+  virtual bool isProjectable4(const Eigen::Vector4d& point) const = 0;
 
   /// @}
 
@@ -197,19 +192,15 @@ class Camera {
   /// 0 and 100 meters.
   virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const = 0;
 
-  /// \brief is this camera equal to another
-  virtual bool operator==(const Camera& other) const;
-
   /// @}
 
-  /// \name Methods to support optimizaiton
+  /// \name Methods to support optimization
   /// @{
 
   /// Get the intrinsic parameters.
-  /// This must include distortion parameters
   virtual const Eigen::VectorXd& getParameters() const = 0;
 
-  /// Set the intrinsic parameters, which include the distortion parameters
+  /// Set the intrinsic parameters.
   virtual void setParameters(const Eigen::VectorXd& params) = 0;
 
   /// Get the intrinsic parameters (mutable).
@@ -218,7 +209,7 @@ class Camera {
   /// Get the intrinsic parameters (memory pointer).
   virtual double* getParameterMutablePtr() = 0;
 
-  /// How many intrinsic parameters are there (including distortion parameters)?
+  /// How many intrinsic parameters are there?
   virtual size_t getParameterSize() const = 0;
 
   /// @}
