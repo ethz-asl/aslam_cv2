@@ -1,5 +1,5 @@
-#ifndef ASLAM_FISHEYE_DISTORTION_H_
-#define ASLAM_FISHEYE_DISTORTION_H_
+#ifndef ASLAM_RADTAN_DISTORTION_H_
+#define ASLAM_RADTAN_DISTORTION_H_
 
 #include <Eigen/Core>
 #include <glog/logging.h>
@@ -7,12 +7,17 @@
 
 namespace aslam {
 
-/// \class FisheyeDistortion
-/// \brief An implementation of the fisheye distortion model for pinhole cameras.
-class FisheyeDistortion : public aslam::Distortion {
+/// \class RadTanDistortion
+/// \brief An implementation of the standard radial tangential distortion model for pinhole cameras.
+///        Two radial (k1, k2) and tangential (p1, p2) parameters are used in this implementation.
+///        The ordering of the parameter vector is: k1 k2 p1 p2
+///        NOTE: The inverse transformation (undistort) in this case is not available in
+///        closed form and so it is computed iteratively!
+class RadTanDistortion : public aslam::Distortion {
+
  private:
   /** \brief Number of parameters used for this distortion model. */
-  enum { kNumOfParams = 1 };
+  enum { kNumOfParams = 4 };
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
@@ -21,15 +26,16 @@ class FisheyeDistortion : public aslam::Distortion {
   /// \name Constructors/destructors and operators
   /// @{
 
-  /// \brief FisheyeDistortion Ctor.
+  /// \brief RadTanDistortion Ctor.
   /// @param[in] distortionParams Vector containing the distortion parameter. (dim=1)
-  explicit FisheyeDistortion(const Eigen::VectorXd& distortionParams);
+  explicit RadTanDistortion(const Eigen::VectorXd& distortionParams);
 
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Distort methods: applies the distortion model to a point.
   /// @{
+
   /// \brief Apply distortion to a point in the normalized image plane using provided distortion
   ///        coefficients. External distortion coefficients can be specified using this function.
   ///        Ignores the internally stored parameters.
@@ -40,19 +46,8 @@ class FisheyeDistortion : public aslam::Distortion {
   ///                             changes in the input point. If NULL is passed, the Jacobian
   ///                             calculation is skipped.
   virtual void distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
-                                                Eigen::Vector2d* point,
-                                                Eigen::Matrix2d* out_jacobian) const;
-
-  /// \brief Templated version of the distortExternalCoeffs function.
-  /// @param[in]  dist_coeffs Vector containing the coefficients for the distortion model.
-  /// @param[in]  point       The point in the normalized image plane. After the function, this
-  ///                         point is distorted.
-  /// @param[out] out_point   The distorted point.
-  template <typename ScalarType>
-  void distortUsingExternalCoefficients(const Eigen::Map<Eigen::Matrix<ScalarType,
-                                        Eigen::Dynamic,1>>& dist_coeffs,
-                                        const Eigen::Matrix<ScalarType, 2, 1>& point,
-                                        Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+                                     Eigen::Vector2d* point,
+                                     Eigen::Matrix2d* out_jacobian) const;
 
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
@@ -104,20 +99,9 @@ class FisheyeDistortion : public aslam::Distortion {
 
   /// @}
 
-  //////////////////////////////////////////////////////////////
-  /// \name Valid parameter range definition.
-  /// @{
- private:
-  static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
-  static constexpr double kMinValidW = 0.5;
-  static constexpr double kMaxValidW = 1.5;
-
-  /// @}
-
 };
 
 } // namespace aslam
 
-#include "fisheye-distortion-inl.h"
 
-#endif /* ASLAM_FISHEYE_DISTORTION_H_ */
+#endif /* ASLAM_RADTAN_DISTORTION_H_ */

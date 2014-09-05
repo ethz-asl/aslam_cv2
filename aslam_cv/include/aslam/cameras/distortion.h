@@ -10,6 +10,11 @@
 //}
 
 namespace aslam {
+
+/// \class RadTanDistortion
+/// \brief This class represents a standard implementation of the distortion block. The function
+///        "distort" applies this nonlinear transformation. The function "undistort" applies the
+///        inverse transformation.
 class Distortion {
  public:
   ASLAM_POINTER_TYPEDEFS(Distortion);
@@ -60,7 +65,7 @@ class Distortion {
   /// @param[out]    out_jacobian The Jacobian of the distortion function with respect to small
   ///                             changes in the input point.
   void distort(Eigen::Vector2d* point,
-               Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
+               Eigen::Matrix2d* out_jacobian) const;
 
   /// \brief Apply distortion to a point in the normalized image plane using provided distortion
   ///        coefficients. External distortion coefficients can be specified using this function.
@@ -73,8 +78,15 @@ class Distortion {
   ///                             calculation is skipped.
   virtual void distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
                                  Eigen::Vector2d* point,
-                                 Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
+                                 Eigen::Matrix2d* out_jacobian) const = 0;
 
+  /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
+  ///        to small changes in the distortion parameters.
+  /// @param[in]  dist_coeffs  Vector containing the coefficients for the distortion model.
+  /// @param[in]  point        The point in the normalized image plane. After the function,
+  ///                          this point is distorted.
+  /// @param[out] out_jacobian The Jacobian of the distortion with respect to small changes in
+  ///                          the distortion parameters.
   virtual void distortParameterJacobian(const Eigen::VectorXd& dist_coeffs,
                                  const Eigen::Vector2d& point,
                                  Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
@@ -124,6 +136,11 @@ class Distortion {
   /// @return If the distortion parameters are valid.
   virtual bool distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const = 0;
   
+  /// \brief Print the internal parameters of the distortion in a human-readable form
+  /// Print to the ostream that is passed in. The text is extra
+  /// text used by the calling function to distinguish cameras.
+  virtual void printParameters(std::ostream& out, const std::string& text) const = 0;
+
  private:
   /// \brief Parameter vector for the distortion model.
   Eigen::VectorXd distortion_coefficients_;

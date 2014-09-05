@@ -117,7 +117,7 @@ bool PinholeCamera::project3(
   (*outKeypoint)[0] = p[0] * rz;
   (*outKeypoint)[1] = p[1] * rz;
 
-  Eigen::Matrix<double, 2, Eigen::Dynamic> Jd;
+  Eigen::Matrix2d Jd;
   CHECK_NOTNULL(_distortion.get());
   _distortion->distort(outKeypoint, &Jd);  // distort and Jacobian wrt. keypoint
   CHECK_GE(Jd.cols(), 2);
