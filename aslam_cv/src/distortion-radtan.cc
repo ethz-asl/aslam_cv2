@@ -1,4 +1,4 @@
-#include <aslam/cameras/radtan-distortion.h>
+#include <aslam/cameras/distortion-radtan.h>
 
 namespace aslam {
 

@@ -238,6 +238,6 @@ class PinholeCamera : public Camera {
 
 }  // namespace aslam
 
-#include "aslam/cameras/pinhole-camera-inl.h"
+#include "aslam/cameras/camera-pinhole-inl.h"
 
 #endif  // ASLAM_CAMERAS_PINHOLE_CAMERA_H_

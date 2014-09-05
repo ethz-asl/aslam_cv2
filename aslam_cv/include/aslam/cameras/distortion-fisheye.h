@@ -118,6 +118,6 @@ class FisheyeDistortion : public aslam::Distortion {
 
 } // namespace aslam
 
-#include "fisheye-distortion-inl.h"
+#include "distortion-fisheye-inl.h"
 
 #endif /* ASLAM_FISHEYE_DISTORTION_H_ */

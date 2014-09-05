@@ -1,4 +1,4 @@
-#include <aslam/cameras/fisheye-distortion.h>
+#include <aslam/cameras/distortion-fisheye.h>
 
 namespace aslam {
 

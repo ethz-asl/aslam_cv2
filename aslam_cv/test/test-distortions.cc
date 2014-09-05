@@ -7,9 +7,9 @@
 #include <aslam/common/eigen-predicates.h>
 
 #include <aslam/cameras/distortion.h>
-#include <aslam/cameras/fisheye-distortion.h>
-#include <aslam/cameras/radtan-distortion.h>
-#include <aslam/cameras/equidistant-distortion.h>
+#include <aslam/cameras/distortion-fisheye.h>
+#include <aslam/cameras/distortion-radtan.h>
+#include <aslam/cameras/distortion-equidistant.h>
 
 
 ///////////////////////////////////////////////
