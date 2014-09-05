@@ -29,13 +29,14 @@ inline JetType<T, N> atan(const JetType<T, N>& f) {
 } // namespace jet_trigonometric
 
 template <typename ScalarType>
-void FisheyeDistortion::distort(
-    const Eigen::Map<Eigen::Matrix<ScalarType, Eigen::Dynamic,1>>& params,
+void FisheyeDistortion::distortUsingExternalCoefficients(
+    const Eigen::Map<Eigen::Matrix<ScalarType, Eigen::Dynamic,1>>& dist_coeffs,
     const Eigen::Matrix<ScalarType, 2, 1>& point,
     Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
+  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(out_point);
 
-  const ScalarType& w = params(0);
+  const ScalarType& w = dist_coeffs(0);
 
   // Evaluate the camera distortion.
   const ScalarType r_u = point.norm();
@@ -44,8 +45,7 @@ void FisheyeDistortion::distort(
     // Limit w->0.
     r_rd = static_cast<ScalarType>(1);
   } else {
-    const ScalarType mul2tanwby2 =
-        static_cast<ScalarType>(2.0 * jet_trigonometric::tan(w / 2.0));
+    const ScalarType mul2tanwby2 = static_cast<ScalarType>(2.0 * jet_trigonometric::tan(w / 2.0));
     const ScalarType mul2tanwby2byw = mul2tanwby2 / w;
 
     if (r_u * r_u < static_cast<ScalarType>(1e-5)) {
