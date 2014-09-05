@@ -5,11 +5,11 @@ find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
 cs_add_library(${PROJECT_NAME} src/camera.cc
-                               src/pinhole-camera.cc
+                               src/camera-pinhole.cc
                                src/distortion.cc
-                               src/fisheye-distortion.cc
-                               src/radtan-distortion.cc
-                               src/equidistant-distortion.cc
+                               src/distortion-fisheye.cc
+                               src/distortion-radtan.cc
+                               src/distortion-equidistant.cc
                                src/ncameras.cc
                                src/channel-serialization.cc
                                src/visual-frame.cc

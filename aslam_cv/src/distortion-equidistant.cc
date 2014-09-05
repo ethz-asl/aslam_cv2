@@ -1,6 +1,4 @@
-#include <iostream>
-#include <limits>
-#include <aslam/cameras/equidistant-distortion.h>
+#include <aslam/cameras/distortion-equidistant.h>
 
 namespace aslam {
 

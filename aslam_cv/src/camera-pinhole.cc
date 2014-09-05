@@ -1,4 +1,4 @@
-#include <aslam/cameras/pinhole-camera.h>
+#include <aslam/cameras/camera-pinhole.h>
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
 

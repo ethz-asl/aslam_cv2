@@ -5,8 +5,8 @@
 #include <gtest/gtest.h>
 
 #include <aslam/common/entrypoint.h>
-#include <aslam/cameras/radtan-distortion.h>
-#include <aslam/cameras/pinhole-camera.h>
+#include <aslam/cameras/distortion-radtan.h>
+#include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/eigen-predicates.h>
 
 
