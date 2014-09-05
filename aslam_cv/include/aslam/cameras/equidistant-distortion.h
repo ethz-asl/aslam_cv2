@@ -1,5 +1,5 @@
-#ifndef ASLAM_FISHEYE_DISTORTION_H_
-#define ASLAM_FISHEYE_DISTORTION_H_
+#ifndef ASLAM_EQUIDISTANT_DISTORTION_H_
+#define ASLAM_EQUIDISTANT_DISTORTION_H_
 
 #include <Eigen/Core>
 #include <glog/logging.h>
@@ -7,12 +7,18 @@
 
 namespace aslam {
 
-/// \class FisheyeDistortion
-/// \brief An implementation of the fisheye distortion model for pinhole cameras.
-class FisheyeDistortion : public aslam::Distortion {
+/// \class EquidistantDistortion
+/// \brief An implementation of the equidistant distortion model for pinhole cameras.
+///        See "A Generic Camera Model and Calibration Method for Conventional, Wide-Angle, and
+///        Fish-Eye Lenses" by Juho Kannala and Sami S. Brandt for further information.
+///        The ordering of the parameter vector is: k1 k2 k3 k4
+///        NOTE: The inverse transformation (undistort) in this case is not available in
+///        closed form and so it is computed iteratively!
+class EquidistantDistortion : public aslam::Distortion {
+
  private:
   /** \brief Number of parameters used for this distortion model. */
-  enum { kNumOfParams = 1 };
+  enum { kNumOfParams = 4 };
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
@@ -21,9 +27,9 @@ class FisheyeDistortion : public aslam::Distortion {
   /// \name Constructors/destructors and operators
   /// @{
 
-  /// \brief FisheyeDistortion Ctor.
+  /// \brief EquidistantDistortion Ctor.
   /// @param[in] distortionParams Vector containing the distortion parameter. (dim=1)
-  explicit FisheyeDistortion(const Eigen::VectorXd& distortionParams);
+  explicit EquidistantDistortion(const Eigen::VectorXd& distortionParams);
 
   /// @}
 
@@ -104,20 +110,8 @@ class FisheyeDistortion : public aslam::Distortion {
 
   /// @}
 
-  //////////////////////////////////////////////////////////////
-  /// \name Valid parameter range definition.
-  /// @{
- private:
-  static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
-  static constexpr double kMinValidW = 0.5;
-  static constexpr double kMaxValidW = 1.5;
-
-  /// @}
-
 };
 
 } // namespace aslam
 
-#include "fisheye-distortion-inl.h"
-
-#endif /* ASLAM_FISHEYE_DISTORTION_H_ */
+#endif /* ASLAM_EQUIDISTANT_DISTORTION_H_ */

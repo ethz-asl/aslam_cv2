@@ -37,7 +37,7 @@ void Distortion::distort(const Eigen::Vector2d& point,
 
 void Distortion::distort(
     Eigen::Vector2d* point,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+    Eigen::Matrix2d* out_jacobian) const {
   CHECK_NOTNULL(point);
   CHECK_NOTNULL(out_jacobian);
   distortUsingExternalCoefficients(distortion_coefficients_, point, out_jacobian);

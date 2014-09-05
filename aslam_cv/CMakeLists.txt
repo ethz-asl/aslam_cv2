@@ -5,9 +5,11 @@ find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
 cs_add_library(${PROJECT_NAME} src/camera.cc
-                               src/distortion.cc
                                src/pinhole-camera.cc
+                               src/distortion.cc
                                src/fisheye-distortion.cc
+                               src/radtan-distortion.cc
+                               src/equidistant-distortion.cc
                                src/ncameras.cc
                                src/channel-serialization.cc
                                src/visual-frame.cc
@@ -27,7 +29,7 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 
 catkin_add_gtest(${PROJECT_NAME}_tests 
     test/test-pinhole-camera.cc
-    test/test-fisheye-camera.cc
+	test/test-distortions.cc  
     test/test-channel-serialization.cc
     test/test-channels.cc
     test/test-visual-frame.cc
