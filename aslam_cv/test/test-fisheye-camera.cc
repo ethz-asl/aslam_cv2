@@ -27,11 +27,10 @@ class PosegraphErrorTerms : public ::testing::Test {
   }
 
   void constructCamera() {
-    distortion_ = std::shared_ptr<DistortionType>(new DistortionType());
     Eigen::VectorXd dvec(1);
     dvec[0] = distortion_param_;
-    camera_ = std::shared_ptr<CameraType>(new CameraType(
-        fu_, fv_, cu_, cv_, res_u_, res_v_, distortion_, dvec));
+    distortion_.reset(new DistortionType(dvec));
+    camera_.reset(new CameraType(fu_, fv_, cu_, cv_, res_u_, res_v_, distortion_));
   }
 
   std::shared_ptr<CameraType> camera_;
@@ -124,20 +123,42 @@ INSTANTIATE_TEST_CASE_P(PosegraphErrorTerms,
                         FisheyeParam,
                         ::testing::Range(0.5, 1.5, 0.2));
 
-TEST_P(FisheyeParam, DistortAndUndistort) {
+TEST_P(FisheyeParam, DistortAndUndistortUsingInternalParameters) {
   fu_ = 80;
   fv_ = 75;
   distortion_param_ = GetParam();
   LOG(INFO) << "param: " << GetParam();
-  Eigen::Map<const Eigen::VectorXd> dvec(&distortion_param_, 1);
+
   constructCamera();
+
+  Eigen::VectorXd dvec(1);
+  dvec << distortion_param_;
+  distortion_->setParameters(dvec);
 
   Eigen::Vector2d keypoint((100 - cu_) / fu_, (300 - cv_) / fv_);
   Eigen::Vector2d keypoint2 = keypoint;
-  distortion_->distort(dvec, &keypoint2);
-  distortion_->undistort(dvec, &keypoint2);
+  distortion_->distort(&keypoint2);
+  distortion_->undistort(&keypoint2);
 
   EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
 }
 
 
+TEST_P(FisheyeParam, DistortAndUndistortUsingExternalParameters) {
+  fu_ = 80;
+  fv_ = 75;
+  distortion_param_ = GetParam();
+  LOG(INFO) << "param: " << GetParam();
+
+  constructCamera();
+
+  Eigen::VectorXd dvec(1);
+  dvec << distortion_param_;
+
+  Eigen::Vector2d keypoint((100 - cu_) / fu_, (300 - cv_) / fv_);
+  Eigen::Vector2d keypoint2 = keypoint;
+  distortion_->distortUsingExternalCoefficients(dvec, &keypoint2, nullptr);
+  distortion_->undistortUsingExternalCoefficients(dvec, &keypoint2);
+
+  EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
+}
