@@ -9,7 +9,7 @@ namespace aslam {
 
 
 /// \class PinholeCamera
-/// \brief The usual model of a pinhole camera follows these steps:
+/// \brief The usual model of a pinhole camera follows these steps.
 ///        - Transformation: Transform the point into a coordinate frame associated with the camera
 ///        - Normalization: Project the point onto the normalized image plane:
 ///          \f$\mathbf y := \left[ x/z,y/z\right] \f$
@@ -119,19 +119,6 @@ class PinholeCamera : public Camera {
 
     K << fu, 0.0, cu, 0.0, fv, cv, 0.0, 0.0, 1.0;
     return K;
-  }
-
-  double focalLengthCol() const {
-    return fu();
-  }
-  double focalLengthRow() const {
-    return fv();
-  }
-  double opticalCenterCol() const {
-    return cu();
-  }
-  double opticalCenterRow() const {
-    return cv();
   }
 
   /// \brief The horizontal focal length in pixels.

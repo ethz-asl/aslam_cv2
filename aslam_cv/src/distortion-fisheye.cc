@@ -4,7 +4,7 @@ namespace aslam {
 
 FisheyeDistortion::FisheyeDistortion(const Eigen::VectorXd& dist_coeffs)
 : Distortion(dist_coeffs) {
-  CHECK(distortionParametersValid(dist_coeffs)) << "Invalid distortion parameters!";
+  CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 
 void FisheyeDistortion::distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
@@ -135,8 +135,9 @@ void FisheyeDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd
 }
 
 bool FisheyeDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "Invalid number of distortion coefficients (found "
-        << dist_coeffs.size() << ", expected " << kNumOfParams << ").";
+  // Check the vector size.
+  if (dist_coeffs.size() != kNumOfParams)
+    return false;
 
   // Expect w to have sane magnitude.
   double w = dist_coeffs(0);
@@ -147,7 +148,7 @@ bool FisheyeDistortion::distortionParametersValid(const Eigen::VectorXd& dist_co
 }
 
 void FisheyeDistortion::printParameters(std::ostream& out, const std::string& text) const {
-  Eigen::VectorXd distortion_coefficients = getParameters();
+  const Eigen::VectorXd& distortion_coefficients = getParameters();
   CHECK_EQ(distortion_coefficients.size(), kNumOfParams) << "dist_coeffs: invalid size!";
 
   out << text << std::endl;

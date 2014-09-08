@@ -11,7 +11,7 @@
 
 namespace aslam {
 
-/// \class RadTanDistortion
+/// \class Distortion
 /// \brief This class represents a standard implementation of the distortion block. The function
 ///        "distort" applies this nonlinear transformation. The function "undistort" applies the
 ///        inverse transformation.
@@ -77,8 +77,8 @@ class Distortion {
   ///                             changes in the input point. If NULL is passed, the Jacobian
   ///                             calculation is skipped.
   virtual void distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
-                                 Eigen::Vector2d* point,
-                                 Eigen::Matrix2d* out_jacobian) const = 0;
+                                                Eigen::Vector2d* point,
+                                                Eigen::Matrix2d* out_jacobian) const = 0;
 
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.

@@ -4,7 +4,7 @@ namespace aslam {
 
 EquidistantDistortion::EquidistantDistortion(const Eigen::VectorXd& dist_coeffs)
 : Distortion(dist_coeffs) {
-  CHECK(distortionParametersValid(dist_coeffs)) << "Invalid distortion parameters!";
+  CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 
 void EquidistantDistortion::distortUsingExternalCoefficients(
@@ -24,7 +24,16 @@ void EquidistantDistortion::distortUsingExternalCoefficients(
 
   double x2 = x*x;
   double y2 = y*y;
-  double r = sqrt(x2 + y2);
+  double r = point->norm();
+
+  // Handle special case around image center.
+  if (r < 1e-10) {
+    // Keypoint remains unchanged.
+    if(out_jacobian)
+      out_jacobian->setZero();
+    return;
+  }
+
   double theta = atan(r);
   double theta2 = theta * theta;
   double theta4 = theta2 * theta2;
@@ -32,8 +41,7 @@ void EquidistantDistortion::distortUsingExternalCoefficients(
   double theta8 = theta4 * theta4;
   double thetad = theta * (1 + k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8);
 
-  if(out_jacobian)
-  {
+  if(out_jacobian) {
     double theta3 = theta2 * theta;
     double theta5 = theta4 * theta;
     double theta7 = theta6 * theta;
@@ -41,44 +49,44 @@ void EquidistantDistortion::distortUsingExternalCoefficients(
     //MATLAB generated Jacobian
     const double duf_du = theta * 1.0 / r * (k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8 + 1.0)
     + x * theta * 1.0 / r * ((k2 * x * theta3 * 1.0 / r * 4.0)
-        / (x2 + y2 + 1.0)+ (k3 * x * theta5 * 1.0 / r * 6.0)
-        / (x2 + y2 + 1.0)+ (k4 * x * theta7 * 1.0 / r * 8.0)
-        / (x2 + y2 + 1.0)+ (k1 * x * theta * 1.0 / r * 2.0)
-        / (x2 + y2 + 1.0))+ ((x2)
+        / (x2 + y2 + 1.0) + (k3 * x * theta5 * 1.0 / r * 6.0)
+        / (x2 + y2 + 1.0) + (k4 * x * theta7 * 1.0 / r * 8.0)
+        / (x2 + y2 + 1.0) + (k1 * x * theta * 1.0 / r * 2.0)
+        / (x2 + y2 + 1.0)) + ((x2)
         * (k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8 + 1.0))
     / ((x2 + y2) * (x2 + y2 + 1.0))
     - (x2) * theta * 1.0 / pow(x2 + y2, 3.0 / 2.0)
     * (k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8 + 1.0);
 
-    const double duf_dv = x * theta * 1.0 / r *((k2 * y * theta3 * 1.0 / r * 4.0)
-        / (x2 + y2 + 1.0)+ (k3 * y * theta5 * 1.0 / r * 6.0)
-        / (x2 + y2 + 1.0)+ (k4 * y * theta7 * 1.0 / r * 8.0)
-        / (x2 + y2 + 1.0)+ (k1 * y * theta * 1.0 / r * 2.0)
-        / (x2 + y2 + 1.0))+ (x * y
+    const double duf_dv = x * theta * 1.0 / r * ((k2 * y * theta3 * 1.0 / r * 4.0)
+        / (x2 + y2 + 1.0) + (k3 * y * theta5 * 1.0 / r * 6.0)
+        / (x2 + y2 + 1.0) + (k4 * y * theta7 * 1.0 / r * 8.0)
+        / (x2 + y2 + 1.0) + (k1 * y * theta * 1.0 / r * 2.0)
+        / (x2 + y2 + 1.0)) + (x * y
         * (k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8 + 1.0))
     / ((x2 + y2) * (x2 + y2 + 1.0))
     - x * y * theta * 1.0 / pow(x2 + y2, 3.0 / 2.0)
     * (k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8 + 1.0);
 
-    const double dvf_du = y * theta * 1.0/ r* ((k2 * x * theta3 * 1.0/ r * 4.0)
-        / (x2 + y2 + 1.0)+ (k3 * x * theta5 * 1.0/ r * 6.0)
-        / (x2 + y2 + 1.0)+ (k4 * x * theta7 * 1.0/ r * 8.0)
-        / (x2 + y2 + 1.0)+ (k1 * x * theta * 1.0/ r * 2.0)
-        / (x2 + y2 + 1.0))+ (x * y
+    const double dvf_du = y * theta * 1.0 / r * ((k2 * x * theta3 * 1.0 / r * 4.0)
+        / (x2 + y2 + 1.0)  + (k3 * x * theta5 * 1.0 / r * 6.0)
+        / (x2 + y2 + 1.0)  + (k4 * x * theta7 * 1.0 / r * 8.0)
+        / (x2 + y2 + 1.0)  + (k1 * x * theta * 1.0 / r * 2.0)
+        / (x2 + y2 + 1.0)) + (x * y
         * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0))
     / ((x2 + y2) * (x2 + y2 + 1.0))
-    - x * y * theta * 1.0/ pow(x2 + y2, 3.0 / 2.0)
+    - x * y * theta * 1.0 / pow(x2 + y2, 3.0 / 2.0)
     * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0);
 
-    const double dvf_dv = theta * 1.0/ r* (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0)
-    + y * theta * 1.0/ r* ((k2 * y * theta3 * 1.0/ r * 4.0)
+    const double dvf_dv = theta * 1.0 / r * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0)
+    + y * theta * 1.0 / r * ((k2 * y * theta3 * 1.0 / r * 4.0)
         / (x2 + y2 + 1.0)+ (k3 * y * theta5* 1.0 / r * 6.0)
         / (x2 + y2 + 1.0)+ (k4 * y * theta7* 1.0 / r * 8.0)
-        / (x2 + y2 + 1.0)+ (k1 * y * theta * 1.0/ r * 2.0)
+        / (x2 + y2 + 1.0)+ (k1 * y * theta * 1.0 / r * 2.0)
         / (x2 + y2 + 1.0))+ ((y2)
         * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0))
     / ((x2 + y2) * (x2 + y2 + 1.0))
-    - (y2) * theta * 1.0/ pow(x2 + y2, 3.0 / 2.0)
+    - (y2) * theta * 1.0 / pow(x2 + y2, 3.0 / 2.0)
     * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0);
 
     *out_jacobian << duf_du, duf_dv,
@@ -103,6 +111,13 @@ void EquidistantDistortion::distortParameterJacobian(
   double r = sqrt(x*x + y*y);
   double theta = atan(r);
 
+  // Handle special case around image center.
+  if (r < 1e-10) {
+    out_jacobian->resize(2, kNumOfParams);
+    out_jacobian->setZero();
+    return;
+  }
+
   const double duf_dk1 = x * pow(theta, 3.0) * 1.0 / r;
   const double duf_dk2 = x * pow(theta, 5.0) * 1.0 / r;
   const double duf_dk3 = x * pow(theta, 7.0) * 1.0 / r;
@@ -123,7 +138,7 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
   CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
 
-  const int n = 30;  // Max. number of iterations
+  const int num_max_iterations = 30;
 
   const double& k1 = dist_coeffs(0);
   const double& k2 = dist_coeffs(1);
@@ -135,9 +150,14 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
 
   double theta, theta2, theta4, theta6, theta8, thetad, scaling;
 
-  thetad = sqrt(x*x + y*y);
-  theta = thetad;  // initial guess
-  for (int i = n; i > 0; i--) {
+  thetad = point->norm();
+
+  // Handle special case around image center.
+  if (thetad < 1e-10)
+    return; // Point remains unchanged.
+
+  theta = thetad;  // Initial guess.
+  for (int i = num_max_iterations; i > 0; i--) {
     theta2 = theta * theta;
     theta4 = theta2 * theta2;
     theta6 = theta4 * theta2;
@@ -151,10 +171,10 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
 }
 
 bool EquidistantDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "Invalid number of distortion coefficients (found "
-        << dist_coeffs.size() << ", expected "<< kNumOfParams << ").";
+  // Check the vector size.
+  if (dist_coeffs.size() != kNumOfParams)
+    return false;
 
-  // Just check the vector size.
   return true;
 }
 

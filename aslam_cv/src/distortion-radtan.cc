@@ -4,7 +4,7 @@ namespace aslam {
 
 RadTanDistortion::RadTanDistortion(const Eigen::VectorXd& dist_coeffs)
 : Distortion(dist_coeffs) {
-  CHECK(distortionParametersValid(dist_coeffs)) << "Invalid distortion parameters!";
+  CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 
 void RadTanDistortion::distortUsingExternalCoefficients(
@@ -106,10 +106,10 @@ void RadTanDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd&
 }
 
 bool RadTanDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "Invalid number of distortion coefficients (found "
-        << dist_coeffs.size() << ", expected "<< kNumOfParams << ").";
-
   // Just check the vector size.
+  if (dist_coeffs.size() != kNumOfParams)
+    return false;
+
   return true;
 }
 
