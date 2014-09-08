@@ -27,7 +27,7 @@ class RadTanDistortion : public aslam::Distortion {
   /// @{
 
   /// \brief RadTanDistortion Ctor.
-  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=1)
+  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=4: k1, k2, p1, p2)
   explicit RadTanDistortion(const Eigen::VectorXd& distortionParams);
 
   /// @}

@@ -22,7 +22,7 @@ class FisheyeDistortion : public aslam::Distortion {
   /// @{
 
   /// \brief FisheyeDistortion Ctor.
-  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=1)
+  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=1: w)
   explicit FisheyeDistortion(const Eigen::VectorXd& distortionParams);
 
   /// @}
@@ -43,7 +43,7 @@ class FisheyeDistortion : public aslam::Distortion {
                                                 Eigen::Vector2d* point,
                                                 Eigen::Matrix2d* out_jacobian) const;
 
-  /// \brief Templated version of the distortExternalCoeffs function.
+  /// \brief Template version of the distortExternalCoeffs function.
   /// @param[in]  dist_coeffs Vector containing the coefficients for the distortion model.
   /// @param[in]  point       The point in the normalized image plane. After the function, this
   ///                         point is distorted.

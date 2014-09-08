@@ -28,7 +28,7 @@ class EquidistantDistortion : public aslam::Distortion {
   /// @{
 
   /// \brief EquidistantDistortion Ctor.
-  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=1)
+  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=4: k1, k2, k3, k4)
   explicit EquidistantDistortion(const Eigen::VectorXd& distortionParams);
 
   /// @}
@@ -54,11 +54,11 @@ class EquidistantDistortion : public aslam::Distortion {
   /// @param[in]  point       The point in the normalized image plane. After the function, this
   ///                         point is distorted.
   /// @param[out] out_point   The distorted point.
-  template <typename ScalarType>
-  void distortUsingExternalCoefficients(const Eigen::Map<Eigen::Matrix<ScalarType,
-                                        Eigen::Dynamic,1>>& dist_coeffs,
-                                        const Eigen::Matrix<ScalarType, 2, 1>& point,
-                                        Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+  template<typename ScalarType>
+  void distortUsingExternalCoefficients(
+      const Eigen::Map<Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>>& dist_coeffs,
+      const Eigen::Matrix<ScalarType, 2, 1>& point,
+      Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
