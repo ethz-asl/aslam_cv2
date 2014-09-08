@@ -7,6 +7,16 @@
 
 namespace aslam {
 
+
+/// \class PinholeCamera
+/// \brief The usual model of a pinhole camera follows these steps.
+///        - Transformation: Transform the point into a coordinate frame associated with the camera
+///        - Normalization: Project the point onto the normalized image plane:
+///          \f$\mathbf y := \left[ x/z,y/z\right] \f$
+///        - Distortion: apply a nonlinear transformation to \f$y\f$ to account for radial and
+///          tangential distortion of the lens
+///        - Projection: Project the point into the image using a standard \f$3 \time 3\f$ projection
+///          matrix
 class PinholeCamera : public Camera {
   enum { kNumOfParams = 4 };
  public:
@@ -109,19 +119,6 @@ class PinholeCamera : public Camera {
 
     K << fu, 0.0, cu, 0.0, fv, cv, 0.0, 0.0, 1.0;
     return K;
-  }
-
-  double focalLengthCol() const {
-    return _intrinsics[0];
-  }
-  double focalLengthRow() const {
-    return _intrinsics[1];
-  }
-  double opticalCenterCol() const {
-    return _intrinsics[2];
-  }
-  double opticalCenterRow() const {
-    return _intrinsics[3];
   }
 
   /// \brief The horizontal focal length in pixels.
@@ -228,6 +225,6 @@ class PinholeCamera : public Camera {
 
 }  // namespace aslam
 
-#include "aslam/cameras/pinhole-camera-inl.h"
+#include "aslam/cameras/camera-pinhole-inl.h"
 
 #endif  // ASLAM_CAMERAS_PINHOLE_CAMERA_H_
