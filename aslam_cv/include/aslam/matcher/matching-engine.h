@@ -15,7 +15,7 @@ class MatchingEngine {
 
 public:
   typedef MATCHING_PROBLEM MatchingProblemT;
-  typedef typename Matching_ProblemT::ScoreT ScoreT;
+  typedef typename MatchingProblemT::ScoreT ScoreT;
 
   ASLAM_POINTER_TYPEDEFS(MatchingEngine);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngine);
