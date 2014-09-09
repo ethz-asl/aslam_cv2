@@ -12,41 +12,24 @@ namespace aslam {
 // methods).
 
 template <typename ScalarType, typename DistortionType>
-bool PinholeCamera::project3(
-    const Eigen::Matrix<ScalarType, 3, 1>& point,
+const ProjectionState PinholeCamera::project3Functional(
+    const Eigen::Matrix<ScalarType, 3, 1>& point_3d,
     const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics,
-    Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
-  CHECK_NOTNULL(out_point);
+    Eigen::Matrix<ScalarType, 2, 1>* out_keypoint) const {
+  CHECK_NOTNULL(out_keypoint);
 
-  ScalarType rz = static_cast<ScalarType>(1.0) / point[2];
+  ScalarType rz = static_cast<ScalarType>(1.0) / point_3d[2];
   Eigen::Matrix<ScalarType, 2, 1> keypoint;
-  keypoint[0] = point[0] * rz;
-  keypoint[1] = point[1] * rz;
+  keypoint[0] = point_3d[0] * rz;
+  keypoint[1] = point_3d[1] * rz;
 
-  CHECK_NOTNULL(_distortion.get());
-  std::shared_ptr<DistortionType> distortion_ptr =
-      std::dynamic_pointer_cast<DistortionType>(_distortion);
-  CHECK(distortion_ptr);
-  distortion_ptr->distort(
-      Eigen::Map<Eigen::VectorXd>(intrinsics.tail(distortion_ptr->getParameterSize()).data(), distortion_ptr->getParameterSize()),
-      keypoint,
-      out_point);
+  distortion_->undistort(&keypoint);
 
-  (*out_point)[0] = intrinsics(0) * (*out_point)[0] + intrinsics(2);
-  (*out_point)[1] = intrinsics(1) * (*out_point)[1] + intrinsics(3);
+  (*out_keypoint)[0] = intrinsics(0) * (*out_keypoint)[0] + intrinsics(2);
+  (*out_keypoint)[1] = intrinsics(1) * (*out_keypoint)[1] + intrinsics(3);
 
-  return isValid(*out_point) && point[2] > static_cast<ScalarType>(0);
-}
-
-template <typename ScalarType>
-bool PinholeCamera::isKeypointVisible(
-    const Eigen::Matrix<ScalarType, 2, 1>& keypoint) const {
-  return keypoint[0] >= static_cast<ScalarType>(0)
-      && keypoint[1] >= static_cast<ScalarType>(0)
-      && keypoint[0] < static_cast<ScalarType>(imageWidth())
-      && keypoint[1] < static_cast<ScalarType>(imageHeight());
+  return evaluateProjectionState(out_keypoint, point_3d);
 }
 
 }  // namespace aslam
-
 #endif  // ASLAM_CAMERAS_PINHOLE_CAMERA_INL_H_
