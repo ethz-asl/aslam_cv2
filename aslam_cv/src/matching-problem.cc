@@ -3,7 +3,7 @@
 
 namespace aslam {
 
-MatchingProblem::MatchingProblem() {}
-MatchingProblem::~MatchingProblem() {}
+template <typename SCORE> MatchingProblem<SCORE>::MatchingProblem() {}
+template <typename SCORE> MatchingProblem<SCORE>::~MatchingProblem() {}
 
 }

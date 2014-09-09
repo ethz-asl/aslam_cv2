@@ -49,7 +49,6 @@ public:
 
   ASLAM_POINTER_TYPEDEFS(MatchingProblem);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblem);
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
   MatchingProblem();
   virtual ~MatchingProblem();

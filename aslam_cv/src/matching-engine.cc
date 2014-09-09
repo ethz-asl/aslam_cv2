@@ -3,7 +3,9 @@
 
 namespace aslam {
 
-MatchingEngine::MatchingEngine() {}
-MatchingEngine::~MatchingEngine() {}
+template <typename MP> MatchingEngine<MP>::MatchingEngine() {}
+template <typename MP> MatchingEngine<MP>::~MatchingEngine() {}
+
+
 
 }
