@@ -122,10 +122,9 @@ const ProjectionState PinholeCamera::project3Functional(
   return evaluateProjectionState(*out_keypoint, point_3d);
 }
 
-void PinholeCamera::backProject3(
-    const Eigen::Vector2d& keypoint,
-    Eigen::Vector3d* out_point_3d,
-    const Eigen::VectorXd* intrinsics_external) const {
+void PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
+                                 Eigen::Vector3d* out_point_3d,
+                                 const Eigen::VectorXd* intrinsics_external) const {
   CHECK_NOTNULL(out_point_3d);
 
   // Use the internal intrinsic parameters, if no external vector is provided.
@@ -154,7 +153,7 @@ inline const ProjectionState PinholeCamera::evaluateProjectionState(
     const Eigen::Vector2d& keypoint,
     const Eigen::Vector3d& point_3d) const {
 
-  bool visibility = isKeypointVisible(keypoint);
+  const bool visibility = isKeypointVisible(keypoint);
 
   if (visibility && (point_3d[2] > kMinimumDepth))
     return ProjectionState(ProjectionState::Status_t::KEYPOINT_VISIBLE);
