@@ -118,7 +118,7 @@ bool Camera::isProjectable4(const Eigen::Vector4d& ph) const {
   return ret.isKeypointVisible();
 }
 
-bool Camera::isKeypointVisible(const Eigen::Vector2d& keypoint) const {
+inline bool Camera::isKeypointVisible(const Eigen::Vector2d& keypoint) const {
   return keypoint[0] >= 0.0
       && keypoint[1] >= 0.0
       && keypoint[0] < static_cast<double>(imageWidth())

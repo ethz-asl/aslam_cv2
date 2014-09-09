@@ -169,6 +169,7 @@ class PinholeCamera : public Camera {
   /// \brief The distortion of this camera.
   aslam::Distortion::Ptr distortion_;
 
+  /// \brief Minimal depth for a valid projection.
   static constexpr double kMinimumDepth = 1e-10;
 };
 
