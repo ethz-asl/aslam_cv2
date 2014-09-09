@@ -9,7 +9,6 @@
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/eigen-predicates.h>
 
-
 class PinholeCameraTest : public ::testing::Test {
  protected:
   typedef aslam::RadTanDistortion DistortionType;
@@ -58,30 +57,30 @@ TEST_F(PinholeCameraTest, CameraTest_isVisible) {
   constructCamera();
 
   Eigen::Vector2d keypoint1(0, 0);
-  EXPECT_TRUE(camera_->isVisible(keypoint1)) << "Keypoint1: " << keypoint1;
+  EXPECT_TRUE(camera_->isKeypointVisible(keypoint1)) << "Keypoint1: " << keypoint1;
 
   Eigen::Vector2d keypoint2(res_u_ - 1, res_v_ - 1);
-  EXPECT_TRUE(camera_->isVisible(keypoint2)) << "Keypoint2: " << keypoint2;
+  EXPECT_TRUE(camera_->isKeypointVisible(keypoint2)) << "Keypoint2: " << keypoint2;
 
   Eigen::Vector2d keypoint3(camera_->cu(), camera_->cv());
-  EXPECT_TRUE(camera_->isVisible(keypoint3)) << "Keypoint3: " << keypoint3;
+  EXPECT_TRUE(camera_->isKeypointVisible(keypoint3)) << "Keypoint3: " << keypoint3;
 
   Eigen::Vector2d keypoint4(-1, 0);
-  EXPECT_FALSE(camera_->isVisible(keypoint4)) << "Keypoint4: " << keypoint4;
+  EXPECT_FALSE(camera_->isKeypointVisible(keypoint4)) << "Keypoint4: " << keypoint4;
 
   Eigen::Vector2d keypoint5(-1, -1);
-  EXPECT_FALSE(camera_->isVisible(keypoint5)) << "Keypoint5: " << keypoint5;
+  EXPECT_FALSE(camera_->isKeypointVisible(keypoint5)) << "Keypoint5: " << keypoint5;
 
   Eigen::Vector2d keypoint6(res_u_, res_v_);
-  EXPECT_FALSE(camera_->isVisible(keypoint6)) << "Keypoint6: " << keypoint6;
+  EXPECT_FALSE(camera_->isKeypointVisible(keypoint6)) << "Keypoint6: " << keypoint6;
 }
 
 TEST_F(PinholeCameraTest, CameraTest_IsVisible) {
   constructCamera();
 
   EXPECT_TRUE(camera_->isProjectable3(Eigen::Vector3d(0, 0, 1)));       // Center.
-  EXPECT_FALSE(camera_->isProjectable3(Eigen::Vector3d(5, -5, 1)));    // In front of cam.
-  EXPECT_FALSE(camera_->isProjectable3(Eigen::Vector3d(5000, -5, 1))); // In front of cam, outside range.
+  EXPECT_FALSE(camera_->isProjectable3(Eigen::Vector3d(5, -5, 1)));     // In front of cam.
+  EXPECT_FALSE(camera_->isProjectable3(Eigen::Vector3d(5000, -5, 1)));  // In front of cam, outside range.
   EXPECT_FALSE(camera_->isProjectable3(Eigen::Vector3d(-10, -10, -1))); // Behind cam.
   EXPECT_FALSE(camera_->isProjectable3(Eigen::Vector3d(0, 0, -1)));     // Behind, center.
 }
@@ -101,6 +100,32 @@ TEST_F(PinholeCameraTest, CameraTest_OffAxisProjectionWithoutDistortion) {
   camera_->project3(euclidean, &keypoint);
 
   EXPECT_NEAR_EIGEN(Eigen::Vector2d(fu_*(kx/kz)+cu_, fv_*(ky/kz)+cv_), keypoint, 1e-15);
+}
+
+TEST_F(PinholeCameraTest, CameraTest_ProjectionState) {
+  constructCamera();
+  Eigen::Vector2d keypoint;
+  aslam::ProjectionState ret;
+
+  // In front of cam -> visible.
+  ret = camera_->project3(Eigen::Vector3d(0, 0, 10), &keypoint);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status_t::KEYPOINT_VISIBLE);
+  EXPECT_TRUE(static_cast<bool>(ret));
+
+  // Behind cam -> not visible.
+  ret = camera_->project3(Eigen::Vector3d(0, 0, -10), &keypoint);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status_t::POINT_BEHIND_CAMERA);
+  EXPECT_FALSE(static_cast<bool>(ret));
+
+  // In front of cam, but outside of image box. -> not visible.
+  ret = camera_->project3(Eigen::Vector3d(50, 50, 10), &keypoint);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status_t::KEYPOINT_OUTSIDE_IMAGE_BOX);
+  EXPECT_FALSE(static_cast<bool>(ret));
+
+  // Invalid projection (z<min_z) -> not visible/projectable.
+  ret = camera_->project3(Eigen::Vector3d(1, 1.2, 1e-15), &keypoint);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status_t::PROJECTION_INVALID);
+  EXPECT_FALSE(static_cast<bool>(ret));
 }
 
 TEST(CameraComparison, TestEquality) {
