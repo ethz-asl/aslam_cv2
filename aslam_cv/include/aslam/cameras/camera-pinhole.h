@@ -7,11 +7,16 @@
 
 namespace aslam {
 
-template<typename Derived>
-Eigen::Map<const Eigen::VectorXd> vecmap(const Eigen::MatrixBase<Derived>& vec){
-  return Eigen::Map<const Eigen::VectorXd>(static_cast<const Derived&>(vec).data(),vec.size());
-}
 
+/// \class PinholeCamera
+/// \brief The usual model of a pinhole camera follows these steps.
+///        - Transformation: Transform the point into a coordinate frame associated with the camera
+///        - Normalization: Project the point onto the normalized image plane:
+///          \f$\mathbf y := \left[ x/z,y/z\right] \f$
+///        - Distortion: apply a nonlinear transformation to \f$y\f$ to account for radial and
+///          tangential distortion of the lens
+///        - Projection: Project the point into the image using a standard \f$3 \time 3\f$ projection
+///          matrix
 class PinholeCamera : public Camera {
   enum { kNumOfParams = 4 };
  public:
@@ -24,8 +29,7 @@ class PinholeCamera : public Camera {
   PinholeCamera(double focalLengthCols, double focalLengthRows,
                 double imageCenterCols, double imageCenterRows,
                 uint32_t imageWidth, uint32_t imageHeight,
-                aslam::Distortion::Ptr distortion,
-                const Eigen::VectorXd& distortionParameters);
+                aslam::Distortion::Ptr distortion);
 
   PinholeCamera(double focalLengthCols, double focalLengthRows,
                 double imageCenterCols, double imageCenterRows,
@@ -54,7 +58,7 @@ class PinholeCamera : public Camera {
                 Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement
-  /// and calculate the relevant jacobian.
+  /// and calculate the relevant Jacobian.
   virtual bool project3(const Eigen::Vector3d & point,
                         Eigen::Matrix<double, 2, 1>* out_point,
                         Eigen::Matrix<double, 2, 3>* out_jacobian) const;
@@ -64,7 +68,7 @@ class PinholeCamera : public Camera {
                         Eigen::Matrix<double, 2, 1>* out_point) const;
 
   /// Project a point expressed in homogenous coordinates to a 2d image measurement
-  /// and calculate the relevant jacobian.
+  /// and calculate the relevant Jacobian.
   virtual bool project4(const Eigen::Vector4d & homogeneous_point,
                         Eigen::Matrix<double, 2, 1>* out_point,
                         Eigen::Matrix<double, 2, 4>* out_jacobian) const;
@@ -74,7 +78,7 @@ class PinholeCamera : public Camera {
                             Eigen::Matrix<double, 3, 1>* out_point) const;
 
 
-  /// Compute the 3d bearing vector in euclidean coordinates and the relevant jacobian
+  /// Compute the 3d bearing vector in euclidean coordinates and the relevant Jacobian.
   /// from the 2d image measurement.
   virtual bool backProject3(const Eigen::Vector2d& keypoint,
                                    Eigen::Matrix<double, 3, 1>* out_point,
@@ -82,33 +86,21 @@ class PinholeCamera : public Camera {
 
   /// Compute the 3d bearing vector in homogenous coordinates from the 2d image measurement.
   virtual bool backProject4(Eigen::Vector2d const& keypoint,
-                                     Eigen::Matrix<double, 4, 1>* out_point) const;
+                            Eigen::Matrix<double, 4, 1>* out_point) const;
 
   /// Compute the 3d bearing vector in homogeneous coordinates and the relevant
-  /// jacobian from the 2d image measurement.
+  /// Jacobian from the 2d image measurement.
   virtual bool backProject4(Eigen::Vector2d const& keypoint,
-                                     Eigen::Matrix<double, 4, 1>* out_point,
-                                     Eigen::Matrix<double, 4, 2>* out_jacobian) const;
+                            Eigen::Matrix<double, 4, 1>* out_point,
+                            Eigen::Matrix<double, 4, 2>* out_jacobian) const;
 
-  virtual bool project3IntrinsicsJacobian(
-      const Eigen::Matrix<double, 3, 1>& p,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
+  virtual bool project3IntrinsicsJacobian(const Eigen::Matrix<double, 3, 1>& p,
+                                          Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
 
-  virtual bool project4IntrinsicsJacobian(
-      const Eigen::Matrix<double, 4, 1>& p,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
+  virtual bool project4IntrinsicsJacobian(const Eigen::Matrix<double, 4, 1>& p,
+                                          Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const;
 
-  virtual bool operator==(const PinholeCamera& other) const;
-
-  void setDistortion(const aslam::Distortion::Ptr& distortion, 
-                     const Eigen::VectorXd& params) {
-    _distortion = distortion;
-    if (distortion) {
-      CHECK(distortion->distortionParametersValid(vecmap(params)));
-      _intrinsics.conservativeResize(kNumOfParams + distortion->getParameterSize());
-      _intrinsics.tail(distortion->getParameterSize()) = params;
-    }
-  }
+  virtual bool operator==(const Camera& other) const;
 
   aslam::Distortion::Ptr& distortion() {
     return _distortion;
@@ -127,19 +119,6 @@ class PinholeCamera : public Camera {
 
     K << fu, 0.0, cu, 0.0, fv, cv, 0.0, 0.0, 1.0;
     return K;
-  }
-
-  double focalLengthCol() const {
-    return _intrinsics[0];
-  }
-  double focalLengthRow() const {
-    return _intrinsics[1];
-  }
-  double opticalCenterCol() const {
-    return _intrinsics[2];
-  }
-  double opticalCenterRow() const {
-    return _intrinsics[3];
   }
 
   /// \brief The horizontal focal length in pixels.
@@ -226,8 +205,8 @@ class PinholeCamera : public Camera {
  private:
   void updateTemporaries();
 
-   /// Get the distortion parameters from the intrinsics vector
-   Eigen::Map<const Eigen::VectorXd> getDistortionParameters() const;
+  /// Get the distortion parameters from the intrinsics vector
+  Eigen::Map<const Eigen::VectorXd> getDistortionParameters() const;
 
   // Vector storing intrinsic parameters in a contiguous block of memory.
   // Ordering: fu, fv, cu, cv
@@ -246,6 +225,6 @@ class PinholeCamera : public Camera {
 
 }  // namespace aslam
 
-#include "aslam/cameras/pinhole-camera-inl.h"
+#include "aslam/cameras/camera-pinhole-inl.h"
 
 #endif  // ASLAM_CAMERAS_PINHOLE_CAMERA_H_
