@@ -19,33 +19,40 @@ namespace aslam {
 /// The problem is assumed to have two lists (Apples and Bananas) whose elements
 /// can be referenced by a linear index. The problem defines the score
 /// and scoring function between two elements of the lists, and a
-/// method to get a short list of candiates from list Apples for elements
+/// method to get a short list of candidates from list Apples for elements
 /// of list Bananas.
 /// 
-/// The match is not neccessarially symmetric. For example, Apples can
+/// The match is not necessarily symmetric. For example, Apples can
 /// represent a reference and Bananas queries.
 ///
-template <typename SCORE_T>
+template <typename SCORE>
 class MatchingProblem {
 public:
-  typedef SCORE_T Score_t;
+  typedef SCORE ScoreT;
     
   struct Match {
     int correspondence[2];
-    Score_t score;
+    ScoreT score;
     int getIndexA() const { return correspondence[0]; }
     int getIndexB() const { return correspondence[1]; }
   };
 
   struct Candidate {
     int index;
-    Score_t score; /// a preliminary score that can be used for
-                   /// sorting, rough thresholding; but actuall match
+    ScoreT score; /// a preliminary score that can be used for
+                   /// sorting, rough thresholding; but actual match
                    /// score will get recomputed.
   };
 
-  typedef std::vector<Match> Matches_t;
-  typedef std::vector<Candidate> Candidates_t;
+  typedef std::vector<Match> MatchesT;
+  typedef std::vector<Candidate> CandidatesT;
+
+  ASLAM_POINTER_TYPEDEFS(MatchingProblem);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblem);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+  MatchingProblem();
+  virtual ~MatchingProblem();
 
   virtual int getLengthApples() = 0;
   virtual int getLengthBananas() = 0;
@@ -63,17 +70,17 @@ public:
   ///
   /// \param[in] b The index of b queried for candidates.
   /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
-  virtual int getAppleCandidatesOfBanana(int b, Candidates_t *candidates) = 0;
+  virtual int getAppleCandidatesOfBanana(int b, CandidatesT *candidates) = 0;
 
   /// \brief compute the match score between items referenced by a and b.
   /// Note: this will be called multilple times from different threads.
-  virtual Score_t computeScore(int a, int b) = 0;
+  virtual ScoreT computeScore(int a, int b) = 0;
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
 
   /// Called at the end of the matching process to set the output. 
-  virtual void setBestMatches(const Matches_t &bestMatches) = 0;
+  virtual void setBestMatches(const MatchesT &bestMatches) = 0;
 
 };
 }
