@@ -1,31 +1,19 @@
-#include <aslam/cameras/fisheye-distortion.h>
+#include <aslam/cameras/distortion-fisheye.h>
 
 namespace aslam {
 
-
-void FisheyeDistortion::distort(
-    const Eigen::Map<const Eigen::VectorXd>& params,
-    Eigen::Matrix<double, 2, 1>* point) const {
-  CHECK_NOTNULL(point);
-  distort(params, point, NULL);
+FisheyeDistortion::FisheyeDistortion(const Eigen::VectorXd& dist_coeffs)
+: Distortion(dist_coeffs) {
+  CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 
-void FisheyeDistortion::distort(
-    const Eigen::Map<const Eigen::VectorXd>& params,
-    const Eigen::Matrix<double, 2, 1>& point,
-    Eigen::Matrix<double, 2, 1>* out_point) const {
-  CHECK_NOTNULL(out_point);
-  *out_point = point;
-  distort(params, out_point, NULL);
-}
-
-void FisheyeDistortion::distort(
-    const Eigen::Map<const Eigen::VectorXd>& params,
-    Eigen::Matrix<double, 2, 1>* point,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+void FisheyeDistortion::distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
+                                                         Eigen::Vector2d* point,
+                                                         Eigen::Matrix2d* out_jacobian) const {
+  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
 
-  const double& w = params(0);
+  const double& w = dist_coeffs(0);
   const double r_u = point->norm();
   const double r_u_cubed = r_u * r_u * r_u;
   const double tanwhalf = tan(w / 2.);
@@ -75,58 +63,22 @@ void FisheyeDistortion::distort(
                 + (2 * v * v * tanwhalf)
                 / (w * (u * u + v * v) * (4 * tanwhalfsq * (u * u + v * v) + 1));
 
-      *out_jacobian <<
-          duf_du, duf_dv,
-          dvf_du, dvf_dv;
+      *out_jacobian << duf_du, duf_dv,
+                       dvf_du, dvf_dv;
     }
   }
 
   *point *= r_rd;
 }
 
-bool FisheyeDistortion::operator ==(const Distortion& rhs) const {
-  // Because the distortion is stateless, this just checks if
-  // they are matching types.
-  const FisheyeDistortion * other = dynamic_cast<const FisheyeDistortion*>(&rhs);
-  return other;
-}
-
-void FisheyeDistortion::undistort(
-      const Eigen::Map<const Eigen::VectorXd>& params,
-      Eigen::Matrix<double, 2, 1>* point) const {
-  CHECK_NOTNULL(point);
-
-  const double& w = params(0);
-  double mul2tanwby2 = tan(w / 2.0) * 2.0;
-
-  // Calculate distance from point to center.
-  double r_d = point->norm();
-
-  if (mul2tanwby2 == 0 || r_d == 0) {
-    return;
-  }
-
-  // Calculate undistorted radius of point.
-  double r_u;
-  if (fabs(r_d * w) <= kMaxValidAngle) {
-    r_u = tan(r_d * w) / (r_d * mul2tanwby2);
-  } else {
-    return;
-  }
-
-  (*point) *= r_u;
-}
-
-// Passing NULL as *out_jacobian is admissible and makes the routine
-// skip Jacobian calculation.
-void FisheyeDistortion::distortParameterJacobian(
-    const Eigen::Map<const Eigen::VectorXd>& params,
-    const Eigen::Matrix<double, 2, 1>& point,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+void FisheyeDistortion::distortParameterJacobian(const Eigen::VectorXd& dist_coeffs,
+                                                 const Eigen::Vector2d& point,
+                                                 Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(out_jacobian);
   CHECK_EQ(out_jacobian->cols(), 1);
 
-  const double& w = params(0);
+  const double& w = dist_coeffs(0);
 
   const double tanwhalf = tan(w / 2.);
   const double tanwhalfsq = tanwhalf * tanwhalf;
@@ -154,6 +106,54 @@ void FisheyeDistortion::distortParameterJacobian(
 
     *out_jacobian << dxd_d_w, dyd_d_w;
   }
+}
+
+void FisheyeDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
+                                                           Eigen::Vector2d* point) const {
+  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
+  CHECK_NOTNULL(point);
+
+  const double& w = dist_coeffs(0);
+  double mul2tanwby2 = tan(w / 2.0) * 2.0;
+
+  // Calculate distance from point to center.
+  double r_d = point->norm();
+
+  if (mul2tanwby2 == 0 || r_d == 0) {
+    return;
+  }
+
+  // Calculate undistorted radius of point.
+  double r_u;
+  if (fabs(r_d * w) <= kMaxValidAngle) {
+    r_u = tan(r_d * w) / (r_d * mul2tanwby2);
+  } else {
+    return;
+  }
+
+  (*point) *= r_u;
+}
+
+bool FisheyeDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
+  // Check the vector size.
+  if (dist_coeffs.size() != kNumOfParams)
+    return false;
+
+  // Expect w to have sane magnitude.
+  double w = dist_coeffs(0);
+  bool valid = std::abs(w) < 1e-16 || (w >= kMinValidW && w <= kMaxValidW);
+  LOG_IF(INFO, !valid) << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
+      << ", " << kMaxValidW << "].";
+  return valid;
+}
+
+void FisheyeDistortion::printParameters(std::ostream& out, const std::string& text) const {
+  const Eigen::VectorXd& distortion_coefficients = getParameters();
+  CHECK_EQ(distortion_coefficients.size(), kNumOfParams) << "dist_coeffs: invalid size!";
+
+  out << text << std::endl;
+  out << "Distortion: (FisheyeDistortion) " << std::endl;
+  out << "  w: " << distortion_coefficients(0) << std::endl;
 }
 
 } // namespace aslam

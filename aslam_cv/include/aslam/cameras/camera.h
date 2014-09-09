@@ -25,31 +25,34 @@ class Camera {
   //explicit Camera(const sm::PropertyTree& property_tree);
   virtual ~Camera();
 
+  /// \brief Compare this camera to another camera object.
+  virtual bool operator==(const Camera& other) const;
+
   //////////////////////////////////////////////////////////////
   /// \name Information about the camera
   /// @{
 
-  /// \brief get the camera id.
+  /// \brief Get the camera id.
   const aslam::CameraId& getId() const { return id_; }
 
-  /// \brief set the camera id.
+  /// \brief Set the camera id.
   void setId(const aslam::CameraId& id) { id_ = id; }
 
-  /// \brief get a label for the camera
+  /// \brief Get a label for the camera.
   const std::string& getLabel() const {return label_;}
 
-  /// \brief set a label for the camera
+  /// \brief Set a label for the camera.
   void setLabel(const std::string& label) {label_ = label;}
 
-  /// \brief The width of the image
+  /// \brief The width of the image.
   inline uint32_t imageWidth() const { return image_width_; }
 
-  /// \brief The height of the image
+  /// \brief The height of the image.
   inline uint32_t imageHeight() const { return image_height_; }
 
   /// \brief Print the internal parameters of the camera in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
-  /// text used by the calling function to distinguish cameras
+  /// text used by the calling function to distinguish cameras.
   virtual void printParameters(std::ostream& out, const std::string& text);
 
   /// @}
@@ -63,7 +66,7 @@ class Camera {
                         Eigen::Vector2d* out_keypoint) const = 0;
 
   /// Project a point expressed in euclidean coordinates to a 2d image measurement
-  /// and calculate the relevant jacobian.
+  /// and calculate the relevant Jacobian.
   virtual bool project3(const Eigen::Vector3d& point,
                         Eigen::Vector2d* out_keypoint,
                         Eigen::Matrix<double, 2, 3>* out_jacobian) const = 0;
@@ -73,7 +76,7 @@ class Camera {
                         Eigen::Vector2d* out_keypoint) const = 0;
 
   /// Project a point expressed in homogenous coordinates to a 2d image measurement
-  /// and calculate the relevant jacobian.
+  /// and calculate the relevant Jacobian.
   virtual bool project4(const Eigen::Vector4d& point,
                         Eigen::Vector2d* out_keypoint,
                         Eigen::Matrix<double, 2, 4>* out_jacobian) const = 0;
@@ -83,7 +86,7 @@ class Camera {
                             Eigen::Vector3d* out_keypoint) const = 0;
 
 
-  /// Compute the 3d bearing vector in euclidean coordinates and the relevant jacobian
+  /// Compute the 3d bearing vector in euclidean coordinates and the relevant Jacobian
   /// from the 2d image measurement.
   virtual bool backProject3(const Eigen::Vector2d& keypoint,
                             Eigen::Vector3d* out_point,
@@ -94,20 +97,19 @@ class Camera {
                             Eigen::Vector4d* out_point) const = 0;
 
   /// Compute the 3d bearing vector in homogeneous coordinates and the relevant
-  /// jacobian from the 2d image measurement.
+  /// Jacobian from the 2d image measurement.
   virtual bool backProject4(const Eigen::Vector2d& keypoint,
                             Eigen::Vector4d* out_point,
                             Eigen::Matrix<double, 4, 2>* out_jacobian) const = 0;
 
-  /// Compute the jacobian of the image measurement w.r.t. the intrinsics.
-  virtual bool project3IntrinsicsJacobian(
-      const Eigen::Vector3d& point,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
+  /// Compute the Jacobian of the image measurement w.r.t. the intrinsics.
+  virtual bool project3IntrinsicsJacobian(const Eigen::Vector3d& point,
+                                          Eigen::Matrix<double, 2,
+                                          Eigen::Dynamic>* out_jacobian) const = 0;
 
-  /// Compute the jacobian of the image measurement w.r.t. the intrinsics.
-  virtual bool project4IntrinsicsJacobian(
-      const Eigen::Vector4d& point,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
+  /// Compute the Jacobian of the image measurement w.r.t. the intrinsics.
+  virtual bool project4IntrinsicsJacobian(const Eigen::Vector4d& point,
+                              Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const = 0;
 
   /// @}
 
@@ -115,11 +117,9 @@ class Camera {
   /// \name Functional methods to project and back-project points
   /// @{
 
-  /// This function projects a point into the image using the
-  /// intrinsics parameters and distortion parameters that are
-  /// passed in as arguments. If any of the Jacobians are nonnull,
-  /// they should be filled in with the Jacobian with respect to
-  /// small changes in the argument.
+  /// This function projects a point into the image using the intrinsic and distortion parameters
+  /// that are passed in as arguments. If any of the Jacobians are nonnull, they should be filled
+  /// in with the Jacobian with respect to small changes in the argument.
   virtual bool project3Functional(
       const Eigen::VectorXd& intrinsics_params,
       const Eigen::Vector3d& point,
@@ -146,8 +146,7 @@ class Camera {
 
   // The amount of time elapsed between the first row of the image and the
   // keypoint. For a global shutter camera, this can return Duration(0).
-  inline int64_t temporalOffsetNanoSeconds(
-      const Eigen::Vector2d& keypoint) const {
+  inline int64_t temporalOffsetNanoSeconds(const Eigen::Vector2d& keypoint) const {
     // Don't check validity. This allows points to wander in and out
     // of the frame during optimization
     return static_cast<int64_t>(keypoint(1)) * line_delay_nano_seconds_;
@@ -159,8 +158,8 @@ class Camera {
     return this->imageHeight() * line_delay_nano_seconds_;
   }
 
-
   /// @}
+
 
   //////////////////////////////////////////////////////////////
   /// \name Methods to test validity and visibility
@@ -172,16 +171,14 @@ class Camera {
   /// Can the projection function be run on this point?
   /// This doesn't test if the projected point is visible, only
   /// if the projection function can be run without numerical
-  /// errors or singularities..
-  virtual bool isProjectable3(
-      const Eigen::Vector3d& point) const = 0;
+  /// errors or singularities.
+  virtual bool isProjectable3(const Eigen::Vector3d& point) const = 0;
 
   /// Can the projection function be run on this point?
   /// This doesn't test if the projected point is visible, only
   /// if the projection function can be run without numerical
   /// errors or singularities.
-  virtual bool isProjectable4(
-      const Eigen::Vector4d& point) const = 0;
+  virtual bool isProjectable4(const Eigen::Vector4d& point) const = 0;
 
   /// @}
 
@@ -197,19 +194,15 @@ class Camera {
   /// 0 and 100 meters.
   virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const = 0;
 
-  /// \brief is this camera equal to another
-  virtual bool operator==(const Camera& other) const;
-
   /// @}
 
-  /// \name Methods to support optimizaiton
+  /// \name Methods to support optimization
   /// @{
 
   /// Get the intrinsic parameters.
-  /// This must include distortion parameters
   virtual const Eigen::VectorXd& getParameters() const = 0;
 
-  /// Set the intrinsic parameters, which include the distortion parameters
+  /// Set the intrinsic parameters. Parameters are documented in the specialized camera classes.
   virtual void setParameters(const Eigen::VectorXd& params) = 0;
 
   /// Get the intrinsic parameters (mutable).
@@ -218,7 +211,7 @@ class Camera {
   /// Get the intrinsic parameters (memory pointer).
   virtual double* getParameterMutablePtr() = 0;
 
-  /// How many intrinsic parameters are there (including distortion parameters)?
+  /// How many intrinsic parameters are there?
   virtual size_t getParameterSize() const = 0;
 
   /// @}
