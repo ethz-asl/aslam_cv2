@@ -14,7 +14,7 @@ template <typename MATCHING_PROBLEM>
 class MatchingEngine {
 
 public:
-  typedef MATCHING_PROBLEM Matching_ProblemT;
+  typedef MATCHING_PROBLEM MatchingProblemT;
   typedef typename Matching_ProblemT::ScoreT ScoreT;
 
   ASLAM_POINTER_TYPEDEFS(MatchingEngine);
@@ -23,7 +23,7 @@ public:
   MatchingEngine();
   virtual ~MatchingEngine();
 
-  virtual bool match(Matching_ProblemT &problem) = 0;
+  virtual bool match(MatchingProblemT &problem) = 0;
 
 };
 }
