@@ -1,5 +1,5 @@
-#ifndef ASLAM_FISHEYE_DISTORTION_H_
-#define ASLAM_FISHEYE_DISTORTION_H_
+#ifndef ASLAM_EQUIDISTANT_DISTORTION_H_
+#define ASLAM_EQUIDISTANT_DISTORTION_H_
 
 #include <Eigen/Core>
 #include <glog/logging.h>
@@ -7,11 +7,18 @@
 
 namespace aslam {
 
-class FisheyeDistortion : public aslam::Distortion {
+/// \class EquidistantDistortion
+/// \brief An implementation of the equidistant distortion model for pinhole cameras.
+///        See "A Generic Camera Model and Calibration Method for Conventional, Wide-Angle, and
+///        Fish-Eye Lenses" by Juho Kannala and Sami S. Brandt for further information.
+///        The ordering of the parameter vector is: k1 k2 k3 k4
+///        NOTE: The inverse transformation (undistort) in this case is not available in
+///        closed form and so it is computed iteratively!
+class EquidistantDistortion : public aslam::Distortion {
 
  private:
   /** \brief Number of parameters used for this distortion model. */
-  enum { kNumOfParams = 1 };
+  enum { kNumOfParams = 4 };
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
@@ -20,9 +27,9 @@ class FisheyeDistortion : public aslam::Distortion {
   /// \name Constructors/destructors and operators
   /// @{
 
-  /// \brief FisheyeDistortion Ctor.
-  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=1)
-  explicit FisheyeDistortion(const Eigen::VectorXd& distortionParams);
+  /// \brief EquidistantDistortion Ctor.
+  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=4: k1, k2, k3, k4)
+  explicit EquidistantDistortion(const Eigen::VectorXd& distortionParams);
 
   /// @}
 
@@ -39,21 +46,27 @@ class FisheyeDistortion : public aslam::Distortion {
   ///                             changes in the input point. If NULL is passed, the Jacobian
   ///                             calculation is skipped.
   virtual void distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
-                                     Eigen::Vector2d* point,
-                                     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
+                                                Eigen::Vector2d* point,
+                                                Eigen::Matrix2d* out_jacobian) const;
 
   /// \brief Templated version of the distortExternalCoeffs function.
   /// @param[in]  dist_coeffs Vector containing the coefficients for the distortion model.
   /// @param[in]  point       The point in the normalized image plane. After the function, this
   ///                         point is distorted.
   /// @param[out] out_point   The distorted point.
-  template <typename ScalarType>
-  void distortUsingExternalCoefficients(const Eigen::Map<Eigen::Matrix<ScalarType,
-                                        Eigen::Dynamic,1>>& dist_coeffs,
-                                        const Eigen::Matrix<ScalarType, 2, 1>& point,
-                                        Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+  template<typename ScalarType>
+  void distortUsingExternalCoefficients(
+      const Eigen::Map<Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>>& dist_coeffs,
+      const Eigen::Matrix<ScalarType, 2, 1>& point,
+      Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
-
+  /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
+  ///        to small changes in the distortion parameters.
+  /// @param[in]  dist_coeffs  Vector containing the coefficients for the distortion model.
+  /// @param[in]  point        The point in the normalized image plane. After the function,
+  ///                          this point is distorted.
+  /// @param[out] out_jacobian The Jacobian of the distortion with respect to small changes in
+  ///                          the distortion parameters.
   virtual void distortParameterJacobian(const Eigen::VectorXd& dist_coeffs,
                                         const Eigen::Vector2d& point,
                                         Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
@@ -88,17 +101,12 @@ class FisheyeDistortion : public aslam::Distortion {
   /// \brief Returns the number of parameters used in this distortion model.
   inline static constexpr size_t parameterCount() {
       return kNumOfParams;
-   }
+  }
 
-  /// @}
-
-  //////////////////////////////////////////////////////////////
-  /// \name Valid parameter range definition.
-  /// @{
- private:
-  static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
-  static constexpr double kMinValidW = 0.5;
-  static constexpr double kMaxValidW = 1.5;
+  /// \brief Print the internal parameters of the distortion in a human-readable form
+  /// Print to the ostream that is passed in. The text is extra
+  /// text used by the calling function to distinguish cameras.
+  virtual void printParameters(std::ostream& out, const std::string& text) const;
 
   /// @}
 
@@ -106,6 +114,4 @@ class FisheyeDistortion : public aslam::Distortion {
 
 } // namespace aslam
 
-#include "fisheye-distortion-inl.h"
-
-#endif /* ASLAM_FISHEYE_DISTORTION_H_ */
+#endif /* ASLAM_EQUIDISTANT_DISTORTION_H_ */
