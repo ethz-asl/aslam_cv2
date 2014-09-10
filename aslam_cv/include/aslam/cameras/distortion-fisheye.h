@@ -97,6 +97,12 @@ class FisheyeDistortion : public aslam::Distortion {
       return kNumOfParams;
   }
 
+  /// \brief Returns the number of parameters used in the distortion model.
+  ///        NOTE: Use the constexpr function parameterCount if you know the exact distortion type.
+  virtual size_t getParameterSize() const {
+    return kNumOfParams;
+  }
+
   /// \brief Print the internal parameters of the distortion in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras.
