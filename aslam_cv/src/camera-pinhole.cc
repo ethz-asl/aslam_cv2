@@ -1,4 +1,4 @@
-#include <aslam/cameras/pinhole-camera.h>
+#include <aslam/cameras/camera-pinhole.h>
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
 
@@ -117,10 +117,9 @@ bool PinholeCamera::project3(
   (*outKeypoint)[0] = p[0] * rz;
   (*outKeypoint)[1] = p[1] * rz;
 
-  Eigen::Matrix<double, 2, Eigen::Dynamic> Jd;
+  Eigen::Matrix2d Jd;
   CHECK_NOTNULL(_distortion.get());
   _distortion->distort(outKeypoint, &Jd);  // distort and Jacobian wrt. keypoint
-  CHECK_GE(Jd.cols(), 2);
 
   Eigen::Matrix<double, 2, 3>& J = *outJp;
   // Jacobian including distortion
@@ -390,9 +389,9 @@ void PinholeCamera::printParameters(std::ostream& out,
                                     const std::string& text) {
   Camera::printParameters(out,text);
   out << "  focal length (cols,rows): "
-      << focalLengthCol() << ", " << focalLengthRow() << std::endl;
+      << fu() << ", " << fv() << std::endl;
   out << "  optical center (cols,rows): "
-      << opticalCenterCol() << ", " << opticalCenterRow() << std::endl;
+      << cu() << ", " << cv() << std::endl;
 }
 
 }  // namespace aslam

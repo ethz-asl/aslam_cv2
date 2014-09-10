@@ -1,16 +1,15 @@
-#include <aslam/cameras/fisheye-distortion.h>
+#include <aslam/cameras/distortion-fisheye.h>
 
 namespace aslam {
 
 FisheyeDistortion::FisheyeDistortion(const Eigen::VectorXd& dist_coeffs)
 : Distortion(dist_coeffs) {
-  CHECK(distortionParametersValid(dist_coeffs)) << "Invalid distortion parameters!";
+  CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 
-void FisheyeDistortion::distortUsingExternalCoefficients(
-    const Eigen::VectorXd& dist_coeffs,
-    Eigen::Vector2d* point,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+void FisheyeDistortion::distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
+                                                         Eigen::Vector2d* point,
+                                                         Eigen::Matrix2d* out_jacobian) const {
   CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
 
@@ -136,8 +135,9 @@ void FisheyeDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd
 }
 
 bool FisheyeDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "Invalid number of distortion coefficients (found "
-        << dist_coeffs.size() << ", expected 1).";
+  // Check the vector size.
+  if (dist_coeffs.size() != kNumOfParams)
+    return false;
 
   // Expect w to have sane magnitude.
   double w = dist_coeffs(0);
@@ -145,6 +145,15 @@ bool FisheyeDistortion::distortionParametersValid(const Eigen::VectorXd& dist_co
   LOG_IF(INFO, !valid) << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
       << ", " << kMaxValidW << "].";
   return valid;
+}
+
+void FisheyeDistortion::printParameters(std::ostream& out, const std::string& text) const {
+  const Eigen::VectorXd& distortion_coefficients = getParameters();
+  CHECK_EQ(distortion_coefficients.size(), kNumOfParams) << "dist_coeffs: invalid size!";
+
+  out << text << std::endl;
+  out << "Distortion: (FisheyeDistortion) " << std::endl;
+  out << "  w: " << distortion_coefficients(0) << std::endl;
 }
 
 } // namespace aslam
