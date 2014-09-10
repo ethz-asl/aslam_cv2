@@ -33,7 +33,7 @@ void ThreadPool::run() {
       this->tasks_.pop();
       lock.unlock();
       task();
-      }
     }
+}
 
 }  // namespace aslam

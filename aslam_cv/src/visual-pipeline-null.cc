@@ -1,4 +1,4 @@
-#include <aslam/pipeline/null-visual-pipeline.h>
+#include <aslam/pipeline/visual-pipeline-null.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/cameras/camera.h>
 #include <opencv2/core/core.hpp>
@@ -14,7 +14,7 @@ NullVisualPipeline::NullVisualPipeline(const std::shared_ptr<Camera>& camera,
 NullVisualPipeline::~NullVisualPipeline() { }
 
 std::shared_ptr<VisualFrame> NullVisualPipeline::processImage(
-    const cv::Mat& image, int64_t systemStamp, int64_t hardwareStamp) {
+    const cv::Mat& image, int64_t systemStamp, int64_t hardwareStamp) const {
   CHECK_EQ(camera_->imageWidth(), static_cast<size_t>(image.cols));
   CHECK_EQ(camera_->imageHeight(), static_cast<size_t>(image.rows));
 
