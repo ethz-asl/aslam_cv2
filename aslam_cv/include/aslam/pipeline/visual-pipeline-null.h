@@ -31,7 +31,7 @@ public:
   /// \returns   The visual frame built from the image data.
   virtual std::shared_ptr<VisualFrame> processImage(const cv::Mat& image,
                                                     int64_t systemStamp,
-                                                    int64_t hardwareStamp);
+                                                    int64_t hardwareStamp) const;
 
   /// \brief Get the input camera that corresponds to the image
   ///        passed in to processImage().

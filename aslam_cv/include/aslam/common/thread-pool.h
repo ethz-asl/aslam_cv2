@@ -57,6 +57,7 @@ class ThreadPool {
   std::future<typename std::result_of<Function(Args...)>::type>
   enqueue(Function&& function, Args&&... args);
 
+  void stop(){ stop_ = true; }
  private:
   /// \brief Run a single thread.
   void run();
@@ -68,7 +69,7 @@ class ThreadPool {
   // synchronization
   std::mutex queue_mutex_;
   std::condition_variable condition_;
-  bool stop_;
+  volatile bool stop_;
 };
 
 
