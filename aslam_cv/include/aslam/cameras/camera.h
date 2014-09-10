@@ -28,7 +28,7 @@ namespace aslam {
 ///        of the projection operation.
 struct ProjectionState {
   /// Possible projection state.
-  enum class Status_t {
+  enum class Status {
     /// Keypoint is visible and projection was successful.
     KEYPOINT_VISIBLE,
     /// Keypoint is NOT visible but projection was successful.
@@ -41,10 +41,10 @@ struct ProjectionState {
     UNINITIALIZED
   };
 
-  ProjectionState() : status_(Status_t::UNINITIALIZED) {};
-  ProjectionState(Status_t status) : status_(status) {};
+  ProjectionState() : status_(Status::UNINITIALIZED) {};
+  ProjectionState(Status status) : status_(status) {};
 
-  /// \brief ProjectionState can be typecasted to bool and is true is the projected keypoint
+  /// \brief ProjectionState can be typecasted to bool and is true if the projected keypoint
   ///        is visible. Simplifies the check for a successful projection.
   ///        Example usage:
   /// @code
@@ -53,21 +53,40 @@ struct ProjectionState {
   /// @endcode
   explicit operator bool() const { return isKeypointVisible(); };
 
+  /// \brief Compare objects.
+  bool operator==(const ProjectionState& other) const { return status_ == other.status_; };
+
+  /// \brief Convenience function to print the state using streams.
+  friend std::ostream& operator<< (std::ostream& out, const ProjectionState& state)
+  {
+    std::string enum_str;
+    switch (state.status_){
+      case Status::KEYPOINT_VISIBLE:            enum_str = "KEYPOINT_VISIBLE"; break;
+      case Status::KEYPOINT_OUTSIDE_IMAGE_BOX:  enum_str = "KEYPOINT_OUTSIDE_IMAGE_BOX"; break;
+      case Status::POINT_BEHIND_CAMERA:         enum_str = "POINT_BEHIND_CAMERA"; break;
+      case Status::PROJECTION_INVALID:          enum_str = "PROJECTION_INVALID"; break;
+      default:
+        case Status::UNINITIALIZED:             enum_str = "UNINITIALIZED"; break;
+    }
+    out << "ProjectionState: " << enum_str << std::endl;
+    return out;
+  }
+
   /// \brief Check whether the projection was successful and the point is visible in the image.
-  inline bool isKeypointVisible() const { return (status_ == Status_t::KEYPOINT_VISIBLE); };
+  bool isKeypointVisible() const { return (status_ == Status::KEYPOINT_VISIBLE); };
 
   /// \brief Returns the exact state of the projection operation.
   ///        Example usage:
   /// @code
   ///          aslam::ProjectionState ret = camera_->project3(Eigen::Vector3d(0, 0, -1), &keypoint);
-  ///          if(ret.getDetailedStatus() == aslam::ProjectionState::Status_t::KEYPOINT_OUTSIDE_IMAGE_BOX)
+  ///          if(ret.getDetailedStatus() == aslam::ProjectionState::Status::KEYPOINT_OUTSIDE_IMAGE_BOX)
   ///            std::cout << "Point behind camera! Lets do something...\n";
   /// @endcode
-  Status_t getDetailedStatus() const { return status_; };
+  Status getDetailedStatus() const { return status_; };
 
  private:
   /// Stores the projection state.
-  Status_t status_;
+  Status status_;
 };
 
 /// \class Camera
@@ -101,6 +120,12 @@ class Camera {
   /// \brief Compare this camera to another camera object.
   virtual bool operator==(const Camera& other) const;
 
+  /// \brief Convenience function to print the state using streams.
+  std::ostream& operator<<(std::ostream& out) {
+    this->printParameters(out, std::string(""));
+    return out;
+  };
+
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -126,9 +151,9 @@ class Camera {
   uint32_t imageHeight() const { return image_height_; }
 
   /// \brief Print the internal parameters of the camera in a human-readable form
-  /// Print to the ostream that is passed idfn. The text is extra
+  /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras.
-  virtual void printParameters(std::ostream& out, const std::string& text);
+  virtual void printParameters(std::ostream& out, const std::string& text) const;
 
   /// @}
 
@@ -142,27 +167,26 @@ class Camera {
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @return Contains information about the success of the projection. Check "struct
   ///         ProjectionState" for more information.
-  const ProjectionState project3(const Eigen::Vector3d& point_3d,
-                                 Eigen::Vector2d* out_keypoint) const;
+  virtual const ProjectionState project3(const Eigen::Vector3d& point_3d,
+                                         Eigen::Vector2d* out_keypoint) const = 0;
 
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
   ///        projection (& distortion) models to the point.
   /// @param[in]  point_3d     The point in euclidean coordinates.
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @param[out] out_jacobian The Jacobian w.r.t. to changes in the euclidean point.
-  ///                          If nullptr: Jacobian calculation is skipped.
   /// @return Contains information about the success of the projection. Check "struct
   ///         ProjectionState" for more information.
-  const ProjectionState project3(const Eigen::Vector3d& point_3d,
-                                 Eigen::Vector2d* out_keypoint,
-                                 Eigen::Matrix<double, 2, 3>* out_jacobian) const;
+  virtual const ProjectionState project3(const Eigen::Vector3d& point_3d,
+                                         Eigen::Vector2d* out_keypoint,
+                                         Eigen::Matrix<double, 2, 3>* out_jacobian) const = 0;
 
   /// \brief Compute the 3d bearing vector in euclidean coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
   /// @param[in]  keypoint     Keypoint in image coordinates.
   /// @param[out] out_point_3d Bearing vector in euclidean coordinates (with z=1 -> non-normalized).
-  void backProject3(const Eigen::Vector2d& keypoint,
-                    Eigen::Vector3d* out_point_3d) const;
+  virtual void backProject3(const Eigen::Vector2d& keypoint,
+                            Eigen::Vector3d* out_point_3d) const = 0;
 
   /// @}
 
@@ -184,7 +208,6 @@ class Camera {
   /// @param[in]  point_4d     The point in homogeneous coordinates.
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @param[out] out_jacobian The Jacobian w.r.t. to changes in the homogeneous point.
-  ///                          If nullptr: Jacobian calculation is skipped.
   /// @return Contains information about the success of the projection. Check "struct
   ///         ProjectionState" for more information.
   const ProjectionState project4(const Eigen::Vector4d& point_4d,
@@ -208,29 +231,42 @@ class Camera {
   ///        that are passed in as arguments. If any of the Jacobians are nonnull, they
   ///        should be filled in with the Jacobian with respect to small changes in the argument.
   /// @param[in]  point_3d                The point in euclidean coordinates.
+  /// @param[in]  intrinsics_external     External intrinsic parameter vector.
+  /// @param[in]  distortion_coefficients_external External distortion parameter vector.
+  ///                                              Parameter is ignored is no distortion is active.
   /// @param[out] out_keypoint            The keypoint in image coordinates.
-  /// @param[out] out_jacobian_point      The Jacobian w.r.t. to changes in the euclidean point.
-  ///                                     If nullptr: Jacobian calculation is skipped.
-  /// @param[out] out_jacobian_intrinsics The Jacobian w.r.t. to changes in the intrinsics.
-  ///                                     If nullptr: Jacobian calculation is skipped.
-  //TODO(schneith): Should we also add the distortion parameters as an argument.
+  /// @return Contains information about the success of the projection. Check "struct
+  ///         ProjectionState" for more information.
   virtual const ProjectionState project3Functional(
       const Eigen::Vector3d& point_3d,
+      const Eigen::VectorXd& intrinsics_external,
+      const Eigen::VectorXd* distortion_coefficients_external,
+      Eigen::Vector2d* out_keypoint) const = 0;
+
+  /// \brief This function projects a point into the image using the intrinsic parameters
+  ///        that are passed in as arguments. If any of the Jacobians are nonnull, they
+  ///        should be filled in with the Jacobian with respect to small changes in the argument.
+  /// @param[in]  point_3d                The point in euclidean coordinates.
+  /// @param[in]  intrinsics_external     External intrinsic parameter vector.
+  /// @param[in]  distortion_coefficients_external External distortion parameter vector.
+  ///                                              Parameter is ignored is no distortion is active.
+  /// @param[out] out_keypoint            The keypoint in image coordinates.
+  /// @param[out] out_jacobian_point      The Jacobian w.r.t. to changes in the euclidean point.
+  ///                                       nullptr: calculation is skipped.
+  /// @param[out] out_jacobian_intrinsics The Jacobian w.r.t. to changes in the intrinsics.
+  ///                                       nullptr: calculation is skipped.
+  /// @param[out] out_jacobian_distortion The Jacobian wrt. to changes in the distortion parameters.
+  ///                                       nullptr: calculation is skipped.
+  /// @return Contains information about the success of the projection. Check "struct
+  ///         ProjectionState" for more information.
+  virtual const ProjectionState project3Functional(
+      const Eigen::Vector3d& point_3d,
+      const Eigen::VectorXd& intrinsics_external,
+      const Eigen::VectorXd* distortion_coefficients_external,
       Eigen::Vector2d* out_keypoint,
-      const Eigen::VectorXd* intrinsics_external,
       Eigen::Matrix<double, 2, 3>* out_jacobian_point,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics) const = 0;
-
-
-  /// \brief Compute the 3d bearing vector in euclidean coordinates given a keypoint in
-  ///        image coordinates. Uses the projection (& distortion) models.
-  /// @param[in]  keypoint            Keypoint in image coordinates.
-  /// @param[out] out_point_3d        Bearing vector in homogeneous coordinates.
-  /// @param[in]  intrinsics_external Vector containing the intrinsic parameters.
-  ///                                 If nullptr: Internal parameters will be used.
-  virtual void backProject3(const Eigen::Vector2d& keypoint,
-                            Eigen::Vector3d* out_point_3d,
-                            const Eigen::VectorXd* intrinsics_external) const = 0;
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const = 0;
 
   /// @}
 

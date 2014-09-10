@@ -109,22 +109,22 @@ TEST_F(PinholeCameraTest, CameraTest_ProjectionState) {
 
   // In front of cam -> visible.
   ret = camera_->project3(Eigen::Vector3d(0, 0, 10), &keypoint);
-  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status_t::KEYPOINT_VISIBLE);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status::KEYPOINT_VISIBLE);
   EXPECT_TRUE(static_cast<bool>(ret));
 
   // Behind cam -> not visible.
   ret = camera_->project3(Eigen::Vector3d(0, 0, -10), &keypoint);
-  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status_t::POINT_BEHIND_CAMERA);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status::POINT_BEHIND_CAMERA);
   EXPECT_FALSE(static_cast<bool>(ret));
 
   // In front of cam, but outside of image box. -> not visible.
   ret = camera_->project3(Eigen::Vector3d(50, 50, 10), &keypoint);
-  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status_t::KEYPOINT_OUTSIDE_IMAGE_BOX);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status::KEYPOINT_OUTSIDE_IMAGE_BOX);
   EXPECT_FALSE(static_cast<bool>(ret));
 
   // Invalid projection (z<min_z) -> not visible/projectable.
   ret = camera_->project3(Eigen::Vector3d(1, 1.2, 1e-15), &keypoint);
-  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status_t::PROJECTION_INVALID);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionState::Status::PROJECTION_INVALID);
   EXPECT_FALSE(static_cast<bool>(ret));
 }
 

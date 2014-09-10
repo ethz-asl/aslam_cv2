@@ -9,8 +9,15 @@ namespace aslam {
 
 /// \class PinholeCamera
 /// \brief An implementation of the pinhole camera model with (optional) distortion.
-///        Intrinsic parameters ordering: fu, fv, cu, cv
-///        Reference: http://en.wikipedia.org/wiki/Pinhole_camera_model
+///
+/// The usual model of a pinhole camera follows these steps:
+///    - Transformation: Transform the point into a coordinate frame associated with the camera
+///    - Normalization:  Project the point onto the normalized image plane: \f$\mathbf y := \left[ x/z,y/z\right] \f$
+///    - Distortion:     apply a nonlinear transformation to \f$y\f$ to account for radial and tangential distortion of the lens
+///    - Projection:     Project the point into the image using a standard \f$3 \time 3\f$ projection matrix
+///
+///  Intrinsic parameters ordering: fu, fv, cu, cv
+///  Reference: http://en.wikipedia.org/wiki/Pinhole_camera_model
 class PinholeCamera : public Camera {
   enum { kNumOfParams = 4 };
  public:
@@ -32,23 +39,23 @@ class PinholeCamera : public Camera {
 
  public:
   /// \brief Construct a PinholeCamera with distortion.
-  /// @param[in] focalLengthCols focallength; cols direction in pixels (width-direction)
-  /// @param[in] focalLengthRows focallength; rows direction in pixels (width-direction)
-  /// @param[in] imageCenterCols image center; cols direction in pixels (height-direction)
-  /// @param[in] imageCenterRows image center; rows direction in pixels (height-direction)
+  /// @param[in] focalLengthCols focallength in pixels; cols (width-direction)
+  /// @param[in] focalLengthRows focallength in pixels; rows (height-direction)
+  /// @param[in] imageCenterCols image center in pixels; cols (width-direction)
+  /// @param[in] imageCenterRows image center in pixels; rows (height-direction)
   /// @param[in] imageWidth      image width in pixels
   /// @param[in] imageHeight     image height in pixels
-  /// @param[in] distortion      Pointer to the distortion model.
+  /// @param[in] distortion      pointer to the distortion model
   PinholeCamera(double focalLengthCols, double focalLengthRows,
                 double imageCenterCols, double imageCenterRows,
                 uint32_t imageWidth, uint32_t imageHeight,
                 aslam::Distortion::Ptr distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
-  /// @param[in] focalLengthCols focallength; cols direction in pixels (width-direction)
-  /// @param[in] focalLengthRows focallength; rows direction in pixels (width-direction)
-  /// @param[in] imageCenterCols image center; cols direction in pixels (height-direction)
-  /// @param[in] imageCenterRows image center; rows direction in pixels (height-direction)
+  /// @param[in] focalLengthCols focallength in pixels; cols (width-direction)
+  /// @param[in] focalLengthRows focallength in pixels; rows (height-direction)
+  /// @param[in] imageCenterCols image center in pixels; cols (width-direction)
+  /// @param[in] imageCenterRows image center in pixels; rows (height-direction)
   /// @param[in] imageWidth      image width in pixels
   /// @param[in] imageHeight     image height in pixels
   PinholeCamera(double focalLengthCols, double focalLengthRows,
@@ -60,46 +67,44 @@ class PinholeCamera : public Camera {
   /// \brief Compare this camera to another camera object.
   virtual bool operator==(const Camera& other) const;
 
+  /// \brief Convenience function to print the state using streams.
+  std::ostream& operator<<(std::ostream& out) {
+    this->printParameters(out, std::string(""));
+    return out;
+  };
+
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Methods to project and back-project euclidean points
   /// @{
 
-  /// \brief This function projects a point into the image using the intrinsic parameters
-  ///        that are passed in as arguments. If any of the Jacobians are nonnull, they
-  ///        should be filled in with the Jacobian with respect to small changes in the argument.
-  /// @param[in]  point_3d                The point in euclidean coordinates.
-  /// @param[out] out_keypoint            The keypoint in image coordinates.
-  /// @param[out] out_jacobian_point      The Jacobian w.r.t. to changes in the euclidean point.
-  ///                                     If nullptr: Jacobian calculation is skipped.
-  /// @param[out] out_jacobian_intrinsics The Jacobian w.r.t. to changes in the intrinsics.
-  ///                                     If nullptr: Jacobian calculation is skipped.
-  /// @return The ProjectionState object contains details about the success of the projection.
-  virtual const ProjectionState project3Functional(
-      const Eigen::Vector3d& point_3d,
-      Eigen::Vector2d* out_keypoint,
-      const Eigen::VectorXd* intrinsics_external,
-      Eigen::Matrix<double, 2, 3>* out_jacobian_point,
-      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics) const;
+  /// \brief Projects a euclidean point to a 2d image measurement. Applies the
+  ///        projection (& distortion) models to the point.
+  /// @param[in]  point_3d     The point in euclidean coordinates.
+  /// @param[out] out_keypoint The keypoint in image coordinates.
+  /// @return Contains information about the success of the projection. Check "struct
+  ///         ProjectionState" for more information.
+  virtual const ProjectionState project3(const Eigen::Vector3d& point_3d,
+                                         Eigen::Vector2d* out_keypoint) const;
+
+  /// \brief Projects a euclidean point to a 2d image measurement. Applies the
+  ///        projection (& distortion) models to the point.
+  /// @param[in]  point_3d     The point in euclidean coordinates.
+  /// @param[out] out_keypoint The keypoint in image coordinates.
+  /// @param[out] out_jacobian The Jacobian w.r.t. to changes in the euclidean point.
+  /// @return Contains information about the success of the projection. Check "struct
+  ///         ProjectionState" for more information.
+  virtual const ProjectionState project3(const Eigen::Vector3d& point_3d,
+                                         Eigen::Vector2d* out_keypoint,
+                                         Eigen::Matrix<double, 2, 3>* out_jacobian) const;
 
   /// \brief Compute the 3d bearing vector in euclidean coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
-  /// @param[in]  keypoint            Keypoint in image coordinates.
-  /// @param[out] out_point_3d        Bearing vector in homogeneous coordinates.
-  /// @param[in]  intrinsics_external Vector containing the intrinsic parameters.
-  ///                                 If nullptr: Internal parameters will be used.
-  virtual void backProject3(
-      const Eigen::Vector2d& keypoint,
-      Eigen::Vector3d* out_point_3d,
-      const Eigen::VectorXd* intrinsics_external) const;
-
-  /// \brief Template version of project3Functional.
-  template <typename ScalarType, typename DistortionType>
-  const ProjectionState project3Functional(
-      const Eigen::Matrix<ScalarType, 3, 1>& point,
-      const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics,
-      Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+  /// @param[in]  keypoint     Keypoint in image coordinates.
+  /// @param[out] out_point_3d Bearing vector in euclidean coordinates (with z=1 -> non-normalized).
+  virtual void backProject3(const Eigen::Vector2d& keypoint,
+                            Eigen::Vector3d* out_point_3d) const;
 
   /// \brief Checks the success of a projection operation and returns the result in a
   ///        ProjectionState object.
@@ -108,6 +113,62 @@ class PinholeCamera : public Camera {
   /// @return The ProjectionState object contains details about the success of the projection.
   const ProjectionState evaluateProjectionState(const Eigen::Vector2d& keypoint,
                                                 const Eigen::Vector3d& point_3d) const;
+
+  /// @}
+
+  //////////////////////////////////////////////////////////////
+  /// \name Functional methods to project and back-project points
+  /// @{
+
+  /// \brief This function projects a point into the image using the intrinsic parameters
+  ///        that are passed in as arguments. If any of the Jacobians are nonnull, they
+  ///        should be filled in with the Jacobian with respect to small changes in the argument.
+  /// @param[in]  point_3d                The point in euclidean coordinates.
+  /// @param[in]  intrinsics_external     External intrinsic parameter vector.
+  /// @param[in]  distortion_coefficients_external External distortion parameter vector.
+  ///                                              Parameter is ignored is no distortion is active.
+  /// @param[out] out_keypoint            The keypoint in image coordinates.
+  /// @return Contains information about the success of the projection. Check "struct
+  ///         ProjectionState" for more information.
+  virtual const ProjectionState project3Functional(
+      const Eigen::Vector3d& point_3d,
+      const Eigen::VectorXd& intrinsics_external,
+      const Eigen::VectorXd* distortion_coefficients_external,
+      Eigen::Vector2d* out_keypoint) const;
+
+  /// \brief Template version of project3Functional.
+  template <typename ScalarType, typename DistortionType>
+  const ProjectionState project3Functional(
+      const Eigen::Matrix<ScalarType, 3, 1>& point_3d,
+      const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics_external,
+      const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>* distortion_coefficients_external,
+      Eigen::Matrix<ScalarType, 2, 1>* out_keypoint) const;
+
+
+  /// \brief This function projects a point into the image using the intrinsic parameters
+  ///        that are passed in as arguments. If any of the Jacobians are nonnull, they
+  ///        should be filled in with the Jacobian with respect to small changes in the argument.
+  /// @param[in]  point_3d                The point in euclidean coordinates.
+  /// @param[in]  intrinsics_external     External intrinsic parameter vector.
+  /// @param[in]  distortion_coefficients_external External distortion parameter vector.
+  ///                                              Parameter is ignored is no distortion is active.
+  /// @param[out] out_keypoint            The keypoint in image coordinates.
+  /// @param[out] out_jacobian_point      The Jacobian w.r.t. to changes in the euclidean point.
+  ///                                       nullptr: calculation is skipped.
+  /// @param[out] out_jacobian_intrinsics The Jacobian w.r.t. to changes in the intrinsics.
+  ///                                       nullptr: calculation is skipped.
+  /// @param[out] out_jacobian_distortion The Jacobian wrt. to changes in the distortion parameters.
+  ///                                       nullptr: calculation is skipped.
+  /// @return Contains information about the success of the projection. Check "struct
+  ///         ProjectionState" for more information.
+  virtual const ProjectionState project3Functional(
+      const Eigen::Vector3d& point_3d,
+      const Eigen::VectorXd& intrinsics_external,
+      const Eigen::VectorXd* distortion_coefficients_external,
+      Eigen::Vector2d* out_keypoint,
+      Eigen::Matrix<double, 2, 3>* out_jacobian_point,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const;
 
   /// @}
 
@@ -161,7 +222,7 @@ class PinholeCamera : public Camera {
   /// \brief Print the internal parameters of the camera in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras
-  virtual void printParameters(std::ostream& out, const std::string& text);
+  virtual void printParameters(std::ostream& out, const std::string& text) const;
 
   /// @}
 

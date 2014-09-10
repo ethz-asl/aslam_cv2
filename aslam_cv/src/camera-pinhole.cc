@@ -60,93 +60,209 @@ bool PinholeCamera::operator==(const Camera& other) const {
   return intrinsics_ == rhs->intrinsics_;
 }
 
-//TODO(schneith): include the distortion parameters as input?
-const ProjectionState PinholeCamera::project3Functional(
-    const Eigen::Vector3d& point_3d,
-    Eigen::Vector2d* out_keypoint,
-    const Eigen::VectorXd* intrinsics_external,
-    Eigen::Matrix<double, 2, 3>* out_jacobian_point,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics) const {
+const ProjectionState PinholeCamera::project3(const Eigen::Vector3d& point_3d,
+                                              Eigen::Vector2d* out_keypoint) const {
   CHECK_NOTNULL(out_keypoint);
-
-  // Use the internal intrinsic parameters, if no external vector is provided.
-  const Eigen::VectorXd* intrinsics = &intrinsics_;
-  if(intrinsics_external)
-    intrinsics = intrinsics_external;
-  CHECK_EQ(intrinsics->size(), kNumOfParams) << "intrinsics: invalid size!";
-  const double& fu = (*intrinsics)[0];
-  const double& fv = (*intrinsics)[1];
-  const double& cu = (*intrinsics)[2];
-  const double& cv = (*intrinsics)[3];
 
   // Project the point.
   const double& x = point_3d[0];
   const double& y = point_3d[1];
   const double& z = point_3d[2];
 
-  double rz = 1.0 / z;
+  const double rz = 1.0 / z;
+  (*out_keypoint)[0] = x * rz;
+  (*out_keypoint)[1] = y * rz;
+
+  // Distort the point (if a distortion model is set)
+  if (distortion_)
+    distortion_->distort(out_keypoint);
+
+  // Normalized image plane to camera plane.
+  (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
+  (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
+
+  return evaluateProjectionState(*out_keypoint, point_3d);
+}
+
+const ProjectionState PinholeCamera::project3(const Eigen::Vector3d& point_3d,
+                                              Eigen::Vector2d* out_keypoint,
+                                              Eigen::Matrix<double, 2, 3>* out_jacobian) const {
+  CHECK_NOTNULL(out_keypoint);
+  CHECK_NOTNULL(out_jacobian);
+
+  const double& x = point_3d[0];
+  const double& y = point_3d[1];
+  const double& z = point_3d[2];
+
+  // Normalize.
+  const double rz = 1.0 / z;
+  (*out_keypoint)[0] = x * rz;
+  (*out_keypoint)[1] = y * rz;
+
+  // Distort the point (if a distortion model is set)
+  Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
+  if (distortion_)
+    distortion_->distort(out_keypoint, &J_distortion);
+
+  // Calculate the Jacobian w.r.t to the 3d point
+  const double rz2 = rz * rz;
+
+  const double duf_dx =  fu() * J_distortion(0, 0) * rz;
+  const double duf_dy =  fu() * J_distortion(0, 1) * rz;
+  const double duf_dz = -fu() * (x * J_distortion(0, 0) + y * J_distortion(0, 1)) * rz2;
+  const double dvf_dx =  fv() * J_distortion(1, 0) * rz;
+  const double dvf_dy =  fv() * J_distortion(1, 1) * rz;
+  const double dvf_dz = -fv() * (x * J_distortion(1, 0) + y * J_distortion(1, 1)) * rz2;
+
+  (*out_jacobian) << duf_dx, duf_dy, duf_dz,
+                     dvf_dx, dvf_dy, dvf_dz;
+
+  // Normalized image plane to camera plane.
+  (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
+  (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
+
+  return evaluateProjectionState(*out_keypoint, point_3d);
+}
+
+void PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
+                                 Eigen::Vector3d* out_point_3d) const {
+  CHECK_NOTNULL(out_point_3d);
+
+  Eigen::Vector2d kp = keypoint;
+  kp[0] = (kp[0] - cu()) / fu();
+  kp[1] = (kp[1] - cv()) / fv();
+
+  if(distortion_)
+    distortion_->undistort(&kp);
+
+  (*out_point_3d)[0] = kp[0];
+  (*out_point_3d)[1] = kp[1];
+  (*out_point_3d)[2] = 1;
+}
+
+const ProjectionState PinholeCamera::project3Functional(
+    const Eigen::Vector3d& point_3d,
+    const Eigen::VectorXd& intrinsics_external,
+    const Eigen::VectorXd* distortion_coefficients_external,
+    Eigen::Vector2d* out_keypoint) const {
+  CHECK_NOTNULL(out_keypoint);
+
+  // Use the external parameters.
+  CHECK_EQ(intrinsics_external.size(), kNumOfParams) << "intrinsics: invalid size!";
+  const double& fu = intrinsics_external[0];
+  const double& fv = intrinsics_external[1];
+  const double& cu = intrinsics_external[2];
+  const double& cv = intrinsics_external[3];
+
+  // Project the point.
+  const double& x = point_3d[0];
+  const double& y = point_3d[1];
+  const double& z = point_3d[2];
+
+  const double rz = 1.0 / z;
+  (*out_keypoint)[0] = x * rz;
+  (*out_keypoint)[1] = y * rz;
+
+  // Distort the point (if a distortion model is set)
+  if (distortion_)
+    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+                                                  out_keypoint,
+                                                  nullptr); // No Jacobian needed.
+
+  // Normalized image plane to camera plane.
+  (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
+  (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
+
+  return evaluateProjectionState(*out_keypoint, point_3d);
+}
+
+const ProjectionState PinholeCamera::project3Functional(
+    const Eigen::Vector3d& point_3d,
+    const Eigen::VectorXd& intrinsics_external,
+    const Eigen::VectorXd* distortion_coefficients_external,
+    Eigen::Vector2d* out_keypoint,
+    Eigen::Matrix<double, 2, 3>* out_jacobian_point,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const {
+  CHECK_NOTNULL(out_keypoint);
+
+  // Use the external parameters.
+  CHECK_EQ(intrinsics_external.size(), kNumOfParams) << "intrinsics: invalid size!";
+  const double& fu = intrinsics_external[0];
+  const double& fv = intrinsics_external[1];
+  const double& cu = intrinsics_external[2];
+  const double& cv = intrinsics_external[3];
+
+  // Project the point.
+  const double& x = point_3d[0];
+  const double& y = point_3d[1];
+  const double& z = point_3d[2];
+
+  const double rz = 1.0 / z;
   (*out_keypoint)[0] = x * rz;
   (*out_keypoint)[1] = y * rz;
 
   // Distort the point and get the Jacobian wrt. keypoint.
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
-  if (distortion_ && out_jacobian_point) {  // Distortion active and we want the Jacobian.
-    distortion_->distort(out_keypoint, &J_distortion);
+  if (distortion_ && out_jacobian_point) {
+    // Distortion active and we want the Jacobian.
+    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+                                                  out_keypoint,
+                                                  &J_distortion);
   } else if (distortion_) {
-    distortion_->distort(out_keypoint); // Distortion active but Jacobian NOT wanted.
+    // Distortion active but Jacobian NOT wanted.
+    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+                                                  out_keypoint,
+                                                  nullptr);
+  }
+
+  // Calculate the Jacobian w.r.t to the 3d point, if requested.
+  if(out_jacobian_point) {
+    // Jacobian including distortion
+    const double rz2 = rz * rz;
+
+    const double duf_dx =  fu * J_distortion(0, 0) * rz;
+    const double duf_dy =  fu * J_distortion(0, 1) * rz;
+    const double duf_dz = -fu * (x * J_distortion(0, 0) + y * J_distortion(0, 1)) * rz2;
+    const double dvf_dx =  fv * J_distortion(1, 0) * rz;
+    const double dvf_dy =  fv * J_distortion(1, 1) * rz;
+    const double dvf_dz = -fv * (x * J_distortion(1, 0) + y * J_distortion(1, 1)) * rz2;
+
+    (*out_jacobian_point) << duf_dx, duf_dy, duf_dz,
+                             dvf_dx, dvf_dy, dvf_dz;
+  }
+
+  // Calculate the Jacobian w.r.t to the intrinsic parameters, if requested.
+  if(out_jacobian_intrinsics) {
+    out_jacobian_intrinsics->resize(2, kNumOfParams);
+    const double duf_dfu = (*out_keypoint)[0];
+    const double duf_dfv = 0.0;
+    const double duf_dcu = 1.0;
+    const double duf_dcv = 0.0;
+    const double dvf_dfu = 0.0;
+    const double dvf_dfv = (*out_keypoint)[1];
+    const double dvf_dcu = 0.0;
+    const double dvf_dcv = 1.0;
+
+    (*out_jacobian_point) << duf_dfu, duf_dfv, duf_dcu, duf_dcv,
+                             dvf_dfu, dvf_dfv, dvf_dcu, dvf_dcv;
+  }
+
+  // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
+  if(distortion_ && out_jacobian_distortion) {
+    distortion_->distortParameterJacobian(*distortion_coefficients_external,
+                                          *out_keypoint,
+                                          out_jacobian_distortion);
+
+    (*out_jacobian_distortion).row(0) *= fu;
+    (*out_jacobian_distortion).row(1) *= fv;
   }
 
   // Normalized image plane to camera plane.
   (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
   (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
 
-  // Calculate the Jacobian w.r.t to the 3d point, if requested.
-  if(out_jacobian_point) {
-    // Jacobian including distortion
-    Eigen::Matrix<double, 2, 3>& J = *out_jacobian_point;
-    double rz2 = rz * rz;
-
-    J(0, 0) =  fu * J_distortion(0, 0) * rz;
-    J(0, 1) =  fu * J_distortion(0, 1) * rz;
-    J(0, 2) = -fu * (x * J_distortion(0, 0) + y * J_distortion(0, 1)) * rz2;
-    J(1, 0) =  fv * J_distortion(1, 0) * rz;
-    J(1, 1) =  fv * J_distortion(1, 1) * rz;
-    J(1, 2) = -fv * (x * J_distortion(1, 0) + y * J_distortion(1, 1)) * rz2;
-  }
-
-  // Calculate the Jacobian w.r.t to the intrinsic parameters, if requested.
-  if(out_jacobian_intrinsics) {
-    CHECK(false) << "TODO(schneith): fill that in";
-  }
-
   return evaluateProjectionState(*out_keypoint, point_3d);
-}
-
-void PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
-                                 Eigen::Vector3d* out_point_3d,
-                                 const Eigen::VectorXd* intrinsics_external) const {
-  CHECK_NOTNULL(out_point_3d);
-
-  // Use the internal intrinsic parameters, if no external vector is provided.
-  const Eigen::VectorXd* intrinsics = &intrinsics_;
-  if(intrinsics_external)
-    intrinsics = intrinsics_external;
-  CHECK_EQ(intrinsics->size(), kNumOfParams) << "intrinsics: invalid size!";
-  const double& fu = (*intrinsics)[0];
-  const double& fv = (*intrinsics)[1];
-  const double& cu = (*intrinsics)[2];
-  const double& cv = (*intrinsics)[3];
-
-  // Backproject the point.
-  Eigen::Vector2d kp = keypoint;
-  kp[0] = (kp[0] - cu) / fu;
-  kp[1] = (kp[1] - cv) / fv;
-
-  distortion_->undistort(&kp);
-
-  (*out_point_3d)[0] = kp[0];
-  (*out_point_3d)[1] = kp[1];
-  (*out_point_3d)[2] = 1;
 }
 
 inline const ProjectionState PinholeCamera::evaluateProjectionState(
@@ -156,13 +272,13 @@ inline const ProjectionState PinholeCamera::evaluateProjectionState(
   const bool visibility = isKeypointVisible(keypoint);
 
   if (visibility && (point_3d[2] > kMinimumDepth))
-    return ProjectionState(ProjectionState::Status_t::KEYPOINT_VISIBLE);
+    return ProjectionState(ProjectionState::Status::KEYPOINT_VISIBLE);
   else if (!visibility && (point_3d[2] > kMinimumDepth))
-    return ProjectionState(ProjectionState::Status_t::KEYPOINT_OUTSIDE_IMAGE_BOX);
+    return ProjectionState(ProjectionState::Status::KEYPOINT_OUTSIDE_IMAGE_BOX);
   else if (point_3d[2] < 0.0)
-    return ProjectionState(ProjectionState::Status_t::POINT_BEHIND_CAMERA);
+    return ProjectionState(ProjectionState::Status::POINT_BEHIND_CAMERA);
   else
-    return ProjectionState(ProjectionState::Status_t::PROJECTION_INVALID);
+    return ProjectionState(ProjectionState::Status::PROJECTION_INVALID);
 }
 
 void PinholeCamera::setParameters(const Eigen::VectorXd& params) {
@@ -170,15 +286,14 @@ void PinholeCamera::setParameters(const Eigen::VectorXd& params) {
   intrinsics_ = params;
 }
 
-void PinholeCamera::printParameters(std::ostream& out, const std::string& text) {
-  Camera::printParameters(out,text);
+void PinholeCamera::printParameters(std::ostream& out, const std::string& text) const {
+  Camera::printParameters(out, text);
   out << "  focal length (cols,rows): "
       << fu() << ", " << fv() << std::endl;
   out << "  optical center (cols,rows): "
       << cu() << ", " << cv() << std::endl;
 
-  if(distortion_)
-  {
+  if(distortion_) {
     out << "  distortion: ";
     distortion_->printParameters(out, text);
   }

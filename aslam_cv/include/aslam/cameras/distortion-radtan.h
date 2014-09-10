@@ -30,6 +30,12 @@ class RadTanDistortion : public aslam::Distortion {
   /// @param[in] distortionParams Vector containing the distortion parameter. (dim=4: k1, k2, p1, p2)
   explicit RadTanDistortion(const Eigen::VectorXd& distortionParams);
 
+  /// \brief Convenience function to print the state using streams.
+  std::ostream& operator<<(std::ostream& out) {
+    this->printParameters(out, std::string(""));
+    return out;
+  };
+
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -52,8 +58,7 @@ class RadTanDistortion : public aslam::Distortion {
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
   /// @param[in]  dist_coeffs  Vector containing the coefficients for the distortion model.
-  /// @param[in]  point        The point in the normalized image plane. After the function,
-  ///                          this point is distorted.
+  /// @param[in]  point        The point in the normalized image plane.
   /// @param[out] out_jacobian The Jacobian of the distortion with respect to small changes in
   ///                          the distortion parameters.
   virtual void distortParameterJacobian(const Eigen::VectorXd& dist_coeffs,
