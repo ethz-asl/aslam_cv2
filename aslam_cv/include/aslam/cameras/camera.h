@@ -185,7 +185,8 @@ class Camera {
   ///        image coordinates. Uses the projection (& distortion) models.
   /// @param[in]  keypoint     Keypoint in image coordinates.
   /// @param[out] out_point_3d Bearing vector in euclidean coordinates (with z=1 -> non-normalized).
-  virtual void backProject3(const Eigen::Vector2d& keypoint,
+  /// @return Was the projection successful?
+  virtual bool backProject3(const Eigen::Vector2d& keypoint,
                             Eigen::Vector3d* out_point_3d) const = 0;
 
   /// @}
@@ -218,7 +219,8 @@ class Camera {
   ///        image coordinates. Uses the projection (& distortion) models.
   /// @param[in]  keypoint     Keypoint in image coordinates.
   /// @param[out] out_point_3d Bearing vector in homogeneous coordinates.
-  void backProject4(const Eigen::Vector2d& keypoint,
+  /// @return Was the projection successful?
+  bool backProject4(const Eigen::Vector2d& keypoint,
                     Eigen::Vector4d* out_point_4d) const;
 
   /// @}
