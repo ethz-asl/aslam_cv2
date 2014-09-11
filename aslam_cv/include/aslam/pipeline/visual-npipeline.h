@@ -128,15 +128,14 @@ class VisualNPipeline {
   /// \brief One visual pipeline for each camera.
   std::vector<std::shared_ptr<VisualPipeline>> pipelines_;
 
+  /// \brief A mutex to protect the processing and completed queues.
+  mutable std::mutex mutex_;
+
   /// \brief The frames that are in progress.
   std::map<int64_t, std::shared_ptr<VisualNFrames>> processing_;
-  /// \brief A mutex for processing_.
-  mutable std::mutex processing_mutex_;
 
   /// \brief The output queue of completed frames.
   std::map<int64_t, std::shared_ptr<VisualNFrames>> completed_;
-  /// \brief A mutex for completed_.
-  mutable std::mutex completed_mutex_;
 
   /// \brief A thread pool for processing.
   std::shared_ptr<aslam::ThreadPool> thread_pool_;
