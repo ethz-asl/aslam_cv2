@@ -64,13 +64,15 @@ const ProjectionState Camera::project4(const Eigen::Vector4d& point_4d,
   return ret;
 }
 
-void Camera::backProject4(const Eigen::Vector2d& keypoint,
+bool Camera::backProject4(const Eigen::Vector2d& keypoint,
                           Eigen::Vector4d* out_point4d) const {
   CHECK_NOTNULL(out_point4d);
 
   Eigen::Vector3d point_3d;
-  backProject3(keypoint, &point_3d);
+  bool success = backProject3(keypoint, &point_3d);
   (*out_point4d) << point_3d, 0.0;
+
+  return success;
 }
 
 bool Camera::isProjectable3(const Eigen::Vector3d& p) const {

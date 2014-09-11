@@ -124,7 +124,7 @@ const ProjectionState PinholeCamera::project3(const Eigen::Vector3d& point_3d,
   return evaluateProjectionState(*out_keypoint, point_3d);
 }
 
-void PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
+bool PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
                                  Eigen::Vector3d* out_point_3d) const {
   CHECK_NOTNULL(out_point_3d);
 
@@ -138,6 +138,9 @@ void PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
   (*out_point_3d)[0] = kp[0];
   (*out_point_3d)[1] = kp[1];
   (*out_point_3d)[2] = 1;
+
+  // Always valid for the pinhole model.
+  return true;
 }
 
 const ProjectionState PinholeCamera::project3Functional(
