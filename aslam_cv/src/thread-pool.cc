@@ -3,7 +3,7 @@
 namespace aslam {
 
 // The constructor just launches some amount of workers.
-ThreadPool::ThreadPool(size_t threads) : stop_(false), active_threads_(0) {
+ThreadPool::ThreadPool(size_t threads) : active_threads_(0), stop_(false) {
   for(size_t i = 0; i < threads; ++i)
     workers_.emplace_back(std::bind(&ThreadPool::run, this));
 }
@@ -40,8 +40,8 @@ void ThreadPool::run() {
       // This is the secret to making the waitForEmptyQueue() function work.
       // After finishing a task, notify that this work is done.
       wait_condition_.notify_all();
-
     }
+}
 
 void ThreadPool::waitForEmptyQueue() const {
   std::unique_lock<std::mutex> lock(this->tasks_mutex_);
