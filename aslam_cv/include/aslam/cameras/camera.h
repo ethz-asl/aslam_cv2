@@ -219,6 +219,15 @@ class Camera {
   /// \name Factory Methods
   /// @{
 
+  /// \brief A factory function to create a derived class camera
+  ///
+  /// This function takes a vectors of intrinsics and distortion parameters
+  /// and produces a camera.
+  /// \param[in] intrinsics  A vector of projection intrinsic parameters.
+  /// \param[in] imageWidth  The width of the image associated with this camera.
+  /// \param[in] imageHeight The height of the image associated with this camera.
+  /// \param[in] distortionParameters The parameters of the distortion object.
+  /// \returns A new camera based on the template types.
   template<typename DerivedCamera, typename DerivedDistortion>
   static std::shared_ptr<Camera> construct(
       const Eigen::VectorXd& intrinsics,
