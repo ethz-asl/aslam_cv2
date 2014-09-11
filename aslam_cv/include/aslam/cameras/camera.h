@@ -216,6 +216,18 @@ class Camera {
 
   /// @}
 
+  /// \name Factory Methods
+  /// @{
+
+  template<typename DerivedCamera, typename DerivedDistortion>
+  static std::shared_ptr<Camera> construct(
+      const Eigen::VectorXd& intrinsics,
+      uint32_t imageWidth,
+      uint32_t imageHeight,
+      const Eigen::VectorXd& distortionParameters);
+
+  /// @}
+
  protected:
   /// Set the image width. Only accessible by derived classes.
   inline void setImageWidth(uint32_t width){ image_width_ = width; }
@@ -236,4 +248,5 @@ class Camera {
   uint32_t image_height_;
 };
 }  // namespace aslam
+#include "camera-inl.h"
 #endif  // ASLAM_CAMERAS_CAMERA_H_

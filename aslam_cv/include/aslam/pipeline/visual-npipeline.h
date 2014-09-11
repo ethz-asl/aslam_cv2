@@ -45,7 +45,7 @@ class VisualPipeline;
 /// The getLatestAndClear() function gets the newest VisualNFrames and discards
 /// anything older.
 class VisualNPipeline {
-public:
+ public:
   ASLAM_POINTER_TYPEDEFS(VisualNPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNPipeline);
 
@@ -66,7 +66,7 @@ public:
                    std::shared_ptr<NCameras> output_cameras,
                    int64_t timestamp_tolerance_ns);
 
-  virtual ~VisualNPipeline();
+  ~VisualNPipeline();
 
   /// \brief Add an image to the visual pipeline
   ///
@@ -79,51 +79,51 @@ public:
   /// \param[in] image the image data
   /// \param[in] systemStamp the host time in integer nanoseconds since epoch
   /// \param[in] hardwareStamp the camera's hardware timestamp. Can be set to "invalid".
-  virtual void processImage(int cameraIndex,
-                            const cv::Mat& image,
-                            int64_t systemStamp,
-                            int64_t hardwareStamp);
+  void processImage(int cameraIndex, const cv::Mat& image, int64_t systemStamp,
+                    int64_t hardwareStamp);
 
 
   /// \brief How many completed VisualNFrames are waiting to be retrieved?
-  virtual size_t numVisualNFramesComplete() const;
+  size_t getNumFramesComplete() const;
+
+  /// \brief Get the number of frames being processed
+  size_t getNumFramesProcessing() const;
 
   /// \brief  Get the next available set of processed frames
   ///
   /// This may not be the latest data, it is simply the next in a FIFO queue.
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
-  virtual std::shared_ptr<VisualNFrames> getNext();
+  std::shared_ptr<VisualNFrames> getNext();
 
   /// \brief Get the latest available data and clear anything older.
   ///
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
-  virtual std::shared_ptr<VisualNFrames> getLatestAndClear();
+  std::shared_ptr<VisualNFrames> getLatestAndClear();
 
   /// \brief Get the input camera system that corresponds to the images
   ///        passed in to processImage().
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  virtual std::shared_ptr<NCameras> getInputNCameras() const;
+  std::shared_ptr<NCameras> getInputNCameras() const;
 
   /// \brief Get the output camera system that corresponds to the VisualNFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  virtual std::shared_ptr<NCameras> getOutputNCameras() const;
+  std::shared_ptr<NCameras> getOutputNCameras() const;
 
-private:
+  /// \brief Blocks until all waiting frames are processed.
+  void waitForAllWorkToComplete() const;
+ private:
   /// \brief A local function to be passed to the thread pool
   ///
   /// \param[in] cameraIndex The index of the camera that this image corresponds to
   /// \param[in] image the image data
   /// \param[in] systemStamp the host time in integer nanoseconds since epoch
   /// \param[in] hardwareStamp the camera's hardware timestamp. Can be set to "invalid".
-  void work(int cameraIndex,
-            const cv::Mat& image,
-            int64_t systemStamp,
-            int64_t hardwareStamp);
+  void work(int cameraIndex, const cv::Mat& image, int64_t systemStamp, int64_t hardwareStamp);
 
   /// \brief One visual pipeline for each camera.
   std::vector<std::shared_ptr<VisualPipeline>> pipelines_;
