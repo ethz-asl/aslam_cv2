@@ -60,7 +60,7 @@ class ThreadPool {
   /// \brief Stop the thread pool. This method is non-blocking.
   void stop(){ stop_ = true; }
 
-  /// This method blocks until the queue is empty
+  /// This method blocks until the queue is empty.
   void waitForEmptyQueue() const;
 
  private:
