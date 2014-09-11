@@ -173,6 +173,22 @@ class PinholeCamera : public Camera {
   /// @}
 
   //////////////////////////////////////////////////////////////
+  /// \name Methods to support unit testing.
+  /// @{
+
+  /// \brief Creates a random valid keypoint..
+  virtual Eigen::Vector2d createRandomKeypoint() const;
+
+  /// \brief Creates a random visible point. Negative depth means random between
+  ///        0 and 100 meters.
+  virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const;
+
+  /// \brief Get a set of border rays
+  void getBorderRays(Eigen::MatrixXd & rays) const;
+
+  /// @}
+
+  //////////////////////////////////////////////////////////////
   /// \name Methods to set/get distortion parameters.
   /// @{
 

@@ -286,6 +286,47 @@ void PinholeCamera::setParameters(const Eigen::VectorXd& params) {
   intrinsics_ = params;
 }
 
+Eigen::Vector2d PinholeCamera::createRandomKeypoint() const {
+  Eigen::Vector2d out;
+  out.setRandom();
+  out(0) = std::abs(out(0)) * imageWidth();
+  out(1) = std::abs(out(1)) * imageHeight();
+  return out;
+}
+
+Eigen::Vector3d PinholeCamera::createRandomVisiblePoint(double depth) const {
+  CHECK_GT(depth, 0.0) << "Depth needs to be positive!";
+  Eigen::Vector3d point_3d;
+
+  Eigen::Vector2d y = createRandomKeypoint();
+  backProject3(y, &point_3d);
+  point_3d /= point_3d.norm();
+
+  // Muck with the depth. This doesn't change the pointing direction.
+  return point_3d * depth;
+}
+
+void PinholeCamera::getBorderRays(Eigen::MatrixXd& rays) const {
+  rays.resize(4, 8);
+  Eigen::Vector4d ray;
+  backProject4(Eigen::Vector2d(0.0, 0.0), &ray);
+  rays.col(0) = ray;
+  backProject4(Eigen::Vector2d(0.0, imageHeight() * 0.5), &ray);
+  rays.col(1) = ray;
+  backProject4(Eigen::Vector2d(0.0, imageHeight() - 1.0), &ray);
+  rays.col(2) = ray;
+  backProject4(Eigen::Vector2d(imageWidth() - 1.0, 0.0), &ray);
+  rays.col(3) = ray;
+  backProject4(Eigen::Vector2d(imageWidth() - 1.0, imageHeight() * 0.5), &ray);
+  rays.col(4) = ray;
+  backProject4(Eigen::Vector2d(imageWidth() - 1.0, imageHeight() - 1.0), &ray);
+  rays.col(5) = ray;
+  backProject4(Eigen::Vector2d(imageWidth() * 0.5, 0.0), &ray);
+  rays.col(6) = ray;
+  backProject4(Eigen::Vector2d(imageWidth() * 0.5, imageHeight() - 1.0), &ray);
+  rays.col(7) = ray;
+}
+
 void PinholeCamera::printParameters(std::ostream& out, const std::string& text) const {
   Camera::printParameters(out, text);
   out << "  focal length (cols,rows): "
