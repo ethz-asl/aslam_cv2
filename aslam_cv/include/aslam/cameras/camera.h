@@ -323,9 +323,6 @@ class Camera {
   /// \brief  Check if a given keypoint is inside the imaging box of the camera.
   bool isKeypointVisible(const Eigen::Vector2d& keypoint) const;
 
-  /// \brief Get a set of border rays
-  void getBorderRays(Eigen::MatrixXd & rays);
-
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -333,11 +330,11 @@ class Camera {
   /// @{
 
   /// \brief Creates a random valid keypoint..
-  Eigen::Vector2d createRandomKeypoint() const;
+  virtual Eigen::Vector2d createRandomKeypoint() const = 0;
 
   /// \brief Creates a random visible point. Negative depth means random between
   ///        0 and 100 meters.
-  Eigen::Vector3d createRandomVisiblePoint(double depth) const;
+  virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const = 0;
 
   /// @}
 
@@ -356,9 +353,7 @@ class Camera {
   virtual const aslam::Distortion::Ptr distortion() const { return nullptr; };
 
   /// Get the intrinsic parameters.
-  virtual const Eigen::VectorXd& getParameters() const {
-    return intrinsics_;
-  }
+  virtual const Eigen::VectorXd& getParameters() const { return intrinsics_; };
 
   /// Set the intrinsic parameters. Parameters are documented in the specialized camera classes.
   virtual void setParameters(const Eigen::VectorXd& params) = 0;
