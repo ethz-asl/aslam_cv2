@@ -50,14 +50,14 @@ void VisualNPipeline::processImage(int cameraIndex, const cv::Mat& image,
 }
 
 size_t VisualNPipeline::getNumFramesComplete() const {
-  std::unique_lock<std::mutex> lock(completed_mutex_);
+  std::unique_lock<std::mutex> lock(mutex_);
   return completed_.size();
 }
 
 std::shared_ptr<VisualNFrames> VisualNPipeline::getNext() {
   // Initialize the return value as null
   std::shared_ptr<VisualNFrames> rval;
-  std::unique_lock<std::mutex> lock(completed_mutex_);
+  std::unique_lock<std::mutex> lock(mutex_);
   if(!completed_.empty()) {
     /// Get the oldest frame.
     auto it = completed_.begin();
@@ -69,12 +69,18 @@ std::shared_ptr<VisualNFrames> VisualNPipeline::getNext() {
 
 std::shared_ptr<VisualNFrames> VisualNPipeline::getLatestAndClear() {
   std::shared_ptr<VisualNFrames> rval;
-  std::unique_lock<std::mutex> lock(completed_mutex_);
+  std::unique_lock<std::mutex> lock(mutex_);
   if(!completed_.empty()) {
     /// Get the latest frame.
     auto it = completed_.rbegin();
     rval = it->second;
+    int64_t timestamp = it->first;
     completed_.clear();
+    // Clear any processing frames older than this one.
+    auto pit = processing_.begin();
+    while(pit != processing_.end() && pit->first <= timestamp) {
+      pit = processing_.erase(pit);
+    }
   }
   return rval;
 }
@@ -88,7 +94,7 @@ std::shared_ptr<NCameras> VisualNPipeline::getOutputNCameras() const {
 }
 
 size_t VisualNPipeline::getNumFramesProcessing() const {
-  std::unique_lock<std::mutex> lock(processing_mutex_);
+  std::unique_lock<std::mutex> lock(mutex_);
   return processing_.size();
 }
 
@@ -100,7 +106,7 @@ void VisualNPipeline::work(int cameraIndex, const cv::Mat& image,
   /// Create an iterator into the processing queue.
   std::map<int64_t, std::shared_ptr<VisualNFrames>>::iterator proc_it;
   {
-    std::unique_lock<std::mutex> lock_processing(processing_mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     bool create_new_nframes = false;
     if(processing_.empty()) {
       create_new_nframes = true;
@@ -147,8 +153,6 @@ void VisualNPipeline::work(int cameraIndex, const cv::Mat& image,
     }
 
     if(all_received) {
-      // This makes me a bit nervous because we have both mutexes...
-      std::unique_lock<std::mutex> completed_lock(completed_mutex_);
       completed_.insert(*proc_it);
       processing_.erase(proc_it);
     }
