@@ -26,6 +26,15 @@ class PinholeCamera : public Camera {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   PinholeCamera();
+
+
+  /// \brief initialize with a vector of intrinsics
+  ///
+  /// The intrinsics are in the order fu, fv, cu, cv
+  PinholeCamera(const Eigen::VectorXd& intrinsics,
+                uint32_t imageWidth, uint32_t imageHeight,
+                aslam::Distortion::Ptr distortion);
+
   PinholeCamera(double focalLengthCols, double focalLengthRows,
                 double imageCenterCols, double imageCenterRows,
                 uint32_t imageWidth, uint32_t imageHeight,

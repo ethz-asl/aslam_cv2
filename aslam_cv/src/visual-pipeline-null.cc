@@ -27,6 +27,7 @@ std::shared_ptr<VisualFrame> NullVisualPipeline::processImage(
   frame->setTimestamp(systemStamp);
   frame->setSystemTimestamp(systemStamp);
   frame->setHardwareTimestamp(hardwareStamp);
+  frame->setCameraGeometry(camera_);
 
   // TODO(slynen) Is this right?
   FrameId id;

@@ -28,6 +28,18 @@ PinholeCamera::PinholeCamera()
 //  updateTemporaries();
 //}
 
+PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
+              uint32_t imageWidth, uint32_t imageHeight,
+              aslam::Distortion::Ptr distortion) {
+  CHECK_EQ(kNumOfParams, intrinsics.size());
+  CHECK_NOTNULL(distortion.get());
+  setParameters(intrinsics);
+  _distortion = distortion;
+  setImageWidth(imageWidth);
+  setImageHeight(imageHeight);
+  updateTemporaries();
+}
+
 PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
                              double imageCenterCols, double imageCenterRows,
                              uint32_t imageWidth, uint32_t imageHeight,

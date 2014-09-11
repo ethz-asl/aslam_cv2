@@ -49,7 +49,7 @@ void VisualNPipeline::processImage(int cameraIndex, const cv::Mat& image,
                         image, systemStamp, hardwareStamp);
 }
 
-size_t VisualNPipeline::numVisualNFramesComplete() const {
+size_t VisualNPipeline::getNumFramesComplete() const {
   std::unique_lock<std::mutex> lock(completed_mutex_);
   return completed_.size();
 }
@@ -85,6 +85,11 @@ std::shared_ptr<NCameras> VisualNPipeline::getInputNCameras() const {
 
 std::shared_ptr<NCameras> VisualNPipeline::getOutputNCameras() const {
   return output_cameras_;
+}
+
+size_t VisualNPipeline::getNumFramesProcessing() const {
+  std::unique_lock<std::mutex> lock(processing_mutex_);
+  return processing_.size();
 }
 
 void VisualNPipeline::work(int cameraIndex, const cv::Mat& image,
@@ -142,6 +147,7 @@ void VisualNPipeline::work(int cameraIndex, const cv::Mat& image,
     }
 
     if(all_received) {
+      // This makes me a bit nervous because we have both mutexes...
       std::unique_lock<std::mutex> completed_lock(completed_mutex_);
       completed_.insert(*proc_it);
       processing_.erase(proc_it);
@@ -149,4 +155,7 @@ void VisualNPipeline::work(int cameraIndex, const cv::Mat& image,
   }
 }
 
+void VisualNPipeline::waitForAllWorkToComplete() const {
+  thread_pool_->waitForEmptyQueue();
+}
 }  // namespace aslam
