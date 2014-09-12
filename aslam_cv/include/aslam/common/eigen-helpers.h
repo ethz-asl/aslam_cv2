@@ -39,16 +39,15 @@ template<typename LeftMat, typename RightMat>
        ::testing::AssertionFailure() << message << "\n";
 }
 
-//Helper function to create a 5d Eigen-vector in place.
+/// Function to create a 5d Eigen-vector in place.
 template <typename ScalarType>
 inline Eigen::Matrix<ScalarType, 5, 1> createVector5(const ScalarType& a, const ScalarType& b,
                                                      const ScalarType& c, const ScalarType& d,
                                                      const ScalarType& e) {
   Eigen::Matrix<ScalarType, 5, 1> vec;
-  vec << a,b,c,d,e;
+  vec << a, b, c, d, e;
   return vec;
 }
-
 
 }  // namespace common
 }  // namespace aslam

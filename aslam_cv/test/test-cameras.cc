@@ -2,16 +2,15 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
-#include <aslam/common/entrypoint.h>
-#include <aslam/common/eigen-predicates.h>
-#include <aslam/common/memory.h>
+#include <aslam/cameras/camera.h>
+#include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
-
-#include <aslam/cameras/camera.h>
-#include <aslam/cameras/camera-pinhole.h>
+#include <aslam/common/eigen-predicates.h>
+#include <aslam/common/entrypoint.h>
+#include <aslam/common/memory.h>
 
 ///////////////////////////////////////////////
 // Types to test
@@ -35,7 +34,6 @@ TYPED_TEST_CASE(TestCameras, Implementations);
 ///////////////////////////////////////////////
 // Generic test cases (run for all models)
 ///////////////////////////////////////////////
-
 TYPED_TEST(TestCameras, CameraTest_EuclideanToOnAxisKeypoint) {
   Eigen::Vector3d euclidean(0, 0, 1);
   Eigen::Vector2d keypoint;
@@ -81,7 +79,6 @@ TYPED_TEST(TestCameras, CameraTest_isProjectable) {
 ///////////////////////////////////////////////
 // Model specific test cases
 ///////////////////////////////////////////////
-
 TEST(CameraComparison, TestEquality) {
   using namespace aslam;
   Eigen::VectorXd dvec(4);
