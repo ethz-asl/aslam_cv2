@@ -29,18 +29,17 @@ std::shared_ptr<VisualFrame> NullVisualPipeline::processImage(
   frame->setHardwareTimestamp(hardwareStamp);
   frame->setCameraGeometry(camera_);
 
-  // TODO(slynen) Is this right?
   FrameId id;
   id.randomize();
   frame->setId( id );
   return frame;
 }
 
-std::shared_ptr<Camera> NullVisualPipeline::getInputCamera() const {
+const std::shared_ptr<Camera>& NullVisualPipeline::getInputCamera() const {
   return camera_;
 }
 
-std::shared_ptr<Camera> NullVisualPipeline::getOutputCamera() const {
+const std::shared_ptr<Camera>& NullVisualPipeline::getOutputCamera() const {
   return camera_;
 }
 

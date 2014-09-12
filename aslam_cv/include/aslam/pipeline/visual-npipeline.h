@@ -1,20 +1,20 @@
 #ifndef VISUAL_NPIPELINE_H_
 #define VISUAL_NPIPELINE_H_
 
-#include <thread>
 #include <memory>
 #include <map>
+#include <thread>
 #include <vector>
 
 #include <aslam/common/macros.h>
-#include <aslam/common/thread-pool.h>
 
 namespace cv { class Mat; }
 
 namespace aslam {
 
-class ThreadPool;
+
 class NCameras;
+class ThreadPool;
 class VisualFrame;
 class VisualNFrames;
 class VisualPipeline;
@@ -49,22 +49,22 @@ class VisualNPipeline {
   ASLAM_POINTER_TYPEDEFS(VisualNPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNPipeline);
 
-  VisualNPipeline();
-
   /// \brief Initialize a working pipeline.
   ///
   /// \param[in] num_threads            The number of processing threads.
-  /// \param[in] pipelines              The ordered image pipelines.
+  /// \param[in] pipelines              The ordered image pipelines, one pipeline
+  ///                                   per camera in the same order as they are
+  ///                                   indexed in the camera system.
   /// \param[in] input_cameras          The camera system of the raw images.
   /// \param[in] output_cameras         The camera system of the processed images.
   /// \param[in] timestamp_tolerance_ns How close should two image timestamps be
   ///                                   for us to consider them part of the same
   ///                                   synchronized frame?
-  VisualNPipeline( unsigned num_threads,
-                   const std::vector<std::shared_ptr<VisualPipeline>>& pipelines,
-                   std::shared_ptr<NCameras> input_cameras,
-                   std::shared_ptr<NCameras> output_cameras,
-                   int64_t timestamp_tolerance_ns);
+  VisualNPipeline(unsigned num_threads,
+                  const std::vector<std::shared_ptr<VisualPipeline>>& pipelines,
+                  std::shared_ptr<NCameras> input_cameras,
+                  std::shared_ptr<NCameras> output_cameras,
+                  int64_t timestamp_tolerance_ns);
 
   ~VisualNPipeline();
 
@@ -75,12 +75,12 @@ class VisualNPipeline {
   /// call numVisualNFramesComplete() to find out how many VisualNFrames are
   /// completed.
   ///
-  /// \param[in] cameraIndex The index of the camera that this image corresponds to
+  /// \param[in] camera_index The index of the camera that this image corresponds to
   /// \param[in] image the image data
-  /// \param[in] systemStamp the host time in integer nanoseconds since epoch
-  /// \param[in] hardwareStamp the camera's hardware timestamp. Can be set to "invalid".
-  void processImage(int cameraIndex, const cv::Mat& image, int64_t systemStamp,
-                    int64_t hardwareStamp);
+  /// \param[in] system_stamp the host time in integer nanoseconds since epoch
+  /// \param[in] hardware_stamp the camera's hardware timestamp. Can be set to "invalid".
+  void processImage(size_t camera_index, const cv::Mat& image, int64_t system_stamp,
+                    int64_t hardware_stamp);
 
 
   /// \brief How many completed VisualNFrames are waiting to be retrieved?
@@ -105,25 +105,26 @@ class VisualNPipeline {
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  std::shared_ptr<NCameras> getInputNCameras() const;
+  const std::shared_ptr<NCameras>& getInputNCameras() const;
 
   /// \brief Get the output camera system that corresponds to the VisualNFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  std::shared_ptr<NCameras> getOutputNCameras() const;
+  const std::shared_ptr<NCameras>& getOutputNCameras() const;
 
   /// \brief Blocks until all waiting frames are processed.
   void waitForAllWorkToComplete() const;
+
  private:
-  /// \brief A local function to be passed to the thread pool
+  /// \brief A local function to be passed to the thread pool.
   ///
-  /// \param[in] cameraIndex The index of the camera that this image corresponds to
-  /// \param[in] image the image data
-  /// \param[in] systemStamp the host time in integer nanoseconds since epoch
-  /// \param[in] hardwareStamp the camera's hardware timestamp. Can be set to "invalid".
-  void work(int cameraIndex, const cv::Mat& image, int64_t systemStamp, int64_t hardwareStamp);
+  /// \param[in] camera_index The index of the camera that this image corresponds to.
+  /// \param[in] image The image data.
+  /// \param[in] system_stamp The host time in integer nanoseconds since epoch.
+  /// \param[in] hardware_stamp The camera's hardware timestamp. Can be set to "invalid".
+  void work(size_t camera_index, const cv::Mat& image, int64_t system_stamp, int64_t hardware_stamp);
 
   /// \brief One visual pipeline for each camera.
   std::vector<std::shared_ptr<VisualPipeline>> pipelines_;
