@@ -9,49 +9,25 @@
 #include <aslam/cameras/distortion-equidistant.h>
 
 ///////////////////////////////////////////////
-// Distortion factories
+// Types to test
 ///////////////////////////////////////////////
-template <class T>
-aslam::Distortion::Ptr CreateDistortion();
-
-template <>
-aslam::Distortion::Ptr CreateDistortion<aslam::RadTanDistortion>() {
-  Eigen::VectorXd params(4);
-  params << 0.8, 0.01, 0.2, 0.003;
-  return aslam::aligned_shared<aslam::RadTanDistortion>(params);
-}
-
-template <>
-aslam::Distortion::Ptr CreateDistortion<aslam::FisheyeDistortion>() {
-  Eigen::VectorXd params(1);
-  params[0] = 1.3;
-  return aslam::aligned_shared<aslam::FisheyeDistortion>(params);
-}
-
-template <>
-aslam::Distortion::Ptr CreateDistortion<aslam::EquidistantDistortion>() {
-  Eigen::VectorXd params(4);
-  params << 0.2, 0.1, 0.2, 0.003;
-  return aslam::aligned_shared<aslam::EquidistantDistortion>(params);
-}
-
-///////////////////////////////////////////////
-// Test fixture
-///////////////////////////////////////////////
-template <class T>
-class TestDistortions : public testing::Test {
- protected:
-  TestDistortions() : distortion_(CreateDistortion<T>()) {};
-  virtual ~TestDistortions() {};
-  aslam::Distortion::Ptr distortion_;
-};
-
 using testing::Types;
 typedef Types<aslam::RadTanDistortion,
               aslam::FisheyeDistortion,
               aslam::EquidistantDistortion> Implementations;
-TYPED_TEST_CASE(TestDistortions, Implementations);
 
+///////////////////////////////////////////////
+// Test fixture
+///////////////////////////////////////////////
+template <class DistortionType>
+class TestDistortions : public testing::Test {
+ protected:
+  TestDistortions() : distortion_(DistortionType::createTestDistortion()) {};
+  virtual ~TestDistortions() {};
+  typename DistortionType::Ptr distortion_;
+};
+
+TYPED_TEST_CASE(TestDistortions, Implementations);
 
 ///////////////////////////////////////////////
 // Test cases
