@@ -16,5 +16,6 @@
   <depend>sm_property_tree</depend>
   <depend>minkindr</depend> 
   <depend>doxygen_catkin</depend>
+  <depend>brisk</depend>
 
 </package>
