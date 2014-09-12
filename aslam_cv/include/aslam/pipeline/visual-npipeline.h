@@ -12,7 +12,6 @@ namespace cv { class Mat; }
 
 namespace aslam {
 
-
 class NCameras;
 class ThreadPool;
 class VisualFrame;
