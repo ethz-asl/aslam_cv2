@@ -12,11 +12,20 @@
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
 
+
+/////
+// TODO(schneith):
+//   * Add numdiff. Jacobian tests
+//   * Add camera specific invalid projection tests
+//   * test all camera with all distortions...
+///
+
 ///////////////////////////////////////////////
 // Types to test
 ///////////////////////////////////////////////
 using testing::Types;
-typedef Types<aslam::PinholeCamera> Implementations;
+typedef Types<aslam::PinholeCamera,
+              aslam::OmniCamera> Implementations;
 
 ///////////////////////////////////////////////
 // Test fixture
@@ -76,9 +85,47 @@ TYPED_TEST(TestCameras, CameraTest_isProjectable) {
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(0, 0, -1)));     // Behind, center.
 }
 
+//TYPED_TEST(TestCameras, CameraTest_OffAxisProjectionWithoutDistortion) {
+//
+//  //disable distortion
+//  this->cameraa_->distortion()->setParameters(Eigen::Vector4d::Zero());
+//
+//  double kx = 1;
+//  double ky = 1.2;
+//  double kz = 10;
+//
+//  Eigen::Vector3d euclidean(kx, ky, kz);
+//  Eigen::Vector2d keypoint;
+//  this->camera_->project3(euclidean, &keypoint);
+//
+//  EXPECT_NEAR_EIGEN(Eigen::Vector2d(fu_*(kx/kz)+cu_, fv_*(ky/kz)+cv_), keypoint, 1e-15);
+//}
+
 ///////////////////////////////////////////////
 // Model specific test cases
 ///////////////////////////////////////////////
+TEST(TestCameraOmni, CameraTest_ProjectionResult) {
+  aslam::OmniCamera::Ptr cam = aslam::OmniCamera::createTestCamera<aslam::RadTanDistortion>();
+
+  Eigen::Vector2d keypoint;
+  aslam::ProjectionResult ret;
+
+  // In front of cam -> visible.
+  ret = cam->project3(Eigen::Vector3d(1, 1, 10), &keypoint);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionResult::Status::KEYPOINT_VISIBLE);
+  EXPECT_TRUE(static_cast<bool>(ret));
+
+  // Behind cam -> not visible.
+  ret = cam->project3(Eigen::Vector3d(1, 1, -10), &keypoint);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionResult::Status::POINT_BEHIND_CAMERA);
+  EXPECT_FALSE(static_cast<bool>(ret));
+
+  // Invalid projection
+  ret = cam->project3(Eigen::Vector3d(1000, 1000, 10), &keypoint);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionResult::Status::PROJECTION_INVALID);
+  EXPECT_FALSE(static_cast<bool>(ret));
+}
+
 TEST(CameraComparison, TestEquality) {
   using namespace aslam;
   Eigen::VectorXd dvec(4);
