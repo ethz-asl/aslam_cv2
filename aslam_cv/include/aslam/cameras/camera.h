@@ -10,7 +10,6 @@
 #include <aslam/common/unique-id.h>
 #include <aslam/cameras/distortion.h>
 
-
 // TODO(slynen) Enable commented out PropertyTree support
 //namespace sm {
 //class PropertyTree;
@@ -18,10 +17,40 @@
 
 namespace aslam {
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// TODO(schneith): where to put ProjectionResult?
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/// \brief A factory function to create a derived class camera
+///
+/// This function takes a vectors of intrinsics and distortion parameters
+/// and produces a camera.
+/// \param[in] intrinsics A vector of projection intrinsic parameters.
+/// \param[in] image_width The width of the image associated with this camera.
+/// \param[in] image_height The height of the image associated with this camera.
+/// \param[in] distortion_parameters The parameters of the distortion object.
+/// \returns A new camera based on the template types.
+template <typename CameraType, typename DistortionType>
+typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
+                                      uint32_t image_width, uint32_t image_height,
+                                      const Eigen::VectorXd& distortion_parameters)
+{
+  typename DistortionType::Ptr distortion(new DistortionType(distortion_parameters));
+  typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height, distortion));
+  return camera;
+}
 
+/// \brief A factory function to create a derived class camera without distortion.
+///
+/// This function takes a vectors of intrinsics and distortion parameters
+/// and produces a camera.
+/// \param[in] intrinsics A vector of projection intrinsic parameters.
+/// \param[in] image_width The width of the image associated with this camera.
+/// \param[in] image_height The height of the image associated with this camera.
+/// \returns A new camera based on the template types.
+template <typename CameraType>
+typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
+                                      uint32_t image_width, uint32_t image_height)
+{
+  typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height));
+  return camera;
+}
 
 /// \struct ProjectionResult
 /// \brief This struct is returned by the camera projection methods and holds the result state
