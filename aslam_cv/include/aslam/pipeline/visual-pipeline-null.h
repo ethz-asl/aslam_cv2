@@ -19,35 +19,15 @@ public:
 
   virtual ~NullVisualPipeline();
 
-  /// \brief Add an image to the visual processor
+protected:
+  /// \brief Process the frame and fill the results into the frame variable
   ///
-  /// This function is called by a user when an image is received.
-  /// The processor then processes the images and constructs a VisualFrame.
-  ///
-  /// \param[in] Image the image data.
-  /// \param[in] SystemStamp the host time in integer nanoseconds since epoch.
-  /// \param[in] HardwareStamp the camera's hardware timestamp. Can be set to "invalid".
-  /// \returns   The visual frame built from the image data.
-  virtual std::shared_ptr<VisualFrame> processImage(const cv::Mat& image,
-                                                    int64_t systemStamp,
-                                                    int64_t hardwareStamp) const;
-
-  /// \brief Get the input camera that corresponds to the image
-  ///        passed in to processImage().
-  ///
-  /// Because this processor may do things like image undistortion or
-  /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getInputCamera() const;
-
-  /// \brief Get the output camera that corresponds to the VisualFrame
-  ///        data that comes out.
-  ///
-  /// Because this pipeline may do things like image undistortion or
-  /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getOutputCamera() const;
-
+  /// The top level function will already fill in the timestamps and the output camera.
+  /// \param[in]     image The image data.
+  /// \param[in/out] frame The visual frame. This will be constructed before calling.
+  virtual void processFrame(const cv::Mat& image,
+                            std::shared_ptr<VisualFrame>* frame) const;
 private:
-  std::shared_ptr<Camera> camera_;
   bool copyImages_;
 };
 
