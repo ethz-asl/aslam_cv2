@@ -87,6 +87,18 @@ class FisheyeDistortion : public aslam::Distortion {
 
   /// @}
 
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to support unit testing.
+  /// @{
+
+  /// \brief Create a test distortion object for unit testing.
+  static FisheyeDistortion::Ptr createTestDistortion() {
+    Eigen::VectorXd params(1); params << 1.1;
+    return FisheyeDistortion::Ptr(new FisheyeDistortion(params));
+  }
+
+  /// @}
+
   ///////////////////////////////////////////////////////////////////////////////
   /// \name Methods to set/get distortion parameters
   /// @{
