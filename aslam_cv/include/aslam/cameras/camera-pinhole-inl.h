@@ -12,7 +12,7 @@ namespace aslam {
 // methods).
 
 template <typename ScalarType, typename DistortionType>
-const ProjectionState PinholeCamera::project3Functional(
+const ProjectionResult PinholeCamera::project3Functional(
     const Eigen::Matrix<ScalarType, 3, 1>& point_3d,
     const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics_external,
     const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>* distortion_coefficients_external,
@@ -40,7 +40,7 @@ const ProjectionState PinholeCamera::project3Functional(
   (*out_keypoint)[0] = fu * keypoint[0] + cu;
   (*out_keypoint)[1] = fv * keypoint[1] + cv;
 
-  return evaluateProjectionState(out_keypoint, point_3d);
+  return evaluateProjectionResult(out_keypoint, point_3d);
 }
 
 }  // namespace aslam
