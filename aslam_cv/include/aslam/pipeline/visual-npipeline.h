@@ -61,8 +61,8 @@ class VisualNPipeline {
   ///                                   synchronized frame?
   VisualNPipeline(unsigned num_threads,
                   const std::vector<std::shared_ptr<VisualPipeline>>& pipelines,
-                  std::shared_ptr<NCameras> input_cameras,
-                  std::shared_ptr<NCameras> output_cameras,
+                  const std::shared_ptr<NCameras>& input_cameras,
+                  const std::shared_ptr<NCameras>& output_cameras,
                   int64_t timestamp_tolerance_ns);
 
   ~VisualNPipeline();
