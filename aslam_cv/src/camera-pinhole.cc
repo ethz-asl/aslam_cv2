@@ -3,13 +3,6 @@
 //#include <sm/PropertyTree.hpp>
 
 namespace aslam {
-PinholeCamera::PinholeCamera()
-: _intrinsics(kNumOfParams){
-  _intrinsics << 0, 0, 0, 0;
-  // TODO(PTF) make sure this can work with null distortion
-  updateTemporaries();
-}
-
 // TODO(slynen) Enable commented out PropertyTree support
 //PinholeCamera::PinholeCamera(
 //    const sm::PropertyTree & config)
@@ -25,351 +18,311 @@ PinholeCamera::PinholeCamera()
 //  // distortion.(config, "distortion")
 //  CHECK(false) << "Loading of distortion from property tree not implemented.";
 //
-//  updateTemporaries();
 //}
 
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
-              uint32_t imageWidth, uint32_t imageHeight,
-              aslam::Distortion::Ptr distortion) {
+                             uint32_t imageWidth, uint32_t imageHeight,
+                             aslam::Distortion::Ptr distortion) :
+                               Camera(intrinsics) {
   CHECK_EQ(static_cast<int>(kNumOfParams), intrinsics.size());
   CHECK_NOTNULL(distortion.get());
-  setParameters(intrinsics);
-  _distortion = distortion;
+  distortion_ = distortion;
   setImageWidth(imageWidth);
   setImageHeight(imageHeight);
-  updateTemporaries();
 }
 
 PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
                              double imageCenterCols, double imageCenterRows,
                              uint32_t imageWidth, uint32_t imageHeight,
                              aslam::Distortion::Ptr distortion)
-: _intrinsics(kNumOfParams),
-  _distortion(distortion) {
-  CHECK_NOTNULL(distortion.get());
-  _intrinsics << focalLengthCols, focalLengthRows, imageCenterCols, imageCenterRows;
+: Camera( Eigen::Vector4d(focalLengthCols, focalLengthRows, imageCenterCols, imageCenterRows) ),
+  distortion_(distortion) {
   setImageWidth(imageWidth);
   setImageHeight(imageHeight);
-  updateTemporaries();
 }
 
 PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
                              double imageCenterCols, double imageCenterRows,
                              uint32_t imageWidth, uint32_t imageHeight)
-: _intrinsics(kNumOfParams) {
-  _intrinsics << focalLengthCols, focalLengthRows, imageCenterCols, imageCenterRows;
-  setImageWidth(imageWidth);
-  setImageHeight(imageHeight);
-  updateTemporaries();
-}
-
-PinholeCamera::~PinholeCamera() {}
+: PinholeCamera(focalLengthCols, focalLengthRows,
+                imageCenterCols, imageCenterRows,
+                imageWidth, imageHeight,
+                nullptr) { }
 
 bool PinholeCamera::operator==(const Camera& other) const {
-  //check if the camera models are the same
+  // Check that the camera models are the same.
   const PinholeCamera* rhs = dynamic_cast<const PinholeCamera*>(&other);
-
   if (!rhs)
     return false;
 
-  // Verify that the base class members are equal.
+  // Verify that the base members are equal.
   if (!Camera::operator==(other))
     return false;
 
   // Compare the distortion model (if set).
-  if (_distortion && rhs->_distortion) {
-    if ( !(*(this->_distortion) == *(rhs->_distortion)) )
+  if (distortion_ && rhs->distortion_) {
+    if ( !(*(this->distortion_) == *(rhs->distortion_)) )
       return false;
   } else {
     return false;
   }
 
-  //check intrinsics parameters
-  return _intrinsics == rhs->_intrinsics;
+  // Compare intrinsics parameters.
+  return intrinsics_ == rhs->intrinsics_;
 }
 
-bool PinholeCamera::project3(const Eigen::Matrix<double, 3, 1>& p,
-                             Eigen::Matrix<double, 2, 1>* outKeypoint) const {
-  CHECK_NOTNULL(outKeypoint);
-  const double& fu = _intrinsics(0);
-  const double& fv = _intrinsics(1);
-  const double& cu = _intrinsics(2);
-  const double& cv = _intrinsics(3);
+const ProjectionResult PinholeCamera::project3(const Eigen::Vector3d& point_3d,
+                                              Eigen::Vector2d* out_keypoint) const {
+  CHECK_NOTNULL(out_keypoint);
 
-  double rz = 1.0 / p[2];
-  Eigen::Matrix<double, 2, 1> keypoint;
-  keypoint[0] = p[0] * rz;
-  keypoint[1] = p[1] * rz;
+  // Project the point.
+  const double& x = point_3d[0];
+  const double& y = point_3d[1];
+  const double& z = point_3d[2];
 
-  CHECK_NOTNULL(_distortion.get());
-  _distortion->distort(keypoint, outKeypoint);
+  const double rz = 1.0 / z;
+  (*out_keypoint)[0] = x * rz;
+  (*out_keypoint)[1] = y * rz;
 
-  (*outKeypoint)[0] = fu * (*outKeypoint)[0] + cu;
-  (*outKeypoint)[1] = fv * (*outKeypoint)[1] + cv;
+  // Distort the point (if a distortion model is set)
+  if (distortion_)
+    distortion_->distort(out_keypoint);
 
-  return isVisible(*outKeypoint) && (p[2] > kMinimumDepth);
+  // Normalized image plane to camera plane.
+  (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
+  (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
+
+  return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
-bool PinholeCamera::project3(
-    const Eigen::Matrix<double, 3, 1>& p,
-    Eigen::Matrix<double, 2, 1>* outKeypoint,
-    Eigen::Matrix<double, 2, 3>* outJp) const {
-  CHECK_NOTNULL(outKeypoint);
-  CHECK_NOTNULL(outJp);
-  const double& fu = _intrinsics(0);
-  const double& fv = _intrinsics(1);
-  const double& cu = _intrinsics(2);
-  const double& cv = _intrinsics(3);
+const ProjectionResult PinholeCamera::project3(const Eigen::Vector3d& point_3d,
+                                              Eigen::Vector2d* out_keypoint,
+                                              Eigen::Matrix<double, 2, 3>* out_jacobian) const {
+  CHECK_NOTNULL(out_keypoint);
+  CHECK_NOTNULL(out_jacobian);
 
-  // Jacobian:
-  outJp->setZero();
+  const double& x = point_3d[0];
+  const double& y = point_3d[1];
+  const double& z = point_3d[2];
 
-  double rz = 1.0 / p[2];
-  double rz2 = rz * rz;
-  (*outKeypoint)[0] = p[0] * rz;
-  (*outKeypoint)[1] = p[1] * rz;
+  // Normalize.
+  const double rz = 1.0 / z;
+  (*out_keypoint)[0] = x * rz;
+  (*out_keypoint)[1] = y * rz;
 
-  Eigen::Matrix2d Jd;
-  CHECK_NOTNULL(_distortion.get());
-  _distortion->distort(outKeypoint, &Jd);  // distort and Jacobian wrt. keypoint
+  // Distort the point (if a distortion model is set)
+  Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
+  if (distortion_)
+    distortion_->distort(out_keypoint, &J_distortion);
 
-  Eigen::Matrix<double, 2, 3>& J = *outJp;
-  // Jacobian including distortion
-  J(0, 0) = fu * Jd(0, 0) * rz;
-  J(0, 1) = fu * Jd(0, 1) * rz;
-  J(0, 2) = -fu * (p[0] * Jd(0, 0) + p[1] * Jd(0, 1)) * rz2;
-  J(1, 0) = fv * Jd(1, 0) * rz;
-  J(1, 1) = fv * Jd(1, 1) * rz;
-  J(1, 2) = -fv * (p[0] * Jd(1, 0) + p[1] * Jd(1, 1)) * rz2;
+  // Calculate the Jacobian w.r.t to the 3d point
+  const double rz2 = rz * rz;
 
-  (*outKeypoint)[0] = fu * (*outKeypoint)[0] + cu;
-  (*outKeypoint)[1] = fv * (*outKeypoint)[1] + cv;
+  const double duf_dx =  fu() * J_distortion(0, 0) * rz;
+  const double duf_dy =  fu() * J_distortion(0, 1) * rz;
+  const double duf_dz = -fu() * (x * J_distortion(0, 0) + y * J_distortion(0, 1)) * rz2;
+  const double dvf_dx =  fv() * J_distortion(1, 0) * rz;
+  const double dvf_dy =  fv() * J_distortion(1, 1) * rz;
+  const double dvf_dz = -fv() * (x * J_distortion(1, 0) + y * J_distortion(1, 1)) * rz2;
 
-  return isVisible(*outKeypoint) && (p[2] > kMinimumDepth);
+  (*out_jacobian) << duf_dx, duf_dy, duf_dz,
+                     dvf_dx, dvf_dy, dvf_dz;
+
+  // Normalized image plane to camera plane.
+  (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
+  (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
+
+  return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
-bool PinholeCamera::project4(
-    const Eigen::Matrix<double, 4, 1>& ph,
-    Eigen::Matrix<double, 2, 1>* outKeypoint) const {
-  CHECK_NOTNULL(outKeypoint);
-  if (ph[3] < 0)
-    return project3(-ph.head<3>(), outKeypoint);
-  else
-    return project3(ph.head<3>(), outKeypoint);
-}
+bool PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
+                                 Eigen::Vector3d* out_point_3d) const {
+  CHECK_NOTNULL(out_point_3d);
 
-bool PinholeCamera::project4(
-    const Eigen::Matrix<double, 4, 1>& ph,
-    Eigen::Matrix<double, 2, 1>* outKeypoint,
-    Eigen::Matrix<double, 2, 4>* outJp) const {
-  CHECK_NOTNULL(outKeypoint);
-  CHECK_NOTNULL(outJp);
+  Eigen::Vector2d kp = keypoint;
+  kp[0] = (kp[0] - cu()) / fu();
+  kp[1] = (kp[1] - cv()) / fv();
 
-  Eigen::Matrix<double, 2, 3> J;
-  J.setZero();
-  bool success = project3(ph.head<3>(), outKeypoint, &J);
-  outJp->setZero();
-  outJp->topLeftCorner<2, 3>() = J;
-  return success;
-}
+  if(distortion_)
+    distortion_->undistort(&kp);
 
-bool PinholeCamera::backProject3(
-    const Eigen::Matrix<double, 2, 1>& keypoint,
-    Eigen::Matrix<double, 3, 1>* outPoint) const {
-  CHECK_NOTNULL(outPoint);
-  const double& fu = _intrinsics(0);
-  const double& fv = _intrinsics(1);
-  const double& cu = _intrinsics(2);
-  const double& cv = _intrinsics(3);
+  (*out_point_3d)[0] = kp[0];
+  (*out_point_3d)[1] = kp[1];
+  (*out_point_3d)[2] = 1;
 
-
-  Eigen::Matrix<double, 2, 1> kp = keypoint;
-  kp[0] = (kp[0] - cu) / fu;
-  kp[1] = (kp[1] - cv) / fv;
-
-  _distortion->undistort(&kp);  // revert distortion
-
-  (*outPoint)[0] = kp[0];
-  (*outPoint)[1] = kp[1];
-  (*outPoint)[2] = 1;
-
-  return isVisible(keypoint);
-}
-
-bool PinholeCamera::backProject3(
-    const Eigen::Matrix<double, 2, 1>& keypoint,
-    Eigen::Matrix<double, 3, 1>* outPoint,
-    Eigen::Matrix<double, 3, 2>* outJk) const {
-  CHECK_NOTNULL(outPoint);
-  CHECK_NOTNULL(outJk);
-  const double& fu = _intrinsics(0);
-  const double& fv = _intrinsics(1);
-  const double& cu = _intrinsics(2);
-  const double& cv = _intrinsics(3);
-
-  Eigen::Matrix<double, 2, 1> kp = keypoint;
-
-  kp[0] = (kp[0] - cu) / fu;
-  kp[1] = (kp[1] - cv) / fv;
-
-  Eigen::Matrix<double, 2, Eigen::Dynamic> Jd;
-
-  _distortion->undistort(&kp);
-  CHECK(false) << "undistort: Jacobian not implemented!";
-
-  (*outPoint)[0] = kp[0];
-  (*outPoint)[1] = kp[1];
-  (*outPoint)[2] = 1;
-
-  outJk->setZero();
-
-  (*outJk)(0, 0) = _recip_fu;
-  (*outJk)(1, 1) = _recip_fv;
-
-  (*outJk) *= Jd;
-
-  return isVisible(keypoint);
-
-}
-
-bool PinholeCamera::backProject4(
-    const Eigen::Matrix<double, 2, 1>& keypoint,
-    Eigen::Matrix<double, 4, 1>* outPoint) const {
-  CHECK_NOTNULL(outPoint);
-  Eigen::Matrix<double, 3, 1> p;
-  bool success = backProject3(keypoint, &p);
-
-  (*outPoint) << p, 0.0;
-  return success;
-
-}
-
-bool PinholeCamera::backProject4(
-    const Eigen::Matrix<double, 2, 1>& keypoint,
-    Eigen::Matrix<double, 4, 1>* outPoint,
-    Eigen::Matrix<double, 4, 2>* outJk) const {
-  CHECK_NOTNULL(outPoint);
-  CHECK_NOTNULL(outJk);
-  Eigen::Matrix<double, 3, 2> Jk;
-  Eigen::Matrix<double, 3, 1> p;
-  bool success = backProject3(keypoint, &p, &Jk);
-
-  (*outPoint) << p, 0.0;
-
-  outJk->setZero();
-  outJk->topLeftCorner<3, 2>() = Jk;
-  return success;
-}
-
-bool PinholeCamera::project3IntrinsicsJacobian(
-    const Eigen::Matrix<double, 3, 1>& p,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const {
-  // TODO(PTF) Fix so that it includes the distortion Jacobian
-  CHECK_NOTNULL(outJi);
-  outJi->resize(Eigen::NoChange, this->getParameterSize());
-  Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJi;
-  J.setZero();
-
-  double rz = 1.0 / p[2];
-
-  Eigen::Matrix<double, 2, 1> kp;
-  kp[0] = p[0] * rz;
-  kp[1] = p[1] * rz;
-  _distortion->distort(&kp);
-
-  J(0, 0) = kp[0];
-  J(0, 2) = 1;
-
-  J(1, 1) = kp[1];
-  J(1, 3) = 1;
+  // Always valid for the pinhole model.
   return true;
 }
 
-bool PinholeCamera::project4IntrinsicsJacobian(
-    const Eigen::Matrix<double, 4, 1>& p,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* outJi) const {
-  /// TODO(PTF) make it work with the distortion Jacobian
-  CHECK_NOTNULL(outJi);
-  outJi->resize(Eigen::NoChange, this->getParameterSize());
-  Eigen::Matrix<double, 2, Eigen::Dynamic>& J = *outJi;
-  J.setZero();
+const ProjectionResult PinholeCamera::project3Functional(
+    const Eigen::Vector3d& point_3d,
+    const Eigen::VectorXd& intrinsics_external,
+    const Eigen::VectorXd* distortion_coefficients_external,
+    Eigen::Vector2d* out_keypoint) const {
+  CHECK_NOTNULL(out_keypoint);
 
-  bool success;
-  if (p[3] < 0.0) {
-    success = project3IntrinsicsJacobian(-p.head<3>(), outJi);
-  } else {
-    success = project3IntrinsicsJacobian(p.head<3>(), outJi);
-  }
-  return success;
+  // Use the external parameters.
+  CHECK_EQ(intrinsics_external.size(), kNumOfParams) << "intrinsics: invalid size!";
+  const double& fu = intrinsics_external[0];
+  const double& fv = intrinsics_external[1];
+  const double& cu = intrinsics_external[2];
+  const double& cv = intrinsics_external[3];
+
+  // Project the point.
+  const double& x = point_3d[0];
+  const double& y = point_3d[1];
+  const double& z = point_3d[2];
+
+  const double rz = 1.0 / z;
+  (*out_keypoint)[0] = x * rz;
+  (*out_keypoint)[1] = y * rz;
+
+  // Distort the point (if a distortion model is set)
+  if (distortion_)
+    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+                                                  out_keypoint,
+                                                  nullptr); // No Jacobian needed.
+
+  // Normalized image plane to camera plane.
+  (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
+  (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
+
+  return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
-// \brief creates a random valid keypoint.
-Eigen::Matrix<double, 2, 1> PinholeCamera::createRandomKeypoint() const {
-  Eigen::Matrix<double, 2, 1> out;
+const ProjectionResult PinholeCamera::project3Functional(
+    const Eigen::Vector3d& point_3d,
+    const Eigen::VectorXd& intrinsics_external,
+    const Eigen::VectorXd* distortion_coefficients_external,
+    Eigen::Vector2d* out_keypoint,
+    Eigen::Matrix<double, 2, 3>* out_jacobian_point,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const {
+  CHECK_NOTNULL(out_keypoint);
+
+  // Use the external parameters.
+  CHECK_EQ(intrinsics_external.size(), kNumOfParams) << "intrinsics: invalid size!";
+  const double& fu = intrinsics_external[0];
+  const double& fv = intrinsics_external[1];
+  const double& cu = intrinsics_external[2];
+  const double& cv = intrinsics_external[3];
+
+  // Project the point.
+  const double& x = point_3d[0];
+  const double& y = point_3d[1];
+  const double& z = point_3d[2];
+
+  const double rz = 1.0 / z;
+  (*out_keypoint)[0] = x * rz;
+  (*out_keypoint)[1] = y * rz;
+
+  // Distort the point and get the Jacobian wrt. keypoint.
+  Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
+  if (distortion_ && out_jacobian_point) {
+    // Distortion active and we want the Jacobian.
+    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+                                                  out_keypoint,
+                                                  &J_distortion);
+  } else if (distortion_) {
+    // Distortion active but Jacobian NOT wanted.
+    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+                                                  out_keypoint,
+                                                  nullptr);
+  }
+
+  // Calculate the Jacobian w.r.t to the 3d point, if requested.
+  if(out_jacobian_point) {
+    // Jacobian including distortion
+    const double rz2 = rz * rz;
+
+    const double duf_dx =  fu * J_distortion(0, 0) * rz;
+    const double duf_dy =  fu * J_distortion(0, 1) * rz;
+    const double duf_dz = -fu * (x * J_distortion(0, 0) + y * J_distortion(0, 1)) * rz2;
+    const double dvf_dx =  fv * J_distortion(1, 0) * rz;
+    const double dvf_dy =  fv * J_distortion(1, 1) * rz;
+    const double dvf_dz = -fv * (x * J_distortion(1, 0) + y * J_distortion(1, 1)) * rz2;
+
+    (*out_jacobian_point) << duf_dx, duf_dy, duf_dz,
+                             dvf_dx, dvf_dy, dvf_dz;
+  }
+
+  // Calculate the Jacobian w.r.t to the intrinsic parameters, if requested.
+  if(out_jacobian_intrinsics) {
+    out_jacobian_intrinsics->resize(2, kNumOfParams);
+    const double duf_dfu = (*out_keypoint)[0];
+    const double duf_dfv = 0.0;
+    const double duf_dcu = 1.0;
+    const double duf_dcv = 0.0;
+    const double dvf_dfu = 0.0;
+    const double dvf_dfv = (*out_keypoint)[1];
+    const double dvf_dcu = 0.0;
+    const double dvf_dcv = 1.0;
+
+    (*out_jacobian_point) << duf_dfu, duf_dfv, duf_dcu, duf_dcv,
+                             dvf_dfu, dvf_dfv, dvf_dcu, dvf_dcv;
+  }
+
+  // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
+  if(distortion_ && out_jacobian_distortion) {
+    distortion_->distortParameterJacobian(*distortion_coefficients_external,
+                                          *out_keypoint,
+                                          out_jacobian_distortion);
+
+    (*out_jacobian_distortion).row(0) *= fu;
+    (*out_jacobian_distortion).row(1) *= fv;
+  }
+
+  // Normalized image plane to camera plane.
+  (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
+  (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
+
+  return evaluateProjectionResult(*out_keypoint, point_3d);
+}
+
+inline const ProjectionResult PinholeCamera::evaluateProjectionResult(
+    const Eigen::Vector2d& keypoint,
+    const Eigen::Vector3d& point_3d) const {
+
+  const bool visibility = isKeypointVisible(keypoint);
+
+  if (visibility && (point_3d[2] > kMinimumDepth))
+    return ProjectionResult(ProjectionResult::Status::KEYPOINT_VISIBLE);
+  else if (!visibility && (point_3d[2] > kMinimumDepth))
+    return ProjectionResult(ProjectionResult::Status::KEYPOINT_OUTSIDE_IMAGE_BOX);
+  else if (point_3d[2] < 0.0)
+    return ProjectionResult(ProjectionResult::Status::POINT_BEHIND_CAMERA);
+  else
+    return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
+}
+
+void PinholeCamera::setParameters(const Eigen::VectorXd& params) {
+  CHECK_EQ(parameterCount(), static_cast<size_t>(params.size()));
+  intrinsics_ = params;
+}
+
+Eigen::Vector2d PinholeCamera::createRandomKeypoint() const {
+  Eigen::Vector2d out;
   out.setRandom();
   out(0) = std::abs(out(0)) * imageWidth();
   out(1) = std::abs(out(1)) * imageHeight();
   return out;
 }
 
-// \brief creates a random visible point. Negative depth means random between 0 and 100 meters.
-Eigen::Matrix<double, 3, 1> PinholeCamera::createRandomVisiblePoint(
-    double depth) const {
-  Eigen::Matrix<double, 2, 1> y = createRandomKeypoint();
-  Eigen::Matrix<double, 3, 1> p;
-  backProject3(y, &p);
+Eigen::Vector3d PinholeCamera::createRandomVisiblePoint(double depth) const {
+  CHECK_GT(depth, 0.0) << "Depth needs to be positive!";
+  Eigen::Vector3d point_3d;
 
-  if (depth < 0.0) {
-    depth = (static_cast<double>(rand()) / static_cast<double>(RAND_MAX)) * 100.0;
-  }
-
-  p /= p.norm();
+  Eigen::Vector2d y = createRandomKeypoint();
+  backProject3(y, &point_3d);
+  point_3d /= point_3d.norm();
 
   // Muck with the depth. This doesn't change the pointing direction.
-  p *= depth;
-  return p;
+  return point_3d * depth;
 }
 
-bool PinholeCamera::isProjectable3(
-    const Eigen::Matrix<double, 3, 1>& p) const {
-  Eigen::Matrix<double, 2, 1> k;
-  return project3(p, &k);
-
-}
-
-bool PinholeCamera::isProjectable4(
-    const Eigen::Matrix<double, 4, 1>& ph) const {
-  Eigen::Matrix<double, 2, 1> k;
-  return project4(ph, &k);
-}
-
-const Eigen::VectorXd& PinholeCamera::getParameters() const {
-  return _intrinsics;
-}
-
-void PinholeCamera::setParameters(const Eigen::VectorXd& params) {
-  CHECK_EQ(getParameterSize(), static_cast<size_t>(params.size()));
-  _intrinsics = params;
-  updateTemporaries();
-}
-
-size_t PinholeCamera::getParameterSize() const {
-  return kNumOfParams ;
-}
-
-void PinholeCamera::updateTemporaries() {
-  const double& fu = _intrinsics(0);
-  const double& fv = _intrinsics(1);
-
-  _recip_fu = 1.0 / fu;
-  _recip_fv = 1.0 / fv;
-  _fu_over_fv = fu / fv;
-}
-
-/// \brief Get a set of border rays
-void PinholeCamera::getBorderRays(Eigen::MatrixXd& rays) {
+void PinholeCamera::getBorderRays(Eigen::MatrixXd& rays) const {
   rays.resize(4, 8);
-  Eigen::Matrix<double, 4, 1> ray;
+  Eigen::Vector4d ray;
   backProject4(Eigen::Vector2d(0.0, 0.0), &ray);
   rays.col(0) = ray;
   backProject4(Eigen::Vector2d(0.0, imageHeight() * 0.5), &ray);
@@ -388,22 +341,17 @@ void PinholeCamera::getBorderRays(Eigen::MatrixXd& rays) {
   rays.col(7) = ray;
 }
 
-bool PinholeCamera::project3Functional(
-    const Eigen::VectorXd& /*intrinsics_params*/, const Eigen::Vector3d& /*point*/,
-    Eigen::Vector2d* /* out_point */,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* /* out_intrinsics_jacobian */,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* /* out_point_jacobian */) const {
-  // TODO(PTF) implement
-  CHECK(false) << "Not Implemented";
-}
-
-void PinholeCamera::printParameters(std::ostream& out,
-                                    const std::string& text) {
-  Camera::printParameters(out,text);
+void PinholeCamera::printParameters(std::ostream& out, const std::string& text) const {
+  Camera::printParameters(out, text);
   out << "  focal length (cols,rows): "
       << fu() << ", " << fv() << std::endl;
   out << "  optical center (cols,rows): "
       << cu() << ", " << cv() << std::endl;
+
+  if(distortion_) {
+    out << "  distortion: ";
+    distortion_->printParameters(out, text);
+  }
 }
 
 }  // namespace aslam
