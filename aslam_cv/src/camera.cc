@@ -21,7 +21,9 @@ Camera::Camera() :
 Camera::~Camera() { }
 
 void Camera::printParameters(std::ostream& out, const std::string& text) {
-  out << text << std::endl;
+  if(text.size() > 0) {
+    out << text << std::endl;
+  }
   out << "Camera(" << this->id_ << "): " << this->label_ << std::endl;
   out << "  line delay: " << this->line_delay_nano_seconds_ << std::endl;
   out << "  image (cols,rows): " << imageWidth() << ", " << imageHeight() << std::endl;
