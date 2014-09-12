@@ -93,6 +93,18 @@ class EquidistantDistortion : public aslam::Distortion {
 
   /// @}
 
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to support unit testing.
+  /// @{
+
+  /// \brief Create a test distortion object for unit testing.
+  static EquidistantDistortion::Ptr createTestDistortion() {
+    Eigen::VectorXd params(4); params << 0.2, 0.01, 0.3, 0.05;
+    return EquidistantDistortion::Ptr(new EquidistantDistortion(params));
+  }
+
+  /// @}
+
   ///////////////////////////////////////////////////////////////////////////////
   /// \name Methods to set/get distortion parameters
   /// @{

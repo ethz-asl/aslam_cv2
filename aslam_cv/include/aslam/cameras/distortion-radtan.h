@@ -82,6 +82,18 @@ class RadTanDistortion : public aslam::Distortion {
 
   /// @}
 
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to support unit testing.
+  /// @{
+
+  /// \brief Create a test distortion object for unit testing.
+  static RadTanDistortion::Ptr createTestDistortion() {
+    Eigen::VectorXd params(4); params << 0.8, 0.1, 0.2, 0.03;
+    return RadTanDistortion::Ptr(new RadTanDistortion(params));
+  }
+
+  /// @}
+
   ///////////////////////////////////////////////////////////////////////////////
   /// \name Methods to set/get distortion parameters
   /// @{
