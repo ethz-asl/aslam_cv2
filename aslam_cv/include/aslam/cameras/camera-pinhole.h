@@ -35,32 +35,48 @@ class PinholeCamera : public Camera {
   /// @{
 
  protected:
-  PinholeCamera() = delete;
+  /// \brief Empty constructor for serialization interface.
+  PinholeCamera();
 
  public:
   /// \brief Construct a PinholeCamera with distortion.
-  /// @param[in] focalLengthCols focallength in pixels; cols (width-direction)
-  /// @param[in] focalLengthRows focallength in pixels; rows (height-direction)
-  /// @param[in] imageCenterCols image center in pixels; cols (width-direction)
-  /// @param[in] imageCenterRows image center in pixels; rows (height-direction)
-  /// @param[in] imageWidth      image width in pixels
-  /// @param[in] imageHeight     image height in pixels
-  /// @param[in] distortion      pointer to the distortion model
-  PinholeCamera(double focalLengthCols, double focalLengthRows,
-                double imageCenterCols, double imageCenterRows,
-                uint32_t imageWidth, uint32_t imageHeight,
+  /// @param[in] intrinsics   vector containing the intrinsic parameters (fu,fv,cu.cv)
+  /// @param[in] image_width  image width in pixels
+  /// @param[in] image_height image height in pixels
+  /// @param[in] distortion   pointer to the distortion model
+  PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
                 aslam::Distortion::Ptr distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
-  /// @param[in] focalLengthCols focallength in pixels; cols (width-direction)
-  /// @param[in] focalLengthRows focallength in pixels; rows (height-direction)
-  /// @param[in] imageCenterCols image center in pixels; cols (width-direction)
-  /// @param[in] imageCenterRows image center in pixels; rows (height-direction)
-  /// @param[in] imageWidth      image width in pixels
-  /// @param[in] imageHeight     image height in pixels
-  PinholeCamera(double focalLengthCols, double focalLengthRows,
-                double imageCenterCols, double imageCenterRows,
-                uint32_t resolutionWidth, uint32_t resolutionHeight);
+  /// @param[in] intrinsics   vector containing the intrinsic parameters (fu,fv,cu.cv)
+  /// @param[in] image_width  image width in pixels
+  /// @param[in] image_height image height in pixels
+  /// @param[in] distortion   pointer to the distortion model
+  PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height);
+
+  /// \brief Construct a PinholeCamera with distortion.
+  /// @param[in] focallength_cols focallength in pixels; cols (width-direction)
+  /// @param[in] focallength_rows focallength in pixels; rows (height-direction)
+  /// @param[in] imagecenter_cols image center in pixels; cols (width-direction)
+  /// @param[in] imagecenter_rows image center in pixels; rows (height-direction)
+  /// @param[in] image_width      image width in pixels
+  /// @param[in] image_height     image height in pixels
+  /// @param[in] distortion       pointer to the distortion model
+  PinholeCamera(double focallength_cols, double focallength_rows,
+                double imagecenter_cols, double imagecenter_rows,
+                uint32_t image_width, uint32_t image_height,
+                aslam::Distortion::Ptr distortion);
+
+  /// \brief Construct a PinholeCamera without distortion.
+  /// @param[in] focallength_cols focallength in pixels; cols (width-direction)
+  /// @param[in] focallength_rows focallength in pixels; rows (height-direction)
+  /// @param[in] imagecenter_cols image center in pixels; cols (width-direction)
+  /// @param[in] imagecenter_rows image center in pixels; rows (height-direction)
+  /// @param[in] image_width      image width in pixels
+  /// @param[in] image_height     image height in pixels
+  PinholeCamera(double focallength_cols, double focallength_rows,
+                double imagecenter_cols, double imagecenter_rows,
+                uint32_t image_width, uint32_t image_height);
 
   virtual ~PinholeCamera() {};
 
@@ -200,6 +216,18 @@ class PinholeCamera : public Camera {
   /// @return const_ptr to distortion model; nullptr if none is set or not available
   ///         for the camera type
   virtual const aslam::Distortion::Ptr distortion() const { return distortion_; };
+
+  /// \brief Create a test camera object for unit testing.
+  template<typename DistortionType>
+  static PinholeCamera::Ptr createTestCamera()   {
+    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480,
+                                                DistortionType::createTestDistortion()));
+  }
+
+  /// \brief Create a test camera object for unit testing. (without distortion)
+  static PinholeCamera::Ptr createTestCamera() {
+    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480));
+  }
 
   /// @}
 

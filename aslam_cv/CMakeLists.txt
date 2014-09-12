@@ -28,7 +28,7 @@ endif()
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 catkin_add_gtest(${PROJECT_NAME}_tests 
-    test/test-pinhole-camera.cc
+    test/test-cameras.cc
     test/test-distortions.cc  
     test/test-channel-serialization.cc
     test/test-channels.cc
