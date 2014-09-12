@@ -33,39 +33,56 @@ public:
   ASLAM_POINTER_TYPEDEFS(VisualPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualPipeline);
 
-  VisualPipeline();
+  VisualPipeline(){}
+
+  /// \brief Construct a visual pipeline from the input and output cameras
+  VisualPipeline(const std::shared_ptr<Camera>& input_camera,
+                 const std::shared_ptr<Camera>& output_camera);
+
   virtual ~VisualPipeline();
 
   /// \brief Add an image to the visual processor.
   ///
   /// This function is called by a user when an image is received.
   /// The processor then processes the images and constructs a VisualFrame.
-  /// Implementers should be careful to make sure that this method is thread safe
-  /// as it may be called by multiple threads simultaneously.
+  /// This method constructs a basic frame and passes it on to processFrame().
   ///
-  /// \param[in] Image the image data.
-  /// \param[in] SystemStamp the host time in integer nanoseconds since epoch.
-  /// \param[in] HardwareStamp the camera's hardware timestamp. Can be set to "invalid".
-  /// \returns   The visual frame built from the image data.
-  virtual std::shared_ptr<VisualFrame> processImage(const cv::Mat& image,
-                                                    int64_t systemStamp,
-                                                    int64_t hardwareStamp) const = 0;
+  /// \param[in] image          The image data.
+  /// \param[in] system_stamp   The host time in integer nanoseconds since epoch.
+  /// \param[in] hardware_stamp The camera's hardware timestamp. Can be set to "invalid".
+  /// \returns                  The visual frame built from the image data.
+  std::shared_ptr<VisualFrame> processImage(const cv::Mat& image,
+                                            int64_t system_stamp,
+                                            int64_t hardware_stamp) const;
 
   /// \brief Get the input camera that corresponds to the image
   ///        passed in to processImage().
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getInputCamera() const = 0;
+  virtual const std::shared_ptr<Camera>& getInputCamera() const { return input_camera_; }
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getOutputCamera() const = 0;
-};
+  virtual const std::shared_ptr<Camera>& getOutputCamera() const { return output_camera_; }
 
+protected:
+  /// \brief Process the frame and fill the results into the frame variable
+  ///
+  /// The top level function will already fill in the timestamps and the output camera.
+  /// \param[in]     image The image data.
+  /// \param[in/out] frame The visual frame. This will be constructed before calling.
+  virtual void processFrame(const cv::Mat& image,
+                            std::shared_ptr<VisualFrame>* frame) const = 0;
+
+  /// \brief The intrinsics of the raw image.
+  std::shared_ptr<Camera> input_camera_;
+  /// \brief The intrinsics of the raw image.
+  std::shared_ptr<Camera> output_camera_;
+};
 }  // namespace aslam
 
 #endif // VISUAL_PROCESSOR_H

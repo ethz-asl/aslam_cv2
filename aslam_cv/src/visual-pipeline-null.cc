@@ -7,40 +7,18 @@ namespace aslam {
 
 NullVisualPipeline::NullVisualPipeline(const std::shared_ptr<Camera>& camera,
                                        bool copyImages) :
-    camera_(camera), copyImages_(copyImages) {
-  CHECK_NOTNULL(camera_.get());
-}
+   VisualPipeline(camera, camera), copyImages_(copyImages) { }
 
 NullVisualPipeline::~NullVisualPipeline() { }
 
-std::shared_ptr<VisualFrame> NullVisualPipeline::processImage(
-    const cv::Mat& image, int64_t systemStamp, int64_t hardwareStamp) const {
-  CHECK_EQ(camera_->imageWidth(), static_cast<size_t>(image.cols));
-  CHECK_EQ(camera_->imageHeight(), static_cast<size_t>(image.rows));
-
-  std::shared_ptr<VisualFrame> frame(new VisualFrame);
+void NullVisualPipeline::processFrame(const cv::Mat& image,
+                                      std::shared_ptr<VisualFrame>* frame) const {
+  CHECK_NOTNULL(frame);
+  CHECK_NOTNULL(frame->get());
   if(copyImages_){
-    frame->setImage(image.clone());
+    (*frame)->setImage(image.clone());
   } else {
-    frame->setImage(image);
+    (*frame)->setImage(image);
   }
-  frame->setTimestamp(systemStamp);
-  frame->setSystemTimestamp(systemStamp);
-  frame->setHardwareTimestamp(hardwareStamp);
-  frame->setCameraGeometry(camera_);
-
-  FrameId id;
-  id.randomize();
-  frame->setId( id );
-  return frame;
 }
-
-const std::shared_ptr<Camera>& NullVisualPipeline::getInputCamera() const {
-  return camera_;
-}
-
-const std::shared_ptr<Camera>& NullVisualPipeline::getOutputCamera() const {
-  return camera_;
-}
-
 }  // namespace aslam
