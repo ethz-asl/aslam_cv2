@@ -35,9 +35,24 @@ class PinholeCamera : public Camera {
   /// @{
 
  protected:
-  PinholeCamera() = delete;
+  /// \brief Empty constructor for serialization interface.
+  PinholeCamera();
 
  public:
+  /// \brief Construct a PinholeCamera with distortion.
+  /// @param[in] intrinsics      vector containing the intrinsic parameters (fu,fv,cu.cv)
+  /// @param[in] imageHeight     image height in pixels
+  /// @param[in] distortion      pointer to the distortion model
+  PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t imageWidth, uint32_t imageHeight,
+                aslam::Distortion::Ptr distortion);
+
+  /// \brief Construct a PinholeCamera without distortion.
+  /// @param[in] intrinsics      vector containing the intrinsic parameters (fu,fv,cu.cv)
+  /// @param[in] imageWidth      image width in pixels
+  /// @param[in] imageHeight     image height in pixels
+  /// @param[in] distortion      pointer to the distortion model
+  PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t imageWidth, uint32_t imageHeight);
+
   /// \brief Construct a PinholeCamera with distortion.
   /// @param[in] focalLengthCols focallength in pixels; cols (width-direction)
   /// @param[in] focalLengthRows focallength in pixels; rows (height-direction)
@@ -200,6 +215,18 @@ class PinholeCamera : public Camera {
   /// @return const_ptr to distortion model; nullptr if none is set or not available
   ///         for the camera type
   virtual const aslam::Distortion::Ptr distortion() const { return distortion_; };
+
+  /// \brief Create a test camera object for unit testing.
+  template<typename DistortionType>
+  static PinholeCamera::Ptr createTestCamera()   {
+    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480,
+                                                DistortionType::createTestDistortion()));
+  }
+
+  /// \brief Create a test camera object for unit testing. (without distortion)
+  static PinholeCamera::Ptr createTestCamera() {
+    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480));
+  }
 
   /// @}
 

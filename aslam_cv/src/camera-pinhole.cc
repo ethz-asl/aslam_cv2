@@ -20,23 +20,40 @@ namespace aslam {
 //
 //}
 
-PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
-                             double imageCenterCols, double imageCenterRows,
+
+PinholeCamera::PinholeCamera()
+  : Camera( Eigen::Vector4d::Zero() ),
+    distortion_(nullptr) {
+  setImageWidth(0);
+  setImageHeight(0);
+}
+
+PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
                              uint32_t imageWidth, uint32_t imageHeight,
                              aslam::Distortion::Ptr distortion)
-: Camera( Eigen::Vector4d(focalLengthCols, focalLengthRows, imageCenterCols, imageCenterRows) ),
-  distortion_(distortion) {
+  : Camera( intrinsics ),
+    distortion_(distortion) {
+  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
   setImageWidth(imageWidth);
   setImageHeight(imageHeight);
 }
 
+PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
+                             uint32_t imageWidth, uint32_t imageHeight)
+    : PinholeCamera(intrinsics, imageWidth, imageHeight, nullptr) {}
+
+PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
+                             double imageCenterCols, double imageCenterRows, uint32_t imageWidth,
+                             uint32_t imageHeight, aslam::Distortion::Ptr distortion)
+    : PinholeCamera( Eigen::Vector4d(focalLengthCols, focalLengthRows,
+                                     imageCenterCols, imageCenterRows),
+                     imageWidth, imageHeight, distortion) {}
+
 PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
                              double imageCenterCols, double imageCenterRows,
                              uint32_t imageWidth, uint32_t imageHeight)
-: PinholeCamera(focalLengthCols, focalLengthRows,
-                imageCenterCols, imageCenterRows,
-                imageWidth, imageHeight,
-                nullptr) { }
+    : PinholeCamera(focalLengthCols, focalLengthRows, imageCenterCols, imageCenterRows, imageWidth,
+                    imageHeight, nullptr) {}
 
 bool PinholeCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.
