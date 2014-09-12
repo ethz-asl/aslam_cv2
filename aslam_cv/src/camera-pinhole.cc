@@ -20,7 +20,6 @@ namespace aslam {
 //
 //}
 
-
 PinholeCamera::PinholeCamera()
   : Camera( Eigen::Vector4d::Zero() ),
     distortion_(nullptr) {
@@ -46,7 +45,7 @@ PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
                              double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
                              uint32_t image_height, aslam::Distortion::Ptr distortion)
     : PinholeCamera(Eigen::Vector4d(focallength_cols, focallength_rows,
-                                     imagecenter_cols, imagecenter_rows),
+                                    imagecenter_cols, imagecenter_rows),
                      image_width, image_height, distortion) {}
 
 PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
