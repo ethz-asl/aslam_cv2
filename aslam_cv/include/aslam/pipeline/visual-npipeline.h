@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <map>
-#include <thread>
+#include <mutex>
 #include <vector>
 
 #include <aslam/common/macros.h>
