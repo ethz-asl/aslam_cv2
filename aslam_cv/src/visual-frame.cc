@@ -184,10 +184,32 @@ const Camera::ConstPtr VisualFrame::getCameraGeometry() const {
   return camera_geometry_;
 }
 
-
-
 void VisualFrame::setCameraGeometry(const Camera::Ptr& camera) {
   camera_geometry_ = camera;
+}
+
+void VisualFrame::print(std::ostream& out, const std::string& label) const {
+  if(label.size() > 0) {
+    out << label << std::endl;
+  }
+  out << "VisualFrame(" << this->id_ << ")" << std::endl;
+  out << "  timestamp:          " << this->stamp_ << std::endl;
+  out << "  system timestamp:   " << this->systemStamp_ << std::endl;
+  out << "  hardware timestamp: " << this->hardwareStamp_ << std::endl;
+  if(camera_geometry_) {
+    camera_geometry_->printParameters(out, "  VisualFrame::camera");
+  } else {
+    out << "  VisualFrame::camera is NULL" << std::endl;
+  }
+  if(! channels_.empty()) {
+    out << "  Channels:" << std::endl;
+    aslam::channels::ChannelGroup::const_iterator it = channels_.begin();
+    for( ; it != channels_.end(); ++it) {
+      out << "   - " << it->first << std::endl;
+    }
+  } else {
+    out << "  Channels: empty" << std::endl;
+  }
 }
 
 }  // namespace aslam

@@ -173,6 +173,9 @@ class VisualFrame  {
 
   /// \brief set the system (host computer) timestamp.
   inline void setSystemTimestamp(int64_t stamp) { systemStamp_ = stamp; }
+
+  /// \brief print out a human-readable version of this frame
+  void print(std::ostream& out, const std::string& label) const;
  private:
   /// \brief integer nanoseconds since epoch.
   int64_t stamp_;
@@ -184,5 +187,10 @@ class VisualFrame  {
   aslam::channels::ChannelGroup channels_;
   Camera::Ptr camera_geometry_;
 };
+
+inline std::ostream& operator<<(std::ostream& out, const VisualFrame& rhs) {
+  rhs.print(out, "");
+  return out;
+}
 }  // namespace aslam
 #endif  // ASLAM_FRAMES_VISUAL_FRAME_H_
