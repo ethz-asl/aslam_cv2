@@ -10,7 +10,6 @@
 #include <aslam/common/unique-id.h>
 #include <aslam/cameras/distortion.h>
 
-
 // TODO(slynen) Enable commented out PropertyTree support
 //namespace sm {
 //class PropertyTree;
@@ -23,17 +22,17 @@ namespace aslam {
 /// This function takes a vectors of intrinsics and distortion parameters
 /// and produces a camera.
 /// \param[in] intrinsics A vector of projection intrinsic parameters.
-/// \param[in] imageWidth The width of the image associated with this camera.
-/// \param[in] imageHeight The height of the image associated with this camera.
-/// \param[in] distortionParameters The parameters of the distortion object.
+/// \param[in] image_width The width of the image associated with this camera.
+/// \param[in] image_height The height of the image associated with this camera.
+/// \param[in] distortion_parameters The parameters of the distortion object.
 /// \returns A new camera based on the template types.
 template <typename CameraType, typename DistortionType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
-                                      uint32_t imageWidth, uint32_t imageHeight,
+                                      uint32_t image_width, uint32_t image_height,
                                       const Eigen::VectorXd& distortion_parameters)
 {
   typename DistortionType::Ptr distortion(new DistortionType(distortion_parameters));
-  typename CameraType::Ptr camera(new CameraType(intrinsics, imageWidth, imageHeight, distortion));
+  typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height, distortion));
   return camera;
 }
 
@@ -42,14 +41,14 @@ typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
 /// This function takes a vectors of intrinsics and distortion parameters
 /// and produces a camera.
 /// \param[in] intrinsics A vector of projection intrinsic parameters.
-/// \param[in] imageWidth The width of the image associated with this camera.
-/// \param[in] imageHeight The height of the image associated with this camera.
+/// \param[in] image_width The width of the image associated with this camera.
+/// \param[in] image_height The height of the image associated with this camera.
 /// \returns A new camera based on the template types.
 template <typename CameraType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
-                                      uint32_t imageWidth, uint32_t imageHeight)
+                                      uint32_t image_width, uint32_t image_height)
 {
-  typename CameraType::Ptr camera(new CameraType(intrinsics, imageWidth, imageHeight));
+  typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height));
   return camera;
 }
 
