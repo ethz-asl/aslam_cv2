@@ -62,7 +62,6 @@ class ThreadPool {
 
   /// This method blocks until the queue is empty.
   void waitForEmptyQueue() const;
-
  private:
   /// \brief Run a single thread.
   void run();

@@ -17,6 +17,7 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/thread-pool.cc
                                src/visual-pipeline.cc
                                src/visual-npipeline.cc
+                               src/visual-pipeline-null.cc
 )
 
 add_doxygen(NOT_AUTOMATIC)
@@ -34,6 +35,7 @@ catkin_add_gtest(${PROJECT_NAME}_tests
     test/test-channels.cc
     test/test-visual-frame.cc
     test/test-thread-pool.cc
+    test/test-visual-npipeline.cc
     test/entry-point.cc
     )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})

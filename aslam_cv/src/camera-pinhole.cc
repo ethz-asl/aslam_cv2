@@ -20,7 +20,6 @@ namespace aslam {
 //
 //}
 
-
 PinholeCamera::PinholeCamera()
   : Camera( Eigen::Vector4d::Zero() ),
     distortion_(nullptr) {
