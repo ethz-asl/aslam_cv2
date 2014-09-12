@@ -171,6 +171,15 @@ void VisualFrame::setBriskDescriptors(
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
+void VisualFrame::setBriskDescriptors(
+    const Eigen::Map<const DescriptorsT>& descriptors_new) {
+  if (!aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_)) {
+    aslam::channels::add_BRISK_DESCRIPTORS_Channel(&channels_);
+  }
+  VisualFrame::DescriptorsT& descriptors =
+      aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+  descriptors = descriptors_new;
+}
 void VisualFrame::setImage(const cv::Mat& image_new) {
   if (!aslam::channels::has_IMAGE_Channel(channels_)) {
     aslam::channels::add_IMAGE_Channel(&channels_);

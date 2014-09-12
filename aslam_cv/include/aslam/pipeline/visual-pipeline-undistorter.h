@@ -14,6 +14,9 @@ namespace aslam {
 /// http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html?highlight=remap#remap
 class Undistorter : public VisualPipeline {
 public:
+  ASLAM_POINTER_TYPEDEFS(Undistorter);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Undistorter);
+
   Undistorter();
 
   /// \brief Create an undistorter.

@@ -69,15 +69,16 @@ public:
   /// rectification, the input and output camera may not be the same.
   virtual const std::shared_ptr<Camera>& getOutputCamera() const { return output_camera_; }
 
-protected:
-  /// \brief Process the frame and fill the results into the frame variable
+  /// \brief Process the frame and fill the results into the frame variable.
   ///
+  /// This function can be used to chain together pipelines that do different things.
   /// The top level function will already fill in the timestamps and the output camera.
   /// \param[in]     image The image data.
   /// \param[in/out] frame The visual frame. This will be constructed before calling.
   virtual void processFrame(const cv::Mat& image,
                             std::shared_ptr<VisualFrame>* frame) const = 0;
 
+protected:
   /// \brief The intrinsics of the raw image.
   std::shared_ptr<Camera> input_camera_;
   /// \brief The intrinsics of the raw image.
