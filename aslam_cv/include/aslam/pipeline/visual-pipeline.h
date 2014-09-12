@@ -40,6 +40,8 @@ public:
   ///
   /// This function is called by a user when an image is received.
   /// The processor then processes the images and constructs a VisualFrame.
+  /// Implementers should be careful to make sure that this method is thread safe
+  /// as it may be called by multiple threads simultaneously.
   ///
   /// \param[in] Image the image data.
   /// \param[in] SystemStamp the host time in integer nanoseconds since epoch.
@@ -47,21 +49,21 @@ public:
   /// \returns   The visual frame built from the image data.
   virtual std::shared_ptr<VisualFrame> processImage(const cv::Mat& image,
                                                     int64_t systemStamp,
-                                                    int64_t hardwareStamp) = 0;
+                                                    int64_t hardwareStamp) const = 0;
 
   /// \brief Get the input camera that corresponds to the image
   ///        passed in to processImage().
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual std::shared_ptr<Camera> getInputCamera() const = 0;
+  virtual const std::shared_ptr<Camera>& getInputCamera() const = 0;
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual std::shared_ptr<Camera> getOutputCamera() const = 0;
+  virtual const std::shared_ptr<Camera>& getOutputCamera() const = 0;
 };
 
 }  // namespace aslam

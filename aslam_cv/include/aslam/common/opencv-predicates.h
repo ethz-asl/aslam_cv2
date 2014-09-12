@@ -135,6 +135,7 @@ inline testing::AssertionResult ImagesEqual(const cv::Mat& A,
       << "comparison.";
       break;
   }
+  return ::testing::AssertionFailure() << "Unreachable code.";
 }
 
 // Compare two opencv images by checking whether the absolute difference

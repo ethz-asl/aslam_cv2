@@ -9,9 +9,9 @@ namespace aslam {
 NCameras::NCameras() { }
 
 NCameras::NCameras(const NCamerasId& id,
-                     const TransformationVector& T_C_B, 
-                     const std::vector<Camera::Ptr>& cameras,
-                     const std::string& label) :
+                   const TransformationVector& T_C_B,
+                   const std::vector<Camera::Ptr>& cameras,
+                   const std::string& label) :
     id_(id), T_C_B_(T_C_B), 
     cameras_(cameras), label_(label) { 
   initInternal(); 

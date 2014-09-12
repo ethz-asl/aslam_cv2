@@ -2,17 +2,23 @@
 #include <aslam/common/predicates.h>
 namespace aslam {
 
-/// \brief creates an empty visual multi frame
 VisualNFrames::VisualNFrames() { }
+
+VisualNFrames::VisualNFrames(const aslam::NFramesId& id,
+                             std::shared_ptr<NCameras> ncameras) :
+                                   id_(id), cameraRig_(ncameras) {
+  CHECK_NOTNULL(cameraRig_.get());
+  frames_.resize(ncameras->getNumCameras());
+}
+
+VisualNFrames::VisualNFrames(std::shared_ptr<NCameras> ncameras) :
+  cameraRig_(ncameras) {
+  CHECK_NOTNULL(cameraRig_.get());
+  id_.randomize();
+  frames_.resize(ncameras->getNumCameras());
+}
   
 VisualNFrames::~VisualNFrames() { }
-
-/// \brief set the camera rig
-void VisualNFrames::setNCameras(NCameras::Ptr rig) {
-  cameraRig_ = rig;
-  // \todo (PTF) set the frame cameras as well...
-  // Maybe this should be disallowed?
-}
 
 /// \brief get the camera rig
 const NCameras& VisualNFrames::getNCameras() const {
@@ -78,6 +84,18 @@ bool VisualNFrames::hasCameraWithId(const CameraId& id) const {
 size_t VisualNFrames::getCameraIndex(const CameraId& id) const {
   CHECK_NOTNULL(cameraRig_.get());
   return cameraRig_->getCameraIndex(id);
+}
+
+void VisualNFrames::setFrame(size_t frameIndex, VisualFrame::Ptr frame) {
+  CHECK_LT(frameIndex, frames_.size());
+  CHECK_NOTNULL(cameraRig_.get());
+  CHECK_EQ(&cameraRig_->getCamera(frameIndex), frame->getCameraGeometry().get());
+  frames_[frameIndex] = frame;
+}
+
+bool VisualNFrames::isFrameNull(size_t frameIndex) const {
+  CHECK_LT(frameIndex, frames_.size());
+  return static_cast<bool>(frames_[frameIndex]);
 }
 
 /// \brief binary equality
