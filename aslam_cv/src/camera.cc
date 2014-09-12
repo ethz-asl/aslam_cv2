@@ -31,7 +31,7 @@ bool Camera::operator==(const Camera& other) const {
          (this->image_height_ == other.image_height_);
 }
 
-const ProjectionState Camera::project4(const Eigen::Vector4d& point_4d,
+const ProjectionResult Camera::project4(const Eigen::Vector4d& point_4d,
                                        Eigen::Vector2d* out_keypoint) const {
   CHECK_NOTNULL(out_keypoint);
 
@@ -44,7 +44,7 @@ const ProjectionState Camera::project4(const Eigen::Vector4d& point_4d,
   return project3(point_3d, out_keypoint);
 }
 
-const ProjectionState Camera::project4(const Eigen::Vector4d& point_4d,
+const ProjectionResult Camera::project4(const Eigen::Vector4d& point_4d,
                                        Eigen::Vector2d* out_keypoint,
                                        Eigen::Matrix<double, 2, 4>* out_jacobian) const {
   CHECK_NOTNULL(out_keypoint);
@@ -57,7 +57,7 @@ const ProjectionState Camera::project4(const Eigen::Vector4d& point_4d,
     point_3d =  point_4d.head<3>();
 
   Eigen::Matrix<double, 2, 3> Je;
-  ProjectionState ret = project3(point_3d, out_keypoint, &Je);
+  ProjectionResult ret = project3(point_3d, out_keypoint, &Je);
   out_jacobian->setZero();
   out_jacobian->topLeftCorner<2, 3>() = Je;
 
@@ -77,13 +77,13 @@ bool Camera::backProject4(const Eigen::Vector2d& keypoint,
 
 bool Camera::isProjectable3(const Eigen::Vector3d& p) const {
   Eigen::Vector2d k;
-  const ProjectionState& ret = project3(p, &k);
+  const ProjectionResult& ret = project3(p, &k);
   return ret.isKeypointVisible();
 }
 
 bool Camera::isProjectable4(const Eigen::Vector4d& ph) const {
   Eigen::Vector2d k;
-  const ProjectionState& ret = project4(ph, &k);
+  const ProjectionResult& ret = project4(ph, &k);
   return ret.isKeypointVisible();
 }
 

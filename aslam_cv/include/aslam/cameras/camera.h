@@ -19,14 +19,14 @@
 namespace aslam {
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// TODO(schneith): where to put ProjectionState?
+// TODO(schneith): where to put ProjectionResult?
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-/// \struct ProjectionState
+/// \struct ProjectionResult
 /// \brief This struct is returned by the camera projection methods and holds the result state
 ///        of the projection operation.
-struct ProjectionState {
+struct ProjectionResult {
   /// Possible projection state.
   enum class Status {
     /// Keypoint is visible and projection was successful.
@@ -41,23 +41,23 @@ struct ProjectionState {
     UNINITIALIZED
   };
 
-  ProjectionState() : status_(Status::UNINITIALIZED) {};
-  ProjectionState(Status status) : status_(status) {};
+  ProjectionResult() : status_(Status::UNINITIALIZED) {};
+  ProjectionResult(Status status) : status_(status) {};
 
-  /// \brief ProjectionState can be typecasted to bool and is true if the projected keypoint
+  /// \brief ProjectionResult can be typecasted to bool and is true if the projected keypoint
   ///        is visible. Simplifies the check for a successful projection.
   ///        Example usage:
   /// @code
-  ///          aslam::ProjectionState ret = camera_->project3(Eigen::Vector3d(0, 0, -10), &keypoint);
+  ///          aslam::ProjectionResult ret = camera_->project3(Eigen::Vector3d(0, 0, -10), &keypoint);
   ///          if(ret) std::cout << "Projection was successful!\n";
   /// @endcode
   explicit operator bool() const { return isKeypointVisible(); };
 
   /// \brief Compare objects.
-  bool operator==(const ProjectionState& other) const { return status_ == other.status_; };
+  bool operator==(const ProjectionResult& other) const { return status_ == other.status_; };
 
   /// \brief Convenience function to print the state using streams.
-  friend std::ostream& operator<< (std::ostream& out, const ProjectionState& state)
+  friend std::ostream& operator<< (std::ostream& out, const ProjectionResult& state)
   {
     std::string enum_str;
     switch (state.status_){
@@ -68,7 +68,7 @@ struct ProjectionState {
       default:
         case Status::UNINITIALIZED:             enum_str = "UNINITIALIZED"; break;
     }
-    out << "ProjectionState: " << enum_str << std::endl;
+    out << "ProjectionResult: " << enum_str << std::endl;
     return out;
   }
 
@@ -78,8 +78,8 @@ struct ProjectionState {
   /// \brief Returns the exact state of the projection operation.
   ///        Example usage:
   /// @code
-  ///          aslam::ProjectionState ret = camera_->project3(Eigen::Vector3d(0, 0, -1), &keypoint);
-  ///          if(ret.getDetailedStatus() == aslam::ProjectionState::Status::KEYPOINT_OUTSIDE_IMAGE_BOX)
+  ///          aslam::ProjectionResult ret = camera_->project3(Eigen::Vector3d(0, 0, -1), &keypoint);
+  ///          if(ret.getDetailedStatus() == aslam::ProjectionResult::Status::KEYPOINT_OUTSIDE_IMAGE_BOX)
   ///            std::cout << "Point behind camera! Lets do something...\n";
   /// @endcode
   Status getDetailedStatus() const { return status_; };
@@ -166,8 +166,8 @@ class Camera {
   /// @param[in]  point_3d     The point in euclidean coordinates.
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  virtual const ProjectionState project3(const Eigen::Vector3d& point_3d,
+  ///         ProjectionResult" for more information.
+  virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
                                          Eigen::Vector2d* out_keypoint) const = 0;
 
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
@@ -176,8 +176,8 @@ class Camera {
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @param[out] out_jacobian The Jacobian w.r.t. to changes in the euclidean point.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  virtual const ProjectionState project3(const Eigen::Vector3d& point_3d,
+  ///         ProjectionResult" for more information.
+  virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
                                          Eigen::Vector2d* out_keypoint,
                                          Eigen::Matrix<double, 2, 3>* out_jacobian) const = 0;
 
@@ -200,8 +200,8 @@ class Camera {
   /// @param[in]  point_4d     The point in homogeneous coordinates.
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  const ProjectionState project4(const Eigen::Vector4d& point_4d,
+  ///         ProjectionResult" for more information.
+  const ProjectionResult project4(const Eigen::Vector4d& point_4d,
                                  Eigen::Vector2d* out_keypoint) const;
 
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
@@ -210,8 +210,8 @@ class Camera {
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @param[out] out_jacobian The Jacobian w.r.t. to changes in the homogeneous point.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  const ProjectionState project4(const Eigen::Vector4d& point_4d,
+  ///         ProjectionResult" for more information.
+  const ProjectionResult project4(const Eigen::Vector4d& point_4d,
                                  Eigen::Vector2d* out_keypoint,
                                  Eigen::Matrix<double, 2, 4>* out_jacobian) const;
 
@@ -238,8 +238,8 @@ class Camera {
   ///                                              Parameter is ignored is no distortion is active.
   /// @param[out] out_keypoint            The keypoint in image coordinates.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  virtual const ProjectionState project3Functional(
+  ///         ProjectionResult" for more information.
+  virtual const ProjectionResult project3Functional(
       const Eigen::Vector3d& point_3d,
       const Eigen::VectorXd& intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,
@@ -260,8 +260,8 @@ class Camera {
   /// @param[out] out_jacobian_distortion The Jacobian wrt. to changes in the distortion parameters.
   ///                                       nullptr: calculation is skipped.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  virtual const ProjectionState project3Functional(
+  ///         ProjectionResult" for more information.
+  virtual const ProjectionResult project3Functional(
       const Eigen::Vector3d& point_3d,
       const Eigen::VectorXd& intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,

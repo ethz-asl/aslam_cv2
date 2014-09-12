@@ -84,8 +84,8 @@ class PinholeCamera : public Camera {
   /// @param[in]  point_3d     The point in euclidean coordinates.
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  virtual const ProjectionState project3(const Eigen::Vector3d& point_3d,
+  ///         ProjectionResult" for more information.
+  virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
                                          Eigen::Vector2d* out_keypoint) const;
 
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
@@ -94,8 +94,8 @@ class PinholeCamera : public Camera {
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @param[out] out_jacobian The Jacobian w.r.t. to changes in the euclidean point.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  virtual const ProjectionState project3(const Eigen::Vector3d& point_3d,
+  ///         ProjectionResult" for more information.
+  virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
                                          Eigen::Vector2d* out_keypoint,
                                          Eigen::Matrix<double, 2, 3>* out_jacobian) const;
 
@@ -107,11 +107,11 @@ class PinholeCamera : public Camera {
                             Eigen::Vector3d* out_point_3d) const;
 
   /// \brief Checks the success of a projection operation and returns the result in a
-  ///        ProjectionState object.
+  ///        ProjectionResult object.
   /// @param[in] keypoint Keypoint in image coordinates.
   /// @param[in] point_3d Projected point in euclidean.
-  /// @return The ProjectionState object contains details about the success of the projection.
-  const ProjectionState evaluateProjectionState(const Eigen::Vector2d& keypoint,
+  /// @return The ProjectionResult object contains details about the success of the projection.
+  const ProjectionResult evaluateProjectionResult(const Eigen::Vector2d& keypoint,
                                                 const Eigen::Vector3d& point_3d) const;
 
   /// @}
@@ -129,8 +129,8 @@ class PinholeCamera : public Camera {
   ///                                              Parameter is ignored is no distortion is active.
   /// @param[out] out_keypoint            The keypoint in image coordinates.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  virtual const ProjectionState project3Functional(
+  ///         ProjectionResult" for more information.
+  virtual const ProjectionResult project3Functional(
       const Eigen::Vector3d& point_3d,
       const Eigen::VectorXd& intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,
@@ -138,12 +138,11 @@ class PinholeCamera : public Camera {
 
   /// \brief Template version of project3Functional.
   template <typename ScalarType, typename DistortionType>
-  const ProjectionState project3Functional(
+  const ProjectionResult project3Functional(
       const Eigen::Matrix<ScalarType, 3, 1>& point_3d,
       const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics_external,
       const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>* distortion_coefficients_external,
       Eigen::Matrix<ScalarType, 2, 1>* out_keypoint) const;
-
 
   /// \brief This function projects a point into the image using the intrinsic parameters
   ///        that are passed in as arguments. If any of the Jacobians are nonnull, they
@@ -160,8 +159,8 @@ class PinholeCamera : public Camera {
   /// @param[out] out_jacobian_distortion The Jacobian wrt. to changes in the distortion parameters.
   ///                                       nullptr: calculation is skipped.
   /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionState" for more information.
-  virtual const ProjectionState project3Functional(
+  ///         ProjectionResult" for more information.
+  virtual const ProjectionResult project3Functional(
       const Eigen::Vector3d& point_3d,
       const Eigen::VectorXd& intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,

@@ -60,7 +60,7 @@ bool PinholeCamera::operator==(const Camera& other) const {
   return intrinsics_ == rhs->intrinsics_;
 }
 
-const ProjectionState PinholeCamera::project3(const Eigen::Vector3d& point_3d,
+const ProjectionResult PinholeCamera::project3(const Eigen::Vector3d& point_3d,
                                               Eigen::Vector2d* out_keypoint) const {
   CHECK_NOTNULL(out_keypoint);
 
@@ -81,10 +81,10 @@ const ProjectionState PinholeCamera::project3(const Eigen::Vector3d& point_3d,
   (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
   (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
 
-  return evaluateProjectionState(*out_keypoint, point_3d);
+  return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
-const ProjectionState PinholeCamera::project3(const Eigen::Vector3d& point_3d,
+const ProjectionResult PinholeCamera::project3(const Eigen::Vector3d& point_3d,
                                               Eigen::Vector2d* out_keypoint,
                                               Eigen::Matrix<double, 2, 3>* out_jacobian) const {
   CHECK_NOTNULL(out_keypoint);
@@ -121,7 +121,7 @@ const ProjectionState PinholeCamera::project3(const Eigen::Vector3d& point_3d,
   (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
   (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
 
-  return evaluateProjectionState(*out_keypoint, point_3d);
+  return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
 bool PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
@@ -143,7 +143,7 @@ bool PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
   return true;
 }
 
-const ProjectionState PinholeCamera::project3Functional(
+const ProjectionResult PinholeCamera::project3Functional(
     const Eigen::Vector3d& point_3d,
     const Eigen::VectorXd& intrinsics_external,
     const Eigen::VectorXd* distortion_coefficients_external,
@@ -176,10 +176,10 @@ const ProjectionState PinholeCamera::project3Functional(
   (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
   (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
 
-  return evaluateProjectionState(*out_keypoint, point_3d);
+  return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
-const ProjectionState PinholeCamera::project3Functional(
+const ProjectionResult PinholeCamera::project3Functional(
     const Eigen::Vector3d& point_3d,
     const Eigen::VectorXd& intrinsics_external,
     const Eigen::VectorXd* distortion_coefficients_external,
@@ -265,23 +265,23 @@ const ProjectionState PinholeCamera::project3Functional(
   (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
   (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
 
-  return evaluateProjectionState(*out_keypoint, point_3d);
+  return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
-inline const ProjectionState PinholeCamera::evaluateProjectionState(
+inline const ProjectionResult PinholeCamera::evaluateProjectionResult(
     const Eigen::Vector2d& keypoint,
     const Eigen::Vector3d& point_3d) const {
 
   const bool visibility = isKeypointVisible(keypoint);
 
   if (visibility && (point_3d[2] > kMinimumDepth))
-    return ProjectionState(ProjectionState::Status::KEYPOINT_VISIBLE);
+    return ProjectionResult(ProjectionResult::Status::KEYPOINT_VISIBLE);
   else if (!visibility && (point_3d[2] > kMinimumDepth))
-    return ProjectionState(ProjectionState::Status::KEYPOINT_OUTSIDE_IMAGE_BOX);
+    return ProjectionResult(ProjectionResult::Status::KEYPOINT_OUTSIDE_IMAGE_BOX);
   else if (point_3d[2] < 0.0)
-    return ProjectionState(ProjectionState::Status::POINT_BEHIND_CAMERA);
+    return ProjectionResult(ProjectionResult::Status::POINT_BEHIND_CAMERA);
   else
-    return ProjectionState(ProjectionState::Status::PROJECTION_INVALID);
+    return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
 }
 
 void PinholeCamera::setParameters(const Eigen::VectorXd& params) {
