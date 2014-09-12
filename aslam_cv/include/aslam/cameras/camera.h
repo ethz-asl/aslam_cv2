@@ -18,10 +18,40 @@
 
 namespace aslam {
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// TODO(schneith): where to put ProjectionResult?
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/// \brief A factory function to create a derived class camera
+///
+/// This function takes a vectors of intrinsics and distortion parameters
+/// and produces a camera.
+/// \param[in] intrinsics A vector of projection intrinsic parameters.
+/// \param[in] imageWidth The width of the image associated with this camera.
+/// \param[in] imageHeight The height of the image associated with this camera.
+/// \param[in] distortionParameters The parameters of the distortion object.
+/// \returns A new camera based on the template types.
+template <typename CameraType, typename DistortionType>
+typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
+                                      uint32_t imageWidth, uint32_t imageHeight,
+                                      const Eigen::VectorXd& distortion_parameters)
+{
+  typename DistortionType::Ptr distortion(new DistortionType(distortion_parameters));
+  typename CameraType::Ptr camera(new CameraType(intrinsics, imageWidth, imageHeight, distortion));
+  return camera;
+}
 
+/// \brief A factory function to create a derived class camera without distortion.
+///
+/// This function takes a vectors of intrinsics and distortion parameters
+/// and produces a camera.
+/// \param[in] intrinsics A vector of projection intrinsic parameters.
+/// \param[in] imageWidth The width of the image associated with this camera.
+/// \param[in] imageHeight The height of the image associated with this camera.
+/// \returns A new camera based on the template types.
+template <typename CameraType>
+typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
+                                      uint32_t imageWidth, uint32_t imageHeight)
+{
+  typename CameraType::Ptr camera(new CameraType(intrinsics, imageWidth, imageHeight));
+  return camera;
+}
 
 /// \struct ProjectionResult
 /// \brief This struct is returned by the camera projection methods and holds the result state
