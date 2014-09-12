@@ -12,41 +12,36 @@ namespace aslam {
 // methods).
 
 template <typename ScalarType, typename DistortionType>
-bool PinholeCamera::project3(
-    const Eigen::Matrix<ScalarType, 3, 1>& point,
-    const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics,
-    Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
-  CHECK_NOTNULL(out_point);
+const ProjectionResult PinholeCamera::project3Functional(
+    const Eigen::Matrix<ScalarType, 3, 1>& point_3d,
+    const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics_external,
+    const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>* distortion_coefficients_external,
+    Eigen::Matrix<ScalarType, 2, 1>* out_keypoint) const {
 
-  ScalarType rz = static_cast<ScalarType>(1.0) / point[2];
+  CHECK_NOTNULL(out_keypoint);
+  CHECK_EQ(intrinsics_external.size(), kNumOfParams) << "intrinsics: invalid size!";
+
+  const double& fu = intrinsics_external[0];
+  const double& fv = intrinsics_external[1];
+  const double& cu = intrinsics_external[2];
+  const double& cv = intrinsics_external[3];
+
+  ScalarType rz = static_cast<ScalarType>(1.0) / point_3d[2];
   Eigen::Matrix<ScalarType, 2, 1> keypoint;
-  keypoint[0] = point[0] * rz;
-  keypoint[1] = point[1] * rz;
+  keypoint[0] = point_3d[0] * rz;
+  keypoint[1] = point_3d[1] * rz;
 
-  CHECK_NOTNULL(_distortion.get());
-  std::shared_ptr<DistortionType> distortion_ptr =
-      std::dynamic_pointer_cast<DistortionType>(_distortion);
-  CHECK(distortion_ptr);
-  distortion_ptr->distort(
-      Eigen::Map<Eigen::VectorXd>(intrinsics.tail(distortion_ptr->getParameterSize()).data(), distortion_ptr->getParameterSize()),
-      keypoint,
-      out_point);
+  // Distort the point (if a distortion model is set)
+  if (distortion_)
+    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+                                                  keypoint,
+                                                  nullptr); // No Jacobian needed.
 
-  (*out_point)[0] = intrinsics(0) * (*out_point)[0] + intrinsics(2);
-  (*out_point)[1] = intrinsics(1) * (*out_point)[1] + intrinsics(3);
+  (*out_keypoint)[0] = fu * keypoint[0] + cu;
+  (*out_keypoint)[1] = fv * keypoint[1] + cv;
 
-  return isValid(*out_point) && point[2] > static_cast<ScalarType>(0);
-}
-
-template <typename ScalarType>
-bool PinholeCamera::isKeypointVisible(
-    const Eigen::Matrix<ScalarType, 2, 1>& keypoint) const {
-  return keypoint[0] >= static_cast<ScalarType>(0)
-      && keypoint[1] >= static_cast<ScalarType>(0)
-      && keypoint[0] < static_cast<ScalarType>(imageWidth())
-      && keypoint[1] < static_cast<ScalarType>(imageHeight());
+  return evaluateProjectionResult(out_keypoint, point_3d);
 }
 
 }  // namespace aslam
-
 #endif  // ASLAM_CAMERAS_PINHOLE_CAMERA_INL_H_
