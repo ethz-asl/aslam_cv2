@@ -20,34 +20,39 @@ namespace aslam {
 //
 //}
 
+PinholeCamera::PinholeCamera()
+  : Camera( Eigen::Vector4d::Zero() ),
+    distortion_(nullptr) {
+  setImageWidth(0);
+  setImageHeight(0);
+}
+
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
-                             uint32_t imageWidth, uint32_t imageHeight,
-                             aslam::Distortion::Ptr distortion) :
-                               Camera(intrinsics) {
-  CHECK_EQ(static_cast<int>(kNumOfParams), intrinsics.size());
-  CHECK_NOTNULL(distortion.get());
-  distortion_ = distortion;
-  setImageWidth(imageWidth);
-  setImageHeight(imageHeight);
-}
-
-PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
-                             double imageCenterCols, double imageCenterRows,
-                             uint32_t imageWidth, uint32_t imageHeight,
+                             uint32_t image_width, uint32_t image_height,
                              aslam::Distortion::Ptr distortion)
-: Camera( Eigen::Vector4d(focalLengthCols, focalLengthRows, imageCenterCols, imageCenterRows) ),
-  distortion_(distortion) {
-  setImageWidth(imageWidth);
-  setImageHeight(imageHeight);
+  : Camera(intrinsics),
+    distortion_(distortion) {
+  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
+  setImageWidth(image_width);
+  setImageHeight(image_height);
 }
 
-PinholeCamera::PinholeCamera(double focalLengthCols, double focalLengthRows,
-                             double imageCenterCols, double imageCenterRows,
-                             uint32_t imageWidth, uint32_t imageHeight)
-: PinholeCamera(focalLengthCols, focalLengthRows,
-                imageCenterCols, imageCenterRows,
-                imageWidth, imageHeight,
-                nullptr) { }
+PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
+                             uint32_t image_width, uint32_t image_height)
+    : PinholeCamera(intrinsics, image_width, image_height, nullptr) {}
+
+PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
+                             double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
+                             uint32_t image_height, aslam::Distortion::Ptr distortion)
+    : PinholeCamera(Eigen::Vector4d(focallength_cols, focallength_rows,
+                                     imagecenter_cols, imagecenter_rows),
+                     image_width, image_height, distortion) {}
+
+PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
+                             double imagecenter_cols, double imagecenter_rows,
+                             uint32_t image_width, uint32_t image_height)
+    : PinholeCamera(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows, image_width,
+                    image_height, nullptr) {}
 
 bool PinholeCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.
