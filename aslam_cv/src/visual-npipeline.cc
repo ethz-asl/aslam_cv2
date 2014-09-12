@@ -2,14 +2,14 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncameras.h>
+#include <aslam/common/thread-pool.h>
 #include <aslam/frames/visual-nframes.h>
 #include <aslam/pipeline/visual-pipeline.h>
-#include <opencv2/core/core.hpp>
 #include <glog/logging.h>
+#include <opencv2/core/core.hpp>
+
 
 namespace aslam {
-
-VisualNPipeline::VisualNPipeline() { }
 
 VisualNPipeline::VisualNPipeline(
     unsigned num_threads,
@@ -36,17 +36,16 @@ VisualNPipeline::VisualNPipeline(
   }
   CHECK_GT(num_threads, 0u);
   thread_pool_.reset(new ThreadPool(num_threads));
-
 }
 
 VisualNPipeline::~VisualNPipeline() {
   thread_pool_->stop();
 }
 
-void VisualNPipeline::processImage(int cameraIndex, const cv::Mat& image,
-                                   int64_t systemStamp, int64_t hardwareStamp) {
-  thread_pool_->enqueue(&VisualNPipeline::work, this, cameraIndex,
-                        image, systemStamp, hardwareStamp);
+void VisualNPipeline::processImage(size_t camera_index, const cv::Mat& image,
+                                   int64_t system_stamp, int64_t hardware_stamp) {
+  thread_pool_->enqueue(&VisualNPipeline::work, this, camera_index,
+                        image, system_stamp, hardware_stamp);
 }
 
 size_t VisualNPipeline::getNumFramesComplete() const {
@@ -85,11 +84,11 @@ std::shared_ptr<VisualNFrames> VisualNPipeline::getLatestAndClear() {
   return rval;
 }
 
-std::shared_ptr<NCameras> VisualNPipeline::getInputNCameras() const {
+const std::shared_ptr<NCameras>& VisualNPipeline::getInputNCameras() const {
   return input_cameras_;
 }
 
-std::shared_ptr<NCameras> VisualNPipeline::getOutputNCameras() const {
+const std::shared_ptr<NCameras>& VisualNPipeline::getOutputNCameras() const {
   return output_cameras_;
 }
 
@@ -98,10 +97,10 @@ size_t VisualNPipeline::getNumFramesProcessing() const {
   return processing_.size();
 }
 
-void VisualNPipeline::work(int cameraIndex, const cv::Mat& image,
-                           int64_t systemStamp, int64_t hardwareStamp) {
+void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
+                           int64_t system_stamp, int64_t hardware_stamp) {
   std::shared_ptr<VisualFrame> frame;
-  frame = pipelines_[cameraIndex]->processImage(image, systemStamp, hardwareStamp);
+  frame = pipelines_[camera_index]->processImage(image, system_stamp, hardware_stamp);
 
   /// Create an iterator into the processing queue.
   std::map<int64_t, std::shared_ptr<VisualNFrames>>::iterator proc_it;
@@ -136,7 +135,7 @@ void VisualNPipeline::work(int cameraIndex, const cv::Mat& image,
     }
 
     if(create_new_nframes) {
-      std::shared_ptr<VisualNFrames> nframes( new VisualNFrames(output_cameras_) );
+      std::shared_ptr<VisualNFrames> nframes(new VisualNFrames(output_cameras_));
       bool replaced;
       std::tie(proc_it, replaced) = processing_.insert(
           std::make_pair(frame->getTimestamp(), nframes)
@@ -144,7 +143,7 @@ void VisualNPipeline::work(int cameraIndex, const cv::Mat& image,
     }
     // Now proc_it points to the correct place in the processing_ list and
     // the NFrame has been created if necessary.
-    proc_it->second->setFrame(cameraIndex, frame);
+    proc_it->second->setFrame(camera_index, frame);
 
     // Check if all images have been received.
     bool all_received = true;

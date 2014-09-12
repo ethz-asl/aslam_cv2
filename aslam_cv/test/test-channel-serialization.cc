@@ -38,7 +38,6 @@ class CvMatSerializationTest : public ::testing::Test {
       fill(&(imagesA_[i].value_));
     }
   }
-  // TODO(PTF) Change to channels.
   aslam::channels::Channel<cv::Mat> imagesA_[num_channels];
   aslam::channels::Channel<cv::Mat> imagesB_[num_channels];
 };

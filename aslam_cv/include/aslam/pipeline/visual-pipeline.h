@@ -56,14 +56,14 @@ public:
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual std::shared_ptr<Camera> getInputCamera() const = 0;
+  virtual const std::shared_ptr<Camera>& getInputCamera() const = 0;
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual std::shared_ptr<Camera> getOutputCamera() const = 0;
+  virtual const std::shared_ptr<Camera>& getOutputCamera() const = 0;
 };
 
 }  // namespace aslam

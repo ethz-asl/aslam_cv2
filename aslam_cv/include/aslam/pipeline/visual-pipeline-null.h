@@ -15,8 +15,7 @@ public:
   /// \param[in] camera The camera that produces the images.
   /// \param[in] copyImages If true, images passed in are cloned before storing
   ///                       in the frame.
-  NullVisualPipeline(const std::shared_ptr<Camera>& camera,
-                     bool copyImages);
+  NullVisualPipeline(const std::shared_ptr<Camera>& camera, bool copyImages);
 
   virtual ~NullVisualPipeline();
 
@@ -38,14 +37,15 @@ public:
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual std::shared_ptr<Camera> getInputCamera() const;
+  virtual const std::shared_ptr<Camera>& getInputCamera() const;
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual std::shared_ptr<Camera> getOutputCamera() const;
+  virtual const std::shared_ptr<Camera>& getOutputCamera() const;
+
 private:
   std::shared_ptr<Camera> camera_;
   bool copyImages_;
