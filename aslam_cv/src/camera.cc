@@ -96,4 +96,32 @@ bool Camera::isKeypointVisible(const Eigen::Vector2d& keypoint) const {
       && keypoint[1] < static_cast<double>(imageHeight());
 }
 
+void Camera::project3Vectorized(
+    const Eigen::Matrix3Xd& points_3d, Eigen::Matrix2Xd* out_keypoints,
+    std::vector<ProjectionResult>* out_results) const {
+  CHECK_NOTNULL(out_keypoints);
+  CHECK_NOTNULL(out_results);
+  out_keypoints->resize(2, points_3d.cols());
+  out_results->resize(points_3d.cols());
+  Eigen::Vector2d projection;
+  for(int i = 0; i < points_3d.cols(); ++i) {
+    (*out_results)[i] = project3(points_3d.col(i), &projection);
+   out_keypoints->col(i) = projection;
+  }
+}
+
+void Camera::backProject3Vectorized(const Eigen::Matrix2Xd& keypoints,
+                                    Eigen::Matrix3Xd* out_points_3d,
+                                    std::vector<bool>* out_success) const {
+  CHECK_NOTNULL(out_points_3d);
+  CHECK_NOTNULL(out_success);
+  out_points_3d->resize(3, keypoints.cols());
+  out_success->resize(keypoints.cols());
+  Eigen::Vector3d bearing;
+  for(int i = 0; i < keypoints.cols(); ++i) {
+    (*out_success)[i] = backProject3(keypoints.col(i), &bearing);
+    out_points_3d->col(i) = bearing;
+  }
+}
 }  // namespace aslam
+
