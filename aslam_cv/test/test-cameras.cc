@@ -8,6 +8,7 @@
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
+#include <aslam/common/eigen-helpers.h>
 #include <aslam/common/eigen-predicates.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
@@ -74,6 +75,47 @@ TYPED_TEST(TestCameras, CameraTest_isProjectable) {
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(5000, -5, 1)));  // In front of cam, outside range.
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(-10, -10, -1))); // Behind cam.
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(0, 0, -1)));     // Behind, center.
+}
+TYPED_TEST(TestCameras, CameraTest_isInvertible) {
+  const int N = 100;
+  const double depth = 10.0;
+  Eigen::Matrix3Xd points1(3,N);
+  Eigen::Matrix2Xd projections1(2,N);
+  Eigen::Matrix3Xd points2(3,N);
+  Eigen::Matrix3Xd points3(3,N);
+  Eigen::Matrix2Xd projections3(2,N);
+  Eigen::Vector3d point;
+  Eigen::Vector2d keypoint;
+
+  // N times, project and back-project a random point at a known depth.
+  // Then check that the back projection matches the projeciton.
+  for(size_t n = 0; n < N; ++n) {
+    points1.col(n) = this->camera_->createRandomVisiblePoint(depth);
+    aslam::ProjectionResult result = this->camera_->project3(points1.col(n), &keypoint);
+    projections1.col(n) = keypoint;
+    ASSERT_EQ(aslam::ProjectionResult::Status::KEYPOINT_VISIBLE, result.getDetailedStatus());
+    bool success = this->camera_->backProject3(keypoint, &point);
+    ASSERT_TRUE(success);
+    point.normalize();
+    points2.col(n) = point * depth;
+  }
+  ASSERT_TRUE(aslam::common::MatricesEqual(points1, points2, 1e-4));
+
+  // Do the same with the vectorized functions.
+  std::vector<aslam::ProjectionResult> result;
+  this->camera_->project3Vectorized(points1, &projections3, &result);
+  for(size_t n = 0; n < N; ++n) {
+    ASSERT_EQ(aslam::ProjectionResult::Status::KEYPOINT_VISIBLE, result[n].getDetailedStatus());
+  }
+  std::vector<bool> success;
+  this->camera_->backProject3Vectorized(projections3, &points3, &success);
+  for(size_t n = 0; n < N; ++n) {
+    ASSERT_TRUE(success[n]);
+    points3.col(n).normalize();
+    points3.col(n) *= depth;
+  }
+
+  ASSERT_TRUE(aslam::common::MatricesEqual(points1, points3, 1e-4));
 }
 
 ///////////////////////////////////////////////

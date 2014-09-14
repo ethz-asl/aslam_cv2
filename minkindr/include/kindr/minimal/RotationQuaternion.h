@@ -89,14 +89,8 @@ class RotationQuaternion
   /// \brief set the quaternion to identity
   RotationQuaternion& setIdentity();
 
-  /// \brief invert the quaternion
-  RotationQuaternion& invert();
-
   /// \brief get a copy of the quaternion inverted.
   RotationQuaternion inverted() const;
-
-  /// \brief conjugate the quaternion
-  RotationQuaternion& conjugate();
 
   /// \brief get a copy of the conjugate of the quaternion.
   RotationQuaternion conjugated() const;
@@ -129,7 +123,7 @@ class RotationQuaternion
   Scalar getDisparityAngle(const RotationQuaternion& rhs) const;
 
   /// \brief enforce the unit length constraint
-  RotationQuaternion& fix();
+  RotationQuaternion& normalize();
 
   /// \brief compose two quaternions
   RotationQuaternion operator*(const RotationQuaternion& rhs) const;

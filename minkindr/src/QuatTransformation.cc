@@ -4,7 +4,7 @@ namespace kindr {
 namespace minimal {
 
 QuatTransformation::QuatTransformation() {
-
+  setIdentity();
 }
 
 
@@ -14,11 +14,35 @@ QuatTransformation::QuatTransformation(const RotationQuaternion& q_A_B, const Po
 
 }
 
-  
+QuatTransformation::QuatTransformation(const Rotation::Implementation& q_A_B,
+                                       const Position& A_t_A_B) :
+        q_A_B_(q_A_B),
+        A_t_A_B_(A_t_A_B) {
+
+}
+
+QuatTransformation::QuatTransformation(const Position& A_t_A_B,
+                                       const RotationQuaternion& q_A_B) :
+    q_A_B_(q_A_B),
+    A_t_A_B_(A_t_A_B) {
+
+}
+
+QuatTransformation::QuatTransformation(const Position& A_t_A_B,
+                                       const Rotation::Implementation& q_A_B) :
+        q_A_B_(q_A_B),
+        A_t_A_B_(A_t_A_B) {
+
+}
+
 QuatTransformation::~QuatTransformation() {
 
 }
 
+void QuatTransformation::setIdentity() {
+  q_A_B_.setIdentity();
+  A_t_A_B_.setZero();
+}
 
 /// \brief get the position component
 QuatTransformation::Position& QuatTransformation::getPosition() {
@@ -104,14 +128,6 @@ Eigen::Vector3d QuatTransformation::inverseTransformVector(const Eigen::Vector3d
 QuatTransformation QuatTransformation::inverted() const {
   return QuatTransformation(q_A_B_.inverted(), -q_A_B_.inverseRotate(A_t_A_B_));
 }
-
-/// \brief invert the transformation
-QuatTransformation& QuatTransformation::invert(){
-  q_A_B_.invert();
-  A_t_A_B_ = -q_A_B_.rotate(A_t_A_B_);
-  return *this;
-}
-
 
 
 std::ostream & operator<<(std::ostream & out, const QuatTransformation& pose) {

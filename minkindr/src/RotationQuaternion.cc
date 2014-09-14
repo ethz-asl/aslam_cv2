@@ -145,26 +145,10 @@ RotationQuaternion& RotationQuaternion::setIdentity() {
   return *this;
 }
 
-/// \brief invert the quaternion
-RotationQuaternion& RotationQuaternion::invert() {
-  return conjugate();
-}
-
-
 /// \brief get a copy of the quaternion inverted.
 RotationQuaternion RotationQuaternion::inverted() const {
   return conjugated();
 }
-
-
-/// \brief conjugate the quaternion
-RotationQuaternion& RotationQuaternion::conjugate() {
-  q_A_B_.x() = -q_A_B_.x();
-  q_A_B_.y() = -q_A_B_.y();
-  q_A_B_.z() = -q_A_B_.z();
-  return *this;
-}
-
 
 /// \brief get a copy of the conjugate of the quaternion.
 RotationQuaternion RotationQuaternion::conjugated() const {
@@ -223,7 +207,7 @@ RotationQuaternion::Scalar RotationQuaternion::squaredNorm() const {
 }
 
 /// \brief enforce the unit length constraint
-RotationQuaternion& RotationQuaternion::fix() {
+RotationQuaternion& RotationQuaternion::normalize() {
   q_A_B_.normalize();
   return *this;
 }
