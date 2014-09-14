@@ -95,5 +95,14 @@ bool Camera::isKeypointVisible(const Eigen::Vector2d& keypoint) const {
       && keypoint[0] < static_cast<double>(imageWidth())
       && keypoint[1] < static_cast<double>(imageHeight());
 }
-
+ProjectionResult::Status ProjectionResult::KEYPOINT_VISIBLE =
+    ProjectionResult::Status::KEYPOINT_VISIBLE;
+ProjectionResult::Status ProjectionResult::KEYPOINT_OUTSIDE_IMAGE_BOX =
+    ProjectionResult::Status::KEYPOINT_OUTSIDE_IMAGE_BOX;
+ProjectionResult::Status ProjectionResult::POINT_BEHIND_CAMERA =
+    ProjectionResult::Status::POINT_BEHIND_CAMERA;
+ProjectionResult::Status ProjectionResult::PROJECTION_INVALID =
+    ProjectionResult::Status::PROJECTION_INVALID;
+ProjectionResult::Status ProjectionResult::UNINITIALIZED =
+    ProjectionResult::Status::UNINITIALIZED;
 }  // namespace aslam
