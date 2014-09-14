@@ -9,7 +9,7 @@ namespace aslam {
 template<typename Score>
 struct Match {
   /// \brief Initialize to an invalid match.
-  Match() : correspondence{ -1, -1 }, score() {}
+  Match() : correspondence{ -1, -1 }, score(static_cast<Score>(0)) {}
 
   /// \brief Initialize with correspondences and a score.
   Match(int correspondence_a, int correspondence_b, Score score) :
