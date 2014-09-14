@@ -108,10 +108,8 @@ TEST(CameraComparison, TestStatus) {
   Distortion::Ptr distortion = std::make_shared<RadTanDistortion>(dvec);
   Camera::Ptr camera = std::make_shared<PinholeCamera>(240, 480, 100, 200, 500, 500, distortion);
 
-  Eigen::Matrix<double, 3, 1> point(0, 0, 1);
+  Eigen::Matrix<double, 3, 1> point(0, 0, -1);
   Eigen::Matrix<double, 2, 1> keypoint;
   ProjectionResult result = camera->project3(point, &keypoint);
-  if(result == ProjectionResult::POINT_BEHIND_CAMERA ) {
-
-  }
+  EXPECT_TRUE(result == ProjectionResult::POINT_BEHIND_CAMERA);
 }
