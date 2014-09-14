@@ -1,7 +1,7 @@
 #ifndef ASLAM_VISUAL_MULTI_FRAME_H
 #define ASLAM_VISUAL_MULTI_FRAME_H
 
-#include <aslam/cameras/ncameras.h>
+#include <aslam/cameras/ncamera.h>
 #include <aslam/frames/visual-frame.h>
 
 namespace aslam {
@@ -9,14 +9,14 @@ namespace aslam {
 /// \class VisualMultiFrame
 /// \brief A class representing images and keypoints and 
 ///        calibration data from a multi-camera system.
-class VisualNFrames {
+class VisualNFrame {
  public:
-  ASLAM_POINTER_TYPEDEFS(VisualNFrames);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNFrames);
+  ASLAM_POINTER_TYPEDEFS(VisualNFrame);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /// \brief Creates an empty visual multi frame.
-  VisualNFrames();
+  VisualNFrame();
   
   /// \brief Creates a visual n-frame from an id and camera system.
   ///
@@ -24,26 +24,26 @@ class VisualNFrames {
   ///
   /// \param[in] id       The unique id for this object.
   /// \param[in] ncameras The camera system associated with this object.
-  VisualNFrames(const aslam::NFramesId& id,
-                std::shared_ptr<NCameras> ncameras);
+  VisualNFrame(const aslam::NFramesId& id,
+                std::shared_ptr<NCamera> ncameras);
 
   /// \brief Creates a visual n-frame from a camera system.
   ///
   ///        The id is set randomly and the individual frames are initialized to NULL.
   ///
   /// \param[in] ncameras The camera system associated with this object.
-  VisualNFrames(std::shared_ptr<NCameras> ncameras);
+  VisualNFrame(std::shared_ptr<NCamera> ncameras);
 
-  virtual ~VisualNFrames();
+  virtual ~VisualNFrame();
 
   /// \brief Get the multiframe id.
   inline const aslam::NFramesId& getId() const { return id_; }
 
   /// \brief Get the camera rig.
-  const NCameras& getNCameras() const;
+  const NCamera& getNCameras() const;
   
   /// \brief Get the camera rig.
-  NCameras::Ptr getNCamerasMutable();
+  NCamera::Ptr getNCamerasMutable();
   
   /// \brief Is the frame at this index null
   bool isFrameNull(size_t frameIndex) const;
@@ -85,14 +85,14 @@ class VisualNFrames {
   size_t getCameraIndex(const CameraId& id) const;
 
   /// \brief Binary equality.
-  bool operator==(const VisualNFrames& other) const;
+  bool operator==(const VisualNFrame& other) const;
 
  private:
   /// \brief The unique frame id.
   NFramesId id_;
 
   /// \brief The camera rig.
-  NCameras::Ptr cameraRig_;
+  NCamera::Ptr cameraRig_;
   
   /// \brief The list of individual image frames.
   std::vector<VisualFrame::Ptr> frames_;

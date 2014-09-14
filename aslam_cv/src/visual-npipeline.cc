@@ -1,9 +1,9 @@
 #include <aslam/pipeline/visual-npipeline.h>
 
 #include <aslam/cameras/camera.h>
-#include <aslam/cameras/ncameras.h>
+#include <aslam/cameras/ncamera.h>
 #include <aslam/common/thread-pool.h>
-#include <aslam/frames/visual-nframes.h>
+#include <aslam/frames/visual-nframe.h>
 #include <aslam/pipeline/visual-pipeline.h>
 #include <glog/logging.h>
 #include <opencv2/core/core.hpp>
@@ -14,8 +14,8 @@ namespace aslam {
 VisualNPipeline::VisualNPipeline(
     unsigned num_threads,
     const std::vector<std::shared_ptr<VisualPipeline> >& pipelines,
-    const std::shared_ptr<NCameras>& input_cameras,
-    const std::shared_ptr<NCameras>& output_cameras, int64_t timestamp_tolerance_ns) :
+    const std::shared_ptr<NCamera>& input_cameras,
+    const std::shared_ptr<NCamera>& output_cameras, int64_t timestamp_tolerance_ns) :
       pipelines_(pipelines),
       input_cameras_(input_cameras), output_cameras_(output_cameras),
       timestamp_tolerance_ns_(timestamp_tolerance_ns) {
@@ -53,9 +53,9 @@ size_t VisualNPipeline::getNumFramesComplete() const {
   return completed_.size();
 }
 
-std::shared_ptr<VisualNFrames> VisualNPipeline::getNext() {
+std::shared_ptr<VisualNFrame> VisualNPipeline::getNext() {
   // Initialize the return value as null
-  std::shared_ptr<VisualNFrames> rval;
+  std::shared_ptr<VisualNFrame> rval;
   std::unique_lock<std::mutex> lock(mutex_);
   if(!completed_.empty()) {
     /// Get the oldest frame.
@@ -66,8 +66,8 @@ std::shared_ptr<VisualNFrames> VisualNPipeline::getNext() {
   return rval;
 }
 
-std::shared_ptr<VisualNFrames> VisualNPipeline::getLatestAndClear() {
-  std::shared_ptr<VisualNFrames> rval;
+std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
+  std::shared_ptr<VisualNFrame> rval;
   std::unique_lock<std::mutex> lock(mutex_);
   if(!completed_.empty()) {
     /// Get the latest frame.
@@ -84,11 +84,11 @@ std::shared_ptr<VisualNFrames> VisualNPipeline::getLatestAndClear() {
   return rval;
 }
 
-const std::shared_ptr<NCameras>& VisualNPipeline::getInputNCameras() const {
+const std::shared_ptr<NCamera>& VisualNPipeline::getInputNCameras() const {
   return input_cameras_;
 }
 
-const std::shared_ptr<NCameras>& VisualNPipeline::getOutputNCameras() const {
+const std::shared_ptr<NCamera>& VisualNPipeline::getOutputNCameras() const {
   return output_cameras_;
 }
 
@@ -103,7 +103,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
   frame = pipelines_[camera_index]->processImage(image, system_stamp, hardware_stamp);
 
   /// Create an iterator into the processing queue.
-  std::map<int64_t, std::shared_ptr<VisualNFrames>>::iterator proc_it;
+  std::map<int64_t, std::shared_ptr<VisualNFrame>>::iterator proc_it;
   {
     std::unique_lock<std::mutex> lock(mutex_);
     bool create_new_nframes = false;
@@ -135,7 +135,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
     }
 
     if(create_new_nframes) {
-      std::shared_ptr<VisualNFrames> nframes(new VisualNFrames(output_cameras_));
+      std::shared_ptr<VisualNFrame> nframes(new VisualNFrame(output_cameras_));
       bool replaced;
       std::tie(proc_it, replaced) = processing_.insert(
           std::make_pair(frame->getTimestamp(), nframes)
