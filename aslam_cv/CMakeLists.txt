@@ -10,10 +10,10 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/distortion-fisheye.cc
                                src/distortion-radtan.cc
                                src/distortion-equidistant.cc
-                               src/ncameras.cc
+                               src/ncamera.cc
                                src/channel-serialization.cc
                                src/visual-frame.cc
-                               src/visual-nframes.cc
+                               src/visual-nframe.cc
                                src/thread-pool.cc
                                src/visual-pipeline.cc
                                src/visual-npipeline.cc
