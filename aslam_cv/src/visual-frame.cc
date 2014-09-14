@@ -40,7 +40,7 @@ bool VisualFrame::hasKeypointScales() const{
 bool VisualFrame::hasBriskDescriptors() const{
   return aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_);
 }
-bool VisualFrame::hasImage() const {
+bool VisualFrame::hasRawImage() const {
   return aslam::channels::has_IMAGE_Channel(channels_);
 }
 
@@ -59,7 +59,7 @@ const Eigen::VectorXd& VisualFrame::getKeypointOrientations() const {
 const VisualFrame::DescriptorsT& VisualFrame::getBriskDescriptors() const {
   return aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
 }
-const cv::Mat& VisualFrame::getImage() const {
+const cv::Mat& VisualFrame::getRawImage() const {
   return aslam::channels::get_IMAGE_Data(channels_);
 }
 
@@ -88,7 +88,7 @@ VisualFrame::DescriptorsT* VisualFrame::getBriskDescriptorsMutable() {
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
   return &descriptors;
 }
-cv::Mat* VisualFrame::getImageMutable() {
+cv::Mat* VisualFrame::getRawImageMutable() {
   cv::Mat& image =
       aslam::channels::get_IMAGE_Data(channels_);
   return &image;
@@ -171,7 +171,7 @@ void VisualFrame::setBriskDescriptors(
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
-void VisualFrame::setImage(const cv::Mat& image_new) {
+void VisualFrame::setRawImage(const cv::Mat& image_new) {
   if (!aslam::channels::has_IMAGE_Channel(channels_)) {
     aslam::channels::add_IMAGE_Channel(&channels_);
   }
@@ -212,4 +212,33 @@ void VisualFrame::print(std::ostream& out, const std::string& label) const {
   }
 }
 
+aslam::ProjectionResult VisualFrame::toRawImageCoordinates(const Eigen::Vector2d& keypoint,
+                                                           Eigen::Vector2d* out_image_coordinates) {
+  CHECK_NOTNULL(out_image_coordinates);
+  Eigen::Vector3d bearing;
+  // Creating a bearing vector from the transformed camera, then projecting this
+  // bearing should recover the raw image coordinates.
+  bool success = camera_geometry_->backProject3( keypoint, &bearing );
+  if(success) {
+    return raw_camera_geometry_->project3(bearing, out_image_coordinates );
+  } else {
+    return ProjectionResult::Status::PROJECTION_INVALID;
+  }
+}
+
+void VisualFrame::toRawImageCoordinatesVectorized(const Eigen::Matrix2Xd& keypoints,
+                                                  Eigen::Matrix2Xd* out_image_coordinates,
+                                                  std::vector<aslam::ProjectionResult>* results) {
+  CHECK_NOTNULL(out_image_coordinates);
+  CHECK_NOTNULL(results);
+  Eigen::Matrix3Xd bearings;
+  std::vector<bool> success;
+  camera_geometry_->backProject3Vectorized(keypoints, &bearings, &success);
+  raw_camera_geometry_->project3Vectorized(bearings, out_image_coordinates, results);
+  for(size_t i = 0; i < success.size(); ++i) {
+    if(!success[i]){
+      (*results)[i] = ProjectionResult::Status::PROJECTION_INVALID;
+    }
+  }
+}
 }  // namespace aslam

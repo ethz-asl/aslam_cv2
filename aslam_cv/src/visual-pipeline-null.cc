@@ -20,9 +20,9 @@ std::shared_ptr<VisualFrame> NullVisualPipeline::processImage(
 
   std::shared_ptr<VisualFrame> frame(new VisualFrame);
   if(copyImages_){
-    frame->setImage(image.clone());
+    frame->setRawImage(image.clone());
   } else {
-    frame->setImage(image);
+    frame->setRawImage(image);
   }
   frame->setTimestamp(systemStamp);
   frame->setSystemTimestamp(systemStamp);
