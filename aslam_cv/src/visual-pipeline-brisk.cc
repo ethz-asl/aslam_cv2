@@ -104,5 +104,4 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   frame->swapKeypointScales(&scales);
 }
 
-
 }  // namespace aslam
