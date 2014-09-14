@@ -76,8 +76,8 @@ struct ProjectionResult {
   static Status PROJECTION_INVALID;
   static Status UNINITIALIZED;
 
-  ProjectionResult() : status_(Status::UNINITIALIZED) {};
-  ProjectionResult(Status status) : status_(status) {};
+  constexpr ProjectionResult() : status_(Status::UNINITIALIZED) {};
+  constexpr ProjectionResult(Status status) : status_(status) {};
 
   /// \brief ProjectionResult can be typecasted to bool and is true if the projected keypoint
   ///        is visible. Simplifies the check for a successful projection.
@@ -208,6 +208,21 @@ class Camera {
   virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
                                          Eigen::Vector2d* out_keypoint) const = 0;
 
+  /// \brief Projects a matrix of euclidean points to 2d image measurements. Applies the
+  ///        projection (& distortion) models to the points.
+  ///
+  /// This vanilla version just repeatedly calls backProject3. Camera implementers
+  /// are encouraged to override for efficiency.
+  /// @param[in]  point_3d      The point in euclidean coordinates.
+  /// @param[out] out_keypoints The keypoint in image coordinates.
+  /// @param[out] out_results   Contains information about the success of the
+  ///                           projections. Check "struct ProjectionResult" for
+  ///                           more information.
+  virtual void project3Vectorized(const Eigen::Matrix3Xd& points_3d,
+                                  Eigen::Matrix2Xd* out_keypoints,
+                                  std::vector<ProjectionResult>* out_results) const;
+
+
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
   ///        projection (& distortion) models to the point.
   /// @param[in]  point_3d     The point in euclidean coordinates.
@@ -227,6 +242,17 @@ class Camera {
   virtual bool backProject3(const Eigen::Vector2d& keypoint,
                             Eigen::Vector3d* out_point_3d) const = 0;
 
+  /// \brief Compute the 3d bearing vectors in euclidean coordinates given a list of
+  ///        keypoints in image coordinates. Uses the projection (& distortion) models.
+  ///
+  /// This vanilla version just repeatedly calls backProject3. Camera implementers
+  /// are encouraged to override for efficiency.
+  /// @param[in]  keypoints     Keypoints in image coordinates.
+  /// @param[out] out_point_3ds Bearing vectors in euclidean coordinates (with z=1 -> non-normalized).
+  /// @param[out] out_success   Were the projections successful?
+  virtual void backProject3Vectorized(const Eigen::Matrix2Xd& keypoints,
+                                      Eigen::Matrix3Xd* out_points_3d,
+                                      std::vector<bool>* out_success) const;
   /// @}
 
   //////////////////////////////////////////////////////////////
