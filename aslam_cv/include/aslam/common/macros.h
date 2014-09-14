@@ -11,8 +11,8 @@
   typedef std::shared_ptr<TypeName> Ptr;               \
   typedef std::shared_ptr<const TypeName> ConstPtr     \
 
-// Extract the type from an expression which wraps a type inside braces. This
-// is done to protect the commas in some types.
+/// Extract the type from an expression which wraps a type inside braces. This
+/// is done to protect the commas in some types.
 template<typename T> struct ArgumentType;
 template<typename T, typename U> struct ArgumentType<T(U)> { typedef U Type; };
 #define GET_TYPE(TYPE) ArgumentType<void(TYPE)>::Type
