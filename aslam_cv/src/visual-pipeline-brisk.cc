@@ -61,7 +61,7 @@ void BriskVisualPipeline::initializeBrisk(size_t octaves,
                                                       scale_invariant_));
 }
 
-void BriskVisualPipeline::processFrame(
+void BriskVisualPipeline::processFrameImpl(
     const cv::Mat& image, std::shared_ptr<VisualFrame>* frame) const {
 
   // Now we use the image from the frame. It might be undistorted.

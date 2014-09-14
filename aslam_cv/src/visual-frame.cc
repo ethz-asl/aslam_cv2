@@ -227,11 +227,11 @@ aslam::ProjectionResult VisualFrame::toRawImageCoordinates(const Eigen::Vector2d
   Eigen::Vector3d bearing;
   // Creating a bearing vector from the transformed camera, then projecting this
   // bearing should recover the raw image coordinates.
-  bool success = camera_geometry_->backProject3( keypoint, &bearing );
+  bool success = camera_geometry_->backProject3(keypoint, &bearing);
   if(success) {
     return raw_camera_geometry_->project3(bearing, out_image_coordinates );
   } else {
-    return ProjectionResult::Status::PROJECTION_INVALID;
+    return ProjectionResult::PROJECTION_INVALID;
   }
 }
 
@@ -246,7 +246,7 @@ void VisualFrame::toRawImageCoordinatesVectorized(const Eigen::Matrix2Xd& keypoi
   raw_camera_geometry_->project3Vectorized(bearings, out_image_coordinates, results);
   for(size_t i = 0; i < success.size(); ++i) {
     if(!success[i]){
-      (*results)[i] = ProjectionResult::Status::PROJECTION_INVALID;
+      (*results)[i] = ProjectionResult::PROJECTION_INVALID;
     }
   }
 }

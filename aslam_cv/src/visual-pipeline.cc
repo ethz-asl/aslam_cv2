@@ -52,7 +52,7 @@ std::shared_ptr<VisualFrame> VisualPipeline::processImage(
     image = raw_image;
   }
   /// Send the image to the derived class for processing
-  processFrame(image, &frame);
+  processFrameImpl(image, &frame);
 
   return frame;
 }

@@ -26,13 +26,14 @@ public:
   ///
   /// \param[in] camera             The intrinsic calibration of this camera.
   /// \param[in] copy_images        Should we deep copy the images passed in?
-  /// \param[in] octaves            Number of octaves Brisk should process.
-  /// \param[in] uniformity_radius  Uniformity radius Brisk should use.
+  /// \param[in] octaves            Number of octaves for BRISK scale computation.
+  /// \param[in] uniformity_radius  Gets multiplied on the keypoint scale and determines
+  ///                               the distance to the next neighboring keypoint.
   /// \param[in] absolute_threshold The brisk absolute threshold.
   ///                               Low makes more keypoints.
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
-  /// \param[in] rotation_invariant Should Brisk account for keypoint rotation?
-  /// \param[in] scale_invariant    Should Brisk account for keypoint scale?
+  /// \param[in] rotation_invariant Should Brisk estimate the keypoint orientation?
+  /// \param[in] scale_invariant    Should Brisk estimate the keypoint scale?
   BriskVisualPipeline(const std::shared_ptr<Camera>& camera, bool copy_images,
                       size_t octaves, double uniformity_radius,
                       double absolute_threshold, size_t max_number_of_keypoints,
@@ -43,13 +44,14 @@ public:
   /// \param[in] preprocessing      An undistorter to do preprocessing such as
   ///                               contrast enhancement or undistortion.
   /// \param[in] copy_images        Should we deep copy the images passed in?
-  /// \param[in] octaves            Number of octaves Brisk should process.
-  /// \param[in] uniformity_radius  Uniformity radius Brisk should use.
-  /// \param[in] absolute_threshold The brisk absolute threshold.
+  /// \param[in] octaves            Number of octaves for BRISK scale computation.
+  /// \param[in] uniformity_radius  Gets multiplied on the keypoint scale and determines
+  ///                               the distance to the next neighboring keypoint.
+  /// \param[in] absolute_threshold The Brisk absolute threshold.
   ///                               Low makes more keypoints.
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
-  /// \param[in] rotation_invariant Should Brisk account for keypoint rotation?
-  /// \param[in] scale_invariant    Should Brisk account for keypoint scale?
+  /// \param[in] rotation_invariant Should brisk estimate the keypoint orientation?
+  /// \param[in] scale_invariant    Should Brisk estimate the keypoint scale?
   BriskVisualPipeline(const std::shared_ptr<Undistorter>& preprocessing,
                       bool copy_images, size_t octaves, double uniformity_radius,
                       double absolute_threshold, size_t max_number_of_keypoints,
@@ -59,13 +61,14 @@ public:
 
   /// \brief Initialize the brisk pipeline.
   ///
-  /// \param[in] octaves            Number of octaves Brisk should process.
-  /// \param[in] uniformity_radius  Uniformity radius Brisk should use.
+  /// \param[in] octaves            Number of octaves for BRISK scale computation.
+  /// \param[in] uniformity_radius  Gets multiplied on the keypoint scale and determines
+  ///                               the distance to the next neighboring keypoint.
   /// \param[in] absolute_threshold The brisk absolute threshold.
   ///                               Low makes more keypoints.
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
-  /// \param[in] rotation_invariant Should Brisk account for keypoint rotation?
-  /// \param[in] scale_invariant    Should Brisk account for keypoint scale?
+  /// \param[in] rotation_invariant Should Brisk estimate the keypoint orientation?
+  /// \param[in] scale_invariant    Should Brisk estimate the keypoint scale?
   void initializeBrisk(size_t octaves, double uniformity_radius,
                        double absolute_threshold, size_t max_number_of_keypoints,
                        bool rotation_invariant, bool scale_invariant);
@@ -76,7 +79,7 @@ protected:
   /// The top level function will already fill in the timestamps and the output camera.
   /// \param[in]     image The image data.
   /// \param[in/out] frame The visual frame. This will be constructed before calling.
-  virtual void processFrame(const cv::Mat& image,
+  virtual void processFrameImpl(const cv::Mat& image,
                             std::shared_ptr<VisualFrame>* frame) const;
 private:
   std::shared_ptr<cv::FeatureDetector> detector_;
