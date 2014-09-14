@@ -17,4 +17,6 @@
   <depend>minkindr</depend> 
   <depend>doxygen_catkin</depend>
   <depend>opengv</depend>
+  <depend>brisk</depend>
+
 </package>
