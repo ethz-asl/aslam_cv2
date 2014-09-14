@@ -201,6 +201,7 @@ class VisualFrame  {
   ///                                   getRawCameraGeometry().
   aslam::ProjectionResult toRawImageCoordinates(const Eigen::Vector2d& keypoint,
                                                 Eigen::Vector2d* out_image_coordinates);
+
   /// \brief Convert keypoint coordinates to raw image coordinates.
   ///
   /// \param[in] keypoints              The keypoint coordinates with respect to
