@@ -241,9 +241,9 @@ class Camera {
   /// @param[in]  keypoints     Keypoints in image coordinates.
   /// @param[out] out_point_3ds Bearing vectors in euclidean coordinates (with z=1 -> non-normalized).
   /// @param[out] out_success   Were the projections successful?
-  virtual void backProject3Vectorized( const Eigen::Matrix2Xd& keypoints,
-                                       Eigen::Matrix3Xd* out_points_3d,
-                                       std::vector<bool>* out_success) const;
+  virtual void backProject3Vectorized(const Eigen::Matrix2Xd& keypoints,
+                                      Eigen::Matrix3Xd* out_points_3d,
+                                      std::vector<bool>* out_success) const;
   /// @}
 
   //////////////////////////////////////////////////////////////

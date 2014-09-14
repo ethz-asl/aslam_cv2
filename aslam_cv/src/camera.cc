@@ -101,8 +101,8 @@ void Camera::project3Vectorized(
     std::vector<ProjectionResult>* out_results) const {
   CHECK_NOTNULL(out_keypoints);
   CHECK_NOTNULL(out_results);
-  out_keypoints->resize(2, points_3d.cols());
-  out_results->resize(points_3d.cols());
+  out_keypoints->resize(Eigen::NoChange, points_3d.cols());
+  out_results->resize(points_3d.cols(), ProjectionResult::Status::UNINITIALIZED);
   Eigen::Vector2d projection;
   for(int i = 0; i < points_3d.cols(); ++i) {
     (*out_results)[i] = project3(points_3d.col(i), &projection);
@@ -115,8 +115,8 @@ void Camera::backProject3Vectorized(const Eigen::Matrix2Xd& keypoints,
                                     std::vector<bool>* out_success) const {
   CHECK_NOTNULL(out_points_3d);
   CHECK_NOTNULL(out_success);
-  out_points_3d->resize(3, keypoints.cols());
-  out_success->resize(keypoints.cols());
+  out_points_3d->resize(Eigen::NoChange, keypoints.cols());
+  out_success->resize(keypoints.cols(), false);
   Eigen::Vector3d bearing;
   for(int i = 0; i < keypoints.cols(); ++i) {
     (*out_success)[i] = backProject3(keypoints.col(i), &bearing);
