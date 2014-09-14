@@ -58,17 +58,17 @@ void BriskVisualPipeline::initializeBrisk(size_t octaves,
   );
 #endif
   extractor_.reset(new brisk::BriskDescriptorExtractor(rotation_invariant_,
-                                                      scale_invariant_));
+                                                       scale_invariant_));
 }
 
-void BriskVisualPipeline::processFrameImpl(
-    const cv::Mat& image, std::shared_ptr<VisualFrame>* frame) const {
-
+void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
+                                           VisualFrame* frame) const {
+  CHECK_NOTNULL(frame);
   // Now we use the image from the frame. It might be undistorted.
-  std::vector < cv::KeyPoint > keypoints;
+  std::vector <cv::KeyPoint> keypoints;
   detector_->detect(image, keypoints);
 
-  if(keypoints.size() > 0) {
+  if(!keypoints.empty()) {
     // Copy over the keypoints
     // \TODO(slynen)  can you think of a way to avoid the copy when setting
     //                the data in the channels? Some allocate method to get
@@ -84,22 +84,22 @@ void BriskVisualPipeline::processFrameImpl(
       scales[i]        = kp.size;
       orientations[i]  = kp.angle;
     }
-    (*frame)->setKeypointMeasurements(ikeypoints);
-    (*frame)->setKeypointOrientations(orientations);
-    (*frame)->setKeypointScales(scales);
+    frame->setKeypointMeasurements(ikeypoints);
+    frame->setKeypointOrientations(orientations);
+    frame->setKeypointScales(scales);
 
     // Make the ocv descriptor matrix point to the eigen matrix we will use for descriptors.
     cv::Mat descriptors;
     extractor_->compute(image, keypoints, descriptors);
     CHECK_EQ(descriptors.type(), CV_8UC1);
     CHECK(descriptors.isContinuous());
-    (*frame)->setBriskDescriptors(
+    frame->setBriskDescriptors(
         Eigen::Map<VisualFrame::DescriptorsT>(descriptors.data,
                                               descriptors.rows,
                                               descriptors.cols)
     );
   } else {
-    LOG(WARNING) << "Frame produced no keypoints:\n" << *(*frame);
+    LOG(WARNING) << "Frame produced no keypoints:\n" << *frame;
   }
 }
 

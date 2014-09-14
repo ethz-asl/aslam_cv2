@@ -80,7 +80,7 @@ protected:
   /// \param[in]     image The image data.
   /// \param[in/out] frame The visual frame. This will be constructed before calling.
   virtual void processFrameImpl(const cv::Mat& image,
-                            std::shared_ptr<VisualFrame>* frame) const;
+                                VisualFrame* frame) const;
 private:
   std::shared_ptr<cv::FeatureDetector> detector_;
   std::shared_ptr<cv::DescriptorExtractor> extractor_;
