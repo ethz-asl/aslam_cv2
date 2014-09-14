@@ -84,11 +84,17 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
       scales[i]        = kp.size;
       orientations[i]  = kp.angle;
     }
-    frame->setKeypointMeasurements(ikeypoints);
-    frame->setKeypointOrientations(orientations);
-    frame->setKeypointScales(scales);
+    frame->swapKeypointMeasurements(ikeypoints);
+    frame->swapKeypointOrientations(orientations);
+    frame->swapKeypointScales(scales);
 
-    // Make the ocv descriptor matrix point to the eigen matrix we will use for descriptors.
+    // TODO(slynen) This still requires a copy. I tried to read through the
+    // opencv documentation for descriptor extractors and then through the
+    // brisk code but I can't really figure out what size the matrix will be.
+    // My best guess is: extractor_->descriptorSize() x keypoints.size().
+    // If that is true, we could create an Eigen::MatrixXd of the right size,
+    // map this mat to it, then use "swapBriskDescriptors() at the end to
+    // avoid any copying. Can you or Thomas S. do this?
     cv::Mat descriptors;
     extractor_->compute(image, keypoints, descriptors);
     CHECK_EQ(descriptors.type(), CV_8UC1);
