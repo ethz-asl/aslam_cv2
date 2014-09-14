@@ -138,6 +138,8 @@ class VisualFrame  {
   void setKeypointScales(const Eigen::VectorXd& scales);
   /// \brief Replace (copy) the internal descriptors by the passed ones.
   void setBriskDescriptors(const DescriptorsT& descriptors);
+  /// \brief Replace (copy) the internal descriptors by the passed ones.
+  void setBriskDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
   /// \brief Replace (copy) the internal raw image by the passed ones.
   ///        This is a shallow copy by default. Please clone the image if it
   ///        should be owned by the VisualFrame.

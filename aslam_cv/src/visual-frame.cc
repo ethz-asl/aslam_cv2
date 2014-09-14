@@ -171,6 +171,7 @@ void VisualFrame::setBriskDescriptors(
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
+
 void VisualFrame::setRawImage(const cv::Mat& image_new) {
   if (!aslam::channels::has_IMAGE_Channel(channels_)) {
     aslam::channels::add_IMAGE_Channel(&channels_);
@@ -186,6 +187,14 @@ const Camera::ConstPtr VisualFrame::getCameraGeometry() const {
 
 void VisualFrame::setCameraGeometry(const Camera::Ptr& camera) {
   camera_geometry_ = camera;
+}
+
+const Camera::ConstPtr VisualFrame::getRawCameraGeometry() const {
+  return raw_camera_geometry_;
+}
+
+void VisualFrame::setRawCameraGeometry(const Camera::Ptr& camera) {
+  raw_camera_geometry_ = camera;
 }
 
 void VisualFrame::print(std::ostream& out, const std::string& label) const {
