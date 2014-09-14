@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <kindr/minimal/QuatTransformation.h>
+#include <kindr/minimal/quat-transformation.h>
 #include <cmath>
 
 typedef kindr::minimal::QuatTransformation Transformation;

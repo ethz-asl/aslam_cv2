@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <kindr/minimal/RotationQuaternion.h>
-#include <kindr/minimal/AngleAxis.h>
+#include <kindr/minimal/rotation-quaternion.h>
+#include <kindr/minimal/angle-axis.h>
 #include <cmath>
 
 TEST(MinKindrTests,testQuatAxisAngle) {

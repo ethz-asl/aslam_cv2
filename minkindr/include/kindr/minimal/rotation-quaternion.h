@@ -1,15 +1,17 @@
-#ifndef KINDR_MIN_ROTATION_QUATERNION_HPP
-#define KINDR_MIN_ROTATION_QUATERNION_HPP
+#ifndef KINDR_MIN_ROTATION_QUATERNION_H_
+#define KINDR_MIN_ROTATION_QUATERNION_H_
 
 #include <Eigen/Dense>
 
 namespace kindr {
 namespace minimal {
 
-class AngleAxis;
+template<typename Scalar>
+class AngleAxisTemplate;
 
 /// \class RotationQuaternion
-/// \brief a minimal implementation of a passive Hamiltonian rotation (unit-length) quaternion
+/// \brief a minimal implementation of a passive Hamiltonian rotation
+///        (unit-length) quaternion
 ///
 /// This rotation takes vectors from frame B to frame A, written
 /// as \f${}_{A}\mathbf{v} = \mathbf{C}_{AB} {}_{B}\mathbf{v}\f$
@@ -20,44 +22,44 @@ class AngleAxis;
 /// A_v = q_A_B.rotate(B_v);
 /// \endcode
 ///
-class RotationQuaternion
-{
+template<typename Scalar>
+class RotationQuaternionTemplate {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  
-  typedef double Scalar;
-  
-  typedef Eigen::Vector3d Imaginary;
-  
-  typedef Eigen::Vector4d Vector4;
 
-  typedef Eigen::Quaternion<double> Implementation;
+  typedef Eigen::Matrix<Scalar, 3, 1> Vector3;
 
-  typedef Eigen::Matrix3d RotationMatrix;
+  typedef Vector3 Imaginary;
+  
+  typedef Eigen::Matrix<Scalar, 4, 1> Vector4;
+
+  typedef Eigen::Quaternion<Scalar> Implementation;
+
+  typedef Eigen::Matrix<Scalar, 3, 3> RotationMatrix;
 
   /// \brief initialize to identity
-  RotationQuaternion();
+  RotationQuaternionTemplate();
 
   /// \brief initialize from real and imaginary components (real first)
-  RotationQuaternion(const Vector4& quat);
+  RotationQuaternionTemplate(const Vector4& quat);
   
 
   /// \brief initialize from real and imaginary components (real first)
-  RotationQuaternion(Scalar w, Scalar x, Scalar y, Scalar z);
+  RotationQuaternionTemplate(Scalar w, Scalar x, Scalar y, Scalar z);
   
   /// \brief initialize from real and imaginary components
-  RotationQuaternion(Scalar real, const Eigen::Vector3d& imaginary);
+  RotationQuaternionTemplate(Scalar real, const Imaginary& imaginary);
 
   /// \brief initialize from an Eigen quaternion
-  RotationQuaternion(const Implementation& quaternion);
+  RotationQuaternionTemplate(const Implementation& quaternion);
 
   /// \brief initialize from a rotation matrix
-  RotationQuaternion(const RotationMatrix& matrix);
+  RotationQuaternionTemplate(const RotationMatrix& matrix);
 
   /// \brief initialize from an AngleAxis
-  RotationQuaternion(const AngleAxis& angleAxis);
+  RotationQuaternionTemplate(const AngleAxisTemplate<Scalar>& angleAxis);
   
-  virtual ~RotationQuaternion();
+  virtual ~RotationQuaternionTemplate();
 
   /// \brief the real component of the quaternion
   Scalar w() const;
@@ -81,31 +83,31 @@ class RotationQuaternion
   void setParts(Scalar real, const Imaginary& imag);
 
   /// \brief get a copy of the representation that is unique
-  RotationQuaternion getUnique() const;
+  RotationQuaternionTemplate<Scalar> getUnique() const;
 
   /// \brief set the quaternion to its unique representation
-  RotationQuaternion& setUnique();
+  RotationQuaternionTemplate<Scalar>& setUnique();
 
   /// \brief set the quaternion to identity
-  RotationQuaternion& setIdentity();
+  RotationQuaternionTemplate<Scalar>& setIdentity();
 
   /// \brief get a copy of the quaternion inverted.
-  RotationQuaternion inverted() const;
+  RotationQuaternionTemplate<Scalar> inverted() const;
 
   /// \brief get a copy of the conjugate of the quaternion.
-  RotationQuaternion conjugated() const;
+  RotationQuaternionTemplate<Scalar> conjugated() const;
 
   /// \brief rotate a vector, v
-  Eigen::Vector3d rotate(const Eigen::Vector3d& v) const;
+  Vector3 rotate(const Vector3& v) const;
 
   /// \brief rotate a vector, v
-  Eigen::Vector4d rotate4(const Eigen::Vector4d& v) const;
+  Vector4 rotate4(const Vector4& v) const;
 
   /// \brief rotate a vector, v
-  Eigen::Vector3d inverseRotate(const Eigen::Vector3d& v) const;
+  Vector3 inverseRotate(const Vector3& v) const;
 
   /// \brief rotate a vector, v
-  Eigen::Vector4d inverseRotate4(const Eigen::Vector4d& v) const;
+  Vector4 inverseRotate4(const Vector4& v) const;
 
   /// \brief cast to the implementation type
   Implementation& toImplementation();
@@ -120,32 +122,42 @@ class RotationQuaternion
   Scalar squaredNorm() const;
 
   /// \brief get the angle between this and the other quaternion
-  Scalar getDisparityAngle(const RotationQuaternion& rhs) const;
+  Scalar getDisparityAngle(
+      const RotationQuaternionTemplate<Scalar>& rhs) const;
 
   /// \brief enforce the unit length constraint
-  RotationQuaternion& normalize();
+  RotationQuaternionTemplate<Scalar>& normalize();
 
   /// \brief compose two quaternions
-  RotationQuaternion operator*(const RotationQuaternion& rhs) const;
+  RotationQuaternionTemplate<Scalar> operator*(
+      const RotationQuaternionTemplate<Scalar>& rhs) const;
 
   /// \brief assignment operator
-  RotationQuaternion& operator=(const RotationQuaternion& rhs);
+  RotationQuaternionTemplate<Scalar>& operator=(
+      const RotationQuaternionTemplate<Scalar>& rhs);
 
   /// \brief get the rotation matrix
   RotationMatrix getRotationMatrix() const;
 
   /// \brief check for binary equality
-  bool operator==(const RotationQuaternion& rhs) const { return vector() == rhs.vector(); }
+  bool operator==(const RotationQuaternionTemplate<Scalar>& rhs) const {
+    return vector() == rhs.vector();
+  }
 
  private:
   Implementation q_A_B_;
   
 };
 
-std::ostream& operator<<(std::ostream& out, const RotationQuaternion& rhs);
+typedef RotationQuaternionTemplate<double> RotationQuaternion;
+
+template<typename Scalar>
+std::ostream& operator<<(std::ostream& out,
+                         const RotationQuaternionTemplate<Scalar>& rhs);
 
 } // namespace minimal
 } // namespace kindr
 
+#include <kindr/minimal/implementation/rotation-quaternion-inl.h>
 
-#endif /* KINDR_MIN_ROTATION_QUATERNION_HPP */
+#endif  // KINDR_MIN_ROTATION_QUATERNION_H_
