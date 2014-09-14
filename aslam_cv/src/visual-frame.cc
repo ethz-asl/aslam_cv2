@@ -41,7 +41,7 @@ bool VisualFrame::hasBriskDescriptors() const{
   return aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_);
 }
 bool VisualFrame::hasRawImage() const {
-  return aslam::channels::has_IMAGE_Channel(channels_);
+  return aslam::channels::has_RAW_IMAGE_Channel(channels_);
 }
 
 const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
@@ -60,7 +60,7 @@ const VisualFrame::DescriptorsT& VisualFrame::getBriskDescriptors() const {
   return aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
 }
 const cv::Mat& VisualFrame::getRawImage() const {
-  return aslam::channels::get_IMAGE_Data(channels_);
+  return aslam::channels::get_RAW_IMAGE_Data(channels_);
 }
 
 Eigen::Matrix2Xd* VisualFrame::getKeypointMeasurementsMutable() {
@@ -90,7 +90,7 @@ VisualFrame::DescriptorsT* VisualFrame::getBriskDescriptorsMutable() {
 }
 cv::Mat* VisualFrame::getRawImageMutable() {
   cv::Mat& image =
-      aslam::channels::get_IMAGE_Data(channels_);
+      aslam::channels::get_RAW_IMAGE_Data(channels_);
   return &image;
 }
 
@@ -173,11 +173,11 @@ void VisualFrame::setBriskDescriptors(
 }
 
 void VisualFrame::setRawImage(const cv::Mat& image_new) {
-  if (!aslam::channels::has_IMAGE_Channel(channels_)) {
-    aslam::channels::add_IMAGE_Channel(&channels_);
+  if (!aslam::channels::has_RAW_IMAGE_Channel(channels_)) {
+    aslam::channels::add_RAW_IMAGE_Channel(&channels_);
   }
   cv::Mat& image =
-      aslam::channels::get_IMAGE_Data(channels_);
+      aslam::channels::get_RAW_IMAGE_Data(channels_);
   image = image_new;
 }
 

@@ -38,7 +38,7 @@ std::shared_ptr<VisualFrame> VisualPipeline::processImage(
   frame->setCameraGeometry(output_camera_);
   FrameId id;
   id.randomize();
-  frame->setId( id );
+  frame->setId(id);
   if(copy_images_) {
     frame->setRawImage(raw_image.clone());
   } else {
@@ -52,7 +52,7 @@ std::shared_ptr<VisualFrame> VisualPipeline::processImage(
     image = raw_image;
   }
   /// Send the image to the derived class for processing
-  processFrameImpl(image, &frame);
+  processFrameImpl(image, frame.get());
 
   return frame;
 }
