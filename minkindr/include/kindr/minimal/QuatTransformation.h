@@ -82,9 +82,6 @@ class QuatTransformation
   /// \brief return a copy of the transformation inverted
   QuatTransformation inverted() const;
 
-  /// \brief invert the transformation
-  QuatTransformation& invert();
-
   /// \brief check for binary equality
   bool operator==(const QuatTransformation& rhs) const;
 

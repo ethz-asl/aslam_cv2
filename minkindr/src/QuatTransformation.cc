@@ -129,14 +129,6 @@ QuatTransformation QuatTransformation::inverted() const {
   return QuatTransformation(q_A_B_.inverted(), -q_A_B_.inverseRotate(A_t_A_B_));
 }
 
-/// \brief invert the transformation
-QuatTransformation& QuatTransformation::invert(){
-  q_A_B_.invert();
-  A_t_A_B_ = -q_A_B_.rotate(A_t_A_B_);
-  return *this;
-}
-
-
 
 std::ostream & operator<<(std::ostream & out, const QuatTransformation& pose) {
   out << pose.getTransformationMatrix();
