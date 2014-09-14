@@ -2,8 +2,8 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/distortion-radtan.h>
-#include <aslam/cameras/ncameras.h>
-#include <aslam/frames/visual-nframes.h>
+#include <aslam/cameras/ncamera.h>
+#include <aslam/frames/visual-nframe.h>
 #include <aslam/pipeline/visual-pipeline-null.h>
 #include <aslam/pipeline/visual-pipeline.h>
 #include <aslam/pipeline/visual-npipeline.h>
@@ -18,9 +18,9 @@ class VisualNPipelineTest : public ::testing::Test {
 
   virtual void SetUp() { }
 
-  void constructNCameras(unsigned num_cameras,
-                         unsigned num_threads,
-                         int64_t timestamp_tolerance_ns) {
+  void constructNCamera(unsigned num_cameras,
+                        unsigned num_threads,
+                        int64_t timestamp_tolerance_ns) {
     //random intrinsics
     double fu = 300;
     double fv = 320;
@@ -50,7 +50,7 @@ class VisualNPipelineTest : public ::testing::Test {
       cameras.push_back(camera);
       pipelines.push_back( std::shared_ptr<VisualPipeline>(new NullVisualPipeline(camera, false)));
     }
-    camera_rig_.reset( new NCameras(id, T_C_B, cameras, "Test Camera System"));
+    camera_rig_.reset( new NCamera(id, T_C_B, cameras, "Test Camera System"));
 
     pipeline_.reset( new VisualNPipeline(num_threads, pipelines,
                                          camera_rig_, camera_rig_,
@@ -65,13 +65,13 @@ class VisualNPipelineTest : public ::testing::Test {
                    CV_8UC1, uint8_t(camera_index));
   }
 
-  std::shared_ptr<NCameras> camera_rig_;
+  std::shared_ptr<NCamera> camera_rig_;
   std::shared_ptr<VisualNPipeline> pipeline_;
 
 };
 
 TEST_F(VisualNPipelineTest, buildNFramesOutOfOrder) {
-  this->constructNCameras(2, 4, 100);
+  this->constructNCamera(2, 4, 100);
 
   // Build n frames out of order.
   pipeline_->processImage(0, getImageFromCamera(0), 0, 0);
@@ -90,7 +90,7 @@ TEST_F(VisualNPipelineTest, buildNFramesOutOfOrder) {
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(2u, pipeline_->getNumFramesComplete());
 
-  std::shared_ptr<VisualNFrames> nframes = pipeline_->getNext();
+  std::shared_ptr<VisualNFrame> nframes = pipeline_->getNext();
 
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
   ASSERT_TRUE(nframes.get() != NULL);
@@ -106,7 +106,7 @@ TEST_F(VisualNPipelineTest, buildNFramesOutOfOrder) {
 
 
 TEST_F(VisualNPipelineTest, testBuildAndClear) {
-  this->constructNCameras(2, 4, 100);
+  this->constructNCamera(2, 4, 100);
 
   // Check that the clearing of older completed frames works.
   pipeline_->processImage(0, getImageFromCamera(0), 0, 0);
@@ -125,7 +125,7 @@ TEST_F(VisualNPipelineTest, testBuildAndClear) {
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(2u, pipeline_->getNumFramesComplete());
 
-  std::shared_ptr<VisualNFrames> nframes = pipeline_->getLatestAndClear();
+  std::shared_ptr<VisualNFrame> nframes = pipeline_->getLatestAndClear();
 
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
   ASSERT_TRUE(nframes.get() != NULL);
@@ -134,7 +134,7 @@ TEST_F(VisualNPipelineTest, testBuildAndClear) {
 }
 
 TEST_F(VisualNPipelineTest, testTimestampDiff) {
-  this->constructNCameras(2, 4, 100);
+  this->constructNCamera(2, 4, 100);
 
   // Check that the timestamp tolerance is respected.
   pipeline_->processImage(0, getImageFromCamera(0), 0, 0);
@@ -144,7 +144,7 @@ TEST_F(VisualNPipelineTest, testTimestampDiff) {
   pipeline_->processImage(1, getImageFromCamera(1), 100, 100);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
-  std::shared_ptr<VisualNFrames> nframes = pipeline_->getLatestAndClear();
+  std::shared_ptr<VisualNFrame> nframes = pipeline_->getLatestAndClear();
   ASSERT_TRUE(nframes.get() != NULL);
   ASSERT_EQ(0, nframes->getFrame(0).getTimestamp());
   ASSERT_EQ(100, nframes->getFrame(1).getTimestamp());

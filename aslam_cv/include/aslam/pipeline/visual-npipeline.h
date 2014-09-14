@@ -12,10 +12,10 @@ namespace cv { class Mat; }
 
 namespace aslam {
 
-class NCameras;
+class NCamera;
 class ThreadPool;
 class VisualFrame;
-class VisualNFrames;
+class VisualNFrame;
 class VisualPipeline;
 
 /// \class VisualNPipeline
@@ -61,8 +61,8 @@ class VisualNPipeline {
   ///                                   synchronized frame?
   VisualNPipeline(unsigned num_threads,
                   const std::vector<std::shared_ptr<VisualPipeline>>& pipelines,
-                  const std::shared_ptr<NCameras>& input_cameras,
-                  const std::shared_ptr<NCameras>& output_cameras,
+                  const std::shared_ptr<NCamera>& input_cameras,
+                  const std::shared_ptr<NCamera>& output_cameras,
                   int64_t timestamp_tolerance_ns);
 
   ~VisualNPipeline();
@@ -92,26 +92,26 @@ class VisualNPipeline {
   ///
   /// This may not be the latest data, it is simply the next in a FIFO queue.
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
-  std::shared_ptr<VisualNFrames> getNext();
+  std::shared_ptr<VisualNFrame> getNext();
 
   /// \brief Get the latest available data and clear anything older.
   ///
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
-  std::shared_ptr<VisualNFrames> getLatestAndClear();
+  std::shared_ptr<VisualNFrame> getLatestAndClear();
 
   /// \brief Get the input camera system that corresponds to the images
   ///        passed in to processImage().
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  const std::shared_ptr<NCameras>& getInputNCameras() const;
+  const std::shared_ptr<NCamera>& getInputNCameras() const;
 
   /// \brief Get the output camera system that corresponds to the VisualNFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  const std::shared_ptr<NCameras>& getOutputNCameras() const;
+  const std::shared_ptr<NCamera>& getOutputNCameras() const;
 
   /// \brief Blocks until all waiting frames are processed.
   void waitForAllWorkToComplete() const;
@@ -132,18 +132,18 @@ class VisualNPipeline {
   mutable std::mutex mutex_;
 
   /// \brief The frames that are in progress.
-  std::map<int64_t, std::shared_ptr<VisualNFrames>> processing_;
+  std::map<int64_t, std::shared_ptr<VisualNFrame>> processing_;
 
   /// \brief The output queue of completed frames.
-  std::map<int64_t, std::shared_ptr<VisualNFrames>> completed_;
+  std::map<int64_t, std::shared_ptr<VisualNFrame>> completed_;
 
   /// \brief A thread pool for processing.
   std::shared_ptr<aslam::ThreadPool> thread_pool_;
 
   /// \brief The camera system of the raw images.
-  std::shared_ptr<NCameras> input_cameras_;
+  std::shared_ptr<NCamera> input_cameras_;
   /// \brief The camera system of the processed images.
-  std::shared_ptr<NCameras> output_cameras_;
+  std::shared_ptr<NCamera> output_cameras_;
 
   /// \brief The tolerance for associating host timestamps as being captured
   ///        at the same time
