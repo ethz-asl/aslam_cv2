@@ -31,8 +31,16 @@ class QuatTransformation
   QuatTransformation();
 
   QuatTransformation(const RotationQuaternion& q_A_B, const Position& A_t_A_B);
+  QuatTransformation(const Rotation::Implementation& q_A_B,
+                     const Position& A_t_A_B);
+
+  QuatTransformation(const Position& A_t_A_B, const RotationQuaternion& q_A_B);
+  QuatTransformation(const Position& A_t_A_B,
+                     const Rotation::Implementation& q_A_B);
   
   virtual ~QuatTransformation();
+
+  void setIdentity();
 
   /// \brief get the position component
   Position& getPosition();
@@ -73,9 +81,6 @@ class QuatTransformation
 
   /// \brief return a copy of the transformation inverted
   QuatTransformation inverted() const;
-
-  /// \brief invert the transformation
-  QuatTransformation& invert();
 
   /// \brief check for binary equality
   bool operator==(const QuatTransformation& rhs) const;
