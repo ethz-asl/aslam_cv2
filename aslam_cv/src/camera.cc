@@ -123,5 +123,16 @@ void Camera::backProject3Vectorized(const Eigen::Matrix2Xd& keypoints,
     out_points_3d->col(i) = bearing;
   }
 }
+
+ProjectionResult::Status ProjectionResult::KEYPOINT_VISIBLE =
+    ProjectionResult::Status::KEYPOINT_VISIBLE;
+ProjectionResult::Status ProjectionResult::KEYPOINT_OUTSIDE_IMAGE_BOX =
+    ProjectionResult::Status::KEYPOINT_OUTSIDE_IMAGE_BOX;
+ProjectionResult::Status ProjectionResult::POINT_BEHIND_CAMERA =
+    ProjectionResult::Status::POINT_BEHIND_CAMERA;
+ProjectionResult::Status ProjectionResult::PROJECTION_INVALID =
+    ProjectionResult::Status::PROJECTION_INVALID;
+ProjectionResult::Status ProjectionResult::UNINITIALIZED =
+    ProjectionResult::Status::UNINITIALIZED;
 }  // namespace aslam
 
