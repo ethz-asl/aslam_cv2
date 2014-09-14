@@ -69,6 +69,12 @@ struct ProjectionResult {
     /// Default value after construction.
     UNINITIALIZED
   };
+  // Make the enum values accessible from the outside without the additional indirection.
+  static Status KEYPOINT_VISIBLE;
+  static Status KEYPOINT_OUTSIDE_IMAGE_BOX;
+  static Status POINT_BEHIND_CAMERA;
+  static Status PROJECTION_INVALID;
+  static Status UNINITIALIZED;
 
   ProjectionResult() : status_(Status::UNINITIALIZED) {};
   ProjectionResult(Status status) : status_(status) {};
@@ -84,6 +90,9 @@ struct ProjectionResult {
 
   /// \brief Compare objects.
   bool operator==(const ProjectionResult& other) const { return status_ == other.status_; };
+
+  /// \brief Compare projection status.
+  bool operator==(const ProjectionResult::Status& other) const { return status_ == other; };
 
   /// \brief Convenience function to print the state using streams.
   friend std::ostream& operator<< (std::ostream& out, const ProjectionResult& state)
