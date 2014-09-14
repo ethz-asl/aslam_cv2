@@ -68,40 +68,40 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   std::vector <cv::KeyPoint> keypoints;
   detector_->detect(image, keypoints);
 
+  cv::Mat descriptors;
   if(!keypoints.empty()) {
-    // Copy over the keypoints
-    // \TODO(slynen)  can you think of a way to avoid the copy when setting
-    //                the data in the channels? Some allocate method to get
-    //                a reference to the channel data directly?
-    Eigen::Matrix2Xd ikeypoints(2, keypoints.size());
-    Eigen::VectorXd  scales(keypoints.size());
-    Eigen::VectorXd  orientations(keypoints.size());
-    // \TODO(ptf) Who knows a good formula for uncertainty based on octave?
-    for(size_t i = 0; i < keypoints.size(); ++i) {
-      const cv::KeyPoint& kp = keypoints[i];
-      ikeypoints(0,i)  = kp.pt.x;
-      ikeypoints(1,i)  = kp.pt.y;
-      scales[i]        = kp.size;
-      orientations[i]  = kp.angle;
-    }
-    frame->setKeypointMeasurements(ikeypoints);
-    frame->setKeypointOrientations(orientations);
-    frame->setKeypointScales(scales);
-
-    // Make the ocv descriptor matrix point to the eigen matrix we will use for descriptors.
-    cv::Mat descriptors;
     extractor_->compute(image, keypoints, descriptors);
-    CHECK_EQ(descriptors.type(), CV_8UC1);
-    CHECK(descriptors.isContinuous());
-    frame->setBriskDescriptors(
-        Eigen::Map<VisualFrame::DescriptorsT>(descriptors.data,
-                                              descriptors.rows,
-                                              descriptors.cols)
-    );
   } else {
+    descriptors = cv::Mat(0,0,CV_8UC1);
     LOG(WARNING) << "Frame produced no keypoints:\n" << *frame;
   }
+  // Note: It is important that
+  //       (a) this happens after the descriptor extractor as the extractor
+  //           may remove keypoints; and
+  //       (b) the values are set even if there are no keypoints as downstream
+  //           code may rely on the keypoints being set.
+  CHECK_EQ(descriptors.type(), CV_8UC1);
+  CHECK(descriptors.isContinuous());
+  frame->setBriskDescriptors(
+      Eigen::Map<VisualFrame::DescriptorsT>(descriptors.data,
+                                            descriptors.rows,
+                                            descriptors.cols)
+  );
+  Eigen::Matrix2Xd ikeypoints(2, keypoints.size());
+  Eigen::VectorXd  scales(keypoints.size());
+  Eigen::VectorXd  orientations(keypoints.size());
+  // \TODO(ptf) Who knows a good formula for uncertainty based on octave?
+  //            See https://github.com/ethz-asl/aslam_cv2/issues/73
+  for(size_t i = 0; i < keypoints.size(); ++i) {
+    const cv::KeyPoint& kp = keypoints[i];
+    ikeypoints(0,i)  = kp.pt.x;
+    ikeypoints(1,i)  = kp.pt.y;
+    scales[i]        = kp.size;
+    orientations[i]  = kp.angle;
+  }
+  frame->swapKeypointMeasurements(&ikeypoints);
+  frame->swapKeypointOrientations(&orientations);
+  frame->swapKeypointScales(&scales);
 }
-
 
 }  // namespace aslam
