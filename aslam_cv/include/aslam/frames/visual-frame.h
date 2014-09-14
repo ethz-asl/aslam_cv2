@@ -181,32 +181,33 @@ class VisualFrame  {
 
   /// \brief Replace (swap) the internal keypoint measurements by the passed ones.
   ///        This method creates the channel if it doesn't exist
-  void swapKeypointMeasurements(Eigen::Matrix2Xd& keypoints);
+  void swapKeypointMeasurements(Eigen::Matrix2Xd* keypoints);
 
   /// \brief Replace (swap) the internal keypoint measurement uncertainties
   ///        by the passed ones.
-  void swapKeypointMeasurementUncertainties(Eigen::VectorXd& uncertainties);
+  void swapKeypointMeasurementUncertainties(Eigen::VectorXd* uncertainties);
 
   /// \brief Replace (swap) the internal keypoint orientations by the passed ones.
-  void swapKeypointOrientations(Eigen::VectorXd& orientations);
+  void swapKeypointOrientations(Eigen::VectorXd* orientations);
 
   /// \brief Replace (swap) the internal keypoint orientations by the passed ones.
-  void swapKeypointScales(Eigen::VectorXd& scales);
+  void swapKeypointScales(Eigen::VectorXd* scales);
 
   /// \brief Replace (swap) the internal descriptors by the passed ones.
-  void swapBriskDescriptors(DescriptorsT& descriptors);
+  void swapBriskDescriptors(DescriptorsT* descriptors);
 
   /// \brief Swap channel data with the data passed in. This will only work
   ///        if the channel data type has a swap() method.
   template<typename CHANNEL_DATA_TYPE>
   void swapChannelData(const std::string& channel,
-                       CHANNEL_DATA_TYPE& data_new) {
+                       CHANNEL_DATA_TYPE* data_new) {
+    CHECK_NOTNULL(data_new);
     if (!aslam::channels::hasChannel(channel, channels_)) {
       aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
     }
     CHANNEL_DATA_TYPE& data =
         aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);
-    data.swap(data_new);
+    data.swap(*data_new);
   }
 
   /// \brief The camera geometry.

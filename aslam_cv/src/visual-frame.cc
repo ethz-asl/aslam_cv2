@@ -181,45 +181,45 @@ void VisualFrame::setRawImage(const cv::Mat& image_new) {
   image = image_new;
 }
 
-void VisualFrame::swapKeypointMeasurements(Eigen::Matrix2Xd& keypoints_new) {
+void VisualFrame::swapKeypointMeasurements(Eigen::Matrix2Xd* keypoints_new) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENTS_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_MEASUREMENTS_Channel(&channels_);
   }
   Eigen::Matrix2Xd& keypoints =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
-  keypoints.swap(keypoints_new);
+  keypoints.swap(*keypoints_new);
 }
-void VisualFrame::swapKeypointMeasurementUncertainties(Eigen::VectorXd& uncertainties_new) {
+void VisualFrame::swapKeypointMeasurementUncertainties(Eigen::VectorXd* uncertainties_new) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Channel(&channels_);
   }
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
-  data.swap(uncertainties_new);
+  data.swap(*uncertainties_new);
 }
-void VisualFrame::swapKeypointScales(Eigen::VectorXd& scales_new) {
+void VisualFrame::swapKeypointScales(Eigen::VectorXd* scales_new) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
   }
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-  data.swap(scales_new);
+  data.swap(*scales_new);
 }
-void VisualFrame::swapKeypointOrientations(Eigen::VectorXd& orientations_new) {
+void VisualFrame::swapKeypointOrientations(Eigen::VectorXd* orientations_new) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_ORIENTATIONS_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_ORIENTATIONS_Channel(&channels_);
   }
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
-  data.swap(orientations_new);
+  data.swap(*orientations_new);
 }
-void VisualFrame::swapBriskDescriptors(DescriptorsT& descriptors_new) {
+void VisualFrame::swapBriskDescriptors(DescriptorsT* descriptors_new) {
   if (!aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_BRISK_DESCRIPTORS_Channel(&channels_);
   }
   VisualFrame::DescriptorsT& descriptors =
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
-  descriptors.swap(descriptors_new);
+  descriptors.swap(*descriptors_new);
 }
 
 
