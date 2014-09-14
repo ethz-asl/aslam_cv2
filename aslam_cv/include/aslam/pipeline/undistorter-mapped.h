@@ -30,11 +30,14 @@ public:
   /// - cv::INTER_CUBIC    - A bicubic interpolation over 4x4 pixel neighborhood.
   /// - cv::INTER_LANCZOS4 - A Lanczos interpolation over 8x8 pixel neighborhood.
   ///
+  /// Map matrices (map_x and map_y) must be the size of the output camera geometry.
+  /// This will be checked by the constructor.
+  ///
   /// \param[in] input_camera  The camera intrinsics for the original image.
   /// \param[in] output_camera The camera intrinsics after undistortion.
   /// \param[in] map_x         The map from input to output x coordinates.
   /// \param[in] map_y         The map from input to output y coordinates.
-  /// \param[in] interpolation An enum specifying the interpolation types.
+  /// \param[in] interpolation_method An enum specifying the interpolation types.
   /// \param[in] copy_image    Should we copy the input image?
   MappedUndistorter(const std::shared_ptr<Camera>& input_camera,
                     const std::shared_ptr<Camera>& output_camera,
@@ -51,7 +54,7 @@ private:
   /// \brief LUT for y coordinates.
   cv::Mat map_y_;
   /// \brief Interpolation strategy
-  int interpolation_;
+  int interpolation_method_;
 };
 
 }  // namespace aslam

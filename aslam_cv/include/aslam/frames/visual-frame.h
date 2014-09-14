@@ -59,14 +59,19 @@ class VisualFrame  {
 
   /// \brief Are there keypoint measurements stored in this frame?
   bool hasKeypointMeasurements() const;
+
   /// \brief Are there keypoint measurement uncertainties stored in this frame?
   bool hasKeypointMeasurementUncertainties() const;
+
   /// \brief Are there keypoint orientations stored in this frame?
   bool hasKeypointOrientations() const;
+
   /// \brief Are there keypoint scales stored in this frame?
   bool hasKeypointScales() const;
+
   /// \brief Are there descriptors stored in this frame?
   bool hasBriskDescriptors() const;
+
   /// \brief Is there a raw image stored in this frame?
   bool hasRawImage() const;
 
@@ -77,14 +82,19 @@ class VisualFrame  {
 
   /// \brief The keypoint measurements stored in a frame.
   const Eigen::Matrix2Xd& getKeypointMeasurements() const;
+
   /// \brief The keypoint measurement uncertainties stored in a frame.
   const Eigen::VectorXd& getKeypointMeasurementUncertainties() const;
+
   /// \brief The keypoint orientations stored in a frame.
   const Eigen::VectorXd& getKeypointOrientations() const;
+
   /// \brief The keypoint scales stored in a frame.
   const Eigen::VectorXd& getKeypointScales() const;
+
   /// \brief The descriptors stored in a frame.
   const DescriptorsT& getBriskDescriptors() const;
+
   /// \brief The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
 
@@ -95,14 +105,19 @@ class VisualFrame  {
 
   /// \brief A pointer to the keypoint measurements, can be used to swap in new data.
   Eigen::Matrix2Xd* getKeypointMeasurementsMutable();
+
   /// \brief A pointer to the keypoint measurement uncertainties, can be used to swap in new data.
   Eigen::VectorXd* getKeypointMeasurementUncertaintiesMutable();
+
   /// \brief A pointer to the keypoint orientations, can be used to swap in new data.
   Eigen::VectorXd* getKeypointOrientationsMutable();
+
   /// \brief A pointer to the keypoint scales, can be used to swap in new data.
   Eigen::VectorXd* getKeypointScalesMutable();
+
   /// \brief A pointer to the descriptors, can be used to swap in new data.
   DescriptorsT* getBriskDescriptorsMutable();
+
   /// \brief A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
 
@@ -115,31 +130,39 @@ class VisualFrame  {
   }
 
   /// \brief Return block expression of the keypoint measurement pointed to by index.
-  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(
-      size_t index) const;
+  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(size_t index) const;
+
   /// \brief Return the keypoint measurement uncertainty index.
   double getKeypointMeasurementUncertainty(size_t index) const;
+
   /// \brief Return the keypoint orientation at index.
   double getKeypointOrientation(size_t index) const;
+
   /// \brief Return the keypoint scale at index.
   double getKeypointScale(size_t index) const;
+
   /// \brief Return pointer location of the descriptor pointed to by index.
   const unsigned char* getBriskDescriptor(size_t index) const;
 
   /// \brief Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
+
   /// \brief Replace (copy) the internal keypoint measurement uncertainties
   ///        by the passed ones.
-  void setKeypointMeasurementUncertainties(
-      const Eigen::VectorXd& uncertainties);
+  void setKeypointMeasurementUncertainties(const Eigen::VectorXd& uncertainties);
+
   /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointOrientations(const Eigen::VectorXd& orientations);
+
   /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointScales(const Eigen::VectorXd& scales);
+
   /// \brief Replace (copy) the internal descriptors by the passed ones.
   void setBriskDescriptors(const DescriptorsT& descriptors);
+
   /// \brief Replace (copy) the internal descriptors by the passed ones.
   void setBriskDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+
   /// \brief Replace (copy) the internal raw image by the passed ones.
   ///        This is a shallow copy by default. Please clone the image if it
   ///        should be owned by the VisualFrame.
@@ -158,10 +181,13 @@ class VisualFrame  {
 
   /// \brief The camera geometry.
   const Camera::ConstPtr getCameraGeometry() const;
+
   /// \brief Set the camera geometry.
   void setCameraGeometry(const Camera::Ptr& camera);
+
   /// \brief The camera geometry.
   const Camera::ConstPtr getRawCameraGeometry() const;
+
   /// \brief Set the camera geometry.
   void setRawCameraGeometry(const Camera::Ptr& camera);
 

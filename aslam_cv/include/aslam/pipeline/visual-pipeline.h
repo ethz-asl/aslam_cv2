@@ -88,8 +88,8 @@ protected:
   /// The top level function will already fill in the timestamps and the output camera.
   /// \param[in]     image The image data.
   /// \param[in/out] frame The visual frame. This will be constructed before calling.
-  virtual void processFrame(const cv::Mat& image,
-                            std::shared_ptr<VisualFrame>* frame) const = 0;
+  virtual void processFrameImpl(const cv::Mat& image,
+                                VisualFrame* frame) const = 0;
 
   /// \brief Preprocessing for the image. Can be null.
   std::shared_ptr<Undistorter> preprocessing_;
