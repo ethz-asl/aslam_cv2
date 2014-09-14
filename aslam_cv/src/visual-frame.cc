@@ -40,8 +40,8 @@ bool VisualFrame::hasKeypointScales() const{
 bool VisualFrame::hasBriskDescriptors() const{
   return aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_);
 }
-bool VisualFrame::hasImage() const {
-  return aslam::channels::has_IMAGE_Channel(channels_);
+bool VisualFrame::hasRawImage() const {
+  return aslam::channels::has_RAW_IMAGE_Channel(channels_);
 }
 
 const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
@@ -59,8 +59,8 @@ const Eigen::VectorXd& VisualFrame::getKeypointOrientations() const {
 const VisualFrame::DescriptorsT& VisualFrame::getBriskDescriptors() const {
   return aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
 }
-const cv::Mat& VisualFrame::getImage() const {
-  return aslam::channels::get_IMAGE_Data(channels_);
+const cv::Mat& VisualFrame::getRawImage() const {
+  return aslam::channels::get_RAW_IMAGE_Data(channels_);
 }
 
 Eigen::Matrix2Xd* VisualFrame::getKeypointMeasurementsMutable() {
@@ -88,9 +88,9 @@ VisualFrame::DescriptorsT* VisualFrame::getBriskDescriptorsMutable() {
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
   return &descriptors;
 }
-cv::Mat* VisualFrame::getImageMutable() {
+cv::Mat* VisualFrame::getRawImageMutable() {
   cv::Mat& image =
-      aslam::channels::get_IMAGE_Data(channels_);
+      aslam::channels::get_RAW_IMAGE_Data(channels_);
   return &image;
 }
 
@@ -171,12 +171,13 @@ void VisualFrame::setBriskDescriptors(
       aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
-void VisualFrame::setImage(const cv::Mat& image_new) {
-  if (!aslam::channels::has_IMAGE_Channel(channels_)) {
-    aslam::channels::add_IMAGE_Channel(&channels_);
+
+void VisualFrame::setRawImage(const cv::Mat& image_new) {
+  if (!aslam::channels::has_RAW_IMAGE_Channel(channels_)) {
+    aslam::channels::add_RAW_IMAGE_Channel(&channels_);
   }
   cv::Mat& image =
-      aslam::channels::get_IMAGE_Data(channels_);
+      aslam::channels::get_RAW_IMAGE_Data(channels_);
   image = image_new;
 }
 
@@ -186,6 +187,14 @@ const Camera::ConstPtr VisualFrame::getCameraGeometry() const {
 
 void VisualFrame::setCameraGeometry(const Camera::Ptr& camera) {
   camera_geometry_ = camera;
+}
+
+const Camera::ConstPtr VisualFrame::getRawCameraGeometry() const {
+  return raw_camera_geometry_;
+}
+
+void VisualFrame::setRawCameraGeometry(const Camera::Ptr& camera) {
+  raw_camera_geometry_ = camera;
 }
 
 void VisualFrame::print(std::ostream& out, const std::string& label) const {
@@ -212,4 +221,33 @@ void VisualFrame::print(std::ostream& out, const std::string& label) const {
   }
 }
 
+aslam::ProjectionResult VisualFrame::toRawImageCoordinates(const Eigen::Vector2d& keypoint,
+                                                           Eigen::Vector2d* out_image_coordinates) {
+  CHECK_NOTNULL(out_image_coordinates);
+  Eigen::Vector3d bearing;
+  // Creating a bearing vector from the transformed camera, then projecting this
+  // bearing should recover the raw image coordinates.
+  bool success = camera_geometry_->backProject3(keypoint, &bearing);
+  if(success) {
+    return raw_camera_geometry_->project3(bearing, out_image_coordinates );
+  } else {
+    return ProjectionResult::PROJECTION_INVALID;
+  }
+}
+
+void VisualFrame::toRawImageCoordinatesVectorized(const Eigen::Matrix2Xd& keypoints,
+                                                  Eigen::Matrix2Xd* out_image_coordinates,
+                                                  std::vector<aslam::ProjectionResult>* results) {
+  CHECK_NOTNULL(out_image_coordinates);
+  CHECK_NOTNULL(results);
+  Eigen::Matrix3Xd bearings;
+  std::vector<bool> success;
+  camera_geometry_->backProject3Vectorized(keypoints, &bearings, &success);
+  raw_camera_geometry_->project3Vectorized(bearings, out_image_coordinates, results);
+  for(size_t i = 0; i < success.size(); ++i) {
+    if(!success[i]){
+      (*results)[i] = ProjectionResult::PROJECTION_INVALID;
+    }
+  }
+}
 }  // namespace aslam

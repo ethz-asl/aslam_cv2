@@ -29,7 +29,7 @@ EXPECT_DEATH(frame.getKeypointMeasurements(), "^");
 EXPECT_DEATH(frame.getKeypointMeasurementUncertainties(), "^");
 EXPECT_DEATH(frame.getKeypointScales(), "^");
 EXPECT_DEATH(frame.getKeypointOrientations(), "^");
-EXPECT_DEATH(frame.getImage(), "^");
+EXPECT_DEATH(frame.getRawImage(), "^");
 }
 
 TEST(Frame, DeathOnGetMutableUnsetData) {
@@ -39,7 +39,7 @@ EXPECT_DEATH(frame.getKeypointMeasurementsMutable(), "^");
 EXPECT_DEATH(frame.getKeypointMeasurementUncertaintiesMutable(), "^");
 EXPECT_DEATH(frame.getKeypointScalesMutable(), "^");
 EXPECT_DEATH(frame.getKeypointOrientationsMutable(), "^");
-EXPECT_DEATH(frame.getImageMutable(), "^");
+EXPECT_DEATH(frame.getRawImageMutable(), "^");
 }
 
 TEST(Frame, SetGetDescriptors) {
@@ -140,7 +140,7 @@ TEST(Frame, SetGetImage) {
   aslam::VisualFrame frame;
   cv::Mat data(10,10,CV_8SC3,uint8_t(7));
 
-  frame.setImage(data);
-  const cv::Mat& data_2 = frame.getImage();
+  frame.setRawImage(data);
+  const cv::Mat& data_2 = frame.getRawImage();
   EXPECT_TRUE(gtest_catkin::ImagesEqual(data, data_2));
 }
