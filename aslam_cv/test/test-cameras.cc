@@ -88,7 +88,7 @@ TYPED_TEST(TestCameras, CameraTest_isInvertible) {
   Eigen::Vector2d keypoint;
 
   // N times, project and back-project a random point at a known depth.
-  // Then check that the back projection matches the projeciton.
+  // Then check that the back projection matches the projection.
   for(size_t n = 0; n < N; ++n) {
     points1.col(n) = this->camera_->createRandomVisiblePoint(depth);
     aslam::ProjectionResult result = this->camera_->project3(points1.col(n), &keypoint);
