@@ -1,15 +1,17 @@
-#ifndef KINDR_MIN_ROTATION_ANGLE_AXIS_HPP
-#define KINDR_MIN_ROTATION_ANGLE_AXIS_HPP
+#ifndef KINDR_MIN_ROTATION_ANGLE_AXIS_H_
+#define KINDR_MIN_ROTATION_ANGLE_AXIS_H_
 
 #include <Eigen/Dense>
 
 namespace kindr {
 namespace minimal {
 
-class RotationQuaternion;
+template<typename Scalar>
+class RotationQuaternionTemplate;
 
 /// \class AngleAxis
-/// \brief a minimal implementation of an angle and axis representation of rotation
+/// \brief a minimal implementation of an angle and axis representation of
+///        rotation
 /// This rotation takes vectors from frame B to frame A, written
 /// as \f${}_{A}\mathbf{v} = \mathbf{C}_{AB} {}_{B}\mathbf{v}\f$
 ///
@@ -19,43 +21,41 @@ class RotationQuaternion;
 /// A_v = C_A_B.rotate(B_v);
 /// \endcode
 ///
-class AngleAxis
-{
+template<typename Scalar>
+class AngleAxisTemplate {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  
-  typedef double Scalar;
-  
-  typedef Eigen::Vector3d Vector3;
-  
-  typedef Eigen::Vector4d Vector4;
 
-  typedef Eigen::AngleAxis<double> Implementation;
+  typedef Eigen::Matrix<Scalar, 3, 1> Vector3;
+  
+  typedef Eigen::Matrix<Scalar, 4, 1> Vector4;
 
-  typedef Eigen::Matrix3d RotationMatrix;
+  typedef Eigen::AngleAxis<Scalar> Implementation;
+
+  typedef Eigen::Matrix<Scalar, 3, 3> RotationMatrix;
 
   /// \brief initialize to identity
-  AngleAxis();
+  AngleAxisTemplate();
 
   /// \brief initialize from real and imaginary components (real first)
-  AngleAxis(Scalar angle, Scalar v1, Scalar v2, Scalar v3);
+  AngleAxisTemplate(Scalar angle, Scalar v1, Scalar v2, Scalar v3);
   
   /// \brief initialize from real and imaginary components
-  AngleAxis(Scalar real, const Vector3& imaginary);
+  AngleAxisTemplate(Scalar real, const Vector3& imaginary);
 
   /// \brief initialize from an Eigen angleAxis
-  AngleAxis(const Implementation& angleAxis);
+  AngleAxisTemplate(const Implementation& angleAxis);
 
   /// \brief initialize from an Eigen angle/axis
-  AngleAxis(const Vector4& angleAxis);
+  AngleAxisTemplate(const Vector4& angleAxis);
 
   /// \brief initialize from a rotation matrix
-  AngleAxis(const RotationMatrix& matrix);
+  AngleAxisTemplate(const RotationMatrix& matrix);
 
   /// \brief initialize from an Eigen quaternion
-  AngleAxis(const RotationQuaternion& quat);
+  AngleAxisTemplate(const RotationQuaternionTemplate<Scalar>& quat);
   
-  virtual ~AngleAxis();
+  virtual ~AngleAxisTemplate();
 
   /// \brief Returns the rotation angle.
   Scalar angle() const;
@@ -76,31 +76,28 @@ class AngleAxis
   Vector4 vector() const;
 
   /// \brief get a copy of the representation that is unique
-  AngleAxis getUnique() const;
+  AngleAxisTemplate<Scalar> getUnique() const;
 
   /// \brief set the angle/axis to its unique representation
-  AngleAxis& setUnique();
+  AngleAxisTemplate<Scalar>& setUnique();
 
   /// \brief set the rotation to identity
-  AngleAxis& setIdentity();
-
-  /// \brief invert the rotation
-  AngleAxis& invert();
+  AngleAxisTemplate<Scalar>& setIdentity();
 
   /// \brief get a copy of the rotation inverted.
-  AngleAxis inverted() const;
+  AngleAxisTemplate<Scalar> inverted() const;
 
   /// \brief rotate a vector, v
-  Eigen::Vector3d rotate(const Eigen::Vector3d& v) const;
+  Vector3 rotate(const Vector3& v) const;
 
   /// \brief rotate a vector, v
-  Eigen::Vector4d rotate4(const Eigen::Vector4d& v) const;
+  Vector4 rotate4(const Vector4& v) const;
 
   /// \brief rotate a vector, v
-  Eigen::Vector3d inverseRotate(const Eigen::Vector3d& v) const;
+  Vector3 inverseRotate(const Vector3& v) const;
 
   /// \brief rotate a vector, v
-  Eigen::Vector4d inverseRotate4(const Eigen::Vector4d& v) const;
+  Vector4 inverseRotate4(const Vector4& v) const;
 
   /// \brief cast to the implementation type
   Implementation& toImplementation();
@@ -109,29 +106,34 @@ class AngleAxis
   const Implementation& toImplementation() const;
 
   /// \brief get the angle between this and the other rotation
-  Scalar getDisparityAngle(const AngleAxis& rhs) const;
+  Scalar getDisparityAngle(const AngleAxisTemplate<Scalar>& rhs) const;
 
   /// \brief enforce the unit length constraint
-  AngleAxis& fix();
+  AngleAxisTemplate<Scalar>& normalize();
 
   /// \brief compose two rotations
-  AngleAxis operator*(const AngleAxis& rhs) const;
+  AngleAxisTemplate<Scalar> operator*(
+      const AngleAxisTemplate<Scalar>& rhs) const;
 
   /// \brief assignment operator
-  AngleAxis& operator=(const AngleAxis& rhs);
+  AngleAxisTemplate<Scalar>& operator=(const AngleAxisTemplate<Scalar>& rhs);
 
   /// \brief get the rotation matrix
   RotationMatrix getRotationMatrix() const;
 
  private:
   Implementation C_A_B_;
-  
 };
 
-std::ostream& operator<<(std::ostream& out, const AngleAxis& rhs);
+typedef AngleAxisTemplate<double> AngleAxis;
+
+template<typename Scalar>
+std::ostream& operator<<(std::ostream& out,
+                         const AngleAxisTemplate<Scalar>& rhs);
 
 } // namespace minimal
 } // namespace kindr
 
+#include <kindr/minimal/implementation/angle-axis-inl.h>
 
 #endif /* KINDR_MIN_ROTATION_ANGLE_AXIS_HPP */
