@@ -9,6 +9,7 @@
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
+#include <aslam/common/eigen-helpers.h>
 #include <aslam/common/eigen-predicates.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
@@ -217,6 +218,47 @@ TYPED_TEST(TestCameras, isProjectable) {
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(-10, -10, -1))); // Behind cam.
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(0, 0, -1)));     // Behind, center.
 }
+TYPED_TEST(TestCameras, CameraTest_isInvertible) {
+  const int N = 100;
+  const double depth = 10.0;
+  Eigen::Matrix3Xd points1(3,N);
+  Eigen::Matrix2Xd projections1(2,N);
+  Eigen::Matrix3Xd points2(3,N);
+  Eigen::Matrix3Xd points3(3,N);
+  Eigen::Matrix2Xd projections3(2,N);
+  Eigen::Vector3d point;
+  Eigen::Vector2d keypoint;
+
+  // N times, project and back-project a random point at a known depth.
+  // Then check that the back projection matches the projection.
+  for(size_t n = 0; n < N; ++n) {
+    points1.col(n) = this->camera_->createRandomVisiblePoint(depth);
+    aslam::ProjectionResult result = this->camera_->project3(points1.col(n), &keypoint);
+    projections1.col(n) = keypoint;
+    ASSERT_EQ(aslam::ProjectionResult::Status::KEYPOINT_VISIBLE, result.getDetailedStatus());
+    bool success = this->camera_->backProject3(keypoint, &point);
+    ASSERT_TRUE(success);
+    point.normalize();
+    points2.col(n) = point * depth;
+  }
+  ASSERT_TRUE(aslam::common::MatricesEqual(points1, points2, 1e-4));
+
+  // Do the same with the vectorized functions.
+  std::vector<aslam::ProjectionResult> result;
+  this->camera_->project3Vectorized(points1, &projections3, &result);
+  for(size_t n = 0; n < N; ++n) {
+    ASSERT_EQ(aslam::ProjectionResult::Status::KEYPOINT_VISIBLE, result[n].getDetailedStatus());
+  }
+  std::vector<bool> success;
+  this->camera_->backProject3Vectorized(projections3, &points3, &success);
+  for(size_t n = 0; n < N; ++n) {
+    ASSERT_TRUE(success[n]);
+    points3.col(n).normalize();
+    points3.col(n) *= depth;
+  }
+
+  ASSERT_TRUE(aslam::common::MatricesEqual(points1, points3, 1e-4));
+}
 
 ///////////////////////////////////////////////
 // Model specific test cases
@@ -401,4 +443,18 @@ TEST(CameraComparison, TestEquality) {
   EXPECT_FALSE(*pinhole_A == *pinhole_B);  // Different intrinsics.
   EXPECT_FALSE(*pinhole_A == *pinhole_C);  // Different distortion coeffs.
   EXPECT_FALSE(*pinhole_C == *pinhole_D);  // Different intrinsics and distortion coeffs.
+}
+
+TEST(CameraComparison, TestStatus) {
+  using namespace aslam;
+  Eigen::VectorXd dvec(4);
+
+  dvec << 0.5, 0.3, 0.2, 0.01;
+  Distortion::Ptr distortion = std::make_shared<RadTanDistortion>(dvec);
+  Camera::Ptr camera = std::make_shared<PinholeCamera>(240, 480, 100, 200, 500, 500, distortion);
+
+  Eigen::Matrix<double, 3, 1> point(0, 0, -1);
+  Eigen::Matrix<double, 2, 1> keypoint;
+  ProjectionResult result = camera->project3(point, &keypoint);
+  EXPECT_TRUE(result == ProjectionResult::POINT_BEHIND_CAMERA);
 }

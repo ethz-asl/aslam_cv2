@@ -11,13 +11,17 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/distortion-fisheye.cc
                                src/distortion-radtan.cc
                                src/distortion-equidistant.cc
-                               src/ncameras.cc
+                               src/ncamera.cc
                                src/channel-serialization.cc
                                src/visual-frame.cc
-                               src/visual-nframes.cc
+                               src/visual-nframe.cc
                                src/thread-pool.cc
                                src/visual-pipeline.cc
                                src/visual-npipeline.cc
+                               src/visual-pipeline-null.cc
+                               src/visual-pipeline-brisk.cc
+                               src/undistorter.cc
+                               src/undistorter-mapped.cc
 )
 
 add_doxygen(NOT_AUTOMATIC)
@@ -35,6 +39,7 @@ catkin_add_gtest(${PROJECT_NAME}_tests
     test/test-channels.cc
     test/test-visual-frame.cc
     test/test-thread-pool.cc
+    test/test-visual-npipeline.cc
     test/entry-point.cc
     )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})

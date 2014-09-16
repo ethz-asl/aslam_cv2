@@ -40,40 +40,39 @@ class PinholeCamera : public Camera {
 
  public:
   /// \brief Construct a PinholeCamera with distortion.
-  /// @param[in] intrinsics   vector containing the intrinsic parameters (fu,fv,cu.cv)
-  /// @param[in] image_width  image width in pixels
-  /// @param[in] image_height image height in pixels
-  /// @param[in] distortion   pointer to the distortion model
+  /// @param[in] intrinsics   Vector containing the intrinsic parameters (fu,fv,cu,cv).
+  /// @param[in] image_width  Image width in pixels.
+  /// @param[in] image_height Image height in pixels.
+  /// @param[in] distortion   Pointer to the distortion model.
   PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
                 aslam::Distortion::Ptr distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
-  /// @param[in] intrinsics   vector containing the intrinsic parameters (fu,fv,cu.cv)
-  /// @param[in] image_width  image width in pixels
-  /// @param[in] image_height image height in pixels
-  /// @param[in] distortion   pointer to the distortion model
+  /// @param[in] intrinsics   Vector containing the intrinsic parameters (fu,fv,cu,cv).
+  /// @param[in] image_width  Image width in pixels.
+  /// @param[in] image_height Image height in pixels.
   PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height);
 
   /// \brief Construct a PinholeCamera with distortion.
-  /// @param[in] focallength_cols focallength in pixels; cols (width-direction)
-  /// @param[in] focallength_rows focallength in pixels; rows (height-direction)
-  /// @param[in] imagecenter_cols image center in pixels; cols (width-direction)
-  /// @param[in] imagecenter_rows image center in pixels; rows (height-direction)
-  /// @param[in] image_width      image width in pixels
-  /// @param[in] image_height     image height in pixels
-  /// @param[in] distortion       pointer to the distortion model
+  /// @param[in] focallength_cols Focal length in pixels; cols (width-direction).
+  /// @param[in] focallength_rows Focal length in pixels; rows (height-direction).
+  /// @param[in] imagecenter_cols Image center in pixels; cols (width-direction).
+  /// @param[in] imagecenter_rows Image center in pixels; rows (height-direction).
+  /// @param[in] image_width      Image width in pixels.
+  /// @param[in] image_height     Image height in pixels.
+  /// @param[in] distortion       Pointer to the distortion model.
   PinholeCamera(double focallength_cols, double focallength_rows,
                 double imagecenter_cols, double imagecenter_rows,
                 uint32_t image_width, uint32_t image_height,
                 aslam::Distortion::Ptr distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
-  /// @param[in] focallength_cols focallength in pixels; cols (width-direction)
-  /// @param[in] focallength_rows focallength in pixels; rows (height-direction)
-  /// @param[in] imagecenter_cols image center in pixels; cols (width-direction)
-  /// @param[in] imagecenter_rows image center in pixels; rows (height-direction)
-  /// @param[in] image_width      image width in pixels
-  /// @param[in] image_height     image height in pixels
+  /// @param[in] focallength_cols Focal length in pixels; cols (width-direction).
+  /// @param[in] focallength_rows Focal length in pixels; rows (height-direction).
+  /// @param[in] imagecenter_cols Image center in pixels; cols (width-direction).
+  /// @param[in] imagecenter_rows Image center in pixels; rows (height-direction).
+  /// @param[in] image_width      Image width in pixels.
+  /// @param[in] image_height     Image height in pixels.
   PinholeCamera(double focallength_cols, double focallength_rows,
                 double imagecenter_cols, double imagecenter_rows,
                 uint32_t image_width, uint32_t image_height);
