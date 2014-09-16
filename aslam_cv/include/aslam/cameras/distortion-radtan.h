@@ -52,8 +52,8 @@ class RadTanDistortion : public aslam::Distortion {
   ///                             changes in the input point. If NULL is passed, the Jacobian
   ///                             calculation is skipped.
   virtual void distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
-                                     Eigen::Vector2d* point,
-                                     Eigen::Matrix2d* out_jacobian) const;
+                                                Eigen::Vector2d* point,
+                                                Eigen::Matrix2d* out_jacobian) const;
 
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
@@ -88,7 +88,7 @@ class RadTanDistortion : public aslam::Distortion {
 
   /// \brief Create a test distortion object for unit testing.
   static RadTanDistortion::Ptr createTestDistortion() {
-    Eigen::VectorXd params(4); params << 0.8, 0.1, 0.2, 0.03;
+    Eigen::VectorXd params(4); params << -0.13,  0.08, -0.00026, -0.00024;
     return RadTanDistortion::Ptr(new RadTanDistortion(params));
   }
 
@@ -123,8 +123,6 @@ class RadTanDistortion : public aslam::Distortion {
   /// @}
 
 };
-
 } // namespace aslam
-
 
 #endif /* ASLAM_RADTAN_DISTORTION_H_ */

@@ -64,12 +64,14 @@ bool PinholeCamera::operator==(const Camera& other) const {
   if (!Camera::operator==(other))
     return false;
 
-  // Compare the distortion model (if set).
+  // Check if only one camera defines a distortion.
+  if ((distortion_ && !rhs->distortion_) || (!distortion_ && rhs->distortion_))
+    return false;
+
+  // Compare the distortion model (if distortion is set for both).
   if (distortion_ && rhs->distortion_) {
     if ( !(*(this->distortion_) == *(rhs->distortion_)) )
       return false;
-  } else {
-    return false;
   }
 
   // Compare intrinsics parameters.
@@ -77,7 +79,7 @@ bool PinholeCamera::operator==(const Camera& other) const {
 }
 
 const ProjectionResult PinholeCamera::project3(const Eigen::Vector3d& point_3d,
-                                              Eigen::Vector2d* out_keypoint) const {
+                                               Eigen::Vector2d* out_keypoint) const {
   CHECK_NOTNULL(out_keypoint);
 
   // Project the point.
@@ -101,8 +103,8 @@ const ProjectionResult PinholeCamera::project3(const Eigen::Vector3d& point_3d,
 }
 
 const ProjectionResult PinholeCamera::project3(const Eigen::Vector3d& point_3d,
-                                              Eigen::Vector2d* out_keypoint,
-                                              Eigen::Matrix<double, 2, 3>* out_jacobian) const {
+                                               Eigen::Vector2d* out_keypoint,
+                                               Eigen::Matrix<double, 2, 3>* out_jacobian) const {
   CHECK_NOTNULL(out_keypoint);
   CHECK_NOTNULL(out_jacobian);
 
@@ -263,8 +265,8 @@ const ProjectionResult PinholeCamera::project3Functional(
     const double dvf_dcu = 0.0;
     const double dvf_dcv = 1.0;
 
-    (*out_jacobian_point) << duf_dfu, duf_dfv, duf_dcu, duf_dcv,
-                             dvf_dfu, dvf_dfv, dvf_dcu, dvf_dcv;
+    (*out_jacobian_intrinsics) << duf_dfu, duf_dfv, duf_dcu, duf_dcv,
+                                  dvf_dfu, dvf_dfv, dvf_dcu, dvf_dcv;
   }
 
   // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
@@ -358,5 +360,4 @@ void PinholeCamera::printParameters(std::ostream& out, const std::string& text) 
     distortion_->printParameters(out, text);
   }
 }
-
 }  // namespace aslam
