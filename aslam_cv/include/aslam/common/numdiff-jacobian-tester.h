@@ -1,17 +1,28 @@
 #ifndef ASLAM_CV_NUMDIFF_JACOBIAN_TESTER_H_
 #define ASLAM_CV_NUMDIFF_JACOBIAN_TESTER_H_
+
 #include <Eigen/Dense>
 #include <aslam/common/eigen-helpers.h>
-
-
-#define NUMDIFF_DEBUG_OUTPUT false
 
 namespace aslam {
 namespace common {
 
-/// \brief Test macro and numerical differentiator to unit test Jacobian implementations.
-/// Example:
+// Enable/disable debug outputs.
+#define NUMDIFF_DEBUG_OUTPUT false
+
+/// \def TEST_JACOBIAN_FINITE_DIFFERENCE(FUNCTOR_TYPE, X, STEP, TOLERANCE, ...)
+///  Test macro and numerical differentiator to unit test Jacobian implementations.
+///  @param[in] FUNCTOR_TYPE Functor that wraps the value and symbolic Jacobian generating function
+///                          to the required form. See example below.
+///  @param[in] X Evaluation point. (struct Functor : public aslam::common::NumDiffFunctor<Nf, Nx>)
+///               Nf: number of functions, Nx: number of parameters --> dim(J)=(Nf x Nx)
+///  @param[in] STEP Step size used for the numerical differentiation. (Eigen::VectorXd)
+///  @param[in] TOLERANCE Tolerance used for comparing the numerical and symbolic Jacobian
+///                       evaluations. (double)
+///  @param[in] ... Argument list forwarded to Functor constructor. (__VA_ARGS__)
 ///
+/// Example:
+/// @code
 ///   struct Functor : public aslam::common::NumDiffFunctor<2, 3> {
 ///    Functor(MyClass::Ptr my_class) : my_class_(my_class) {};
 ///    virtual ~Functor() {};
@@ -30,6 +41,8 @@ namespace common {
 ///  double test_tolerance = 1e-2;
 ///  Eigen::Vector2d x0(0.0, 1.0); // Evaluation point
 ///  TEST_JACOBIAN_FINITE_DIFFERENCE(Functor, x0, stepsize, tolerance, my_class_);
+///
+/// @endcode
 #define TEST_JACOBIAN_FINITE_DIFFERENCE(FUNCTOR_TYPE, X, STEP, TOLERANCE, ...) \
     do {\
       FUNCTOR_TYPE functor(__VA_ARGS__); \
@@ -42,7 +55,6 @@ namespace common {
       if (NUMDIFF_DEBUG_OUTPUT) std::cout << "Jnumeric: " << Jnumeric << "\n"; \
       if (NUMDIFF_DEBUG_OUTPUT) std::cout << "Jsymbolic: " << Jsymbolic << "\n"; \
     } while (0)
-
 
 // Functor base for numerical differentiation.
 template<int NY, int NX, typename _Scalar = double>
@@ -76,17 +88,17 @@ struct NumDiffFunctor {
   };
 };
 
-/// Differentiation schemes.
+/// Differentiation schemes for class NumericalDiff.
 enum NumericalDiffMode {
   Forward,
   Central,
   CentralSecond
 };
 
-/// Modified numerical differentiation code from unsupported/Eigen library
+/// \class NumericalDiff
+/// \brief Modified numerical differentiation code from unsupported/Eigen library
 template<typename _Functor, NumericalDiffMode mode = CentralSecond>
 class NumericalDiff : public _Functor {
-
  public:
   typedef _Functor Functor;
   typedef typename Functor::Scalar Scalar;
@@ -108,7 +120,6 @@ class NumericalDiff : public _Functor {
     using std::abs;
     /* Local variables */
     Scalar h;
-
     const typename InputType::Index n = _x.size();
     const Scalar eps = sqrt(((std::max)(epsfcn, Eigen::NumTraits<Scalar>::epsilon())));
 
@@ -121,28 +132,33 @@ class NumericalDiff : public _Functor {
       if (h == 0.) {
         h = eps;
       }
-
       switch (mode) {
         case Forward:
-                        Functor::operator()(x, val1);
-          x[j] += h;    Functor::operator()(x, val2);
+          Functor::operator()(x, val1);
+          x[j] += h;
+          Functor::operator()(x, val2);
           x[j] = _x[j];
           jac.col(j) = (val2 - val1) / h;
           break;
         case Central:
-          x[j] += h;     Functor::operator()(x, val2);
-          x[j] -= 2 * h; Functor::operator()(x, val1);
+          x[j] += h;
+          Functor::operator()(x, val2);
+          x[j] -= 2 * h;
+          Functor::operator()(x, val1);
           x[j] = _x[j];
           jac.col(j) = (val2 - val1) / (2 * h);
           break;
         case CentralSecond:
-          x[j] += 2.0 * h; Functor::operator()(x, val1);
-          x[j] -= h;       Functor::operator()(x, val2);
-          x[j] -= 2.0 * h; Functor::operator()(x, val3);
-          x[j] -= h;       Functor::operator()(x, val4);
+          x[j] += 2.0 * h;
+          Functor::operator()(x, val1);
+          x[j] -= h;
+          Functor::operator()(x, val2);
+          x[j] -= 2.0 * h;
+          Functor::operator()(x, val3);
+          x[j] -= h;
+          Functor::operator()(x, val4);
           x[j] = _x[j];
-
-          jac.col(j) = ( (8.0*val2) + val4 - val1 - (8.0*val3))/(h * 12.0);
+          jac.col(j) = ((8.0 * val2) + val4 - val1 - (8.0 * val3)) / (h * 12.0);
           break;
         default:
           eigen_assert(false);
@@ -151,10 +167,8 @@ class NumericalDiff : public _Functor {
   }
  private:
   Scalar epsfcn;
-
   NumericalDiff& operator=(const NumericalDiff&);
 };
-
 
 }  // namespace common
 }  // namespace aslam
