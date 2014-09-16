@@ -76,7 +76,6 @@ void FisheyeDistortion::distortParameterJacobian(const Eigen::VectorXd& dist_coe
                                                  Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
   CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(out_jacobian);
-  CHECK_EQ(out_jacobian->cols(), 1);
 
   const double& w = dist_coeffs(0);
 
@@ -88,6 +87,7 @@ void FisheyeDistortion::distortParameterJacobian(const Eigen::VectorXd& dist_coe
   const double& u = point(0);
   const double& v = point(1);
 
+  out_jacobian->resize(2, kNumOfParams);
   if (w * w < 1e-5) {
     out_jacobian->setZero();
   }

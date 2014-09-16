@@ -7,14 +7,6 @@
 
 namespace aslam {
 
-
-/////
-// TODO(schneith):
-//   * cleanup jacobians
-//   * add camera related stuff to camera namespace?
-///
-
-
 /// \class OmniCamera
 /// \brief An implementation of the omni camera model with (optional) distortion.
 ///

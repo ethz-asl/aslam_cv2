@@ -29,18 +29,23 @@ void RadTanDistortion::distortUsingExternalCoefficients(
   double rad_dist_u = k1 * rho2_u + k2 * rho2_u * rho2_u;
 
   if (out_jacobian) {
-    const double duf_du = 1 + rad_dist_u
-                          + k1 * 2.0 * mx2_u
+    const double duf_du =   1.0 + rad_dist_u
+                          + 2.0 * k1 * mx2_u
                           + 4.0 * k2 * rho2_u * mx2_u
                           + 2.0 * p1 * y
                           + 6.0 * p2 * x;
-    const double duf_dv = k1 * 2.0 * mxy_u
+
+
+
+    const double duf_dv =   2.0 * k1 * mxy_u
                           + 4.0 * k2 * rho2_u * mxy_u
                           + 2.0 * p1 * x
                           + 2.0 * p2 * y;
+
     const double dvf_du = duf_dv;
-    const double dvf_dv = 1 + rad_dist_u
-                          + k1 * 2.0 * my2_u
+
+    const double dvf_dv =   1.0 + rad_dist_u
+                          + 2.0 * k1 * my2_u
                           + 4.0 * k2 * rho2_u * my2_u
                           + 2.0 * p2 * x
                           + 6.0 * p1 * y;
@@ -75,8 +80,8 @@ void RadTanDistortion::distortParameterJacobian(
   const double dvf_dp2 = 2.0 * y0 * y1;
 
   out_jacobian->resize(2, kNumOfParams);
-  *out_jacobian << duf_dk1, duf_dk2, duf_dp1, duf_dp2,
-                   dvf_dk1, dvf_dk2, dvf_dp1, dvf_dp2;
+  (*out_jacobian) << duf_dk1, duf_dk2, duf_dp1, duf_dp2,
+                     dvf_dk1, dvf_dk2, dvf_dp1, dvf_dp2;
 }
 
 void RadTanDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,

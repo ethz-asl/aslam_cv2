@@ -66,12 +66,14 @@ bool OmniCamera::operator==(const Camera& other) const {
   if (!Camera::operator==(other))
     return false;
 
-  // Compare the distortion model (if set).
+  // Check if only one camera defines a distortion.
+  if ((distortion_ && !rhs->distortion_) || (!distortion_ && rhs->distortion_))
+    return false;
+
+  // Compare the distortion model (if distortion is set for both).
   if (distortion_ && rhs->distortion_) {
     if ( !(*(this->distortion_) == *(rhs->distortion_)) )
       return false;
-  } else {
-    return false;
   }
 
   // Compare intrinsics parameters.
@@ -114,8 +116,8 @@ const ProjectionResult OmniCamera::project3(const Eigen::Vector3d& point_3d,
 }
 
 const ProjectionResult OmniCamera::project3(const Eigen::Vector3d& point_3d,
-                                              Eigen::Vector2d* out_keypoint,
-                                              Eigen::Matrix<double, 2, 3>* out_jacobian) const {
+                                            Eigen::Vector2d* out_keypoint,
+                                            Eigen::Matrix<double, 2, 3>* out_jacobian) const {
   CHECK_NOTNULL(out_keypoint);
   CHECK_NOTNULL(out_jacobian);
 
@@ -184,6 +186,9 @@ bool OmniCamera::backProject3(const Eigen::Vector2d& keypoint,
 
   const double rho2_d = kp[0] * kp[0] + kp[1] * kp[1];
   const double tmpD = std::max(1 + (1 - xi()*xi()) * rho2_d, 0.0);
+
+  (*out_point_3d)[0] = kp[0];
+  (*out_point_3d)[1] = kp[1];
   (*out_point_3d)[2] = 1 - xi() * (rho2_d + 1) / (xi() + sqrt(tmpD));
 
   return isUndistortedKeypointValid(rho2_d, xi());
@@ -273,7 +278,6 @@ const ProjectionResult OmniCamera::project3Functional(
   (*out_keypoint)[0] = x * rz;
   (*out_keypoint)[1] = y * rz;
 
-
   // Distort the point and get the Jacobian wrt. keypoint.
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
   if (distortion_ && out_jacobian_point) {
@@ -314,18 +318,19 @@ const ProjectionResult OmniCamera::project3Functional(
   // Calculate the Jacobian w.r.t to the intrinsic parameters, if requested.
   if(out_jacobian_intrinsics) {
     out_jacobian_intrinsics->resize(2, kNumOfParams);
-    Eigen::Matrix<double, 2, 3>& J = *out_jacobian_point;
+    out_jacobian_intrinsics->setZero();
+
     Eigen::Vector2d Jxi;
     Jxi[0] = -(*out_keypoint)[0] * d * rz;
     Jxi[1] = -(*out_keypoint)[1] * d * rz;
     J_distortion.row(0) *= fu;
     J_distortion.row(1) *= fv;
-    J.col(0) = J_distortion * Jxi;
+    (*out_jacobian_intrinsics).col(0) = J_distortion * Jxi;
 
-    J(0, 1) = (*out_keypoint)[0];
-    J(0, 3) = 1;
-    J(1, 2) = (*out_keypoint)[1];
-    J(1, 4) = 1;
+    (*out_jacobian_intrinsics)(0, 1) = (*out_keypoint)[0];
+    (*out_jacobian_intrinsics)(0, 3) = 1;
+    (*out_jacobian_intrinsics)(1, 2) = (*out_keypoint)[1];
+    (*out_jacobian_intrinsics)(1, 4) = 1;
   }
 
   // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
@@ -419,16 +424,18 @@ Eigen::Vector2d OmniCamera::createRandomKeypoint() const {
 
 Eigen::Vector3d OmniCamera::createRandomVisiblePoint(double depth) const {
   CHECK_GT(depth, 0.0) << "Depth needs to be positive!";
-  Eigen::Vector3d point_3d;
+
 
   Eigen::Vector2d y = createRandomKeypoint();
-  backProject3(y, &point_3d);
+
+  Eigen::Vector3d point_3d;
+  bool success = backProject3(y, &point_3d);
+  CHECK(success) << "backprojection of createRandomVisiblePoint was unsuccessful!";
   point_3d /= point_3d.norm();
 
   // Muck with the depth. This doesn't change the pointing direction.
   return point_3d * depth;
 }
-
 
 void OmniCamera::printParameters(std::ostream& out, const std::string& text) const {
   Camera::printParameters(out, text);
@@ -442,5 +449,4 @@ void OmniCamera::printParameters(std::ostream& out, const std::string& text) con
     distortion_->printParameters(out, text);
   }
 }
-
 }  // namespace aslam
