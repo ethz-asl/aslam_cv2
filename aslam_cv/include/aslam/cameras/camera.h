@@ -69,9 +69,15 @@ struct ProjectionResult {
     /// Default value after construction.
     UNINITIALIZED
   };
+  // Make the enum values accessible from the outside without the additional indirection.
+  static Status KEYPOINT_VISIBLE;
+  static Status KEYPOINT_OUTSIDE_IMAGE_BOX;
+  static Status POINT_BEHIND_CAMERA;
+  static Status PROJECTION_INVALID;
+  static Status UNINITIALIZED;
 
-  ProjectionResult() : status_(Status::UNINITIALIZED) {};
-  ProjectionResult(Status status) : status_(status) {};
+  constexpr ProjectionResult() : status_(Status::UNINITIALIZED) {};
+  constexpr ProjectionResult(Status status) : status_(status) {};
 
   /// \brief ProjectionResult can be typecasted to bool and is true if the projected keypoint
   ///        is visible. Simplifies the check for a successful projection.
@@ -84,6 +90,9 @@ struct ProjectionResult {
 
   /// \brief Compare objects.
   bool operator==(const ProjectionResult& other) const { return status_ == other.status_; };
+
+  /// \brief Compare projection status.
+  bool operator==(const ProjectionResult::Status& other) const { return status_ == other; };
 
   /// \brief Convenience function to print the state using streams.
   friend std::ostream& operator<< (std::ostream& out, const ProjectionResult& state)
@@ -199,6 +208,21 @@ class Camera {
   virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
                                          Eigen::Vector2d* out_keypoint) const = 0;
 
+  /// \brief Projects a matrix of euclidean points to 2d image measurements. Applies the
+  ///        projection (& distortion) models to the points.
+  ///
+  /// This vanilla version just repeatedly calls backProject3. Camera implementers
+  /// are encouraged to override for efficiency.
+  /// @param[in]  point_3d      The point in euclidean coordinates.
+  /// @param[out] out_keypoints The keypoint in image coordinates.
+  /// @param[out] out_results   Contains information about the success of the
+  ///                           projections. Check "struct ProjectionResult" for
+  ///                           more information.
+  virtual void project3Vectorized(const Eigen::Matrix3Xd& points_3d,
+                                  Eigen::Matrix2Xd* out_keypoints,
+                                  std::vector<ProjectionResult>* out_results) const;
+
+
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
   ///        projection (& distortion) models to the point.
   /// @param[in]  point_3d     The point in euclidean coordinates.
@@ -218,6 +242,17 @@ class Camera {
   virtual bool backProject3(const Eigen::Vector2d& keypoint,
                             Eigen::Vector3d* out_point_3d) const = 0;
 
+  /// \brief Compute the 3d bearing vectors in euclidean coordinates given a list of
+  ///        keypoints in image coordinates. Uses the projection (& distortion) models.
+  ///
+  /// This vanilla version just repeatedly calls backProject3. Camera implementers
+  /// are encouraged to override for efficiency.
+  /// @param[in]  keypoints     Keypoints in image coordinates.
+  /// @param[out] out_point_3ds Bearing vectors in euclidean coordinates (with z=1 -> non-normalized).
+  /// @param[out] out_success   Were the projections successful?
+  virtual void backProject3Vectorized(const Eigen::Matrix2Xd& keypoints,
+                                      Eigen::Matrix3Xd* out_points_3d,
+                                      std::vector<bool>* out_success) const;
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -391,6 +426,27 @@ class Camera {
 
   /// @}
 
+  /// \name Factory Methods
+  /// @{
+
+  /// \brief A factory function to create a derived class camera
+  ///
+  /// This function takes a vectors of intrinsics and distortion parameters
+  /// and produces a camera.
+  /// \param[in] intrinsics  A vector of projection intrinsic parameters.
+  /// \param[in] imageWidth  The width of the image associated with this camera.
+  /// \param[in] imageHeight The height of the image associated with this camera.
+  /// \param[in] distortionParameters The parameters of the distortion object.
+  /// \returns A new camera based on the template types.
+  template<typename DerivedCamera, typename DerivedDistortion>
+  static std::shared_ptr<Camera> construct(
+      const Eigen::VectorXd& intrinsics,
+      uint32_t imageWidth,
+      uint32_t imageHeight,
+      const Eigen::VectorXd& distortionParameters);
+
+  /// @}
+
  protected:
   /// Set the image width. Only accessible by derived classes.
   void setImageWidth(uint32_t width){ image_width_ = width; }
@@ -415,4 +471,5 @@ class Camera {
   Eigen::VectorXd intrinsics_;
 };
 }  // namespace aslam
+#include "camera-inl.h"
 #endif  // ASLAM_CAMERAS_CAMERA_H_

@@ -51,5 +51,4 @@ void ThreadPool::waitForEmptyQueue() const {
       this->wait_condition_.wait(lock);
   }
 }
-
 }  // namespace aslam

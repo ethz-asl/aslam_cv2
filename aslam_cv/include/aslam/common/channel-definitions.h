@@ -11,7 +11,7 @@ DECLARE_CHANNEL(VISUAL_KEYPOINT_SCALES, Eigen::VectorXd);
 DECLARE_CHANNEL(BRISK_DESCRIPTORS,
                 Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>);
 DECLARE_CHANNEL(CV_MAT, cv::Mat);
-DECLARE_CHANNEL(IMAGE, cv::Mat);
+DECLARE_CHANNEL(RAW_IMAGE, cv::Mat);
 
 
 #endif  // ASLAM_CV_COMMON_CHANNEL_DEFINITIONS_H_
