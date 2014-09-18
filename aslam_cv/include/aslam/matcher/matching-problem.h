@@ -48,8 +48,8 @@ public:
   MatchingProblem();
   virtual ~MatchingProblem();
 
-  virtual int getLengthApples() = 0;
-  virtual int getLengthBananas() = 0;
+  virtual int getLengthApples() const = 0;
+  virtual int getLengthBananas() const = 0;
 
   /// Get a short list of candidates in list a for index b
   ///
@@ -64,7 +64,17 @@ public:
   ///
   /// \param[in] b The index of b queried for candidates.
   /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
-  virtual int getAppleCandidatesOfBanana(int b, CandidatesT *candidates) = 0;
+  virtual void getAppleCandidatesOfBanana(int b, CandidatesT *candidates) {
+    CHECK_NOTNULL(candidates);
+    candidates->clear();
+    candidates->reserve(getLengthApples());
+
+    // just returns all apples with no score
+    for (int i=0; i<getLengthApples(); ++i) {
+      candidates->emplace_back(i,0);
+    }
+    return;
+  };
 
   /// \brief compute the match score between items referenced by a and b.
   /// Note: this can be called multiple times from different threads.
