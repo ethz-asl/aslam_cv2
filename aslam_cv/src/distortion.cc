@@ -60,8 +60,4 @@ void Distortion::setParameters(const Eigen::VectorXd& dist_coeffs) {
   distortion_coefficients_ = dist_coeffs;
 }
 
-Eigen::VectorXd Distortion::getParameters() const {
-  return distortion_coefficients_;
-}
-
 }  // namespace aslam

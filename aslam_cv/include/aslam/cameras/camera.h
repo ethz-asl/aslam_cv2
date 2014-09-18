@@ -2,6 +2,11 @@
 #define ASLAM_CAMERAS_CAMERA_H_
 
 #include <cstdint>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
 
 #include <Eigen/Dense>
 #include <glog/logging.h>
@@ -28,11 +33,12 @@ namespace aslam {
 /// \returns A new camera based on the template types.
 template <typename CameraType, typename DistortionType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
-                                      uint32_t image_width, uint32_t image_height,
-                                      const Eigen::VectorXd& distortion_parameters)
+                                            uint32_t image_width, uint32_t image_height,
+                                            const Eigen::VectorXd& distortion_parameters)
 {
-  typename DistortionType::Ptr distortion(new DistortionType(distortion_parameters));
-  typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height, distortion));
+  typename DistortionType::UniquePtr distortion(new DistortionType(distortion_parameters));
+  typename CameraType::Ptr camera(new CameraType(intrinsics, image_width,
+                                                 image_height, distortion));
   return camera;
 }
 
@@ -127,6 +133,7 @@ struct ProjectionResult {
   Status status_;
 };
 
+
 /// \class Camera
 /// \brief The base camera class provides methods to project/backproject euclidean and
 ///        homogeneous points. The actual projection is implemented in the derived classes
@@ -138,6 +145,7 @@ class Camera {
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Camera);
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -206,7 +214,7 @@ class Camera {
   /// @return Contains information about the success of the projection. Check "struct
   ///         ProjectionResult" for more information.
   virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
-                                         Eigen::Vector2d* out_keypoint) const = 0;
+                                          Eigen::Vector2d* out_keypoint) const = 0;
 
   /// \brief Projects a matrix of euclidean points to 2d image measurements. Applies the
   ///        projection (& distortion) models to the points.
@@ -231,8 +239,8 @@ class Camera {
   /// @return Contains information about the success of the projection. Check "struct
   ///         ProjectionResult" for more information.
   virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
-                                         Eigen::Vector2d* out_keypoint,
-                                         Eigen::Matrix<double, 2, 3>* out_jacobian) const = 0;
+                                          Eigen::Vector2d* out_keypoint,
+                                          Eigen::Matrix<double, 2, 3>* out_jacobian) const = 0;
 
   /// \brief Compute the 3d bearing vector in euclidean coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
@@ -246,7 +254,7 @@ class Camera {
   ///        keypoints in image coordinates. Uses the projection (& distortion) models.
   ///
   /// This vanilla version just repeatedly calls backProject3. Camera implementers
-  /// are encouraged to override for efficiency.
+  /// are encouraged to override for efficiency. (<--TODO(schneith))
   /// @param[in]  keypoints     Keypoints in image coordinates.
   /// @param[out] out_point_3ds Bearing vectors in euclidean coordinates (with z=1 -> non-normalized).
   /// @param[out] out_success   Were the projections successful?
@@ -266,7 +274,7 @@ class Camera {
   /// @return Contains information about the success of the projection. Check "struct
   ///         ProjectionResult" for more information.
   const ProjectionResult project4(const Eigen::Vector4d& point_4d,
-                                 Eigen::Vector2d* out_keypoint) const;
+                                  Eigen::Vector2d* out_keypoint) const;
 
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
   ///        projection (& distortion) models to the point.
@@ -276,8 +284,8 @@ class Camera {
   /// @return Contains information about the success of the projection. Check "struct
   ///         ProjectionResult" for more information.
   const ProjectionResult project4(const Eigen::Vector4d& point_4d,
-                                 Eigen::Vector2d* out_keypoint,
-                                 Eigen::Matrix<double, 2, 4>* out_jacobian) const;
+                                  Eigen::Vector2d* out_keypoint,
+                                  Eigen::Matrix<double, 2, 4>* out_jacobian) const;
 
   /// \brief Compute the 3d bearing vector in homogeneous coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
@@ -409,17 +417,20 @@ class Camera {
   /// @{
 
   /// \brief Returns a pointer to the underlying distortion object.
-  /// @return ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual aslam::Distortion::Ptr distortion() { return nullptr; };
+  /// @return Pointer for the distortion model;
+  ///         NOTE: nullptr if no model is set or not available for the camera type
+  virtual aslam::Distortion* getDistortionMutable() { return nullptr; };
 
   /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return const_ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual const aslam::Distortion::Ptr distortion() const { return nullptr; };
+  /// @return ConstPointer for the distortion model;
+  ///         NOTE: nullptr if no model is set or not available for the camera type
+  virtual const aslam::Distortion* getDistortion() const { return nullptr; };
 
-  /// Get the intrinsic parameters.
-  virtual const Eigen::VectorXd& getParameters() const { return intrinsics_; };
+  /// Get the intrinsic parameters (const).
+  const Eigen::VectorXd& getParameters() const { return intrinsics_; };
+
+  /// Get the intrinsic parameters (mutable).
+  Eigen::VectorXd& getParametersMutable() { return intrinsics_; };
 
   /// Set the intrinsic parameters. Parameters are documented in the specialized camera classes.
   virtual void setParameters(const Eigen::VectorXd& params) = 0;
@@ -439,7 +450,7 @@ class Camera {
   /// \param[in] distortionParameters The parameters of the distortion object.
   /// \returns A new camera based on the template types.
   template<typename DerivedCamera, typename DerivedDistortion>
-  static std::shared_ptr<Camera> construct(
+  static typename DerivedCamera::Ptr construct(
       const Eigen::VectorXd& intrinsics,
       uint32_t imageWidth,
       uint32_t imageHeight,
@@ -449,10 +460,10 @@ class Camera {
 
  protected:
   /// Set the image width. Only accessible by derived classes.
-  void setImageWidth(uint32_t width){ image_width_ = width; }
+  void setImageWidth(uint32_t width) { image_width_ = width; }
 
   /// Set the image height. Only accessible by derived classes.
-  void setImageHeight(uint32_t height){ image_height_ = height; }
+  void setImageHeight(uint32_t height) { image_height_ = height; }
 
  private:
   /// The delay per scanline for a rolling shutter camera in nanoseconds.
@@ -471,5 +482,7 @@ class Camera {
   Eigen::VectorXd intrinsics_;
 };
 }  // namespace aslam
+
 #include "camera-inl.h"
+
 #endif  // ASLAM_CAMERAS_CAMERA_H_

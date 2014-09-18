@@ -45,7 +45,7 @@ class PinholeCamera : public Camera {
   /// @param[in] image_height Image height in pixels.
   /// @param[in] distortion   Pointer to the distortion model.
   PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
-                aslam::Distortion::Ptr distortion);
+                aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
   /// @param[in] intrinsics   Vector containing the intrinsic parameters (fu,fv,cu,cv).
@@ -64,7 +64,7 @@ class PinholeCamera : public Camera {
   PinholeCamera(double focallength_cols, double focallength_rows,
                 double imagecenter_cols, double imagecenter_rows,
                 uint32_t image_width, uint32_t image_height,
-                aslam::Distortion::Ptr distortion);
+                aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
   /// @param[in] focallength_cols Focal length in pixels; cols (width-direction).
@@ -101,7 +101,7 @@ class PinholeCamera : public Camera {
   /// @return Contains information about the success of the projection. Check "struct
   ///         ProjectionResult" for more information.
   virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
-                                         Eigen::Vector2d* out_keypoint) const;
+                                          Eigen::Vector2d* out_keypoint) const;
 
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
   ///        projection (& distortion) models to the point.
@@ -111,8 +111,8 @@ class PinholeCamera : public Camera {
   /// @return Contains information about the success of the projection. Check "struct
   ///         ProjectionResult" for more information.
   virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
-                                         Eigen::Vector2d* out_keypoint,
-                                         Eigen::Matrix<double, 2, 3>* out_jacobian) const;
+                                          Eigen::Vector2d* out_keypoint,
+                                          Eigen::Matrix<double, 2, 3>* out_jacobian) const;
 
   /// \brief Compute the 3d bearing vector in euclidean coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
@@ -127,7 +127,7 @@ class PinholeCamera : public Camera {
   /// @param[in] point_3d Projected point in euclidean.
   /// @return The ProjectionResult object contains details about the success of the projection.
   const ProjectionResult evaluateProjectionResult(const Eigen::Vector2d& keypoint,
-                                                const Eigen::Vector3d& point_3d) const;
+                                                  const Eigen::Vector3d& point_3d) const;
 
   /// @}
 
@@ -198,35 +198,35 @@ class PinholeCamera : public Camera {
   virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const;
 
   /// \brief Get a set of border rays
-  void getBorderRays(Eigen::MatrixXd & rays) const;
-
-  /// @}
-
-  //////////////////////////////////////////////////////////////
-  /// \name Methods to set/get distortion parameters.
-  /// @{
-
-  /// \brief Returns a pointer to the underlying distortion object.
-  /// @return ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual aslam::Distortion::Ptr distortion() { return distortion_; };
-
-  /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return const_ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual const aslam::Distortion::Ptr distortion() const { return distortion_; };
+  void getBorderRays(Eigen::MatrixXd& rays) const;
 
   /// \brief Create a test camera object for unit testing.
   template<typename DistortionType>
-  static PinholeCamera::Ptr createTestCamera()   {
-    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480,
-                                                DistortionType::createTestDistortion()));
+  static PinholeCamera::Ptr createTestCamera() {
+    aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
+    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480, distortion));
   }
 
   /// \brief Create a test camera object for unit testing. (without distortion)
   static PinholeCamera::Ptr createTestCamera() {
     return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480));
   }
+
+  /// @}
+
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to interface the underlying distortion model.
+  /// @{
+
+  /// \brief Returns a pointer to the underlying distortion object.
+  /// @return Pointer to the distortion model;
+  ///         NOTE: nullptr if no model is set or not available for the camera type
+  virtual aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
+
+  /// \brief Returns a const pointer to the underlying distortion object.
+  /// @return Const pointer to the distortion model;
+  ///         NOTE: nullptr if no model is set or not available for the camera type
+  virtual const aslam::Distortion* getDistortion() const { return distortion_.get(); };
 
   /// @}
 
@@ -270,7 +270,7 @@ class PinholeCamera : public Camera {
 
  private:
   /// \brief The distortion of this camera.
-  aslam::Distortion::Ptr distortion_;
+  aslam::Distortion::UniquePtr distortion_;
 
   /// \brief Minimal depth for a valid projection.
   static constexpr double kMinimumDepth = 1e-10;

@@ -42,13 +42,14 @@ class Camera;
 /// the raw image coordinates of any keypoint.
 class VisualFrame  {
  public:
-  typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
+  typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsType;
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   VisualFrame();
-  virtual ~VisualFrame();
+
+  virtual ~VisualFrame() {};
 
   virtual bool operator==(const VisualFrame& other) const;
 
@@ -93,7 +94,7 @@ class VisualFrame  {
   const Eigen::VectorXd& getKeypointScales() const;
 
   /// \brief The descriptors stored in a frame.
-  const DescriptorsT& getBriskDescriptors() const;
+  const DescriptorsType& getBriskDescriptors() const;
 
   /// \brief The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
@@ -116,7 +117,7 @@ class VisualFrame  {
   Eigen::VectorXd* getKeypointScalesMutable();
 
   /// \brief A pointer to the descriptors, can be used to swap in new data.
-  DescriptorsT* getBriskDescriptorsMutable();
+  DescriptorsType* getBriskDescriptorsMutable();
 
   /// \brief A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
@@ -158,10 +159,10 @@ class VisualFrame  {
   void setKeypointScales(const Eigen::VectorXd& scales);
 
   /// \brief Replace (copy) the internal descriptors by the passed ones.
-  void setBriskDescriptors(const DescriptorsT& descriptors);
+  void setBriskDescriptors(const DescriptorsType& descriptors);
 
   /// \brief Replace (copy) the internal descriptors by the passed ones.
-  void setBriskDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+  void setBriskDescriptors(const Eigen::Map<const DescriptorsType>& descriptors);
 
   /// \brief Replace (copy) the internal raw image by the passed ones.
   ///        This is a shallow copy by default. Please clone the image if it
@@ -194,7 +195,7 @@ class VisualFrame  {
   void swapKeypointScales(Eigen::VectorXd* scales);
 
   /// \brief Replace (swap) the internal descriptors by the passed ones.
-  void swapBriskDescriptors(DescriptorsT* descriptors);
+  void swapBriskDescriptors(DescriptorsType* descriptors);
 
   /// \brief Swap channel data with the data passed in. This will only work
   ///        if the channel data type has a swap() method.
