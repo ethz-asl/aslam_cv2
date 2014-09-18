@@ -23,29 +23,34 @@ namespace aslam {
 //}
 
 OmniCamera::OmniCamera()
-  : Camera( common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0) ),
-    distortion_(nullptr) {
+  : Camera(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)) {
   setImageWidth(0);
   setImageHeight(0);
 }
 
 OmniCamera::OmniCamera(const Eigen::VectorXd& intrinsics,
                        uint32_t image_width, uint32_t image_height,
-                       aslam::Distortion::Ptr distortion)
+                       aslam::Distortion::UniquePtr& distortion)
 : Camera( intrinsics ),
-  distortion_(distortion) {
+  distortion_(std::move(distortion)) {
   CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
 
+
 OmniCamera::OmniCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
                        uint32_t image_height)
-    : OmniCamera(intrinsics, image_width, image_height, nullptr) {}
+    : Camera(intrinsics),
+      distortion_(nullptr) {
+  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
+  setImageWidth(image_width);
+  setImageHeight(image_height);
+}
 
 OmniCamera::OmniCamera(double xi, double focallength_cols, double focallength_rows,
                        double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
-                       uint32_t image_height, aslam::Distortion::Ptr distortion)
+                       uint32_t image_height, aslam::Distortion::UniquePtr& distortion)
     : OmniCamera(
         common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
                               imagecenter_rows), image_width, image_height, distortion) {}
@@ -53,8 +58,9 @@ OmniCamera::OmniCamera(double xi, double focallength_cols, double focallength_ro
 OmniCamera::OmniCamera(double xi, double focallength_cols, double focallength_rows,
                        double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
                        uint32_t image_height)
-    : OmniCamera(xi, focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows,
-                 image_width, image_height, nullptr) {}
+    : OmniCamera(
+        common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
+                              imagecenter_rows), image_width, image_height) {}
 
 bool OmniCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.

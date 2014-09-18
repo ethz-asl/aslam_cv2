@@ -1,4 +1,7 @@
+#include <utility>
+
 #include <aslam/cameras/camera-pinhole.h>
+
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
 
@@ -21,29 +24,33 @@ namespace aslam {
 //}
 
 PinholeCamera::PinholeCamera()
-  : Camera( Eigen::Vector4d::Zero() ),
-    distortion_(nullptr) {
+  : Camera( Eigen::Vector4d::Zero() ) {
   setImageWidth(0);
   setImageHeight(0);
 }
 
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
                              uint32_t image_width, uint32_t image_height,
-                             aslam::Distortion::Ptr distortion)
+                             aslam::Distortion::UniquePtr& distortion)
   : Camera(intrinsics),
-    distortion_(distortion) {
+    distortion_(std::move(distortion)) {
   CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
 
-PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
-                             uint32_t image_width, uint32_t image_height)
-    : PinholeCamera(intrinsics, image_width, image_height, nullptr) {}
+PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
+                             uint32_t image_height)
+    : Camera(intrinsics),
+      distortion_(nullptr) {
+  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
+  setImageWidth(image_width);
+  setImageHeight(image_height);
+}
 
 PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
                              double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
-                             uint32_t image_height, aslam::Distortion::Ptr distortion)
+                             uint32_t image_height, aslam::Distortion::UniquePtr& distortion)
     : PinholeCamera(Eigen::Vector4d(focallength_cols, focallength_rows,
                                     imagecenter_cols, imagecenter_rows),
                      image_width, image_height, distortion) {}
@@ -51,8 +58,9 @@ PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
 PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
                              double imagecenter_cols, double imagecenter_rows,
                              uint32_t image_width, uint32_t image_height)
-    : PinholeCamera(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows, image_width,
-                    image_height, nullptr) {}
+    : PinholeCamera(Eigen::Vector4d(focallength_cols, focallength_rows,
+                                    imagecenter_cols, imagecenter_rows),
+                     image_width, image_height) {}
 
 bool PinholeCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.

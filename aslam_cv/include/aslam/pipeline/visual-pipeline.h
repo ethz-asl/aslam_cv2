@@ -3,15 +3,14 @@
 
 #include <memory>
 
-#include <aslam/common/macros.h>
+#include <opencv2/core/core.hpp>
 
-namespace cv { class Mat; }
+#include <aslam/cameras/camera.h>
+#include <aslam/common/macros.h>
+#include <aslam/pipeline/undistorter.h>
+#include <aslam/frames/visual-frame.h>
 
 namespace aslam {
-
-class Camera;
-class Undistorter;
-class VisualFrame;
 
 /// \class VisualPipeline
 /// \brief An interface for processors that turn images into VisualFrames
@@ -34,22 +33,20 @@ public:
   ASLAM_POINTER_TYPEDEFS(VisualPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualPipeline);
 
-  VisualPipeline(){}
+  VisualPipeline() {};
 
   /// \brief Construct a visual pipeline from the input and output cameras
   ///
   /// \param[in] input_camera  The intrinsics associated with the raw image.
   /// \param[in] output_camera The intrinsics associated with the keypoints.
   /// \param[in] copy_images    Should we copy the image before storing it in the frame?
-  VisualPipeline(const std::shared_ptr<Camera>& input_camera,
-                 const std::shared_ptr<Camera>& output_camera,
-                 bool copy_images);
+  VisualPipeline(Camera::Ptr input_camera, Camera::Ptr output_camera, bool copy_images);
 
   /// \brief Construct a visual pipeline from the input and output cameras
   ///
   /// \param[in] preprocessing Preprocessing to apply to the image before sending to the pipeline.
   /// \param[in] copy_images    Should we copy the image before storing it in the frame?
-  VisualPipeline(const std::shared_ptr<Undistorter>& preprocessing, bool copy_images);
+  VisualPipeline(Undistorter::Ptr preprocessing, bool copy_images);
 
   virtual ~VisualPipeline();
 
@@ -63,23 +60,36 @@ public:
   /// \param[in] system_stamp   The host time in integer nanoseconds since epoch.
   /// \param[in] hardware_stamp The camera's hardware timestamp. Can be set to "invalid".
   /// \returns                  The visual frame built from the image data.
-  std::shared_ptr<VisualFrame> processImage(const cv::Mat& image,
-                                            int64_t system_stamp,
-                                            int64_t hardware_stamp) const;
+  VisualFrame::Ptr processImage(const cv::Mat& image, int64_t system_stamp,
+                                int64_t hardware_stamp) const;
 
   /// \brief Get the input camera that corresponds to the image
   ///        passed in to processImage().
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getInputCamera() const { return input_camera_; }
+  const Camera& getInputCamera() const { CHECK(input_camera_); return *input_camera_; }
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getOutputCamera() const { return output_camera_; }
+  const Camera& getOutputCamera() const { CHECK(output_camera_); return *output_camera_; }
+
+  /// \brief Get a shared pointer to the input camera that corresponds to the image
+  ///        passed in to processImage().
+  ///
+  /// Because this processor may do things like image undistortion or
+  /// rectification, the input and output camera may not be the same.
+  Camera::Ptr getInputCameraShared() const { return input_camera_; }
+
+  /// \brief Get a shared pointer to the output camera that corresponds to the VisualFrame
+  ///        data that comes out.
+  ///
+  /// Because this pipeline may do things like image undistortion or
+  /// rectification, the input and output camera may not be the same.
+  Camera::Ptr getOutputCameraShared() const { return output_camera_; }
 
 protected:
   /// \brief Process the frame and fill the results into the frame variable.

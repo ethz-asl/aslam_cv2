@@ -6,17 +6,16 @@
 #include <mutex>
 #include <vector>
 
-#include <aslam/common/macros.h>
+#include <opencv2/core/core.hpp>
 
-namespace cv { class Mat; }
+#include <aslam/common/macros.h>
+#include <aslam/cameras/ncamera.h>
+#include <aslam/common/thread-pool.h>
+#include <aslam/frames/visual-frame.h>
+#include <aslam/frames/visual-nframe.h>
+#include <aslam/pipeline/visual-pipeline.h>
 
 namespace aslam {
-
-class NCamera;
-class ThreadPool;
-class VisualFrame;
-class VisualNFrame;
-class VisualPipeline;
 
 /// \class VisualNPipeline
 /// \brief An interface for pipelines that turn images into VisualNFrames
@@ -60,9 +59,9 @@ class VisualNPipeline {
   ///                                   for us to consider them part of the same
   ///                                   synchronized frame?
   VisualNPipeline(unsigned num_threads,
-                  const std::vector<std::shared_ptr<VisualPipeline>>& pipelines,
-                  const std::shared_ptr<NCamera>& input_cameras,
-                  const std::shared_ptr<NCamera>& output_cameras,
+                  const std::vector<VisualPipeline::Ptr>& pipelines,
+                  NCamera::Ptr input_cameras,
+                  NCamera::Ptr output_cameras,
                   int64_t timestamp_tolerance_ns);
 
   ~VisualNPipeline();

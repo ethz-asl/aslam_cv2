@@ -38,7 +38,7 @@ class OmniCamera : public Camera {
   /// @param[in] image_height image height in pixels
   /// @param[in] distortion   pointer to the distortion model
   OmniCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
-             aslam::Distortion::Ptr distortion);
+             aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a OmniCamera without distortion.
   /// @param[in] intrinsics   vector containing the intrinsic parameters (xi,fu,fv,cu.cv)
@@ -59,7 +59,7 @@ class OmniCamera : public Camera {
   OmniCamera(double xi, double focallength_cols, double focallength_rows,
              double imagecenter_cols, double imagecenter_rows,
              uint32_t image_width, uint32_t image_height,
-             aslam::Distortion::Ptr distortion);
+             aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a OmniCamera without distortion.
   /// @param[in] xi               mirror parameter
@@ -200,8 +200,8 @@ class OmniCamera : public Camera {
   /// \brief Create a test camera object for unit testing.
   template<typename DistortionType>
   static OmniCamera::Ptr createTestCamera()   {
-    return OmniCamera::Ptr(new OmniCamera(0.9, 400, 400, 320, 240, 640, 480,
-                                          DistortionType::createTestDistortion()));
+    aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
+    return OmniCamera::Ptr(new OmniCamera(0.9, 400, 400, 320, 240, 640, 480, distortion));
   }
 
   /// \brief Create a test camera object for unit testing. (without distortion)
@@ -212,18 +212,18 @@ class OmniCamera : public Camera {
   /// @}
 
   //////////////////////////////////////////////////////////////
-  /// \name Methods to set/get distortion parameters.
+  /// \name Methods to interface the underlying distortion model.
   /// @{
 
   /// \brief Returns a pointer to the underlying distortion object.
-  /// @return ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual aslam::Distortion::Ptr distortion() { return distortion_; };
+  /// @return Pointer for the distortion model;
+  ///         NOTE: nullptr if no model is set or not available for the camera type
+  virtual aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
 
   /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return const_ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual const aslam::Distortion::Ptr distortion() const { return distortion_; };
+  /// @return ConstPointer for the distortion model;
+  ///         NOTE: nullptr if no model is set or not available for the camera type
+  virtual const aslam::Distortion* getDistortion() const { return distortion_.get(); };
 
   /// @}
 
@@ -262,7 +262,7 @@ class OmniCamera : public Camera {
 
  private:
   /// \brief The distortion of this camera.
-  aslam::Distortion::Ptr distortion_;
+  aslam::Distortion::UniquePtr distortion_;
 
   /// \brief Minimal depth for a valid projection.
   static constexpr double kMinimumDepth = 1e-10;
