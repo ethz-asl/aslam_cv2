@@ -31,18 +31,15 @@ OmniCamera::OmniCamera()
 OmniCamera::OmniCamera(const Eigen::VectorXd& intrinsics,
                        uint32_t image_width, uint32_t image_height,
                        aslam::Distortion::UniquePtr& distortion)
-: Camera( intrinsics ),
-  distortion_(std::move(distortion)) {
+: Camera(intrinsics, distortion) {
   CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
 
-
 OmniCamera::OmniCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
                        uint32_t image_height)
-    : Camera(intrinsics),
-      distortion_(nullptr) {
+    : Camera(intrinsics) {
   CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
   setImageWidth(image_width);
   setImageHeight(image_height);

@@ -1,8 +1,11 @@
-#include <aslam/cameras/camera.h>
+#include <memory>
+
 #include <glog/logging.h>
+
+#include <aslam/cameras/camera.h>
+
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
-
 namespace aslam {
 
 // TODO(slynen) Enable commented out PropertyTree support
@@ -14,8 +17,14 @@ namespace aslam {
 //  }
 //}
 
+/// Camera constructor with distortion
+Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion)
+    : intrinsics_(intrinsics),
+      distortion_(std::move(distortion)) {}
+
+/// Camera constructor without distortion
 Camera::Camera(const Eigen::VectorXd& intrinsics)
-    : intrinsics_(intrinsics) { }
+    : intrinsics_(intrinsics) {}
 
 void Camera::printParameters(std::ostream& out, const std::string& text) const {
   if(text.size() > 0) {

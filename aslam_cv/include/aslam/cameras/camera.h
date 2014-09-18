@@ -156,7 +156,12 @@ class Camera {
  protected:
   Camera() = delete;
 
-  /// \brief Camera base constructor.
+  /// \brief Camera base constructor with distortion.
+  /// @param[in] intrinsics Vector containing the intrinsic parameters.
+  /// @param[in] distortion unique_ptr to the distortion model
+  Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion);
+
+  /// \brief Camera base constructor without distortion.
   /// @param[in] intrinsics Vector containing the intrinsic parameters.
   Camera(const Eigen::VectorXd& intrinsics);
 
@@ -413,18 +418,24 @@ class Camera {
   /// @}
 
   //////////////////////////////////////////////////////////////
-  /// \name Methods to support optimization
+  /// \name Methods to interface the underlying distortion model.
   /// @{
 
   /// \brief Returns a pointer to the underlying distortion object.
   /// @return Pointer for the distortion model;
   ///         NOTE: nullptr if no model is set or not available for the camera type
-  virtual aslam::Distortion* getDistortionMutable() { return nullptr; };
+  virtual aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
 
   /// \brief Returns a const pointer to the underlying distortion object.
   /// @return ConstPointer for the distortion model;
   ///         NOTE: nullptr if no model is set or not available for the camera type
-  virtual const aslam::Distortion* getDistortion() const { return nullptr; };
+  virtual const aslam::Distortion* getDistortion() const { return distortion_.get(); };
+
+  /// @}
+
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to access the intrinsic parameters.
+  /// @{
 
   /// Get the intrinsic parameters (const).
   const Eigen::VectorXd& getParameters() const { return intrinsics_; };
@@ -480,6 +491,10 @@ class Camera {
  protected:
   /// Parameter vector for the intrinsic parameters of the model.
   Eigen::VectorXd intrinsics_;
+
+  /// \brief The distortion for this camera.
+  ///        NOTE: Can be nullptr if no distortion model is set.
+  aslam::Distortion::UniquePtr distortion_;
 };
 }  // namespace aslam
 
