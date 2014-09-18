@@ -21,6 +21,10 @@ struct Match {
   /// \brief Get the score given to the match.
   Score getScore() const { return score; }
 
+  bool operator < ( const Match &other) const {
+    return this->score < other.score;
+  }
+
   int correspondence[2];
   Score score;
 };
