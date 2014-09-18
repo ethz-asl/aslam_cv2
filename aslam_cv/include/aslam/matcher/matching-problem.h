@@ -67,7 +67,8 @@ public:
   virtual int getAppleCandidatesOfBanana(int b, CandidatesT *candidates) = 0;
 
   /// \brief compute the match score between items referenced by a and b.
-  /// Note: this will be called multilple times from different threads.
+  /// Note: this can be called multiple times from different threads.
+  /// Warning: these are scores and *not* distances, higher values are better
   virtual ScoreT computeScore(int a, int b) = 0;
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
