@@ -24,18 +24,18 @@ namespace aslam {
 /// - B  : The body frame of the camera rig
 /// - Ci : A coordinate frame attached to camera i. 
 ///
-class NCameras
+class NCamera
 {
  public:
-  ASLAM_POINTER_TYPEDEFS(NCameras);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(NCameras);
+  ASLAM_POINTER_TYPEDEFS(NCamera);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(NCamera);
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef Aligned<std::vector, Transformation>::type TransformationVector;
 
   /// \brief default constructor builds an empty camera rig
-  NCameras();
+  NCamera();
 
   /// \brief initialize from a list of transformations and a list of cameras
   ///
@@ -46,15 +46,15 @@ class NCameras
   /// @param T_C_B a list of transformations that take poinst from B to Ci
   /// @param cameras a list cameras
   /// @param label a human-readable name for this camera rig
-  NCameras(const NCamerasId& id,
+  NCamera(const NCamerasId& id,
             const TransformationVector& T_C_B, 
             const std::vector<Camera::Ptr>& cameras,
             const std::string& label);
 
   /// \brief initialize from a property tree
-  NCameras(const sm::PropertyTree& propertyTree);
+  NCamera(const sm::PropertyTree& propertyTree);
   
-  virtual ~NCameras();
+  virtual ~NCamera();
 
   /// \brief get the number of cameras
   size_t getNumCameras() const;
@@ -103,7 +103,7 @@ class NCameras
   inline void setId(const aslam::NCamerasId& id) { id_ = id; }
 
   /// \brief equality
-  bool operator==(const NCameras& other) const;
+  bool operator==(const NCamera& other) const;
   
   /// \brief get a label for the camera
   inline const std::string& getLabel() const {return label_;}

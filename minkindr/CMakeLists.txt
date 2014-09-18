@@ -4,12 +4,6 @@ project(minkindr)
 find_package(catkin_simple REQUIRED)
 catkin_simple()
 
-cs_add_library(${PROJECT_NAME} 
-  src/RotationQuaternion.cc
-  src/QuatTransformation.cc
-  src/AngleAxis.cc
-)
-
 # add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=0)
 catkin_add_gtest(${PROJECT_NAME}_tests 
   test/test_main.cc
@@ -17,7 +11,7 @@ catkin_add_gtest(${PROJECT_NAME}_tests
   test/testTransformation.cc
 )
 
-target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_tests ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

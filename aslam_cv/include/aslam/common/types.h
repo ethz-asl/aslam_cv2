@@ -1,4 +1,4 @@
-#include <kindr/minimal/QuatTransformation.h>
+#include <kindr/minimal/quat-transformation.h>
 
 namespace aslam {
 
