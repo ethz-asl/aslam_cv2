@@ -1,7 +1,10 @@
-#ifndef VISUAL_PIPELINE_H_
-#define VISUAL_PIPELINE_H_
+#ifndef VISUAL_NPIPELINE_H_
+#define VISUAL_NPIPELINE_H_
 
 #include <memory>
+#include <map>
+#include <mutex>
+#include <vector>
 
 #include <aslam/common/macros.h>
 
@@ -9,8 +12,11 @@ namespace cv { class Mat; }
 
 namespace aslam {
 
+class NCamera;
+class ThreadPool;
+class VisualFrame;
 class VisualNFrame;
-class NCameras;
+class VisualPipeline;
 
 /// \class VisualNPipeline
 /// \brief An interface for pipelines that turn images into VisualNFrames
@@ -38,12 +44,28 @@ class NCameras;
 /// The getLatestAndClear() function gets the newest VisualNFrames and discards
 /// anything older.
 class VisualNPipeline {
-public:
+ public:
   ASLAM_POINTER_TYPEDEFS(VisualNPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNPipeline);
 
-  VisualNPipeline();
-  virtual ~VisualNPipeline();
+  /// \brief Initialize a working pipeline.
+  ///
+  /// \param[in] num_threads            The number of processing threads.
+  /// \param[in] pipelines              The ordered image pipelines, one pipeline
+  ///                                   per camera in the same order as they are
+  ///                                   indexed in the camera system.
+  /// \param[in] input_cameras          The camera system of the raw images.
+  /// \param[in] output_cameras         The camera system of the processed images.
+  /// \param[in] timestamp_tolerance_ns How close should two image timestamps be
+  ///                                   for us to consider them part of the same
+  ///                                   synchronized frame?
+  VisualNPipeline(unsigned num_threads,
+                  const std::vector<std::shared_ptr<VisualPipeline>>& pipelines,
+                  const std::shared_ptr<NCamera>& input_cameras,
+                  const std::shared_ptr<NCamera>& output_cameras,
+                  int64_t timestamp_tolerance_ns);
+
+  ~VisualNPipeline();
 
   /// \brief Add an image to the visual pipeline
   ///
@@ -52,43 +74,80 @@ public:
   /// call numVisualNFramesComplete() to find out how many VisualNFrames are
   /// completed.
   ///
-  /// \param[in] cameraIndex The index of the camera that this image corresponds to
+  /// \param[in] camera_index The index of the camera that this image corresponds to
   /// \param[in] image the image data
-  /// \param[in] systemStamp the host time in integer nanoseconds since epoch
-  /// \param[in] hardwareStamp the camera's hardware timestamp. Can be set to "invalid".
-  virtual void processImage(int cameraIndex,
-                            const cv::Mat& image,
-                            int64_t systemStamp,
-                            int64_t hardwareStamp) = 0;
+  /// \param[in] system_stamp the host time in integer nanoseconds since epoch
+  /// \param[in] hardware_stamp the camera's hardware timestamp. Can be set to "invalid".
+  void processImage(size_t camera_index, const cv::Mat& image, int64_t system_stamp,
+                    int64_t hardware_stamp);
 
 
   /// \brief How many completed VisualNFrames are waiting to be retrieved?
-  virtual size_t numVisualNFramesComplete() const = 0;
+  size_t getNumFramesComplete() const;
+
+  /// \brief Get the number of frames being processed
+  size_t getNumFramesProcessing() const;
 
   /// \brief  Get the next available set of processed frames
   ///
   /// This may not be the latest data, it is simply the next in a FIFO queue.
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
-  virtual std::shared_ptr<VisualNFrame> getNext() = 0;
+  std::shared_ptr<VisualNFrame> getNext();
 
   /// \brief Get the latest available data and clear anything older.
   ///
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
-  virtual std::shared_ptr<VisualNFrame> getLatestAndClear() = 0;
+  std::shared_ptr<VisualNFrame> getLatestAndClear();
 
   /// \brief Get the input camera system that corresponds to the images
   ///        passed in to processImage().
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  virtual std::shared_ptr<NCameras> getInputNCameras() const = 0;
+  const std::shared_ptr<NCamera>& getInputNCameras() const;
 
   /// \brief Get the output camera system that corresponds to the VisualNFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  virtual std::shared_ptr<NCameras> getOutputNCameras() const = 0;
+  const std::shared_ptr<NCamera>& getOutputNCameras() const;
+
+  /// \brief Blocks until all waiting frames are processed.
+  void waitForAllWorkToComplete() const;
+
+ private:
+  /// \brief A local function to be passed to the thread pool.
+  ///
+  /// \param[in] camera_index The index of the camera that this image corresponds to.
+  /// \param[in] image The image data.
+  /// \param[in] system_stamp The host time in integer nanoseconds since epoch.
+  /// \param[in] hardware_stamp The camera's hardware timestamp. Can be set to "invalid".
+  void work(size_t camera_index, const cv::Mat& image, int64_t system_stamp, int64_t hardware_stamp);
+
+  /// \brief One visual pipeline for each camera.
+  std::vector<std::shared_ptr<VisualPipeline>> pipelines_;
+
+  /// \brief A mutex to protect the processing and completed queues.
+  mutable std::mutex mutex_;
+
+  /// \brief The frames that are in progress.
+  std::map<int64_t, std::shared_ptr<VisualNFrame>> processing_;
+
+  /// \brief The output queue of completed frames.
+  std::map<int64_t, std::shared_ptr<VisualNFrame>> completed_;
+
+  /// \brief A thread pool for processing.
+  std::shared_ptr<aslam::ThreadPool> thread_pool_;
+
+  /// \brief The camera system of the raw images.
+  std::shared_ptr<NCamera> input_cameras_;
+  /// \brief The camera system of the processed images.
+  std::shared_ptr<NCamera> output_cameras_;
+
+  /// \brief The tolerance for associating host timestamps as being captured
+  ///        at the same time
+  int64_t timestamp_tolerance_ns_;
 };
 }  // namespace aslam
-#endif // VISUAL_PIPELINE_H_ 
+#endif // VISUAL_NPIPELINE_H_

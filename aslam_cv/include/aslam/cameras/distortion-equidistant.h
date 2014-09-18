@@ -31,6 +31,12 @@ class EquidistantDistortion : public aslam::Distortion {
   /// @param[in] distortionParams Vector containing the distortion parameter. (dim=4: k1, k2, k3, k4)
   explicit EquidistantDistortion(const Eigen::VectorXd& distortionParams);
 
+  /// \brief Convenience function to print the state using streams.
+  std::ostream& operator<<(std::ostream& out) {
+    this->printParameters(out, std::string(""));
+    return out;
+  };
+
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -63,8 +69,7 @@ class EquidistantDistortion : public aslam::Distortion {
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
   /// @param[in]  dist_coeffs  Vector containing the coefficients for the distortion model.
-  /// @param[in]  point        The point in the normalized image plane. After the function,
-  ///                          this point is distorted.
+  /// @param[in]  point        The point in the normalized image plane.
   /// @param[out] out_jacobian The Jacobian of the distortion with respect to small changes in
   ///                          the distortion parameters.
   virtual void distortParameterJacobian(const Eigen::VectorXd& dist_coeffs,
@@ -88,6 +93,18 @@ class EquidistantDistortion : public aslam::Distortion {
 
   /// @}
 
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to support unit testing.
+  /// @{
+
+  /// \brief Create a test distortion object for unit testing.
+  static EquidistantDistortion::Ptr createTestDistortion() {
+    Eigen::VectorXd params(4); params << 0.2, 0.01, 0.3, 0.05;
+    return EquidistantDistortion::Ptr(new EquidistantDistortion(params));
+  }
+
+  /// @}
+
   ///////////////////////////////////////////////////////////////////////////////
   /// \name Methods to set/get distortion parameters
   /// @{
@@ -101,6 +118,12 @@ class EquidistantDistortion : public aslam::Distortion {
   /// \brief Returns the number of parameters used in this distortion model.
   inline static constexpr size_t parameterCount() {
       return kNumOfParams;
+  }
+
+  /// \brief Returns the number of parameters used in the distortion model.
+  ///        NOTE: Use the constexpr function parameterCount if you know the exact distortion type.
+  virtual size_t getParameterSize() const {
+    return kNumOfParams;
   }
 
   /// \brief Print the internal parameters of the distortion in a human-readable form

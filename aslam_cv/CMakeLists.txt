@@ -5,8 +5,8 @@ find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
 cs_add_library(${PROJECT_NAME} 
-                               src/camera.cc
                                src/camera-pinhole.cc
+                               src/camera.cc
                                src/channel-serialization.cc
                                src/distortion-equidistant.cc
                                src/distortion-fisheye.cc
@@ -14,11 +14,16 @@ cs_add_library(${PROJECT_NAME}
                                src/distortion.cc
                                src/matching-engine.cc
                                src/matching-problem.cc
+                               src/ncamera.cc
                                src/ncameras.cc
                                src/thread-pool.cc
+                               src/undistorter-mapped.cc
+                               src/undistorter.cc
                                src/visual-frame.cc
-                               src/visual-nframes.cc
+                               src/visual-nframe.cc
                                src/visual-npipeline.cc
+                               src/visual-pipeline-brisk.cc
+                               src/visual-pipeline-null.cc
                                src/visual-pipeline.cc
 )
 
@@ -32,12 +37,13 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 
 catkin_add_gtest(${PROJECT_NAME}_tests 
     test/entry-point.cc
+    test/test-cameras.cc
     test/test-channel-serialization.cc
     test/test-channels.cc
     test/test-distortions.cc  
-    test/test-pinhole-camera.cc
     test/test-thread-pool.cc
     test/test-visual-frame.cc
+    test/test-visual-npipeline.cc
     )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 

@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <aslam/common/macros.h>
-
+#include "match.h"
 namespace aslam {
 
 /// \class MatchingProblem
@@ -30,12 +30,7 @@ class MatchingProblem {
 public:
   typedef SCORE ScoreT;
     
-  struct Match {
-    int correspondence[2];
-    ScoreT score;
-    int getIndexA() const { return correspondence[0]; }
-    int getIndexB() const { return correspondence[1]; }
-  };
+  typedef Match<ScoreT> Match;
 
   struct Candidate {
     int index;
