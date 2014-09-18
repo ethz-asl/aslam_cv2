@@ -1,6 +1,7 @@
 
 #include "aslam/matcher/matching-engine-greedy.h"
 
+#include <algorithm>
 #include <vector>
 
 namespace aslam {
