@@ -41,6 +41,7 @@ catkin_add_gtest(${PROJECT_NAME}_tests
     test/test-channel-serialization.cc
     test/test-channels.cc
     test/test-distortions.cc  
+    test/test-matcher.cc
     test/test-thread-pool.cc
     test/test-visual-frame.cc
     test/test-visual-npipeline.cc
