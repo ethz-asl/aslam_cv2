@@ -14,8 +14,8 @@ cs_add_library(${PROJECT_NAME}
                                src/distortion.cc
                                src/matching-engine.cc
                                src/matching-problem.cc
+                               src/matching-engine-simple-one.cc
                                src/ncamera.cc
-                               src/ncameras.cc
                                src/thread-pool.cc
                                src/undistorter-mapped.cc
                                src/undistorter.cc
