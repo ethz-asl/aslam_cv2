@@ -212,22 +212,6 @@ class OmniCamera : public Camera {
   /// @}
 
   //////////////////////////////////////////////////////////////
-  /// \name Methods to interface the underlying distortion model.
-  /// @{
-
-  /// \brief Returns a pointer to the underlying distortion object.
-  /// @return Pointer for the distortion model;
-  ///         NOTE: nullptr if no model is set or not available for the camera type
-  virtual aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
-
-  /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return ConstPointer for the distortion model;
-  ///         NOTE: nullptr if no model is set or not available for the camera type
-  virtual const aslam::Distortion* getDistortion() const { return distortion_.get(); };
-
-  /// @}
-
-  //////////////////////////////////////////////////////////////
   /// \name Methods to access intrinsics.
   /// @{
 
@@ -261,9 +245,6 @@ class OmniCamera : public Camera {
   /// @}
 
  private:
-  /// \brief The distortion of this camera.
-  aslam::Distortion::UniquePtr distortion_;
-
   /// \brief Minimal depth for a valid projection.
   static constexpr double kMinimumDepth = 1e-10;
 };
