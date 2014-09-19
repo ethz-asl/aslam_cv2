@@ -33,8 +33,8 @@ namespace aslam {
 /// \returns A new camera based on the template types.
 template <typename CameraType, typename DistortionType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
-                                            uint32_t image_width, uint32_t image_height,
-                                            const Eigen::VectorXd& distortion_parameters)
+                                      uint32_t image_width, uint32_t image_height,
+                                      const Eigen::VectorXd& distortion_parameters)
 {
   typename DistortionType::UniquePtr distortion(new DistortionType(distortion_parameters));
   typename CameraType::Ptr camera(new CameraType(intrinsics, image_width,
@@ -132,7 +132,6 @@ struct ProjectionResult {
   /// Stores the projection state.
   Status status_;
 };
-
 
 /// \class Camera
 /// \brief The base camera class provides methods to project/backproject euclidean and
@@ -485,7 +484,5 @@ class Camera {
   Eigen::VectorXd intrinsics_;
 };
 }  // namespace aslam
-
 #include "camera-inl.h"
-
 #endif  // ASLAM_CAMERAS_CAMERA_H_

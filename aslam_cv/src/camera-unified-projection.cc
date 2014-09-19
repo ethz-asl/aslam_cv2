@@ -122,30 +122,25 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
   CHECK_NOTNULL(out_keypoint);
 
   // Determine the parameter source. (if nullptr, use internal)
-  //TODO(schneith): use the new interface to avoid copying...
-  Eigen::VectorXd intrinsics;
+  const Eigen::VectorXd* intrinsics;
   if (!intrinsics_external)
-    intrinsics = getParameters();
+    intrinsics = &getParameters();
   else
-    intrinsics = *intrinsics_external;
+    intrinsics = intrinsics_external;
+  CHECK_EQ(intrinsics->size(), kNumOfParams) << "intrinsics: invalid size!";
 
-  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
-
-  //TODO(schneith): use the new interface to avoid copying...
-  Eigen::VectorXd* distortion_coefficients;
-  Eigen::VectorXd dist_coeff_internal;
+  const Eigen::VectorXd* distortion_coefficients;
   if(!distortion_coefficients_external && distortion_) {
-    dist_coeff_internal = getDistortion()->getParameters();
-    distortion_coefficients = &dist_coeff_internal;
+    distortion_coefficients = &getDistortion()->getParameters();
   } else {
-    distortion_coefficients = const_cast<Eigen::VectorXd*>(distortion_coefficients_external);
+    distortion_coefficients = distortion_coefficients_external;
   }
 
-  const double& xi = intrinsics[0];
-  const double& fu = intrinsics[1];
-  const double& fv = intrinsics[2];
-  const double& cu = intrinsics[3];
-  const double& cv = intrinsics[4];
+  const double& xi = (*intrinsics)[0];
+  const double& fu = (*intrinsics)[1];
+  const double& fv = (*intrinsics)[2];
+  const double& cu = (*intrinsics)[3];
+  const double& cv = (*intrinsics)[4];
 
   // Project the point.
   const double& x = point_3d[0];
