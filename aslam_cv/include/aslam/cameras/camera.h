@@ -393,7 +393,8 @@ class Camera {
   bool isProjectable4(const Eigen::Vector4d& point) const;
 
   /// \brief  Check if a given keypoint is inside the imaging box of the camera.
-  bool isKeypointVisible(const Eigen::Vector2d& keypoint) const;
+  template<typename Scalar>
+  bool isKeypointVisible(const Eigen::Matrix<Scalar, 2, 1>& keypoint) const;
 
   /// @}
 
