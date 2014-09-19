@@ -24,10 +24,10 @@ struct Match {
   /// \brief Get the score given to the match.
   Score getScore() const { return score; }
 
-  bool operator < ( const Match &other) const {
+  bool operator<( const Match &other) const {
     return this->score < other.score;
   }
-  bool operator > ( const Match &other) const {
+  bool operator>( const Match &other) const {
     return this->score > other.score;
   }
 

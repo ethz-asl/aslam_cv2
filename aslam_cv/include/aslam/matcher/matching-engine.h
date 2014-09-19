@@ -20,8 +20,8 @@ public:
   ASLAM_POINTER_TYPEDEFS(MatchingEngine);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngine);
 
-  MatchingEngine();
-  virtual ~MatchingEngine();
+  MatchingEngine() {};
+  virtual ~MatchingEngine() {};
 
   virtual bool match(MatchingProblemT &problem) = 0;
 
