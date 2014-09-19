@@ -6,6 +6,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 
 cs_add_library(${PROJECT_NAME} 
                                src/camera-pinhole.cc
+                               src/camera-unified-projection.cc
                                src/camera.cc
                                src/channel-serialization.cc
                                src/distortion-equidistant.cc
