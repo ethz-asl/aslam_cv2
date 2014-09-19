@@ -44,24 +44,26 @@ class RadTanDistortion : public aslam::Distortion {
 
   /// \brief Apply distortion to a point in the normalized image plane using provided distortion
   ///        coefficients. External distortion coefficients can be specified using this function.
-  ///        Ignores the internally stored parameters.
+  ///        (Ignores the internally stored parameters.
   /// @param[in]     dist_coeffs  Vector containing the coefficients for the distortion model.
+  ///                             NOTE: If nullptr, use internal distortion parameters.
   /// @param[in,out] point        The point in the normalized image plane. After the function,
   ///                             this point is distorted.
   /// @param[out]    out_jacobian The Jacobian of the distortion function with respect to small
   ///                             changes in the input point. If NULL is passed, the Jacobian
   ///                             calculation is skipped.
-  virtual void distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
+  virtual void distortUsingExternalCoefficients(const Eigen::VectorXd* dist_coeffs,
                                                 Eigen::Vector2d* point,
                                                 Eigen::Matrix2d* out_jacobian) const;
 
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
   /// @param[in]  dist_coeffs  Vector containing the coefficients for the distortion model.
+  ///                          NOTE: If nullptr, use internal distortion parameters.
   /// @param[in]  point        The point in the normalized image plane.
   /// @param[out] out_jacobian The Jacobian of the distortion with respect to small changes in
   ///                          the distortion parameters.
-  virtual void distortParameterJacobian(const Eigen::VectorXd& dist_coeffs,
+  virtual void distortParameterJacobian(const Eigen::VectorXd* dist_coeffs,
                                         const Eigen::Vector2d& point,
                                         Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
 

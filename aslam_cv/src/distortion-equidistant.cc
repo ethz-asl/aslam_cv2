@@ -8,19 +8,23 @@ EquidistantDistortion::EquidistantDistortion(const Eigen::VectorXd& dist_coeffs)
 }
 
 void EquidistantDistortion::distortUsingExternalCoefficients(
-    const Eigen::VectorXd& dist_coeffs,
+    const Eigen::VectorXd* dist_coeffs,
     Eigen::Vector2d* point,
     Eigen::Matrix2d* out_jacobian) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
 
   double& x = (*point)(0);
   double& y = (*point)(1);
 
-  const double& k1 = dist_coeffs(0);
-  const double& k2 = dist_coeffs(1);
-  const double& k3 = dist_coeffs(2);
-  const double& k4 = dist_coeffs(3);
+  // Use internal params if dist_coeffs==nullptr
+  if(!dist_coeffs)
+    dist_coeffs = &distortion_coefficients_;
+  CHECK_EQ(dist_coeffs->size(), kNumOfParams) << "dist_coeffs: invalid size!";
+
+  const double& k1 = (*dist_coeffs)(0);
+  const double& k2 = (*dist_coeffs)(1);
+  const double& k3 = (*dist_coeffs)(2);
+  const double& k4 = (*dist_coeffs)(3);
 
   double x2 = x*x;
   double y2 = y*y;
@@ -99,10 +103,10 @@ void EquidistantDistortion::distortUsingExternalCoefficients(
 }
 
 void EquidistantDistortion::distortParameterJacobian(
-    const Eigen::VectorXd& dist_coeffs,
+    const Eigen::VectorXd* dist_coeffs,
     const Eigen::Vector2d& point,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
+  CHECK_EQ(dist_coeffs->size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(out_jacobian);
 
   const double& x = point(0);

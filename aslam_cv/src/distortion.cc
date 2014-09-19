@@ -25,14 +25,14 @@ bool Distortion::operator==(const Distortion& rhs) const {
 
 void Distortion::distort(Eigen::Vector2d* point) const {
   CHECK_NOTNULL(point);
-  distortUsingExternalCoefficients(distortion_coefficients_, point, nullptr);
+  distortUsingExternalCoefficients(nullptr, point, nullptr);
 }
 
 void Distortion::distort(const Eigen::Vector2d& point,
                          Eigen::Vector2d* out_point) const {
   CHECK_NOTNULL(out_point);
   *out_point = point;
-  distortUsingExternalCoefficients(distortion_coefficients_, out_point, nullptr);
+  distortUsingExternalCoefficients(nullptr, out_point, nullptr);
 }
 
 void Distortion::distort(
@@ -40,7 +40,7 @@ void Distortion::distort(
     Eigen::Matrix2d* out_jacobian) const {
   CHECK_NOTNULL(point);
   CHECK_NOTNULL(out_jacobian);
-  distortUsingExternalCoefficients(distortion_coefficients_, point, out_jacobian);
+  distortUsingExternalCoefficients(nullptr, point, out_jacobian);
 }
 
 void Distortion::undistort(Eigen::Vector2d* point) const {
