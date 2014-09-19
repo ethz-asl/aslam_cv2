@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <aslam/cameras/camera.h>
-#include <aslam/cameras/camera-omni.h>
+#include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/cameras/distortion-fisheye.h>
@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////
 using testing::Types;
 typedef Types<aslam::PinholeCamera,
-              aslam::OmniCamera> Implementations;
+              aslam::UnifiedProjectionCamera> Implementations;
 
 ///////////////////////////////////////////////
 // Test fixture
@@ -48,17 +48,17 @@ struct Point3dFunctor : public aslam::common::NumDiffFunctor<2, 3> {
 
   virtual ~Point3dFunctor() {};
 
-  void functional(const typename NumDiffFunctor::InputType& x,
+  bool functional(const typename NumDiffFunctor::InputType& x,
                   typename NumDiffFunctor::ValueType& fvec,
                   typename NumDiffFunctor::JacobianType* Jout) const {
     typename NumDiffFunctor::ValueType out_keypoint;
     CHECK(camera_->getDistortion()) << "Distortion model not set!";
     Eigen::VectorXd dist_coeffs = camera_->getDistortion()->getParameters();
-    aslam::ProjectionResult res = camera_->project3Functional(x, camera_->getParameters(),
-                                                              &dist_coeffs, &out_keypoint,
-                                                              Jout, nullptr, nullptr);
-    CHECK(res) << "Projection failed, please investigate...";
+    aslam::ProjectionResult res = camera_->project3Functional(x, nullptr, &dist_coeffs,
+                                                              &out_keypoint, Jout, nullptr,
+                                                              nullptr);
     fvec = out_keypoint;
+    return static_cast<bool>(res);
   };
   aslam::Camera::ConstPtr camera_;
 };
@@ -82,7 +82,7 @@ struct IntrinsicJacobianFunctor : public aslam::common::NumDiffFunctor<2, numInt
 
   virtual ~IntrinsicJacobianFunctor() {};
 
-  virtual void functional(
+  virtual bool functional(
       const typename aslam::common::NumDiffFunctor<2, numIntrinsics>::InputType& x,
       typename aslam::common::NumDiffFunctor<2, numIntrinsics>::ValueType& fvec,
       typename aslam::common::NumDiffFunctor<2, numIntrinsics>::JacobianType* Jout) const {
@@ -94,17 +94,18 @@ struct IntrinsicJacobianFunctor : public aslam::common::NumDiffFunctor<2, numInt
     Eigen::Matrix<double, 2, Eigen::Dynamic> JoutDynamic;
 
     aslam::ProjectionResult res;
-    if (!Jout) {
-      res = camera_->project3Functional(point_3d_, x, &dist_coeffs, &out_keypoint);
+    Eigen::Matrix<double, Eigen::Dynamic, 1> xDynamic = x;
 
+    if (!Jout) {
+      res = camera_->project3Functional(point_3d_, &xDynamic, &dist_coeffs, &out_keypoint);
     } else {
-      res = camera_->project3Functional(point_3d_, x, &dist_coeffs, &out_keypoint,
+      res = camera_->project3Functional(point_3d_, &xDynamic, &dist_coeffs, &out_keypoint,
                                         nullptr, &JoutDynamic, nullptr);
       (*Jout) = JoutDynamic;
     }
 
-    CHECK(res) << "Projection failed, please investigate...";
     fvec = out_keypoint;
+    return static_cast<bool>(res);
   };
 
   aslam::Camera::ConstPtr camera_;
@@ -132,7 +133,7 @@ struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, 4> {
 
   virtual ~DistortionJacobianFunctor() {};
 
-  virtual void functional(
+  virtual bool functional(
       const typename NumDiffFunctor::InputType& x,
       typename NumDiffFunctor::ValueType& fvec,
       typename NumDiffFunctor::JacobianType* Jout) const {
@@ -148,16 +149,17 @@ struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, 4> {
 
     aslam::ProjectionResult res;
     if (!Jout) {
-      res = camera_->project3Functional(point_3d_, camera_->getParameters(), &dist_coeff_dynamic,
+
+      res = camera_->project3Functional(point_3d_, nullptr, &dist_coeff_dynamic,
                                         &out_keypoint);
     } else {
-      res = camera_->project3Functional(point_3d_, camera_->getParameters(), &dist_coeff_dynamic,
+      res = camera_->project3Functional(point_3d_, nullptr, &dist_coeff_dynamic,
                                         &out_keypoint, nullptr, nullptr, &JoutDynamic);
       (*Jout) = JoutDynamic;
     }
 
-    CHECK(res) << "Projection failed, please investigate...";
     fvec = out_keypoint;
+    return static_cast<bool>(res);
   };
 
   aslam::Camera::ConstPtr camera_;
@@ -282,31 +284,31 @@ TEST(TestCameraPinhole, ManualProjectionWithoutDistortion) {
   // Project using the camera methods
   aslam::ProjectionResult res;
   res = camera->project3(euclidean, &keypoint);
-  CHECK(res) << "Projection failed, please investigate...";
+  EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
   EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
   keypoint.setZero();
 
   Eigen::Matrix<double, 2, 3> out_jacobian;
   res = camera->project3(euclidean, &keypoint, &out_jacobian);
-  CHECK(res) << "Projection failed, please investigate...";
+  EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
   EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
   keypoint.setZero();
 
-  res = camera->project3Functional(euclidean, camera->getParameters(), nullptr, &keypoint);
-  CHECK(res) << "Projection failed, please investigate...";
+  res = camera->project3Functional(euclidean, nullptr, nullptr, &keypoint);
+  EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
   EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
   keypoint.setZero();
 
-  res = camera->project3Functional(euclidean, camera->getParameters(),
-                                   nullptr, &keypoint, nullptr, nullptr, nullptr);
-  CHECK(res) << "Projection failed, please investigate...";
+  res = camera->project3Functional(euclidean, nullptr, nullptr, &keypoint,
+                                   nullptr, nullptr, nullptr);
+  EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
   EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
   keypoint.setZero();
 }
 
-TEST(TestCameraOmni, ManualProjectionWithoutDistortion) {
+TEST(TestCameraUnifiedProjection, ManualProjectionWithoutDistortion) {
   //Create camera without distortion
-  aslam::OmniCamera::Ptr camera = aslam::OmniCamera::createTestCamera();
+  aslam::UnifiedProjectionCamera::Ptr camera = aslam::UnifiedProjectionCamera::createTestCamera();
 
   double kx =  1.0,
          ky =  1.2,
@@ -323,31 +325,31 @@ TEST(TestCameraOmni, ManualProjectionWithoutDistortion) {
   // Project using the camera methods
   aslam::ProjectionResult res;
   res = camera->project3(euclidean, &keypoint);
-  CHECK(res) << "Projection failed, please investigate...";
+  EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
   EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
   keypoint.setZero();
 
   Eigen::Matrix<double, 2, 3> out_jacobian;
   res = camera->project3(euclidean, &keypoint, &out_jacobian);
-  CHECK(res) << "Projection failed, please investigate...";
+  EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
   EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
   keypoint.setZero();
 
-  res = camera->project3Functional(euclidean, camera->getParameters(), nullptr, &keypoint);
-  CHECK(res) << "Projection failed, please investigate...";
+  res = camera->project3Functional(euclidean, nullptr, nullptr, &keypoint);
+  EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
   EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
   keypoint.setZero();
 
-  res = camera->project3Functional(euclidean, camera->getParameters(),
+  res = camera->project3Functional(euclidean, nullptr,
                                    nullptr, &keypoint, nullptr, nullptr, nullptr);
-  CHECK(res) << "Projection failed, please investigate...";
+  EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
   EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
   keypoint.setZero();
 }
 
-TEST(TestCameraOmni, ProjectionResult) {
+TEST(TestCameraUnifiedProjection, ProjectionResult) {
   // Create camera without distortion.
-  aslam::OmniCamera::Ptr cam = aslam::OmniCamera::createTestCamera();
+  aslam::UnifiedProjectionCamera::Ptr cam = aslam::UnifiedProjectionCamera::createTestCamera();
 
   Eigen::Vector2d keypoint;
   aslam::ProjectionResult ret;
@@ -357,13 +359,13 @@ TEST(TestCameraOmni, ProjectionResult) {
   EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionResult::Status::KEYPOINT_VISIBLE);
   EXPECT_TRUE(static_cast<bool>(ret));
 
-  // Behind cam -> not visible.
-  ret = cam->project3(Eigen::Vector3d(1, 1, -1), &keypoint);
-  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionResult::Status::POINT_BEHIND_CAMERA);
+  // Outside image box.
+  ret = cam->project3(Eigen::Vector3d(0.0, 10, -10), &keypoint);
+  EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionResult::Status::KEYPOINT_OUTSIDE_IMAGE_BOX);
   EXPECT_FALSE(static_cast<bool>(ret));
 
   // Invalid projection (invalid if: z <= -(fov_parameter(xi()) * d) )
-  ret = cam->project3(Eigen::Vector3d(1, 1, -10), &keypoint);
+  ret = cam->project3(Eigen::Vector3d(0, 0, -10), &keypoint);
   EXPECT_EQ(ret.getDetailedStatus(), aslam::ProjectionResult::Status::PROJECTION_INVALID);
   EXPECT_FALSE(static_cast<bool>(ret));
 }
@@ -408,12 +410,12 @@ TEST(CameraComparison, TestEquality) {
   EXPECT_FALSE(*pinhole_radtan == *pinhole_nodist); // Different distortion model.
   EXPECT_FALSE(*pinhole_radtan == *pinhole_equi);   // Different distortion model.
 
-  aslam::Camera::Ptr omni_nodist = aslam::OmniCamera::createTestCamera();
-  aslam::Camera::Ptr omni_radtan = aslam::OmniCamera::createTestCamera<aslam::RadTanDistortion>();
-  aslam::Camera::Ptr omni_fisheye = aslam::OmniCamera::createTestCamera<aslam::FisheyeDistortion>();
+  aslam::Camera::Ptr udc_nodist = aslam::UnifiedProjectionCamera::createTestCamera();
+  aslam::Camera::Ptr udc_radtan = aslam::UnifiedProjectionCamera::createTestCamera<aslam::RadTanDistortion>();
+  aslam::Camera::Ptr udc_fisheye = aslam::UnifiedProjectionCamera::createTestCamera<aslam::FisheyeDistortion>();
 
-  EXPECT_FALSE(*pinhole_nodist == *omni_nodist);  // Different camera model.
-  EXPECT_FALSE(*pinhole_nodist == *omni_fisheye); // Different camera and distortion model.
+  EXPECT_FALSE(*pinhole_nodist == *udc_nodist);  // Different camera model.
+  EXPECT_FALSE(*pinhole_nodist == *udc_fisheye); // Different camera and distortion model.
 
   aslam::PinholeCamera::Ptr pinhole_A =
       aslam::createCamera<aslam::PinholeCamera, aslam::RadTanDistortion>(

@@ -1,12 +1,12 @@
 #include <aslam/common/eigen-helpers.h>
-#include <aslam/cameras/camera-omni.h>
+#include <aslam/cameras/camera-unified-projection.h>
 
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
 
 namespace aslam {
 // TODO(slynen) Enable commented out PropertyTree support
-//OmniCamera::OmniCamera(
+//UnifiedProjection::UnifiedProjection(
 //    const sm::PropertyTree & config)
 //: Camera(config) {
 //  _fu = config.getDouble("fu");
@@ -22,25 +22,25 @@ namespace aslam {
 //
 //}
 
-OmniCamera::OmniCamera()
-  : Camera(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)) {
+
+UnifiedProjectionCamera::UnifiedProjectionCamera()
+    : Camera(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)) {
   setImageWidth(0);
   setImageHeight(0);
 }
 
-OmniCamera::OmniCamera(const Eigen::VectorXd& intrinsics,
-                       uint32_t image_width, uint32_t image_height,
-                       aslam::Distortion::UniquePtr& distortion)
-: Camera( intrinsics ),
-  distortion_(std::move(distortion)) {
-  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
+UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
+                                                 uint32_t image_width, uint32_t image_height,
+                                                 aslam::Distortion::UniquePtr& distortion)
+    : Camera(intrinsics),
+      distortion_(std::move(distortion)) {
+  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
 
-
-OmniCamera::OmniCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
-                       uint32_t image_height)
+UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
+                                                 uint32_t image_width, uint32_t image_height)
     : Camera(intrinsics),
       distortion_(nullptr) {
   CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
@@ -48,23 +48,28 @@ OmniCamera::OmniCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
   setImageHeight(image_height);
 }
 
-OmniCamera::OmniCamera(double xi, double focallength_cols, double focallength_rows,
-                       double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
-                       uint32_t image_height, aslam::Distortion::UniquePtr& distortion)
-    : OmniCamera(
+UnifiedProjectionCamera::UnifiedProjectionCamera(double xi, double focallength_cols,
+                                                 double focallength_rows, double imagecenter_cols,
+                                                 double imagecenter_rows, uint32_t image_width,
+                                                 uint32_t image_height,
+                                                 aslam::Distortion::UniquePtr& distortion)
+    : UnifiedProjectionCamera(
         common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
-                              imagecenter_rows), image_width, image_height, distortion) {}
+                              imagecenter_rows),
+        image_width, image_height, distortion) {}
 
-OmniCamera::OmniCamera(double xi, double focallength_cols, double focallength_rows,
-                       double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
-                       uint32_t image_height)
-    : OmniCamera(
+UnifiedProjectionCamera::UnifiedProjectionCamera(double xi, double focallength_cols,
+                                                 double focallength_rows, double imagecenter_cols,
+                                                 double imagecenter_rows, uint32_t image_width,
+                                                 uint32_t image_height)
+    : UnifiedProjectionCamera(
         common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
-                              imagecenter_rows), image_width, image_height) {}
+                              imagecenter_rows),
+        image_width, image_height) {}
 
-bool OmniCamera::operator==(const Camera& other) const {
+bool UnifiedProjectionCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.
-  const OmniCamera* rhs = dynamic_cast<const OmniCamera*>(&other);
+  const UnifiedProjectionCamera* rhs = dynamic_cast<const UnifiedProjectionCamera*>(&other);
   if (!rhs)
     return false;
 
@@ -82,105 +87,11 @@ bool OmniCamera::operator==(const Camera& other) const {
       return false;
   }
 
-  // Compare intrinsics parameters.
-  return intrinsics_ == rhs->intrinsics_;
+  return true;
 }
 
-
-const ProjectionResult OmniCamera::project3(const Eigen::Vector3d& point_3d,
-                                           Eigen::Vector2d* out_keypoint) const {
-  CHECK_NOTNULL(out_keypoint);
-
-  // Project the point.
-  const double& x = point_3d[0];
-  const double& y = point_3d[1];
-  const double& z = point_3d[2];
-
-  const double d = point_3d.norm();
-  const double rz = 1.0 / (z + xi() * d);
-
-  // Check if point will lead to a valid projection
-  const bool valid_proj = z > -(fov_parameter(xi()) * d);
-  if(!valid_proj)
-  {
-    out_keypoint->setZero();
-    return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
-  }
-
-  (*out_keypoint)[0] = x * rz;
-  (*out_keypoint)[1] = y * rz;
-
-  // Distort the point (if a distortion model is set)
-  if (distortion_)
-    distortion_->distort(out_keypoint);
-
-  // Normalized image plane to camera plane.
-  (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
-  (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
-
-  return evaluateProjectionResult(*out_keypoint, point_3d);
-}
-
-const ProjectionResult OmniCamera::project3(const Eigen::Vector3d& point_3d,
-                                            Eigen::Vector2d* out_keypoint,
-                                            Eigen::Matrix<double, 2, 3>* out_jacobian) const {
-  CHECK_NOTNULL(out_keypoint);
-  CHECK_NOTNULL(out_jacobian);
-
-  const double& x = point_3d[0];
-  const double& y = point_3d[1];
-  const double& z = point_3d[2];
-
-  // Normalize
-  const double d = point_3d.norm();
-  double rz = 1.0 / (z + xi() * d);
-
-  // Check if point will lead to a valid projection
-  const bool valid_proj = z > -(fov_parameter(xi()) * d);
-  if(!valid_proj)
-  {
-    out_keypoint->setZero();
-    return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
-  }
-
-  (*out_keypoint)[0] = x * rz;
-  (*out_keypoint)[1] = y * rz;
-
-  // Distort the point (if a distortion model is set)
-  Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
-  if (distortion_)
-    distortion_->distort(out_keypoint, &J_distortion);
-
-  // Calculate the Jacobian w.r.t to the 3d point
-  Eigen::Matrix<double, 2, 3>& J = *out_jacobian;
-
-  rz = rz * rz / d;
-  J(0, 0) = rz * (d * z + xi() * (y * y + z * z));
-  J(1, 0) = -rz * xi() * x * y;
-  J(0, 1) = J(1, 0);
-  J(1, 1) = rz * (d * z + xi() * (x * x + z * z));
-  rz = rz * (-xi() * z - d);
-  J(0, 2) = x * rz;
-  J(1, 2) = y * rz;
-  rz = fu() * (J(0, 0) * J_distortion(0, 0) + J(1, 0) * J_distortion(0, 1));
-  J(1, 0) = fv() * (J(0, 0) * J_distortion(1, 0) + J(1, 0) * J_distortion(1, 1));
-  J(0, 0) = rz;
-  rz = fu() * (J(0, 1) * J_distortion(0, 0) + J(1, 1) * J_distortion(0, 1));
-  J(1, 1) = fv() * (J(0, 1) * J_distortion(1, 0) + J(1, 1) * J_distortion(1, 1));
-  J(0, 1) = rz;
-  rz = fu() * (J(0, 2) * J_distortion(0, 0) + J(1, 2) * J_distortion(0, 1));
-  J(1, 2) = fv() * (J(0, 2) * J_distortion(1, 0) + J(1, 2) * J_distortion(1, 1));
-  J(0, 2) = rz;
-
-  // Normalized image plane to camera plane.
-  (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
-  (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
-
-  return evaluateProjectionResult(*out_keypoint, point_3d);
-}
-
-bool OmniCamera::backProject3(const Eigen::Vector2d& keypoint,
-                              Eigen::Vector3d* out_point_3d) const {
+bool UnifiedProjectionCamera::backProject3(const Eigen::Vector2d& keypoint,
+                                           Eigen::Vector3d* out_point_3d) const {
   CHECK_NOTNULL(out_point_3d);
 
   Eigen::Vector2d kp = keypoint;
@@ -200,56 +111,9 @@ bool OmniCamera::backProject3(const Eigen::Vector2d& keypoint,
   return isUndistortedKeypointValid(rho2_d, xi());
 }
 
-const ProjectionResult OmniCamera::project3Functional(
+const ProjectionResult UnifiedProjectionCamera::project3Functional(
     const Eigen::Vector3d& point_3d,
-    const Eigen::VectorXd& intrinsics_external,
-    const Eigen::VectorXd* distortion_coefficients_external,
-    Eigen::Vector2d* out_keypoint) const {
-  CHECK_NOTNULL(out_keypoint);
-
-  // Use the external parameters.
-  CHECK_EQ(intrinsics_external.size(), kNumOfParams) << "intrinsics: invalid size!";
-  const double& xi = intrinsics_external[0];
-  const double& fu = intrinsics_external[1];
-  const double& fv = intrinsics_external[2];
-  const double& cu = intrinsics_external[3];
-  const double& cv = intrinsics_external[4];
-
-  // Project the point.
-  const double& x = point_3d[0];
-  const double& y = point_3d[1];
-  const double& z = point_3d[2];
-
-  const double d = point_3d.norm();
-  const double rz = 1.0 / (z + xi * d);
-
-  // Check if point will lead to a valid projection
-  const bool valid_proj = z > -(fov_parameter(xi) * d);
-  if(!valid_proj)
-  {
-    out_keypoint->setZero();
-    return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
-  }
-
-  (*out_keypoint)[0] = x * rz;
-  (*out_keypoint)[1] = y * rz;
-
-  // Distort the point (if a distortion model is set)
-  if (distortion_)
-    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
-                                                  out_keypoint,
-                                                  nullptr); // No Jacobian needed.
-
-  // Normalized image plane to camera plane.
-  (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
-  (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
-
-  return evaluateProjectionResult(*out_keypoint, point_3d);
-}
-
-const ProjectionResult OmniCamera::project3Functional(
-    const Eigen::Vector3d& point_3d,
-    const Eigen::VectorXd& intrinsics_external,
+    const Eigen::VectorXd* intrinsics_external,
     const Eigen::VectorXd* distortion_coefficients_external,
     Eigen::Vector2d* out_keypoint,
     Eigen::Matrix<double, 2, 3>* out_jacobian_point,
@@ -257,13 +121,31 @@ const ProjectionResult OmniCamera::project3Functional(
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const {
   CHECK_NOTNULL(out_keypoint);
 
-  // Use the external parameters.
-  CHECK_EQ(intrinsics_external.size(), kNumOfParams) << "intrinsics: invalid size!";
-  const double& xi = intrinsics_external[0];
-  const double& fu = intrinsics_external[1];
-  const double& fv = intrinsics_external[2];
-  const double& cu = intrinsics_external[3];
-  const double& cv = intrinsics_external[4];
+  // Determine the parameter source. (if nullptr, use internal)
+  //TODO(schneith): use the new interface to avoid copying...
+  Eigen::VectorXd intrinsics;
+  if (!intrinsics_external)
+    intrinsics = getParameters();
+  else
+    intrinsics = *intrinsics_external;
+
+  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
+
+  //TODO(schneith): use the new interface to avoid copying...
+  Eigen::VectorXd* distortion_coefficients;
+  Eigen::VectorXd dist_coeff_internal;
+  if(!distortion_coefficients_external && distortion_) {
+    dist_coeff_internal = getDistortion()->getParameters();
+    distortion_coefficients = &dist_coeff_internal;
+  } else {
+    distortion_coefficients = const_cast<Eigen::VectorXd*>(distortion_coefficients_external);
+  }
+
+  const double& xi = intrinsics[0];
+  const double& fu = intrinsics[1];
+  const double& fv = intrinsics[2];
+  const double& cu = intrinsics[3];
+  const double& cv = intrinsics[4];
 
   // Project the point.
   const double& x = point_3d[0];
@@ -288,12 +170,12 @@ const ProjectionResult OmniCamera::project3Functional(
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
   if (distortion_ && out_jacobian_point) {
     // Distortion active and we want the Jacobian.
-    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
                                                   out_keypoint,
                                                   &J_distortion);
   } else if (distortion_) {
     // Distortion active but Jacobian NOT wanted.
-    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
                                                   out_keypoint,
                                                   nullptr);
   }
@@ -341,7 +223,7 @@ const ProjectionResult OmniCamera::project3Functional(
 
   // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
   if(distortion_ && out_jacobian_distortion) {
-    distortion_->distortParameterJacobian(*distortion_coefficients_external,
+    distortion_->distortParameterJacobian(distortion_coefficients_external,
                                           *out_keypoint,
                                           out_jacobian_distortion);
     (*out_jacobian_distortion).row(0) *= fu;
@@ -355,28 +237,31 @@ const ProjectionResult OmniCamera::project3Functional(
   return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
-inline const ProjectionResult OmniCamera::evaluateProjectionResult(
+inline const ProjectionResult UnifiedProjectionCamera::evaluateProjectionResult(
     const Eigen::Vector2d& keypoint,
     const Eigen::Vector3d& point_3d) const {
 
   const bool visibility = isKeypointVisible(keypoint);
 
-  if (visibility && (point_3d[2] > kMinimumDepth))
+  const double d2 = point_3d.squaredNorm();
+  const double minDepth2 = kMinimumDepth*kMinimumDepth;
+
+  if (visibility && (d2 > minDepth2))
     return ProjectionResult(ProjectionResult::Status::KEYPOINT_VISIBLE);
-  else if (!visibility && (point_3d[2] > kMinimumDepth))
+  else if (!visibility && (d2 > minDepth2))
     return ProjectionResult(ProjectionResult::Status::KEYPOINT_OUTSIDE_IMAGE_BOX);
-  else if (point_3d[2] < 0.0)
-    return ProjectionResult(ProjectionResult::Status::POINT_BEHIND_CAMERA);
-  else
+  else if (d2 <= minDepth2)
     return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
+
+  return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
 }
 
-inline bool OmniCamera::isUndistortedKeypointValid(const double& rho2_d,
+inline bool UnifiedProjectionCamera::isUndistortedKeypointValid(const double& rho2_d,
                                                    const double& xi) const {
   return xi <= 1.0 || rho2_d <= (1.0 / (xi * xi - 1));
 }
 
-bool OmniCamera::isLiftable(const Eigen::Vector2d& keypoint) const {
+bool UnifiedProjectionCamera::isLiftable(const Eigen::Vector2d& keypoint) const {
   Eigen::Vector2d y;
   y[0] = 1.0/fu() * (keypoint[0] - cu());
   y[1] = 1.0/fv() * (keypoint[1] - cv());
@@ -389,12 +274,12 @@ bool OmniCamera::isLiftable(const Eigen::Vector2d& keypoint) const {
   return isUndistortedKeypointValid(rho2_d, xi());
 }
 
-void OmniCamera::setParameters(const Eigen::VectorXd& params) {
+void UnifiedProjectionCamera::setParameters(const Eigen::VectorXd& params) {
   CHECK_EQ(parameterCount(), static_cast<size_t>(params.size()));
   intrinsics_ = params;
 }
 
-Eigen::Vector2d OmniCamera::createRandomKeypoint() const {
+Eigen::Vector2d UnifiedProjectionCamera::createRandomKeypoint() const {
   // This is tricky...The camera model defines a circle on the normalized image
   // plane and the projection equations don't work outside of it.
   // With some manipulation, we can see that, on the normalized image plane,
@@ -410,7 +295,8 @@ Eigen::Vector2d OmniCamera::createRandomKeypoint() const {
   Eigen::Vector2d u(ru + 1, rv + 1);
   double one_over_xixi_m_1 = 1.0 / (xi() * xi() - 1);
 
-  while (!isLiftable(u) || !isKeypointVisible(u) ) {
+  int max_tries = 10;
+  while ( !(isLiftable(u) && isKeypointVisible(u)) ) {
     u.setRandom();
     u = u - Eigen::Vector2d(0.5, 0.5);
     u /= u.norm();
@@ -423,12 +309,20 @@ Eigen::Vector2d OmniCamera::createRandomKeypoint() const {
 
     u[0] = fu() * u[0] + cu();
     u[1] = fv() * u[1] + cv();
-  }
 
+    // Protect against inifinte loops.
+    if(--max_tries<1)
+    {
+      u << cu(), cv();  //image center
+      VLOG(2) << "UnifiedProjectionCamera::createRandomKeypoint "
+              << "failed to produce a random keypoint!";
+      break;
+    }
+  }
   return u;
 }
 
-Eigen::Vector3d OmniCamera::createRandomVisiblePoint(double depth) const {
+Eigen::Vector3d UnifiedProjectionCamera::createRandomVisiblePoint(double depth) const {
   CHECK_GT(depth, 0.0) << "Depth needs to be positive!";
 
 
@@ -443,8 +337,10 @@ Eigen::Vector3d OmniCamera::createRandomVisiblePoint(double depth) const {
   return point_3d * depth;
 }
 
-void OmniCamera::printParameters(std::ostream& out, const std::string& text) const {
+void UnifiedProjectionCamera::printParameters(std::ostream& out, const std::string& text) const {
   Camera::printParameters(out, text);
+  out << "  mirror parameter (xi): "
+      << xi() << std::endl;
   out << "  focal length (cols,rows): "
       << fu() << ", " << fv() << std::endl;
   out << "  optical center (cols,rows): "
