@@ -15,16 +15,20 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
   MatchesT _matches;
 
 public:
+  SimpleMatchProblem() {}
+  ~SimpleMatchProblem() {}
+
+
   virtual int getLengthApples() const { return _apples.size(); }
   virtual int getLengthBananas() const { return _bananas.size(); }
   
   virtual float computeScore(int a, int b) {
-    CHECK_LT(a,_apples.size());
-    CHECK_LT(b,_bananas.size());
+    CHECK_LT(size_t(a),_apples.size());
+    CHECK_LT(size_t(b),_bananas.size());
     return -fabs(_apples[a]-_bananas[b]);
   }
 
-  virtual bool doSetup() {}
+  virtual bool doSetup() {return true;}
 
   virtual void setBestMatches(const MatchesT &bestMatches) {
     _matches = bestMatches;
@@ -33,12 +37,12 @@ public:
   template <typename iter>
   void setApples(iter first, iter last) {
     _apples.clear();
-    _apples.insert(_apples.end(),fist,last);
+    _apples.insert(_apples.end(),first,last);
   }
   template <typename iter>
   void setBananas(iter first, iter last) {
     _bananas.clear();
-    _bananas.insert(_bananas.end(),fist,last);
+    _bananas.insert(_bananas.end(),first,last);
   }
   MatchesT &getMatches() { return _matches;}
 };
@@ -46,19 +50,20 @@ public:
 
 class TestMatch : public testing::Test {
 public:
-  TestIntegerMatch() {}
-  virtual ~TestIntegerMatch() {}
+  TestMatch() {}
+  virtual ~TestMatch() {}
 
 };
 
 TEST(TestMatcher, EmptyMatch) {
   SimpleMatchProblem mp;
-  MatchingEngineGreedy<SimpleMatchProblem> me;
+  aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
   me.match(mp);
   EXPECT_EQ(0,mp.getMatches().size());
 
-  mp.setBananas(std::vector<float>({1.1,2.2,3.3}));
+  std::vector<float> bananas{1.1,2.2,3.3};
+  mp.setBananas(bananas.begin(),bananas.end());
   me.match(mp);
   EXPECT_EQ(0,mp.getMatches().size());
 }
@@ -70,7 +75,7 @@ TEST(TestMatcher, GreedyMatcher) {
   std::vector<int> ind_a_of_b = {0, 1, 2, 3, 4, -1};
 
   SimpleMatchProblem mp;
-  MatchingEngineGreedy<SimpleMatchProblem> me;
+  aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
 
   mp.setApples(apples.begin(),apples.end());
@@ -87,9 +92,6 @@ TEST(TestMatcher, GreedyMatcher) {
 
   std::sort(mp.getMatches().begin(),mp.getMatches().end());
   
-  EXPECT_EQ(1,mp.getMatches()[0].getIndexA());
-  EXPECT_EQ(1,mp.getMatches()[0].getIndexB());
-
   for(auto &match: mp.getMatches()) {
     EXPECT_EQ(match.getIndexA(), ind_a_of_b[match.getIndexB()]);
   }
