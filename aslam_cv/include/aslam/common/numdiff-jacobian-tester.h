@@ -2,6 +2,8 @@
 #define ASLAM_CV_NUMDIFF_JACOBIAN_TESTER_H_
 
 #include <Eigen/Dense>
+#include <glog/logging.h>
+
 #include <aslam/common/eigen-helpers.h>
 
 namespace aslam {
@@ -15,7 +17,7 @@ namespace common {
 ///  @param[in] FUNCTOR_TYPE Functor that wraps the value and symbolic Jacobian generating function
 ///                          to the required form. See example below.
 ///  @param[in] X Evaluation point. (struct Functor : public aslam::common::NumDiffFunctor<Nf, Nx>)
-///               Nf: number of functions, Nx: number of parameters --> dim(J)=(Nf x Nx)
+///               Nf: output dimension, Nx: number of parameters --> dim(J)=(Nf x Nx)
 ///  @param[in] STEP Step size used for the numerical differentiation. (Eigen::VectorXd)
 ///  @param[in] TOLERANCE Tolerance used for comparing the numerical and symbolic Jacobian
 ///                       evaluations. (double)
@@ -45,15 +47,17 @@ namespace common {
 /// @endcode
 #define TEST_JACOBIAN_FINITE_DIFFERENCE(FUNCTOR_TYPE, X, STEP, TOLERANCE, ...) \
     do {\
-      FUNCTOR_TYPE functor(__VA_ARGS__); \
+      FUNCTOR_TYPE functor(__VA_ARGS__);                                 \
       aslam::common::NumericalDiff<FUNCTOR_TYPE> numDiff(functor, STEP); \
-      typename FUNCTOR_TYPE::JacobianType Jnumeric;\
-      numDiff.getJacobianNumerical(X, Jnumeric); \
-      typename FUNCTOR_TYPE::JacobianType Jsymbolic; \
-      functor.getJacobian(X, &Jsymbolic); \
-      EXPECT_NEAR_EIGEN(Jnumeric, Jsymbolic, TOLERANCE); \
-      if (NUMDIFF_DEBUG_OUTPUT) std::cout << "Jnumeric: " << Jnumeric << "\n"; \
-      if (NUMDIFF_DEBUG_OUTPUT) std::cout << "Jsymbolic: " << Jsymbolic << "\n"; \
+      typename FUNCTOR_TYPE::JacobianType Jnumeric;                      \
+      bool success = numDiff.getJacobianNumerical(X, Jnumeric);          \
+      EXPECT_TRUE(success) << "Num. differentiation failed!";            \
+      typename FUNCTOR_TYPE::JacobianType Jsymbolic;                     \
+      success = functor.getJacobian(X, &Jsymbolic);                      \
+      EXPECT_TRUE(success) << "Getting analytical Jacobian failed!";     \
+      EXPECT_NEAR_EIGEN(Jnumeric, Jsymbolic, TOLERANCE);                 \
+      VLOG(3) << "Jnumeric: " << Jnumeric << "\n";                       \
+      VLOG(3) << "Jsymbolic: " << Jsymbolic << "\n";                     \
     } while (0)
 
 // Functor base for numerical differentiation.
@@ -73,18 +77,18 @@ struct NumDiffFunctor {
   NumDiffFunctor() {};
   virtual ~NumDiffFunctor() {};
 
-  virtual void functional(const typename NumDiffFunctor::InputType& x,
+  virtual bool functional(const typename NumDiffFunctor::InputType& x,
                           typename NumDiffFunctor::ValueType& fvec,
                           typename NumDiffFunctor::JacobianType* Jout) const = 0;
 
-  void operator()(const InputType& x, ValueType& fvec) const {
-    functional(x, fvec, nullptr);
+  bool operator()(const InputType& x, ValueType& fvec) const {
+    return functional(x, fvec, nullptr);
   };
 
-  void getJacobian(const InputType& x,
+  bool getJacobian(const InputType& x,
                    JacobianType* out_jacobian) const {
     ValueType fvec;
-    functional(x, fvec, out_jacobian);
+    return functional(x, fvec, out_jacobian);
   };
 };
 
@@ -115,7 +119,7 @@ class NumericalDiff : public _Functor {
     ValuesAtCompileTime = Functor::ValuesAtCompileTime
   };
 
-  void getJacobianNumerical(const InputType& _x, JacobianType &jac) const {
+  bool getJacobianNumerical(const InputType& _x, JacobianType &jac) const {
     using std::sqrt;
     using std::abs;
     /* Local variables */
@@ -126,6 +130,7 @@ class NumericalDiff : public _Functor {
     // Build jacobian.
     InputType x = _x;
     ValueType val1, val2, val3, val4;
+    bool success = true;  // Success of value generating function.
 
     for (int j = 0; j < n; ++j) {
       h = eps * abs(x[j]);
@@ -134,29 +139,29 @@ class NumericalDiff : public _Functor {
       }
       switch (mode) {
         case Forward:
-          Functor::operator()(x, val1);
+          success &= Functor::operator()(x, val1);
           x[j] += h;
-          Functor::operator()(x, val2);
+          success &= Functor::operator()(x, val2);
           x[j] = _x[j];
           jac.col(j) = (val2 - val1) / h;
           break;
         case Central:
           x[j] += h;
-          Functor::operator()(x, val2);
+          success &= Functor::operator()(x, val2);
           x[j] -= 2 * h;
-          Functor::operator()(x, val1);
+          success &= Functor::operator()(x, val1);
           x[j] = _x[j];
           jac.col(j) = (val2 - val1) / (2 * h);
           break;
         case CentralSecond:
           x[j] += 2.0 * h;
-          Functor::operator()(x, val1);
+          success &= Functor::operator()(x, val1);
           x[j] -= h;
-          Functor::operator()(x, val2);
+          success &= Functor::operator()(x, val2);
           x[j] -= 2.0 * h;
-          Functor::operator()(x, val3);
+          success &= Functor::operator()(x, val3);
           x[j] -= h;
-          Functor::operator()(x, val4);
+          success &= Functor::operator()(x, val4);
           x[j] = _x[j];
           jac.col(j) = ((8.0 * val2) + val4 - val1 - (8.0 * val3)) / (h * 12.0);
           break;
@@ -164,6 +169,7 @@ class NumericalDiff : public _Functor {
           eigen_assert(false);
       };
     }
+    return success;
   }
  private:
   Scalar epsfcn;
