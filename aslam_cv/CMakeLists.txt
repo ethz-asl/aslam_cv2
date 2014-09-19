@@ -12,9 +12,6 @@ cs_add_library(${PROJECT_NAME}
                                src/distortion-fisheye.cc
                                src/distortion-radtan.cc
                                src/distortion.cc
-                               src/matching-engine.cc
-                               src/matching-problem.cc
-                               src/matching-engine-greedy.cc
                                src/ncamera.cc
                                src/thread-pool.cc
                                src/undistorter-mapped.cc
