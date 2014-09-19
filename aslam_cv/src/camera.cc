@@ -37,13 +37,55 @@ void Camera::printParameters(std::ostream& out, const std::string& text) const {
 
 bool Camera::operator==(const Camera& other) const {
   // \TODO(slynen) should we include the id and name here?
-  return (this->line_delay_nano_seconds_ == other.line_delay_nano_seconds_) &&
+  return (this->intrinsics_ == other.intrinsics_) &&
+         (this->line_delay_nano_seconds_ == other.line_delay_nano_seconds_) &&
          (this->image_width_ == other.image_width_) &&
          (this->image_height_ == other.image_height_);
 }
 
+const ProjectionResult Camera::project3(const Eigen::Vector3d& point_3d,
+                                        Eigen::Vector2d* out_keypoint) const {
+  CHECK_NOTNULL(out_keypoint);
+  return project3Functional(point_3d,
+                            nullptr,      // Use internal intrinsic parameters.
+                            nullptr,      // Use internal distortion parameters.
+                            out_keypoint,
+                            nullptr,      // J_point3d not needed.
+                            nullptr,      // J_intrinsic not needed.
+                            nullptr);     // J_distortion not needed.
+}
+
+const ProjectionResult Camera::project3(const Eigen::Vector3d& point_3d,
+                                        Eigen::Vector2d* out_keypoint,
+                                        Eigen::Matrix<double, 2, 3>* out_jacobian) const {
+  CHECK_NOTNULL(out_keypoint);
+  return project3Functional(point_3d,
+                            nullptr,       // Use internal intrinsic parameters.
+                            nullptr,       // Use internal distortion parameters.
+                            out_keypoint,
+                            out_jacobian,
+                            nullptr,       // J_intrinsic not needed.
+                            nullptr);      // J_distortion not needed.
+}
+
+const ProjectionResult Camera::project3Functional(
+    const Eigen::Vector3d& point_3d,
+    const Eigen::VectorXd* intrinsics_external,
+    const Eigen::VectorXd* distortion_coefficients_external,
+    Eigen::Vector2d* out_keypoint) const {
+  CHECK_NOTNULL(out_keypoint);
+
+  return project3Functional(point_3d,
+                            intrinsics_external,
+                            distortion_coefficients_external,
+                            out_keypoint,
+                            nullptr,
+                            nullptr,
+                            nullptr);
+}
+
 const ProjectionResult Camera::project4(const Eigen::Vector4d& point_4d,
-                                       Eigen::Vector2d* out_keypoint) const {
+                                        Eigen::Vector2d* out_keypoint) const {
   CHECK_NOTNULL(out_keypoint);
 
   Eigen::Vector3d point_3d;
@@ -56,10 +98,9 @@ const ProjectionResult Camera::project4(const Eigen::Vector4d& point_4d,
 }
 
 const ProjectionResult Camera::project4(const Eigen::Vector4d& point_4d,
-                                       Eigen::Vector2d* out_keypoint,
-                                       Eigen::Matrix<double, 2, 4>* out_jacobian) const {
+                                        Eigen::Vector2d* out_keypoint,
+                                        Eigen::Matrix<double, 2, 4>* out_jacobian) const {
   CHECK_NOTNULL(out_keypoint);
-  CHECK_NOTNULL(out_jacobian);
 
   Eigen::Vector3d point_3d;
   if (point_4d[3] < 0)

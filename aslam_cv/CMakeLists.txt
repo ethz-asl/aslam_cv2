@@ -6,7 +6,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 
 cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/camera-pinhole.cc
-                               src/camera-omni.cc
+                               src/camera-unified-projection.cc
                                src/distortion.cc
                                src/distortion-fisheye.cc
                                src/distortion-radtan.cc

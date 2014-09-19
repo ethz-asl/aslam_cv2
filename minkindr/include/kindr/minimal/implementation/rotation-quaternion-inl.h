@@ -203,7 +203,10 @@ RotationQuaternionTemplate<Scalar>::inverted() const {
 template<typename Scalar>
 RotationQuaternionTemplate<Scalar>
 RotationQuaternionTemplate<Scalar>::conjugated() const {
-  return RotationQuaternionTemplate<Scalar>(q_A_B_.inverse());
+  // Own implementation since Eigen::conjugate does not use the correct
+  // scalar type for the greater than zero comparison.
+  return RotationQuaternionTemplate(
+      Implementation(q_A_B_.w(),-q_A_B_.x(),-q_A_B_.y(),-q_A_B_.z()));
 }
 
 
