@@ -33,8 +33,8 @@ namespace aslam {
 /// \returns A new camera based on the template types.
 template <typename CameraType, typename DistortionType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
-                                            uint32_t image_width, uint32_t image_height,
-                                            const Eigen::VectorXd& distortion_parameters)
+                                      uint32_t image_width, uint32_t image_height,
+                                      const Eigen::VectorXd& distortion_parameters)
 {
   typename DistortionType::UniquePtr distortion(new DistortionType(distortion_parameters));
   typename CameraType::Ptr camera(new CameraType(intrinsics, image_width,
@@ -133,7 +133,6 @@ struct ProjectionResult {
   Status status_;
 };
 
-
 /// \class Camera
 /// \brief The base camera class provides methods to project/backproject euclidean and
 ///        homogeneous points. The actual projection is implemented in the derived classes
@@ -216,10 +215,21 @@ class Camera {
   ///        projection (& distortion) models to the point.
   /// @param[in]  point_3d     The point in euclidean coordinates.
   /// @param[out] out_keypoint The keypoint in image coordinates.
-  /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionResult" for more information.
-  virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
-                                          Eigen::Vector2d* out_keypoint) const = 0;
+  /// @return Contains information about the success of the projection. Check
+  ///         \ref ProjectionResult for more information.
+  const ProjectionResult project3(const Eigen::Vector3d& point_3d,
+                                  Eigen::Vector2d* out_keypoint) const;
+
+  /// \brief Projects a euclidean point to a 2d image measurement. Applies the
+  ///        projection (& distortion) models to the po int.
+  /// @param[in]  point_3d     The point in euclidean coordinates.
+  /// @param[out] out_keypoint The keypoint in image coordinates.
+  /// @param[out] out_jacobian The Jacobian wrt. to changes in the euclidean point.
+  /// @return Contains information about the success of the projection. Check
+  ///         \ref ProjectionResult for more information.
+  const ProjectionResult project3(const Eigen::Vector3d& point_3d,
+                                  Eigen::Vector2d* out_keypoint,
+                                  Eigen::Matrix<double, 2, 3>* out_jacobian) const;
 
   /// \brief Projects a matrix of euclidean points to 2d image measurements. Applies the
   ///        projection (& distortion) models to the points.
@@ -229,23 +239,11 @@ class Camera {
   /// @param[in]  point_3d      The point in euclidean coordinates.
   /// @param[out] out_keypoints The keypoint in image coordinates.
   /// @param[out] out_results   Contains information about the success of the
-  ///                           projections. Check "struct ProjectionResult" for
+  ///                           projections. Check \ref ProjectionResult for
   ///                           more information.
   virtual void project3Vectorized(const Eigen::Matrix3Xd& points_3d,
                                   Eigen::Matrix2Xd* out_keypoints,
                                   std::vector<ProjectionResult>* out_results) const;
-
-
-  /// \brief Projects a euclidean point to a 2d image measurement. Applies the
-  ///        projection (& distortion) models to the point.
-  /// @param[in]  point_3d     The point in euclidean coordinates.
-  /// @param[out] out_keypoint The keypoint in image coordinates.
-  /// @param[out] out_jacobian The Jacobian w.r.t. to changes in the euclidean point.
-  /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionResult" for more information.
-  virtual const ProjectionResult project3(const Eigen::Vector3d& point_3d,
-                                          Eigen::Vector2d* out_keypoint,
-                                          Eigen::Matrix<double, 2, 3>* out_jacobian) const = 0;
 
   /// \brief Compute the 3d bearing vector in euclidean coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
@@ -276,8 +274,8 @@ class Camera {
   ///        projection (& distortion) models to the point.
   /// @param[in]  point_4d     The point in homogeneous coordinates.
   /// @param[out] out_keypoint The keypoint in image coordinates.
-  /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionResult" for more information.
+  /// @return Contains information about the success of the projection. Check
+  ///         \ref ProjectionResult for more information.
   const ProjectionResult project4(const Eigen::Vector4d& point_4d,
                                   Eigen::Vector2d* out_keypoint) const;
 
@@ -285,9 +283,9 @@ class Camera {
   ///        projection (& distortion) models to the point.
   /// @param[in]  point_4d     The point in homogeneous coordinates.
   /// @param[out] out_keypoint The keypoint in image coordinates.
-  /// @param[out] out_jacobian The Jacobian w.r.t. to changes in the homogeneous point.
-  /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionResult" for more information.
+  /// @param[out] out_jacobian The Jacobian wrt. to changes in the homogeneous point.
+  /// @return Contains information about the success of the projection. Check \ref
+  ///         ProjectionResult for more information.
   const ProjectionResult project4(const Eigen::Vector4d& point_4d,
                                   Eigen::Vector2d* out_keypoint,
                                   Eigen::Matrix<double, 2, 4>* out_jacobian) const;
@@ -311,36 +309,40 @@ class Camera {
   ///        should be filled in with the Jacobian with respect to small changes in the argument.
   /// @param[in]  point_3d                The point in euclidean coordinates.
   /// @param[in]  intrinsics_external     External intrinsic parameter vector.
+  ///                                     NOTE: If nullptr, use internal intrinsic parameters.
   /// @param[in]  distortion_coefficients_external External distortion parameter vector.
-  ///                                              Parameter is ignored is no distortion is active.
+  ///                                     Parameter is ignored is no distortion is active.
+  ///                                     NOTE: If nullptr, use internal distortion parameters.
   /// @param[out] out_keypoint            The keypoint in image coordinates.
-  /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionResult" for more information.
-  virtual const ProjectionResult project3Functional(
+  /// @return Contains information about the success of the projection. Check \ref
+  ///         ProjectionResult for more information.
+  const ProjectionResult project3Functional(
       const Eigen::Vector3d& point_3d,
-      const Eigen::VectorXd& intrinsics_external,
+      const Eigen::VectorXd* intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,
-      Eigen::Vector2d* out_keypoint) const = 0;
+      Eigen::Vector2d* out_keypoint) const;
 
   /// \brief This function projects a point into the image using the intrinsic parameters
   ///        that are passed in as arguments. If any of the Jacobians are nonnull, they
   ///        should be filled in with the Jacobian with respect to small changes in the argument.
   /// @param[in]  point_3d                The point in euclidean coordinates.
   /// @param[in]  intrinsics_external     External intrinsic parameter vector.
+  ///                                     NOTE: If nullptr, use internal intrinsic parameters.
   /// @param[in]  distortion_coefficients_external External distortion parameter vector.
-  ///                                              Parameter is ignored is no distortion is active.
+  ///                                     Parameter is ignored is no distortion is active.
+  ///                                     NOTE: If nullptr, use internal distortion parameters.
   /// @param[out] out_keypoint            The keypoint in image coordinates.
-  /// @param[out] out_jacobian_point      The Jacobian w.r.t. to changes in the euclidean point.
+  /// @param[out] out_jacobian_point      The Jacobian wrt. to changes in the euclidean point.
   ///                                       nullptr: calculation is skipped.
-  /// @param[out] out_jacobian_intrinsics The Jacobian w.r.t. to changes in the intrinsics.
+  /// @param[out] out_jacobian_intrinsics The Jacobian wrt. to changes in the intrinsics.
   ///                                       nullptr: calculation is skipped.
   /// @param[out] out_jacobian_distortion The Jacobian wrt. to changes in the distortion parameters.
   ///                                       nullptr: calculation is skipped.
-  /// @return Contains information about the success of the projection. Check "struct
-  ///         ProjectionResult" for more information.
+  /// @return Contains information about the success of the projection. Check \ref
+  ///         ProjectionResult for more information.
   virtual const ProjectionResult project3Functional(
       const Eigen::Vector3d& point_3d,
-      const Eigen::VectorXd& intrinsics_external,
+      const Eigen::VectorXd* intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,
       Eigen::Vector2d* out_keypoint,
       Eigen::Matrix<double, 2, 3>* out_jacobian_point,
@@ -497,7 +499,5 @@ class Camera {
   aslam::Distortion::UniquePtr distortion_;
 };
 }  // namespace aslam
-
 #include "camera-inl.h"
-
 #endif  // ASLAM_CAMERAS_CAMERA_H_
