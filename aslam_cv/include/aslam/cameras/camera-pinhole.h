@@ -221,12 +221,13 @@ class PinholeCamera : public Camera {
   /// \brief The vertical image center in pixels.
   double cv() const { return intrinsics_[3]; };
 
-  /// \brief Set the intrinsic parameters for the pinhole model.
-  /// @param[in] params Intrinsic parameters (dim=4: fu, fv, cu, cv)
-  virtual void setParameters(const Eigen::VectorXd& params);
+  /// \brief Returns the number of intrinsic parameters used in this camera model.
+  inline static constexpr int parameterCount() {
+      return kNumOfParams;
+  }
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
-  inline static constexpr size_t parameterCount() {
+  inline virtual int getParameterSize() const {
       return kNumOfParams;
   }
 

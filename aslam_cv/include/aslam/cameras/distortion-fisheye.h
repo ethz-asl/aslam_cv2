@@ -119,7 +119,7 @@ class FisheyeDistortion : public aslam::Distortion {
 
   /// \brief Returns the number of parameters used in the distortion model.
   ///        NOTE: Use the constexpr function parameterCount if you know the exact distortion type.
-  virtual size_t getParameterSize() const {
+  virtual int getParameterSize() const {
     return kNumOfParams;
   }
 
