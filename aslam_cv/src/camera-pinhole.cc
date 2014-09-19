@@ -21,38 +21,40 @@ namespace aslam {
 //}
 
 PinholeCamera::PinholeCamera()
-  : Camera( Eigen::Vector4d::Zero() ),
-    distortion_(nullptr) {
+    : Camera(Eigen::Vector4d::Zero()),
+      distortion_(nullptr) {
   setImageWidth(0);
   setImageHeight(0);
 }
 
-PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
-                             uint32_t image_width, uint32_t image_height,
-                             aslam::Distortion::Ptr distortion)
-  : Camera(intrinsics),
-    distortion_(distortion) {
-  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
+PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
+                             uint32_t image_height, aslam::Distortion::Ptr distortion)
+    : Camera(intrinsics),
+      distortion_(distortion) {
+  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
 
-PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
-                             uint32_t image_width, uint32_t image_height)
-    : PinholeCamera(intrinsics, image_width, image_height, nullptr) {}
+PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
+                             uint32_t image_height)
+    : PinholeCamera(intrinsics, image_width, image_height, nullptr) {
+}
 
 PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
                              double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
                              uint32_t image_height, aslam::Distortion::Ptr distortion)
-    : PinholeCamera(Eigen::Vector4d(focallength_cols, focallength_rows,
-                                     imagecenter_cols, imagecenter_rows),
-                     image_width, image_height, distortion) {}
+    : PinholeCamera(
+        Eigen::Vector4d(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows),
+        image_width, image_height, distortion) {
+}
 
 PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
-                             double imagecenter_cols, double imagecenter_rows,
-                             uint32_t image_width, uint32_t image_height)
-    : PinholeCamera(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows, image_width,
-                    image_height, nullptr) {}
+                             double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
+                             uint32_t image_height)
+    : PinholeCamera(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows,
+                    image_width, image_height, nullptr) {
+}
 
 bool PinholeCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.
@@ -64,80 +66,17 @@ bool PinholeCamera::operator==(const Camera& other) const {
   if (!Camera::operator==(other))
     return false;
 
-  // Compare the distortion model (if set).
+  // Check if only one camera defines a distortion.
+  if ((distortion_ && !rhs->distortion_) || (!distortion_ && rhs->distortion_))
+    return false;
+
+  // Compare the distortion model (if distortion is set for both).
   if (distortion_ && rhs->distortion_) {
     if ( !(*(this->distortion_) == *(rhs->distortion_)) )
       return false;
-  } else {
-    return false;
   }
 
-  // Compare intrinsics parameters.
-  return intrinsics_ == rhs->intrinsics_;
-}
-
-const ProjectionResult PinholeCamera::project3(const Eigen::Vector3d& point_3d,
-                                              Eigen::Vector2d* out_keypoint) const {
-  CHECK_NOTNULL(out_keypoint);
-
-  // Project the point.
-  const double& x = point_3d[0];
-  const double& y = point_3d[1];
-  const double& z = point_3d[2];
-
-  const double rz = 1.0 / z;
-  (*out_keypoint)[0] = x * rz;
-  (*out_keypoint)[1] = y * rz;
-
-  // Distort the point (if a distortion model is set)
-  if (distortion_)
-    distortion_->distort(out_keypoint);
-
-  // Normalized image plane to camera plane.
-  (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
-  (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
-
-  return evaluateProjectionResult(*out_keypoint, point_3d);
-}
-
-const ProjectionResult PinholeCamera::project3(const Eigen::Vector3d& point_3d,
-                                              Eigen::Vector2d* out_keypoint,
-                                              Eigen::Matrix<double, 2, 3>* out_jacobian) const {
-  CHECK_NOTNULL(out_keypoint);
-  CHECK_NOTNULL(out_jacobian);
-
-  const double& x = point_3d[0];
-  const double& y = point_3d[1];
-  const double& z = point_3d[2];
-
-  // Normalize.
-  const double rz = 1.0 / z;
-  (*out_keypoint)[0] = x * rz;
-  (*out_keypoint)[1] = y * rz;
-
-  // Distort the point (if a distortion model is set)
-  Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
-  if (distortion_)
-    distortion_->distort(out_keypoint, &J_distortion);
-
-  // Calculate the Jacobian w.r.t to the 3d point
-  const double rz2 = rz * rz;
-
-  const double duf_dx =  fu() * J_distortion(0, 0) * rz;
-  const double duf_dy =  fu() * J_distortion(0, 1) * rz;
-  const double duf_dz = -fu() * (x * J_distortion(0, 0) + y * J_distortion(0, 1)) * rz2;
-  const double dvf_dx =  fv() * J_distortion(1, 0) * rz;
-  const double dvf_dy =  fv() * J_distortion(1, 1) * rz;
-  const double dvf_dz = -fv() * (x * J_distortion(1, 0) + y * J_distortion(1, 1)) * rz2;
-
-  (*out_jacobian) << duf_dx, duf_dy, duf_dz,
-                     dvf_dx, dvf_dy, dvf_dz;
-
-  // Normalized image plane to camera plane.
-  (*out_keypoint)[0] = fu() * (*out_keypoint)[0] + cu();
-  (*out_keypoint)[1] = fv() * (*out_keypoint)[1] + cv();
-
-  return evaluateProjectionResult(*out_keypoint, point_3d);
+  return true;
 }
 
 bool PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
@@ -161,43 +100,7 @@ bool PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
 
 const ProjectionResult PinholeCamera::project3Functional(
     const Eigen::Vector3d& point_3d,
-    const Eigen::VectorXd& intrinsics_external,
-    const Eigen::VectorXd* distortion_coefficients_external,
-    Eigen::Vector2d* out_keypoint) const {
-  CHECK_NOTNULL(out_keypoint);
-
-  // Use the external parameters.
-  CHECK_EQ(intrinsics_external.size(), kNumOfParams) << "intrinsics: invalid size!";
-  const double& fu = intrinsics_external[0];
-  const double& fv = intrinsics_external[1];
-  const double& cu = intrinsics_external[2];
-  const double& cv = intrinsics_external[3];
-
-  // Project the point.
-  const double& x = point_3d[0];
-  const double& y = point_3d[1];
-  const double& z = point_3d[2];
-
-  const double rz = 1.0 / z;
-  (*out_keypoint)[0] = x * rz;
-  (*out_keypoint)[1] = y * rz;
-
-  // Distort the point (if a distortion model is set)
-  if (distortion_)
-    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
-                                                  out_keypoint,
-                                                  nullptr); // No Jacobian needed.
-
-  // Normalized image plane to camera plane.
-  (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
-  (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
-
-  return evaluateProjectionResult(*out_keypoint, point_3d);
-}
-
-const ProjectionResult PinholeCamera::project3Functional(
-    const Eigen::Vector3d& point_3d,
-    const Eigen::VectorXd& intrinsics_external,
+    const Eigen::VectorXd* intrinsics_external,
     const Eigen::VectorXd* distortion_coefficients_external,
     Eigen::Vector2d* out_keypoint,
     Eigen::Matrix<double, 2, 3>* out_jacobian_point,
@@ -205,12 +108,30 @@ const ProjectionResult PinholeCamera::project3Functional(
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const {
   CHECK_NOTNULL(out_keypoint);
 
-  // Use the external parameters.
-  CHECK_EQ(intrinsics_external.size(), kNumOfParams) << "intrinsics: invalid size!";
-  const double& fu = intrinsics_external[0];
-  const double& fv = intrinsics_external[1];
-  const double& cu = intrinsics_external[2];
-  const double& cv = intrinsics_external[3];
+  // Determine the parameter source. (if nullptr, use internal)
+  //TODO(schneith): use the new interface to avoid copying...
+  Eigen::VectorXd intrinsics;
+  if (!intrinsics_external)
+    intrinsics = getParameters();
+  else
+    intrinsics = *intrinsics_external;
+
+  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
+
+  //TODO(schneith): use the new interface to avoid copying...
+  Eigen::VectorXd* distortion_coefficients;
+  Eigen::VectorXd dist_coeff_internal;
+  if(!distortion_coefficients_external && distortion_) {
+    dist_coeff_internal = distortion()->getParameters();
+    distortion_coefficients = &dist_coeff_internal;
+  } else {
+    distortion_coefficients = const_cast<Eigen::VectorXd*>(distortion_coefficients_external);
+  }
+
+  const double& fu = intrinsics[0];
+  const double& fv = intrinsics[1];
+  const double& cu = intrinsics[2];
+  const double& cv = intrinsics[3];
 
   // Project the point.
   const double& x = point_3d[0];
@@ -225,12 +146,12 @@ const ProjectionResult PinholeCamera::project3Functional(
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
   if (distortion_ && out_jacobian_point) {
     // Distortion active and we want the Jacobian.
-    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
                                                   out_keypoint,
                                                   &J_distortion);
   } else if (distortion_) {
     // Distortion active but Jacobian NOT wanted.
-    distortion_->distortUsingExternalCoefficients(*distortion_coefficients_external,
+    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
                                                   out_keypoint,
                                                   nullptr);
   }
@@ -263,13 +184,13 @@ const ProjectionResult PinholeCamera::project3Functional(
     const double dvf_dcu = 0.0;
     const double dvf_dcv = 1.0;
 
-    (*out_jacobian_point) << duf_dfu, duf_dfv, duf_dcu, duf_dcv,
-                             dvf_dfu, dvf_dfv, dvf_dcu, dvf_dcv;
+    (*out_jacobian_intrinsics) << duf_dfu, duf_dfv, duf_dcu, duf_dcv,
+                                  dvf_dfu, dvf_dfv, dvf_dcu, dvf_dcv;
   }
 
   // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
   if(distortion_ && out_jacobian_distortion) {
-    distortion_->distortParameterJacobian(*distortion_coefficients_external,
+    distortion_->distortParameterJacobian(distortion_coefficients_external,
                                           *out_keypoint,
                                           out_jacobian_distortion);
 
@@ -358,5 +279,4 @@ void PinholeCamera::printParameters(std::ostream& out, const std::string& text) 
     distortion_->printParameters(out, text);
   }
 }
-
 }  // namespace aslam

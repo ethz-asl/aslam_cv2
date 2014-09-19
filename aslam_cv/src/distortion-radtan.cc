@@ -8,19 +8,23 @@ RadTanDistortion::RadTanDistortion(const Eigen::VectorXd& dist_coeffs)
 }
 
 void RadTanDistortion::distortUsingExternalCoefficients(
-    const Eigen::VectorXd& dist_coeffs,
+    const Eigen::VectorXd* dist_coeffs,
     Eigen::Vector2d* point,
     Eigen::Matrix2d* out_jacobian) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
 
   double& x = (*point)(0);
   double& y = (*point)(1);
 
-  const double& k1 = dist_coeffs(0); // The first radial distortion parameter.
-  const double& k2 = dist_coeffs(1); // The second radial distortion parameter.
-  const double& p1 = dist_coeffs(2); // The first tangential distortion parameter.
-  const double& p2 = dist_coeffs(3); // The second tangential distortion parameter.
+  // Use internal params if dist_coeffs==nullptr
+  if(!dist_coeffs)
+    dist_coeffs = &distortion_coefficients_;
+  CHECK_EQ(dist_coeffs->size(), kNumOfParams) << "dist_coeffs: invalid size!";
+
+  const double& k1 = (*dist_coeffs)(0); // The first radial distortion parameter.
+  const double& k2 = (*dist_coeffs)(1); // The second radial distortion parameter.
+  const double& p1 = (*dist_coeffs)(2); // The first tangential distortion parameter.
+  const double& p2 = (*dist_coeffs)(3); // The second tangential distortion parameter.
 
   double mx2_u = x * x;
   double my2_u = y * y;
@@ -29,18 +33,21 @@ void RadTanDistortion::distortUsingExternalCoefficients(
   double rad_dist_u = k1 * rho2_u + k2 * rho2_u * rho2_u;
 
   if (out_jacobian) {
-    const double duf_du = 1 + rad_dist_u
-                          + k1 * 2.0 * mx2_u
+    const double duf_du =   1.0 + rad_dist_u
+                          + 2.0 * k1 * mx2_u
                           + 4.0 * k2 * rho2_u * mx2_u
                           + 2.0 * p1 * y
                           + 6.0 * p2 * x;
-    const double duf_dv = k1 * 2.0 * mxy_u
+
+    const double duf_dv =   2.0 * k1 * mxy_u
                           + 4.0 * k2 * rho2_u * mxy_u
                           + 2.0 * p1 * x
                           + 2.0 * p2 * y;
+
     const double dvf_du = duf_dv;
-    const double dvf_dv = 1 + rad_dist_u
-                          + k1 * 2.0 * my2_u
+
+    const double dvf_dv =   1.0 + rad_dist_u
+                          + 2.0 * k1 * my2_u
                           + 4.0 * k2 * rho2_u * my2_u
                           + 2.0 * p2 * x
                           + 6.0 * p1 * y;
@@ -54,10 +61,10 @@ void RadTanDistortion::distortUsingExternalCoefficients(
 }
 
 void RadTanDistortion::distortParameterJacobian(
-    const Eigen::VectorXd& dist_coeffs,
+    const Eigen::VectorXd* dist_coeffs,
     const Eigen::Vector2d& point,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
+  CHECK_EQ(dist_coeffs->size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(out_jacobian);
 
   const double& y0 = point(0);
@@ -75,8 +82,8 @@ void RadTanDistortion::distortParameterJacobian(
   const double dvf_dp2 = 2.0 * y0 * y1;
 
   out_jacobian->resize(2, kNumOfParams);
-  *out_jacobian << duf_dk1, duf_dk2, duf_dp1, duf_dp2,
-                   dvf_dk1, dvf_dk2, dvf_dp1, dvf_dp2;
+  (*out_jacobian) << duf_dk1, duf_dk2, duf_dp1, duf_dp2,
+                     dvf_dk1, dvf_dk2, dvf_dp1, dvf_dp2;
 }
 
 void RadTanDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
@@ -94,7 +101,7 @@ void RadTanDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd&
 
   for (int i = 0; i < n; i++) {
     y_tmp = ybar;
-    distortUsingExternalCoefficients(dist_coeffs, &y_tmp, &F);
+    distortUsingExternalCoefficients(&dist_coeffs, &y_tmp, &F);
     Eigen::Vector2d e(y - y_tmp);
     Eigen::Vector2d du = (F.transpose() * F).inverse() * F.transpose() * e;
     ybar += du;
