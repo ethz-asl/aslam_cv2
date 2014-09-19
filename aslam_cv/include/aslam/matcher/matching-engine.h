@@ -10,10 +10,10 @@
 
 namespace aslam {
 
-template <typename MATCHING_PROBLEM>
+template<typename MATCHING_PROBLEM>
 class MatchingEngine {
 
-public:
+ public:
   typedef MATCHING_PROBLEM MatchingProblemT;
   typedef typename MatchingProblemT::ScoreT ScoreT;
 
