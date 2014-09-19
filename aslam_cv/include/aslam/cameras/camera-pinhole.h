@@ -227,7 +227,7 @@ class PinholeCamera : public Camera {
   }
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
-  inline virtual int parameterCountImpl() const {
+  inline virtual int getParameterSize() const {
       return kNumOfParams;
   }
 

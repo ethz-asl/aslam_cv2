@@ -60,7 +60,11 @@ void Distortion::setParameters(const Eigen::VectorXd& dist_coeffs) {
   distortion_coefficients_ = dist_coeffs;
 }
 
-Eigen::VectorXd Distortion::getParameters() const {
+double* Distortion::getParametersMutable() {
+  return &distortion_coefficients_.coeffRef(0, 0);
+}
+
+const Eigen::VectorXd& Distortion::getParameters() const {
   return distortion_coefficients_;
 }
 
