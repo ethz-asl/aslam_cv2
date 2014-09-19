@@ -1,5 +1,5 @@
-#ifndef ASLAM_CAMERAS_PINHOLE_CAMERA_H_
-#define ASLAM_CAMERAS_PINHOLE_CAMERA_H_
+#ifndef ASLAM_UNIFIED_PROJECTION_CAMERA_H_
+#define ASLAM_UNIFIED_PROJECTION_CAMERA_H_
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion.h>
@@ -7,28 +7,28 @@
 
 namespace aslam {
 
-/// \class PinholeCamera
-/// \brief An implementation of the pinhole camera model with (optional) distortion.
+/// \class UnifiedProjectionCamera
+/// \brief An implementation of the unified projection camera model with (optional) distortion.
 ///
-/// The usual model of a pinhole camera follows these steps:
-///    - Transformation: Transform the point into a coordinate frame associated with the camera
-///    - Normalization:  Project the point onto the normalized image plane: \f$\mathbf y := \left[ x/z,y/z\right] \f$
-///    - Distortion:     apply a nonlinear transformation to \f$y\f$ to account for radial and tangential distortion of the lens
-///    - Projection:     Project the point into the image using a standard \f$3 \time 3\f$ projection matrix
+///  Intrinsic parameters ordering: xi, fu, fv, cu, cv
 ///
-///  Intrinsic parameters ordering: fu, fv, cu, cv
-///  Reference: http://en.wikipedia.org/wiki/Pinhole_camera_model
-class PinholeCamera : public Camera {
-  enum { kNumOfParams = 4 };
+///  Reference: (1) C. Geyer and K. Daniilidis. A unifying theory for central panoramic systems
+///                 and practical implications. In ECCV, pages 445–461, 2000.
+///                 (http://www.frc.ri.cmu.edu/users/cgeyer/papers/geyer_eccv00.pdf)
+///             (2) Joao P. Barreto and Helder Araujo. Issues on the geometry of central
+///                 catadioptric image formation. In CVPR, volume 2, pages 422–427, 2001.
+///                 (http://home.isr.uc.pt/~jpbar/Publication_Source/cvpr2001.pdf)
+class UnifiedProjectionCamera : public Camera {
+  enum { kNumOfParams = 5 };
  public:
-  ASLAM_POINTER_TYPEDEFS(PinholeCamera);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(PinholeCamera);
+  ASLAM_POINTER_TYPEDEFS(UnifiedProjectionCamera);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(UnifiedProjectionCamera);
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   // TODO(slynen) Enable commented out PropertyTree support
-  // PinholeCamera(const sm::PropertyTree& config);
+  // UnifiedProjectionCamera(const sm::PropertyTree& config);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -36,48 +36,51 @@ class PinholeCamera : public Camera {
 
  protected:
   /// \brief Empty constructor for serialization interface.
-  PinholeCamera();
+  UnifiedProjectionCamera();
 
  public:
-  /// \brief Construct a PinholeCamera with distortion.
-  /// @param[in] intrinsics   Vector containing the intrinsic parameters (fu,fv,cu,cv).
-  /// @param[in] image_width  Image width in pixels.
-  /// @param[in] image_height Image height in pixels.
-  /// @param[in] distortion   Pointer to the distortion model.
-  PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
-                aslam::Distortion::Ptr distortion);
+  /// \brief Construct a camera with distortion.
+  /// @param[in] intrinsics   vector containing the intrinsic parameters (xi,fu,fv,cu.cv)
+  /// @param[in] image_height image height in pixels
+  /// @param[in] distortion   pointer to the distortion model
+  UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
+                          uint32_t image_height, aslam::Distortion::Ptr distortion);
 
-  /// \brief Construct a PinholeCamera without distortion.
-  /// @param[in] intrinsics   Vector containing the intrinsic parameters (fu,fv,cu,cv).
-  /// @param[in] image_width  Image width in pixels.
-  /// @param[in] image_height Image height in pixels.
-  PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height);
+  /// \brief Construct a camera without distortion.
+  /// @param[in] intrinsics   vector containing the intrinsic parameters (xi,fu,fv,cu.cv)
+  /// @param[in] image_width  image width in pixels
+  /// @param[in] image_height image height in pixels
+  /// @param[in] distortion   pointer to the distortion model
+  UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
+                          uint32_t image_height);
 
-  /// \brief Construct a PinholeCamera with distortion.
-  /// @param[in] focallength_cols Focal length in pixels; cols (width-direction).
-  /// @param[in] focallength_rows Focal length in pixels; rows (height-direction).
-  /// @param[in] imagecenter_cols Image center in pixels; cols (width-direction).
-  /// @param[in] imagecenter_rows Image center in pixels; rows (height-direction).
-  /// @param[in] image_width      Image width in pixels.
-  /// @param[in] image_height     Image height in pixels.
-  /// @param[in] distortion       Pointer to the distortion model.
-  PinholeCamera(double focallength_cols, double focallength_rows,
-                double imagecenter_cols, double imagecenter_rows,
-                uint32_t image_width, uint32_t image_height,
-                aslam::Distortion::Ptr distortion);
+  /// \brief Construct a camera with distortion.
+  /// @param[in] xi               mirror parameter
+  /// @param[in] focallength_cols focallength in pixels; cols (width-direction)
+  /// @param[in] focallength_rows focallength in pixels; rows (height-direction)
+  /// @param[in] imagecenter_cols image center in pixels; cols (width-direction)
+  /// @param[in] imagecenter_rows image center in pixels; rows (height-direction)
+  /// @param[in] image_width      image width in pixels
+  /// @param[in] image_height     image height in pixels
+  /// @param[in] distortion       pointer to the distortion model
+  UnifiedProjectionCamera(double xi, double focallength_cols, double focallength_rows,
+                          double imagecenter_cols, double imagecenter_rows,
+                          uint32_t image_width, uint32_t image_height,
+                          aslam::Distortion::Ptr distortion);
 
-  /// \brief Construct a PinholeCamera without distortion.
-  /// @param[in] focallength_cols Focal length in pixels; cols (width-direction).
-  /// @param[in] focallength_rows Focal length in pixels; rows (height-direction).
-  /// @param[in] imagecenter_cols Image center in pixels; cols (width-direction).
-  /// @param[in] imagecenter_rows Image center in pixels; rows (height-direction).
-  /// @param[in] image_width      Image width in pixels.
-  /// @param[in] image_height     Image height in pixels.
-  PinholeCamera(double focallength_cols, double focallength_rows,
-                double imagecenter_cols, double imagecenter_rows,
-                uint32_t image_width, uint32_t image_height);
+  /// \brief Construct a camera without distortion.
+  /// @param[in] xi               mirror parameter
+  /// @param[in] focallength_cols focallength in pixels; cols (width-direction)
+  /// @param[in] focallength_rows focallength in pixels; rows (height-direction)
+  /// @param[in] imagecenter_cols image center in pixels; cols (width-direction)
+  /// @param[in] imagecenter_rows image center in pixels; rows (height-direction)
+  /// @param[in] image_width      image width in pixels
+  /// @param[in] image_height     image height in pixels
+  UnifiedProjectionCamera(double xi, double focallength_cols, double focallength_rows,
+                          double imagecenter_cols, double imagecenter_rows,
+                          uint32_t image_width, uint32_t image_height);
 
-  virtual ~PinholeCamera() {};
+  virtual ~UnifiedProjectionCamera() {};
 
   /// \brief Compare this camera to another camera object.
   virtual bool operator==(const Camera& other) const;
@@ -98,8 +101,7 @@ class PinholeCamera : public Camera {
   ///        image coordinates. Uses the projection (& distortion) models.
   /// @param[in]  keypoint     Keypoint in image coordinates.
   /// @param[out] out_point_3d Bearing vector in euclidean coordinates (with z=1 -> non-normalized).
-  virtual bool backProject3(const Eigen::Vector2d& keypoint,
-                            Eigen::Vector3d* out_point_3d) const;
+  virtual bool backProject3(const Eigen::Vector2d& keypoint, Eigen::Vector3d* out_point_3d) const;
 
   /// \brief Checks the success of a projection operation and returns the result in a
   ///        ProjectionResult object.
@@ -107,7 +109,17 @@ class PinholeCamera : public Camera {
   /// @param[in] point_3d Projected point in euclidean.
   /// @return The ProjectionResult object contains details about the success of the projection.
   const ProjectionResult evaluateProjectionResult(const Eigen::Vector2d& keypoint,
-                                                const Eigen::Vector3d& point_3d) const;
+                                                  const Eigen::Vector3d& point_3d) const;
+
+
+  /// \brief Checks whether an undistorted keypoint lies in the valid range.
+  /// @param[in] keypoint Squarred norm of the normalized undistorted keypoint.
+  /// @param[in] xi       Mirror parameter
+  bool isUndistortedKeypointValid(const double& rho2_d, const double& xi) const;
+
+  /// \brief Checks whether a keypoint is liftable to the unit sphere.
+  /// @param[in] keypoint Keypoint in image coordinates.
+  bool isLiftable(const Eigen::Vector2d& keypoint) const;
 
   /// @}
 
@@ -117,14 +129,6 @@ class PinholeCamera : public Camera {
 
   // Get the overloaded non-virtual project3Functional(..) from base into scope.
   using Camera::project3Functional;
-
-  /// \brief Template version of project3Functional.
-  template <typename ScalarType, typename DistortionType>
-  const ProjectionResult project3Functional(
-      const Eigen::Matrix<ScalarType, 3, 1>& point_3d,
-      const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics_external,
-      const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>* distortion_coefficients_external,
-      Eigen::Matrix<ScalarType, 2, 1>* out_keypoint) const;
 
   /// \brief This function projects a point into the image using the intrinsic parameters
   ///        that are passed in as arguments. If any of the Jacobians are nonnull, they
@@ -166,8 +170,17 @@ class PinholeCamera : public Camera {
   ///        0 and 100 meters.
   virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const;
 
-  /// \brief Get a set of border rays
-  void getBorderRays(Eigen::MatrixXd & rays) const;
+  /// \brief Create a test camera object for unit testing.
+  template<typename DistortionType>
+  static UnifiedProjectionCamera::Ptr createTestCamera()   {
+    return UnifiedProjectionCamera::Ptr(new UnifiedProjectionCamera(0.9, 400, 400, 320, 240, 640, 480,
+                                          DistortionType::createTestDistortion()));
+  }
+
+  /// \brief Create a test camera object for unit testing. (without distortion)
+  static UnifiedProjectionCamera::Ptr createTestCamera() {
+    return UnifiedProjectionCamera::Ptr(new UnifiedProjectionCamera(0.9, 400, 400, 320, 240, 640, 480));
+  }
 
   /// @}
 
@@ -185,44 +198,27 @@ class PinholeCamera : public Camera {
   ///         for the camera type
   virtual const aslam::Distortion::Ptr distortion() const { return distortion_; };
 
-  /// \brief Create a test camera object for unit testing.
-  template<typename DistortionType>
-  static PinholeCamera::Ptr createTestCamera()   {
-    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480,
-                                                DistortionType::createTestDistortion()));
-  }
-
-  /// \brief Create a test camera object for unit testing. (without distortion)
-  static PinholeCamera::Ptr createTestCamera() {
-    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480));
-  }
-
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Methods to access intrinsics.
   /// @{
 
-  /// \brief Returns the camera matrix for the pinhole projection.
-  Eigen::Matrix3d getCameraMatrix() const {
-    Eigen::Matrix3d K;
-    K << fu(), 0.0,  cu(),
-         0.0,  fv(), cv(),
-         0.0,  0.0,  1.0;
-    return K;
-  }
-
   /// \brief The horizontal focal length in pixels.
-  double fu() const { return intrinsics_[0]; };
+  double xi() const { return intrinsics_[0]; };
+  /// \brief The horizontal focal length in pixels.
+  double fu() const { return intrinsics_[1]; };
   /// \brief The vertical focal length in pixels.
-  double fv() const { return intrinsics_[1]; };
+  double fv() const { return intrinsics_[2]; };
   /// \brief The horizontal image center in pixels.
-  double cu() const { return intrinsics_[2]; };
+  double cu() const { return intrinsics_[3]; };
   /// \brief The vertical image center in pixels.
-  double cv() const { return intrinsics_[3]; };
+  double cv() const { return intrinsics_[4]; };
+  /// \brief Returns the fov parameter.
+  double fov_parameter(double xi) const { return (xi <= 1.0) ? xi : (1 / xi); };
 
   /// \brief Set the intrinsic parameters for the pinhole model.
-  /// @param[in] params Intrinsic parameters (dim=4: fu, fv, cu, cv)
+  /// @param[in] params Intrinsic parameters (dim=5: xi, fu, fv, cu, cv)
   virtual void setParameters(const Eigen::VectorXd& params);
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
@@ -247,6 +243,4 @@ class PinholeCamera : public Camera {
 
 }  // namespace aslam
 
-#include "aslam/cameras/camera-pinhole-inl.h"
-
-#endif  // ASLAM_CAMERAS_PINHOLE_CAMERA_H_
+#endif  // ASLAM_UNIFIED_PROJECTION_CAMERA_H_
