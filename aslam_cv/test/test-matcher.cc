@@ -8,10 +8,10 @@
 
 class SimpleMatchProblem : public aslam::MatchingProblem<float> {
 
-  std::vector<float> _apples;
-  std::vector<float> _bananas;
+  std::vector<float> apples_;
+  std::vector<float> bananas_;
 
-  MatchesT _matches;
+  MatchesT matches_;
 
  public:
   SimpleMatchProblem() {
@@ -20,16 +20,16 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
   }
 
   virtual int getLengthApples() const {
-    return _apples.size();
+    return apples_.size();
   }
   virtual int getLengthBananas() const {
-    return _bananas.size();
+    return bananas_.size();
   }
 
   virtual float computeScore(int a, int b) {
-    CHECK_LT(size_t(a), _apples.size());
-    CHECK_LT(size_t(b), _bananas.size());
-    return -fabs(_apples[a] - _bananas[b]);
+    CHECK_LT(size_t(a), apples_.size());
+    CHECK_LT(size_t(b), bananas_.size());
+    return -fabs(apples_[a] - bananas_[b]);
   }
 
   virtual bool doSetup() {
@@ -37,21 +37,21 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
   }
 
   virtual void setBestMatches(const MatchesT &bestMatches) {
-    _matches = bestMatches;
+    matches_ = bestMatches;
   }
 
   template<typename iter>
   void setApples(iter first, iter last) {
-    _apples.clear();
-    _apples.insert(_apples.end(), first, last);
+    apples_.clear();
+    apples_.insert(apples_.end(), first, last);
   }
   template<typename iter>
   void setBananas(iter first, iter last) {
-    _bananas.clear();
-    _bananas.insert(_bananas.end(), first, last);
+    bananas_.clear();
+    bananas_.insert(bananas_.end(), first, last);
   }
   MatchesT &getMatches() {
-    return _matches;
+    return matches_;
   }
 };
 
@@ -69,12 +69,12 @@ TEST(TestMatcher, EmptyMatch) {
   aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
   me.match(mp);
-  EXPECT_EQ(0, mp.getMatches().size());
+  EXPECT_EQ(0u, mp.getMatches().size());
 
   std::vector<float> bananas { 1.1, 2.2, 3.3 };
   mp.setBananas(bananas.begin(), bananas.end());
   me.match(mp);
-  EXPECT_EQ(0, mp.getMatches().size());
+  EXPECT_EQ(0u, mp.getMatches().size());
 }
 
 TEST(TestMatcher, GreedyMatcher) {
@@ -87,16 +87,16 @@ TEST(TestMatcher, GreedyMatcher) {
   aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
   mp.setApples(apples.begin(), apples.end());
-  EXPECT_EQ(5, mp.getLengthApples());
+  EXPECT_EQ(5u, mp.getLengthApples());
 
   me.match(mp);
-  EXPECT_EQ(0, mp.getMatches().size());
+  EXPECT_EQ(0u, mp.getMatches().size());
 
   mp.setBananas(bananas.begin(), bananas.end());
   EXPECT_EQ(6, mp.getLengthBananas());
 
   me.match(mp);
-  EXPECT_EQ(5, mp.getMatches().size());
+  EXPECT_EQ(5u, mp.getMatches().size());
 
   std::sort(mp.getMatches().begin(), mp.getMatches().end());
 
