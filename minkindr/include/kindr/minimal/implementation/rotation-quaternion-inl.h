@@ -205,8 +205,6 @@ RotationQuaternionTemplate<Scalar>
 RotationQuaternionTemplate<Scalar>::conjugated() const {
   // Own implementation since Eigen::conjugate does not use the correct
   // scalar type for the greater than zero comparison.
-  Scalar n2 = q_A_B_.squaredNorm();
-  CHECK_GT(n2, static_cast<Scalar>(0));
   return RotationQuaternionTemplate(
       Implementation(q_A_B_.w(),-q_A_B_.x(),-q_A_B_.y(),-q_A_B_.z()));
 }
