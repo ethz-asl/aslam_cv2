@@ -200,6 +200,9 @@ class Camera {
   /// text used by the calling function to distinguish cameras.
   virtual void printParameters(std::ostream& out, const std::string& text) const;
 
+  /// \brief The number of intrinsic parameters.
+  virtual int getParameterSize() const  = 0;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -431,11 +434,15 @@ class Camera {
   /// Get the intrinsic parameters (const).
   const Eigen::VectorXd& getParameters() const { return intrinsics_; };
 
-  /// Get the intrinsic parameters (mutable).
-  Eigen::VectorXd& getParametersMutable() { return intrinsics_; };
+  /// Get the intrinsic parameters.
+  double* getParametersMutable() { return &intrinsics_.coeffRef(0, 0); };
 
-  /// Set the intrinsic parameters. Parameters are documented in the specialized camera classes.
-  virtual void setParameters(const Eigen::VectorXd& params) = 0;
+  /// Set the intrinsic parameters. Parameters are documented in the specialized
+  /// camera classes.
+  void setParameters(const Eigen::VectorXd& params) {
+    CHECK_EQ(getParameterSize(), static_cast<size_t>(params.size()));
+    intrinsics_ = params;
+  }
 
   /// @}
 
