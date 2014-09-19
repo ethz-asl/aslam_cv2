@@ -221,11 +221,6 @@ inline const ProjectionResult PinholeCamera::evaluateProjectionResult(
     return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
 }
 
-void PinholeCamera::setParameters(const Eigen::VectorXd& params) {
-  CHECK_EQ(parameterCount(), static_cast<size_t>(params.size()));
-  intrinsics_ = params;
-}
-
 Eigen::Vector2d PinholeCamera::createRandomKeypoint() const {
   Eigen::Vector2d out;
   out.setRandom();
