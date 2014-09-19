@@ -28,13 +28,14 @@ inline JetType<T, N> atan(const JetType<T, N>& f) {
 }
 } // namespace jet_trigonometric
 
-template <typename ScalarType>
+template <typename ScalarType, typename MDistortion>
 void FisheyeDistortion::distortUsingExternalCoefficients(
-    const Eigen::Map<Eigen::Matrix<ScalarType, Eigen::Dynamic,1>>& dist_coeffs,
+    const Eigen::MatrixBase<MDistortion>& dist_coeffs,
     const Eigen::Matrix<ScalarType, 2, 1>& point,
     Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
   CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(out_point);
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(MDistortion);
 
   const ScalarType& w = dist_coeffs(0);
 
