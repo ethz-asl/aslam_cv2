@@ -7,13 +7,17 @@ FisheyeDistortion::FisheyeDistortion(const Eigen::VectorXd& dist_coeffs)
   CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 
-void FisheyeDistortion::distortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
+void FisheyeDistortion::distortUsingExternalCoefficients(const Eigen::VectorXd* dist_coeffs,
                                                          Eigen::Vector2d* point,
                                                          Eigen::Matrix2d* out_jacobian) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
 
-  const double& w = dist_coeffs(0);
+  // Use internal params if dist_coeffs==nullptr
+  if(!dist_coeffs)
+    dist_coeffs = &distortion_coefficients_;
+  CHECK_EQ(dist_coeffs->size(), kNumOfParams) << "dist_coeffs: invalid size!";
+
+  const double& w = (*dist_coeffs)(0);
   const double r_u = point->norm();
   const double r_u_cubed = r_u * r_u * r_u;
   const double tanwhalf = tan(w / 2.);
@@ -71,14 +75,13 @@ void FisheyeDistortion::distortUsingExternalCoefficients(const Eigen::VectorXd& 
   *point *= r_rd;
 }
 
-void FisheyeDistortion::distortParameterJacobian(const Eigen::VectorXd& dist_coeffs,
+void FisheyeDistortion::distortParameterJacobian(const Eigen::VectorXd* dist_coeffs,
                                                  const Eigen::Vector2d& point,
                                                  Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
+  CHECK_EQ(dist_coeffs->size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(out_jacobian);
-  CHECK_EQ(out_jacobian->cols(), 1);
 
-  const double& w = dist_coeffs(0);
+  const double& w = (*dist_coeffs)(0);
 
   const double tanwhalf = tan(w / 2.);
   const double tanwhalfsq = tanwhalf * tanwhalf;
@@ -88,6 +91,7 @@ void FisheyeDistortion::distortParameterJacobian(const Eigen::VectorXd& dist_coe
   const double& u = point(0);
   const double& v = point(1);
 
+  out_jacobian->resize(2, kNumOfParams);
   if (w * w < 1e-5) {
     out_jacobian->setZero();
   }
@@ -110,8 +114,8 @@ void FisheyeDistortion::distortParameterJacobian(const Eigen::VectorXd& dist_coe
 
 void FisheyeDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
                                                            Eigen::Vector2d* point) const {
-  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
+  CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
 
   const double& w = dist_coeffs(0);
   double mul2tanwby2 = tan(w / 2.0) * 2.0;
