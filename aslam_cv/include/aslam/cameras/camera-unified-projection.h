@@ -223,7 +223,7 @@ class UnifiedProjectionCamera : public Camera {
   }
 
   /// \brief The number of intrinsic parameters.
-  virtual int parameterCountImpl() const {
+  virtual int getParameterSize() const {
     return kNumOfParams;
   }
 

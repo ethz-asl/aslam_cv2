@@ -194,7 +194,7 @@ class Camera {
   virtual void printParameters(std::ostream& out, const std::string& text) const;
 
   /// \brief The number of intrinsic parameters.
-  virtual int parameterCountImpl() const  = 0;
+  virtual int getParameterSize() const  = 0;
 
   /// @}
 
@@ -433,7 +433,7 @@ class Camera {
   /// Set the intrinsic parameters. Parameters are documented in the specialized
   /// camera classes.
   void setParameters(const Eigen::VectorXd& params) {
-    CHECK_EQ(parameterCountImpl(), static_cast<size_t>(params.size()));
+    CHECK_EQ(getParameterSize(), static_cast<size_t>(params.size()));
     intrinsics_ = params;
   }
 
