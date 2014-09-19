@@ -218,13 +218,14 @@ class UnifiedProjectionCamera : public Camera {
   /// \brief Returns the fov parameter.
   double fov_parameter(double xi) const { return (xi <= 1.0) ? xi : (1 / xi); };
 
-  /// \brief Set the intrinsic parameters for the pinhole model.
-  /// @param[in] params Intrinsic parameters (dim=5: xi, fu, fv, cu, cv)
-  virtual void setParameters(const Eigen::VectorXd& params);
-
   /// \brief Returns the number of intrinsic parameters used in this camera model.
-  inline static constexpr size_t parameterCount() {
+  inline static constexpr int parameterCount() {
       return kNumOfParams;
+  }
+
+  /// \brief The number of intrinsic parameters.
+  virtual int getParameterSize() const {
+    return kNumOfParams;
   }
 
   /// \brief Print the internal parameters of the camera in a human-readable form

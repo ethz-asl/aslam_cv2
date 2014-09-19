@@ -134,12 +134,17 @@ class Distortion {
   /// @param[in] dist_coeffs Vector containing the coefficients.
   void setParameters(const Eigen::VectorXd& dist_coeffs);
 
-  /// Get the distortion model coefficients.
+  /// \brief Get the distortion model coefficients.
+  /// @return Vector containing the coefficients.
   const Eigen::VectorXd& getParameters() const { return distortion_coefficients_; };
+
+  /// \brief Get the pointer to the distortion model coefficients.
+  /// @return Pointer to the first coefficient.
+  double* getParametersMutable() { return &distortion_coefficients_.coeffRef(0, 0); };
 
   /// \brief Returns the number of parameters used in the distortion model.
   ///        NOTE: Use the constexpr function parameterCount if you know the exact distortion type.
-  virtual size_t getParameterSize() const = 0;
+  virtual int getParameterSize() const = 0;
 
   /// \brief Check the validity of distortion parameters.
   /// @param[in] dist_coeffs Vector containing the coefficients. Parameters will NOT be stored.
