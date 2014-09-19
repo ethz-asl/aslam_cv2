@@ -130,13 +130,6 @@ bool Camera::isProjectable4(const Eigen::Vector4d& ph) const {
   return ret.isKeypointVisible();
 }
 
-bool Camera::isKeypointVisible(const Eigen::Vector2d& keypoint) const {
-  return keypoint[0] >= 0.0
-      && keypoint[1] >= 0.0
-      && keypoint[0] < static_cast<double>(imageWidth())
-      && keypoint[1] < static_cast<double>(imageHeight());
-}
-
 void Camera::project3Vectorized(
     const Eigen::Matrix3Xd& points_3d, Eigen::Matrix2Xd* out_keypoints,
     std::vector<ProjectionResult>* out_results) const {
