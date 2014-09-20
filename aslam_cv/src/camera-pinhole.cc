@@ -29,11 +29,11 @@ PinholeCamera::PinholeCamera()
   setImageHeight(0);
 }
 
-PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
-                             uint32_t image_height, aslam::Distortion::UniquePtr& distortion)
-    : Camera(intrinsics),
-      distortion_(std::move(distortion)) {
-  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
+PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
+                             uint32_t image_width, uint32_t image_height,
+                             aslam::Distortion::UniquePtr& distortion)
+  : Camera(intrinsics, distortion) {
+  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
