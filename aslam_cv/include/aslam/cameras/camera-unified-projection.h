@@ -2,6 +2,7 @@
 #define ASLAM_UNIFIED_PROJECTION_CAMERA_H_
 
 #include <aslam/cameras/camera.h>
+#include <aslam/common/crtp-clone.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 
@@ -18,7 +19,7 @@ namespace aslam {
 ///             (2) Joao P. Barreto and Helder Araujo. Issues on the geometry of central
 ///                 catadioptric image formation. In CVPR, volume 2, pages 422–427, 2001.
 ///                 (http://home.isr.uc.pt/~jpbar/Publication_Source/cvpr2001.pdf)
-class UnifiedProjectionCamera : public Camera {
+class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectionCamera> {
   enum { kNumOfParams = 5 };
  public:
   ASLAM_POINTER_TYPEDEFS(UnifiedProjectionCamera);
@@ -37,18 +38,14 @@ class UnifiedProjectionCamera : public Camera {
   /// \brief Empty constructor for serialization interface.
   UnifiedProjectionCamera();
 
+ public:
   /// Copy constructor for clone operation.
-  UnifiedProjectionCamera(const UnifiedProjectionCamera& other) : Camera(other), distortion_(nullptr) {
+  UnifiedProjectionCamera(const UnifiedProjectionCamera& other) : Base(other), distortion_(nullptr) {
     if (other.distortion_) // Clone distortion if model is set.
       distortion_.reset(other.distortion_->clone());
   };
-  void operator=(const UnifiedProjectionCamera&) = delete;
 
- public:
-  virtual aslam::Camera* clone() const
-  {
-    return new UnifiedProjectionCamera(static_cast<const UnifiedProjectionCamera&>(*this));
-  }
+  void operator=(const UnifiedProjectionCamera&) = delete;
 
  public:
   /// \brief Construct a camera with distortion.

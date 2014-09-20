@@ -23,7 +23,7 @@ namespace aslam {
 //}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera()
-    : Camera(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)),
+    : Base(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)),
       distortion_(nullptr) {
   setImageWidth(0);
   setImageHeight(0);
@@ -32,7 +32,7 @@ UnifiedProjectionCamera::UnifiedProjectionCamera()
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height,
                                                  aslam::Distortion::Ptr distortion)
-    : Camera(intrinsics),
+    : Base(intrinsics),
       distortion_(distortion) {
   CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
   setImageWidth(image_width);

@@ -3,14 +3,16 @@
 
 #include <Eigen/Core>
 #include <glog/logging.h>
-#include "distortion.h"
+
+#include <aslam/common/crtp-clone.h>
+#include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 
 namespace aslam {
 
 /// \class FisheyeDistortion
 /// \brief An implementation of the fisheye distortion model for pinhole cameras.
-class FisheyeDistortion : public aslam::Distortion {
+class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion> {
  private:
   /** \brief Number of parameters used for this distortion model. */
   enum { kNumOfParams = 1 };
@@ -33,21 +35,17 @@ class FisheyeDistortion : public aslam::Distortion {
     return out;
   };
 
- protected:
+ public:
+  /// Copy constructor for clone operation.
   FisheyeDistortion(const FisheyeDistortion&) = default;
   void operator=(const FisheyeDistortion&) = delete;
 
- public:
-  virtual aslam::Distortion* clone() const
-  {
-    return new FisheyeDistortion(static_cast<const FisheyeDistortion&>(*this));
-  }
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Distort methods: applies the distortion model to a point.
   /// @{
-
+ public:
   /// \brief Apply distortion to a point in the normalized image plane using provided distortion
   ///        coefficients. External distortion coefficients can be specified using this function.
   ///        (Ignores the internally stored parameters.

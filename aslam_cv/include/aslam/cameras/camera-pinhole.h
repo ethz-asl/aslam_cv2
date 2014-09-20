@@ -2,6 +2,7 @@
 #define ASLAM_CAMERAS_PINHOLE_CAMERA_H_
 
 #include <aslam/cameras/camera.h>
+#include <aslam/common/crtp-clone.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 
@@ -18,7 +19,7 @@ namespace aslam {
 ///
 ///  Intrinsic parameters ordering: fu, fv, cu, cv
 ///  Reference: http://en.wikipedia.org/wiki/Pinhole_camera_model
-class PinholeCamera : public Camera {
+class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   enum { kNumOfParams = 4 };
  public:
   ASLAM_POINTER_TYPEDEFS(PinholeCamera);
@@ -37,18 +38,13 @@ class PinholeCamera : public Camera {
   /// \brief Empty constructor for serialization interface.
   PinholeCamera();
 
+ public:
   /// Copy constructor for clone operation.
-  PinholeCamera(const PinholeCamera& other) : Camera(other), distortion_(nullptr) {
+  PinholeCamera(const PinholeCamera& other) : Base(other), distortion_(nullptr) {
     if (other.distortion_) // Clone distortion if model is set.
       distortion_.reset(other.distortion_->clone());
   };
   void operator=(const PinholeCamera&) = delete;
-
- public:
-  virtual aslam::Camera* clone() const
-  {
-    return new PinholeCamera(static_cast<const PinholeCamera&>(*this));
-  }
 
  public:
   /// \brief Construct a PinholeCamera with distortion.
