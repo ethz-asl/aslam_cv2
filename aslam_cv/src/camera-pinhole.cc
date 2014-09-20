@@ -21,7 +21,7 @@ namespace aslam {
 //}
 
 PinholeCamera::PinholeCamera()
-    : Camera(Eigen::Vector4d::Zero()),
+    : Base(Eigen::Vector4d::Zero()),
       distortion_(nullptr) {
   setImageWidth(0);
   setImageHeight(0);
@@ -29,7 +29,7 @@ PinholeCamera::PinholeCamera()
 
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
                              uint32_t image_height, aslam::Distortion::Ptr distortion)
-    : Camera(intrinsics),
+    : Base(intrinsics),
       distortion_(distortion) {
   CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
   setImageWidth(image_width);

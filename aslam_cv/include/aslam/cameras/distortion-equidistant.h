@@ -3,7 +3,9 @@
 
 #include <Eigen/Core>
 #include <glog/logging.h>
-#include "distortion.h"
+
+#include <aslam/common/crtp-clone.h>
+#include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 
 namespace aslam {
@@ -15,7 +17,7 @@ namespace aslam {
 ///        The ordering of the parameter vector is: k1 k2 k3 k4
 ///        NOTE: The inverse transformation (undistort) in this case is not available in
 ///        closed form and so it is computed iteratively!
-class EquidistantDistortion : public aslam::Distortion {
+class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDistortion> {
 
  private:
   /** \brief Number of parameters used for this distortion model. */
@@ -39,22 +41,17 @@ class EquidistantDistortion : public aslam::Distortion {
     return out;
   };
 
- protected:
+ public:
+  /// Copy constructor for clone operation.
   EquidistantDistortion(const EquidistantDistortion&) = default;
   void operator=(const EquidistantDistortion&) = delete;
-
- public:
-  virtual aslam::Distortion* clone() const
-  {
-    return new EquidistantDistortion(static_cast<const EquidistantDistortion&>(*this));
-  }
 
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Distort methods: applies the distortion model to a point.
   /// @{
-
+ public:
   /// \brief Apply distortion to a point in the normalized image plane using provided distortion
   ///        coefficients. External distortion coefficients can be specified using this function.
   ///        (Ignores the internally stored parameters.
