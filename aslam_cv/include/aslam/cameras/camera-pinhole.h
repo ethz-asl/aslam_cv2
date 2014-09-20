@@ -50,7 +50,6 @@ class PinholeCamera : public Camera {
     return new PinholeCamera(static_cast<const PinholeCamera&>(*this));
   }
 
-
  public:
   /// \brief Construct a PinholeCamera with distortion.
   /// @param[in] intrinsics   Vector containing the intrinsic parameters (fu,fv,cu,cv).
