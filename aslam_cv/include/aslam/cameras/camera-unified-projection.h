@@ -50,7 +50,6 @@ class UnifiedProjectionCamera : public Camera {
     return new UnifiedProjectionCamera(static_cast<const UnifiedProjectionCamera&>(*this));
   }
 
-
  public:
   /// \brief Construct a camera with distortion.
   /// @param[in] intrinsics   vector containing the intrinsic parameters (xi,fu,fv,cu.cv)
