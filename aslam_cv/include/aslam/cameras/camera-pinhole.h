@@ -22,7 +22,6 @@ class PinholeCamera : public Camera {
   enum { kNumOfParams = 4 };
  public:
   ASLAM_POINTER_TYPEDEFS(PinholeCamera);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(PinholeCamera);
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -37,6 +36,20 @@ class PinholeCamera : public Camera {
  protected:
   /// \brief Empty constructor for serialization interface.
   PinholeCamera();
+
+  /// Copy constructor for clone operation.
+  PinholeCamera(const PinholeCamera& other) : Camera(other), distortion_(nullptr) {
+    if (other.distortion_) // Clone distortion if model is set.
+      distortion_.reset(other.distortion_->clone());
+  };
+  void operator=(const PinholeCamera&) = delete;
+
+ public:
+  virtual aslam::Camera* clone() const
+  {
+    return new PinholeCamera(static_cast<const PinholeCamera&>(*this));
+  }
+
 
  public:
   /// \brief Construct a PinholeCamera with distortion.

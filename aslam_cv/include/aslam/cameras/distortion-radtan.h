@@ -4,6 +4,7 @@
 #include <Eigen/Core>
 #include <glog/logging.h>
 #include "distortion.h"
+#include <aslam/common/macros.h>
 
 namespace aslam {
 
@@ -21,6 +22,7 @@ class RadTanDistortion : public aslam::Distortion {
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
+  ASLAM_POINTER_TYPEDEFS(RadTanDistortion);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -36,6 +38,15 @@ class RadTanDistortion : public aslam::Distortion {
     return out;
   };
 
+ protected:
+  RadTanDistortion(const RadTanDistortion&) = default;
+  void operator=(const RadTanDistortion&) = delete;
+
+ public:
+  virtual aslam::Distortion* clone() const
+  {
+    return new RadTanDistortion(static_cast<const RadTanDistortion&>(*this));
+  }
   /// @}
 
   //////////////////////////////////////////////////////////////

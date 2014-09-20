@@ -4,6 +4,7 @@
 #include <Eigen/Core>
 #include <glog/logging.h>
 #include "distortion.h"
+#include <aslam/common/macros.h>
 
 namespace aslam {
 
@@ -22,6 +23,7 @@ class EquidistantDistortion : public aslam::Distortion {
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
+  ASLAM_POINTER_TYPEDEFS(EquidistantDistortion);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -36,6 +38,16 @@ class EquidistantDistortion : public aslam::Distortion {
     this->printParameters(out, std::string(""));
     return out;
   };
+
+ protected:
+  EquidistantDistortion(const EquidistantDistortion&) = default;
+  void operator=(const EquidistantDistortion&) = delete;
+
+ public:
+  virtual aslam::Distortion* clone() const
+  {
+    return new EquidistantDistortion(static_cast<const EquidistantDistortion&>(*this));
+  }
 
   /// @}
 

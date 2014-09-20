@@ -22,7 +22,6 @@ class UnifiedProjectionCamera : public Camera {
   enum { kNumOfParams = 5 };
  public:
   ASLAM_POINTER_TYPEDEFS(UnifiedProjectionCamera);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(UnifiedProjectionCamera);
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -37,6 +36,20 @@ class UnifiedProjectionCamera : public Camera {
  protected:
   /// \brief Empty constructor for serialization interface.
   UnifiedProjectionCamera();
+
+  /// Copy constructor for clone operation.
+  UnifiedProjectionCamera(const UnifiedProjectionCamera& other) : Camera(other), distortion_(nullptr) {
+    if (other.distortion_) // Clone distortion if model is set.
+      distortion_.reset(other.distortion_->clone());
+  };
+  void operator=(const UnifiedProjectionCamera&) = delete;
+
+ public:
+  virtual aslam::Camera* clone() const
+  {
+    return new UnifiedProjectionCamera(static_cast<const UnifiedProjectionCamera&>(*this));
+  }
+
 
  public:
   /// \brief Construct a camera with distortion.

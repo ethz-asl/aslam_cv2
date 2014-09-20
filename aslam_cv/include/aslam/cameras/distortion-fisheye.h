@@ -4,6 +4,7 @@
 #include <Eigen/Core>
 #include <glog/logging.h>
 #include "distortion.h"
+#include <aslam/common/macros.h>
 
 namespace aslam {
 
@@ -16,6 +17,7 @@ class FisheyeDistortion : public aslam::Distortion {
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
+  ASLAM_POINTER_TYPEDEFS(FisheyeDistortion);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -31,6 +33,15 @@ class FisheyeDistortion : public aslam::Distortion {
     return out;
   };
 
+ protected:
+  FisheyeDistortion(const FisheyeDistortion&) = default;
+  void operator=(const FisheyeDistortion&) = delete;
+
+ public:
+  virtual aslam::Distortion* clone() const
+  {
+    return new FisheyeDistortion(static_cast<const FisheyeDistortion&>(*this));
+  }
   /// @}
 
   //////////////////////////////////////////////////////////////
