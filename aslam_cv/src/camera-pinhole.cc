@@ -205,27 +205,6 @@ const ProjectionResult PinholeCamera::project3Functional(
   return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
-inline const ProjectionResult PinholeCamera::evaluateProjectionResult(
-    const Eigen::Vector2d& keypoint,
-    const Eigen::Vector3d& point_3d) const {
-
-  const bool visibility = isKeypointVisible(keypoint);
-
-  if (visibility && (point_3d[2] > kMinimumDepth))
-    return ProjectionResult(ProjectionResult::Status::KEYPOINT_VISIBLE);
-  else if (!visibility && (point_3d[2] > kMinimumDepth))
-    return ProjectionResult(ProjectionResult::Status::KEYPOINT_OUTSIDE_IMAGE_BOX);
-  else if (point_3d[2] < 0.0)
-    return ProjectionResult(ProjectionResult::Status::POINT_BEHIND_CAMERA);
-  else
-    return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
-}
-
-void PinholeCamera::setParameters(const Eigen::VectorXd& params) {
-  CHECK_EQ(parameterCount(), static_cast<size_t>(params.size()));
-  intrinsics_ = params;
-}
-
 Eigen::Vector2d PinholeCamera::createRandomKeypoint() const {
   Eigen::Vector2d out;
   out.setRandom();
