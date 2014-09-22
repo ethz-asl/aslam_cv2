@@ -135,7 +135,7 @@ struct ProjectionResult {
 class Camera {
  public:
   ASLAM_POINTER_TYPEDEFS(Camera);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Camera);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
 
@@ -164,12 +164,20 @@ class Camera {
     return out;
   };
 
+  /// \brief Clones the camera instance and returns a pointer to the copy.
+  virtual aslam::Camera* clone() const = 0;
+
+ protected:
+  /// Copy constructor for clone operation.
+  Camera(const Camera&) = default;
+  void operator=(const Camera&) = delete;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Information about the camera
   /// @{
-
+ public:
   /// \brief Get the camera id.
   const aslam::CameraId& getId() const { return id_; }
 
