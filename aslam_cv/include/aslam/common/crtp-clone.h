@@ -3,7 +3,8 @@
 
 namespace aslam {
 
-/// Implements the cloneable concept using the CRTP and constructor inheritance.
+/// \class Cloneable
+/// \brief Implements the cloneable concept using the CRTP and constructor inheritance.
 /// Example:
 /// @code
 ///  class Vehicle {
@@ -23,6 +24,7 @@ class Cloneable : public BaseType {
   typedef Cloneable Base;
   using BaseType::BaseType;
 
+  /// Method to clone this instance
   virtual BaseType* clone() const {
     return new DerivedType(static_cast<DerivedType const&>(*this));
   };
