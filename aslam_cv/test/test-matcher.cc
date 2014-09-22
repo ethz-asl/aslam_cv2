@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <vector>
+#include <algorithm>
 
 #include <aslam/matcher/matching-engine-greedy.h>
 #include <aslam/matcher/matching-problem.h>
