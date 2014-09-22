@@ -269,11 +269,6 @@ bool UnifiedProjectionCamera::isLiftable(const Eigen::Vector2d& keypoint) const 
   return isUndistortedKeypointValid(rho2_d, xi());
 }
 
-void UnifiedProjectionCamera::setParameters(const Eigen::VectorXd& params) {
-  CHECK_EQ(parameterCount(), static_cast<size_t>(params.size()));
-  intrinsics_ = params;
-}
-
 Eigen::Vector2d UnifiedProjectionCamera::createRandomKeypoint() const {
   // This is tricky...The camera model defines a circle on the normalized image
   // plane and the projection equations don't work outside of it.

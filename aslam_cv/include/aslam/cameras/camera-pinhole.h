@@ -106,8 +106,10 @@ class PinholeCamera : public Camera {
   /// @param[in] keypoint Keypoint in image coordinates.
   /// @param[in] point_3d Projected point in euclidean.
   /// @return The ProjectionResult object contains details about the success of the projection.
-  const ProjectionResult evaluateProjectionResult(const Eigen::Vector2d& keypoint,
-                                                const Eigen::Vector3d& point_3d) const;
+  template <typename DerivedKeyPoint, typename DerivedPoint3d>
+  inline const ProjectionResult evaluateProjectionResult(
+      const Eigen::MatrixBase<DerivedKeyPoint>& keypoint,
+      const Eigen::MatrixBase<DerivedPoint3d>& point_3d) const;
 
   /// @}
 
@@ -119,11 +121,12 @@ class PinholeCamera : public Camera {
   using Camera::project3Functional;
 
   /// \brief Template version of project3Functional.
-  template <typename ScalarType, typename DistortionType>
+  template <typename ScalarType, typename DistortionType,
+            typename MIntrinsics, typename MDistortion>
   const ProjectionResult project3Functional(
       const Eigen::Matrix<ScalarType, 3, 1>& point_3d,
-      const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>& intrinsics_external,
-      const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>* distortion_coefficients_external,
+      const Eigen::MatrixBase<MIntrinsics>& intrinsics_external,
+      const Eigen::MatrixBase<MDistortion>& distortion_coefficients_external,
       Eigen::Matrix<ScalarType, 2, 1>* out_keypoint) const;
 
   /// \brief This function projects a point into the image using the intrinsic parameters
@@ -221,12 +224,13 @@ class PinholeCamera : public Camera {
   /// \brief The vertical image center in pixels.
   double cv() const { return intrinsics_[3]; };
 
-  /// \brief Set the intrinsic parameters for the pinhole model.
-  /// @param[in] params Intrinsic parameters (dim=4: fu, fv, cu, cv)
-  virtual void setParameters(const Eigen::VectorXd& params);
+  /// \brief Returns the number of intrinsic parameters used in this camera model.
+  inline static constexpr int parameterCount() {
+      return kNumOfParams;
+  }
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
-  inline static constexpr size_t parameterCount() {
+  inline virtual int getParameterSize() const {
       return kNumOfParams;
   }
 

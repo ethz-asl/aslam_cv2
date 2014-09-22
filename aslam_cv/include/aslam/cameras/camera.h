@@ -193,6 +193,9 @@ class Camera {
   /// text used by the calling function to distinguish cameras.
   virtual void printParameters(std::ostream& out, const std::string& text) const;
 
+  /// \brief The number of intrinsic parameters.
+  virtual int getParameterSize() const  = 0;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -390,7 +393,8 @@ class Camera {
   bool isProjectable4(const Eigen::Vector4d& point) const;
 
   /// \brief  Check if a given keypoint is inside the imaging box of the camera.
-  bool isKeypointVisible(const Eigen::Vector2d& keypoint) const;
+  template<typename Scalar>
+  bool isKeypointVisible(const Eigen::Matrix<Scalar, 2, 1>& keypoint) const;
 
   /// @}
 
@@ -422,10 +426,17 @@ class Camera {
   virtual const aslam::Distortion::Ptr distortion() const { return nullptr; };
 
   /// Get the intrinsic parameters.
-  virtual const Eigen::VectorXd& getParameters() const { return intrinsics_; };
+  const Eigen::VectorXd& getParameters() const { return intrinsics_; };
 
-  /// Set the intrinsic parameters. Parameters are documented in the specialized camera classes.
-  virtual void setParameters(const Eigen::VectorXd& params) = 0;
+  /// Get the intrinsic parameters.
+  double* getParametersMutable() { return &intrinsics_.coeffRef(0, 0); };
+
+  /// Set the intrinsic parameters. Parameters are documented in the specialized
+  /// camera classes.
+  void setParameters(const Eigen::VectorXd& params) {
+    CHECK_EQ(getParameterSize(), static_cast<size_t>(params.size()));
+    intrinsics_ = params;
+  }
 
   /// @}
 
