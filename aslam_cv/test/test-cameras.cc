@@ -262,6 +262,20 @@ TYPED_TEST(TestCameras, CameraTest_isInvertible) {
   ASSERT_TRUE(aslam::common::MatricesEqual(points1, points3, 1e-4));
 }
 
+TYPED_TEST(TestCameras, TestClone) {
+  aslam::Camera::Ptr cam1(this->camera_->clone());
+
+  EXPECT_TRUE(this->camera_.get() != nullptr); // Check both are valid objects.
+  EXPECT_TRUE(cam1.get() != nullptr);
+  EXPECT_TRUE(this->camera_.get() != cam1.get());  // Check those are two different instances.
+  EXPECT_TRUE(*(this->camera_) == *cam1);  // Check that the copy is the same as the original.
+
+  // Check that the distortion object is copied aswell.
+  EXPECT_TRUE(this->camera_->distortion().get() != cam1->distortion().get());
+  // Check that the copy is the same as the original.
+  EXPECT_TRUE(*(this->camera_->distortion()) == *cam1->distortion());
+}
+
 ///////////////////////////////////////////////
 // Model specific test cases
 ///////////////////////////////////////////////
