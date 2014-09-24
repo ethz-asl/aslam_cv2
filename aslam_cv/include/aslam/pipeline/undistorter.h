@@ -32,28 +32,28 @@ public:
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  const Camera& getInputCamera() const { CHECK(input_camera_); return *input_camera_; };
+  const Camera& getInputCamera() const { return *CHECK_NOTNULL(input_camera_.get()); };
 
   /// \brief Get the input camera that corresponds to the image
   ///        passed in to processImage().
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  Camera::Ptr getInputCameraShared() const { return input_camera_; };
+  Camera::ConstPtr getInputCameraShared() const { return input_camera_; };
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  const Camera& getOutputCamera() const { CHECK(output_camera_); return *output_camera_; };
+  const Camera& getOutputCamera() const { return *CHECK_NOTNULL(output_camera_.get()); };
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  Camera::Ptr getOutputCameraShared() const { return output_camera_; };
+  Camera::ConstPtr getOutputCameraShared() const { return output_camera_; };
 
 protected:
   /// \brief The intrinsics of the raw image.

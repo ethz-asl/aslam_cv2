@@ -33,7 +33,8 @@ PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
                              uint32_t image_width, uint32_t image_height,
                              aslam::Distortion::UniquePtr& distortion)
   : Camera(intrinsics, distortion) {
-  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
+  CHECK(intrinsicsValid(intrinsics));
+
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
@@ -41,7 +42,7 @@ PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
                              uint32_t image_height)
     : Camera(intrinsics) {
-  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
+  CHECK(intrinsicsValid(intrinsics));
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
@@ -259,6 +260,14 @@ void PinholeCamera::getBorderRays(Eigen::MatrixXd& rays) const {
   rays.col(6) = ray;
   backProject4(Eigen::Vector2d(imageWidth() * 0.5, imageHeight() - 1.0), &ray);
   rays.col(7) = ray;
+}
+
+bool PinholeCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
+  return (intrinsics.size() == parameterCount()) &&
+         (intrinsics[0] > 0.0)  && //fu
+         (intrinsics[1] > 0.0)  && //fv
+         (intrinsics[2] > 0.0)  && //cu
+         (intrinsics[3] > 0.0);    //cv
 }
 
 void PinholeCamera::printParameters(std::ostream& out, const std::string& text) const {

@@ -33,7 +33,8 @@ UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsi
                                                  uint32_t image_width, uint32_t image_height,
                                                  aslam::Distortion::UniquePtr& distortion)
     : Camera(intrinsics, distortion) {
-  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
+  CHECK(intrinsicsValid(intrinsics));
+
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
@@ -41,8 +42,8 @@ UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsi
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height)
     : Camera(intrinsics) {
+  CHECK(intrinsicsValid(intrinsics));
 
-  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
@@ -324,6 +325,15 @@ Eigen::Vector3d UnifiedProjectionCamera::createRandomVisiblePoint(double depth) 
 
   // Muck with the depth. This doesn't change the pointing direction.
   return point_3d * depth;
+}
+
+bool UnifiedProjectionCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
+  return (intrinsics.size() == parameterCount()) &&
+         (intrinsics[0] >= 0.0) && //xi
+         (intrinsics[1] > 0.0)  && //fu
+         (intrinsics[2] > 0.0)  && //fv
+         (intrinsics[3] > 0.0)  && //cu
+         (intrinsics[4] > 0.0);    //cv
 }
 
 void UnifiedProjectionCamera::printParameters(std::ostream& out, const std::string& text) const {

@@ -227,7 +227,7 @@ const Camera::ConstPtr VisualFrame::getCameraGeometry() const {
   return camera_geometry_;
 }
 
-void VisualFrame::setCameraGeometry(const Camera::Ptr& camera) {
+void VisualFrame::setCameraGeometry(const Camera::ConstPtr& camera) {
   camera_geometry_ = camera;
 }
 
@@ -235,7 +235,7 @@ const Camera::ConstPtr VisualFrame::getRawCameraGeometry() const {
   return raw_camera_geometry_;
 }
 
-void VisualFrame::setRawCameraGeometry(const Camera::Ptr& camera) {
+void VisualFrame::setRawCameraGeometry(const Camera::ConstPtr& camera) {
   raw_camera_geometry_ = camera;
 }
 

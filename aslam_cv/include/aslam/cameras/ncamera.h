@@ -100,10 +100,10 @@ class NCamera
   size_t getCameraIndex(const CameraId& id) const;
   
   /// \brief get the camera id.
-  const aslam::NCameraId& getId() const { return id_; }
+  inline const aslam::NCameraId& getId() const { return id_; }
   
   /// \brief set the camera id.
-  void setId(const aslam::NCameraId& id) { id_ = id; }
+  inline void setId(const aslam::NCameraId& id) { id_ = id; }
 
   /// \brief equality
   bool operator==(const NCamera& other) const;
@@ -112,7 +112,7 @@ class NCamera
   inline const std::string& getLabel() const { return label_; }
 
   /// \brief set a label for the camera
-  void setLabel(const std::string& label) {label_ = label;}
+  inline void setLabel(const std::string& label) {label_ = label;}
 
  private:
   /// \brief internal consistency checks and initialization

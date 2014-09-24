@@ -207,6 +207,9 @@ class UnifiedProjectionCamera : public Camera {
       return kNumOfParams;
   }
 
+  /// Function to check wheter the given intrinic parameters are valid for this model.
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
+
   /// \brief The number of intrinsic parameters.
   virtual int getParameterSize() const {
     return kNumOfParams;
