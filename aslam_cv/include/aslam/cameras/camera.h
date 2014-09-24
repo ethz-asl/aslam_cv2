@@ -34,8 +34,7 @@ namespace aslam {
 template <typename CameraType, typename DistortionType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
                                       uint32_t image_width, uint32_t image_height,
-                                      const Eigen::VectorXd& distortion_parameters)
-{
+                                      const Eigen::VectorXd& distortion_parameters) {
   typename DistortionType::UniquePtr distortion(new DistortionType(distortion_parameters));
   typename CameraType::Ptr camera(new CameraType(intrinsics, image_width,
                                                  image_height, distortion));
@@ -50,10 +49,9 @@ typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
 /// \param[in] image_width The width of the image associated with this camera.
 /// \param[in] image_height The height of the image associated with this camera.
 /// \returns A new camera based on the template types.
-template <typename CameraType>
-typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
-                                      uint32_t image_width, uint32_t image_height)
-{
+template<typename CameraType>
+typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
+                                      uint32_t image_height) {
   typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height));
   return camera;
 }
