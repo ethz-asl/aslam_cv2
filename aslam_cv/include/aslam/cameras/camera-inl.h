@@ -11,4 +11,12 @@ typename DerivedCamera::Ptr Camera::construct(
   return camera;
 }
 
+template<typename Scalar>
+bool Camera::isKeypointVisible(const Eigen::Matrix<Scalar, 2, 1>& keypoint) const {
+  return keypoint[0] >= static_cast<Scalar>(0.0)
+      && keypoint[1] >= static_cast<Scalar>(0.0)
+      && keypoint[0] < static_cast<Scalar>(imageWidth())
+      && keypoint[1] < static_cast<Scalar>(imageHeight());
+}
+
 }  // namespace aslam

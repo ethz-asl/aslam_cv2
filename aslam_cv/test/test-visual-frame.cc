@@ -44,11 +44,11 @@ EXPECT_DEATH(frame.getRawImageMutable(), "^");
 
 TEST(Frame, SetGetDescriptors) {
 aslam::VisualFrame frame;
-aslam::VisualFrame::DescriptorsType data;
+aslam::VisualFrame::DescriptorsT data;
 data.resize(48, 10);
 data.setRandom();
 frame.setBriskDescriptors(data);
-const aslam::VisualFrame::DescriptorsType& data_2 =
+const aslam::VisualFrame::DescriptorsT& data_2 =
     frame.getBriskDescriptors();
 EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getBriskDescriptorsMutable());
