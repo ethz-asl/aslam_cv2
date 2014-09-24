@@ -2,6 +2,7 @@
 
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/undistort-helpers.h>
+#include <aslam/pipeline/undistorter-mapped.h>
 
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>

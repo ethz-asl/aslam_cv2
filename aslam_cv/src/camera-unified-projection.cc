@@ -3,6 +3,7 @@
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/common/eigen-helpers.h>
 #include <aslam/common/undistort-helpers.h>
+#include <aslam/pipeline/undistorter-mapped.h>
 
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
