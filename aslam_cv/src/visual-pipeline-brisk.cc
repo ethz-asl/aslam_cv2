@@ -11,26 +11,22 @@ BriskVisualPipeline::BriskVisualPipeline() {
   // Just for serialization. Not meant to be used.
 }
 
-BriskVisualPipeline::BriskVisualPipeline(
-    const std::shared_ptr<Camera>& camera, bool copy_images, size_t octaves,
-    double uniformity_radius, double absolute_threshold,
-    size_t max_number_of_keypoints, bool rotation_invariant,
-    bool scale_invariant) : VisualPipeline(camera, camera, copy_images) {
-  CHECK_NOTNULL(camera.get());
-  initializeBrisk(octaves, uniformity_radius, absolute_threshold,
-                  max_number_of_keypoints, rotation_invariant,
-                  scale_invariant);
+BriskVisualPipeline::BriskVisualPipeline(Camera::Ptr camera, bool copy_images, size_t octaves,
+                                         double uniformity_radius, double absolute_threshold,
+                                         size_t max_number_of_keypoints, bool rotation_invariant,
+                                         bool scale_invariant)
+    : VisualPipeline(camera, camera, copy_images) {
+  initializeBrisk(octaves, uniformity_radius, absolute_threshold, max_number_of_keypoints,
+                  rotation_invariant, scale_invariant);
 }
 
-BriskVisualPipeline::BriskVisualPipeline(
-    const Undistorter::Ptr& preprocessing, bool copy_images, size_t octaves,
-    double uniformity_radius, double absolute_threshold,
-    size_t max_number_of_keypoints, bool rotation_invariant,
-    bool scale_invariant) :
-        VisualPipeline(preprocessing, copy_images) {
-  initializeBrisk(octaves, uniformity_radius, absolute_threshold,
-                  max_number_of_keypoints, rotation_invariant,
-                  scale_invariant);
+BriskVisualPipeline::BriskVisualPipeline(std::unique_ptr<Undistorter>& preprocessing,
+                                         bool copy_images, size_t octaves, double uniformity_radius,
+                                         double absolute_threshold, size_t max_number_of_keypoints,
+                                         bool rotation_invariant, bool scale_invariant)
+    : VisualPipeline(preprocessing, copy_images) {
+  initializeBrisk(octaves, uniformity_radius, absolute_threshold, max_number_of_keypoints,
+                  rotation_invariant, scale_invariant);
 }
 
 BriskVisualPipeline::~BriskVisualPipeline() { }

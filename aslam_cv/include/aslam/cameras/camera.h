@@ -17,6 +17,9 @@
 
 namespace aslam {
 
+// Forward declarations
+class MappedUndistorter;
+
 /// \brief A factory function to create a derived class camera
 ///
 /// This function takes a vectors of intrinsics and distortion parameters
@@ -29,8 +32,7 @@ namespace aslam {
 template <typename CameraType, typename DistortionType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
                                       uint32_t image_width, uint32_t image_height,
-                                      const Eigen::VectorXd& distortion_parameters)
-{
+                                      const Eigen::VectorXd& distortion_parameters) {
   typename DistortionType::Ptr distortion(new DistortionType(distortion_parameters));
   typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height, distortion));
   return camera;
@@ -46,8 +48,7 @@ typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
 /// \returns A new camera based on the template types.
 template <typename CameraType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
-                                      uint32_t image_width, uint32_t image_height)
-{
+                                      uint32_t image_width, uint32_t image_height) {
   typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height));
   return camera;
 }
@@ -351,8 +352,32 @@ class Camera {
   /// @}
 
   //////////////////////////////////////////////////////////////
+  /// \name Methods to create an undistorter for this camera.
+  /// @{
+
+ public:
+  /// \brief Factory method to create a mapped undistorter for this camera geometry.
+  ///        NOTE: The undistorter stores a copy of this camera and changes to this geometry
+  ///              are not connected with the undistorter!
+  /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
+  ///                  will be valid) and 1 (when all the source image pixels will be retained in the
+  ///                  undistorted image)
+  /// @param[in] scale Output image size scaling parameter wrt. to input image size.
+  /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
+  /// @param[in] undistort_to_pinhole Undistort image to a pinhole projection
+  ///                                 (remove distortion and projection effects)
+  /// @return Pointer to the created mapped undistorter.
+  virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
+      int interpolation_type, bool undistort_to_pinhole) const = 0;
+
+  /// @}
+
+  //////////////////////////////////////////////////////////////
   /// \name Methods to support rolling shutter cameras
   /// @{
+
+  /// \brief Returns the camera matrix for the pinhole projection.
+  virtual Eigen::Matrix3d getCameraMatrix() const = 0;
 
   /// \brief  Return the temporal offset of a rolling shutter camera.
   ///         Global shutter cameras return zero.
@@ -426,7 +451,7 @@ class Camera {
   /// \brief Returns a pointer to the underlying distortion object.
   /// @return ptr to distortion model; nullptr if none is set or not available
   ///         for the camera type
-  virtual aslam::Distortion::Ptr distortion() { return nullptr; };
+  virtual aslam::Distortion::Ptr distortion() = 0;
 
   /// \brief Returns a const pointer to the underlying distortion object.
   /// @return const_ptr to distortion model; nullptr if none is set or not available

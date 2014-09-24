@@ -1,33 +1,29 @@
 #include <aslam/pipeline/undistorter-mapped.h>
-#include <aslam/cameras/camera.h>
 #include <aslam/frames/visual-frame.h>
 #include <glog/logging.h>
 #include <opencv2/imgproc/imgproc.hpp> // cv::remap
 
 namespace aslam {
 
-MappedUndistorter::MappedUndistorter(){ }
+MappedUndistorter::MappedUndistorter()
+    : interpolation_method_(cv::INTER_LINEAR) {}
 
-MappedUndistorter::MappedUndistorter(const std::shared_ptr<Camera>& input_camera,
-                                     const std::shared_ptr<Camera>& output_camera,
-                                     const cv::Mat& map_x, const cv::Mat& map_y,
+MappedUndistorter::MappedUndistorter(Camera::Ptr input_camera, Camera::Ptr output_camera,
+                                     const cv::Mat& map_u, const cv::Mat& map_v,
                                      int interpolation_method)
-: Undistorter(input_camera, output_camera), map_x_(map_x), map_y_(map_y),
+: Undistorter(input_camera, output_camera), map_u_(map_u), map_v_(map_v),
   interpolation_method_(interpolation_method) {
-  CHECK_EQ(static_cast<size_t>(map_x_.rows), output_camera->imageHeight());
-  CHECK_EQ(static_cast<size_t>(map_x_.cols), output_camera->imageWidth());
-  CHECK_EQ(static_cast<size_t>(map_y_.rows), output_camera->imageHeight());
-  CHECK_EQ(static_cast<size_t>(map_y_.cols), output_camera->imageWidth());
+  CHECK_EQ(static_cast<size_t>(map_u_.rows), output_camera->imageHeight());
+  CHECK_EQ(static_cast<size_t>(map_u_.cols), output_camera->imageWidth());
+  CHECK_EQ(static_cast<size_t>(map_v_.rows), output_camera->imageHeight());
+  CHECK_EQ(static_cast<size_t>(map_v_.cols), output_camera->imageWidth());
 }
 
-MappedUndistorter::~MappedUndistorter() { }
-
-void MappedUndistorter::undistortImage(const cv::Mat& input_image,
-                                       cv::Mat* output_image) const {
+void MappedUndistorter::processImage(const cv::Mat& input_image, cv::Mat* output_image) const {
   CHECK_EQ(input_camera_->imageWidth(), static_cast<size_t>(input_image.cols));
   CHECK_EQ(input_camera_->imageHeight(), static_cast<size_t>(input_image.rows));
   CHECK_NOTNULL(output_image);
-  cv::remap(input_image, *output_image, map_x_, map_y_, interpolation_method_);
+  cv::remap(input_image, *output_image, map_u_, map_v_, interpolation_method_);
 }
 
 }  // namespace aslam
