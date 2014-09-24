@@ -82,14 +82,14 @@ public:
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  Camera::Ptr getInputCameraShared() const { return input_camera_; }
+  Camera::ConstPtr getInputCameraShared() const { return input_camera_; }
 
   /// \brief Get a shared pointer to the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  Camera::Ptr getOutputCameraShared() const { return output_camera_; }
+  Camera::ConstPtr getOutputCameraShared() const { return output_camera_; }
 
 protected:
   /// \brief Process the frame and fill the results into the frame variable.
@@ -104,9 +104,9 @@ protected:
   /// \brief Preprocessing for the image. Can be null.
   std::shared_ptr<Undistorter> preprocessing_;
   /// \brief The intrinsics of the raw image.
-  std::shared_ptr<Camera> input_camera_;
+  std::shared_ptr<const Camera> input_camera_;
   /// \brief The intrinsics of the raw image.
-  std::shared_ptr<Camera> output_camera_;
+  std::shared_ptr<const Camera> output_camera_;
   /// \brief Should we copy the image before storing it in the frame?
   bool copy_images_;
 };

@@ -260,7 +260,8 @@ class Camera {
   ///        keypoints in image coordinates. Uses the projection (& distortion) models.
   ///
   /// This vanilla version just repeatedly calls backProject3. Camera implementers
-  /// are encouraged to override for efficiency. (<--TODO(schneith))
+  /// are encouraged to override for efficiency.
+  /// TODO(schneith): implement efficient backProject3Vectorized
   /// @param[in]  keypoints     Keypoints in image coordinates.
   /// @param[out] out_point_3ds Bearing vectors in euclidean coordinates (with z=1 -> non-normalized).
   /// @param[out] out_success   Were the projections successful?
@@ -428,12 +429,12 @@ class Camera {
 
   /// \brief Returns a pointer to the underlying distortion object.
   /// @return Pointer for the distortion model;
-  ///         NOTE: nullptr if no model is set or not available for the camera type
+  ///         NOTE: Returns nullptr if no model is set or not available for the camera type
   virtual aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
 
   /// \brief Returns a const pointer to the underlying distortion object.
   /// @return ConstPointer for the distortion model;
-  ///         NOTE: nullptr if no model is set or not available for the camera type
+  ///         NOTE: Returns nullptr if no model is set or not available for the camera type
   virtual const aslam::Distortion* getDistortion() const { return distortion_.get(); };
 
   /// @}
@@ -443,10 +444,10 @@ class Camera {
   /// @{
 
   /// Get the intrinsic parameters (const).
-  const Eigen::VectorXd& getParameters() const { return intrinsics_; };
+  inline const Eigen::VectorXd& getParameters() const { return intrinsics_; };
 
   /// Get the intrinsic parameters.
-  double* getParametersMutable() { return &intrinsics_.coeffRef(0, 0); };
+  inline double* getParametersMutable() { return &intrinsics_.coeffRef(0, 0); };
 
   /// Set the intrinsic parameters. Parameters are documented in the specialized
   /// camera classes.
@@ -454,6 +455,9 @@ class Camera {
     CHECK_EQ(getParameterSize(), static_cast<size_t>(params.size()));
     intrinsics_ = params;
   }
+
+  /// Function to check wheter the given intrinic parameters are valid for this model.
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) = 0;
 
   /// @}
 
