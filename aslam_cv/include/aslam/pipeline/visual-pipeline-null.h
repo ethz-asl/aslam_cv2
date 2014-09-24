@@ -15,7 +15,7 @@ public:
   /// \param[in] camera The camera that produces the images.
   /// \param[in] copyImages If true, images passed in are cloned before storing
   ///                       in the frame.
-  NullVisualPipeline(const std::shared_ptr<Camera>& camera, bool copyImages);
+  NullVisualPipeline(Camera::Ptr camera, bool copyImages);
 
   virtual ~NullVisualPipeline();
 

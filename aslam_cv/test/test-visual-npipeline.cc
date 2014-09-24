@@ -48,13 +48,13 @@ class VisualNPipelineTest : public ::testing::Test {
       std::shared_ptr<Camera> camera = Camera::construct<CameraType, DistortionType>(
           intrinsics, res_u, res_v, distortion_param);
       cameras.push_back(camera);
-      pipelines.push_back( std::shared_ptr<VisualPipeline>(new NullVisualPipeline(camera, false)));
+      pipelines.push_back(std::shared_ptr<VisualPipeline>(new NullVisualPipeline(camera, false)));
     }
-    camera_rig_.reset( new NCamera(id, T_C_B, cameras, "Test Camera System"));
+    camera_rig_.reset(new NCamera(id, T_C_B, cameras, "Test Camera System"));
 
-    pipeline_.reset( new VisualNPipeline(num_threads, pipelines,
-                                         camera_rig_, camera_rig_,
-                                         timestamp_tolerance_ns));
+    pipeline_.reset(new VisualNPipeline(num_threads, pipelines,
+                                        camera_rig_, camera_rig_,
+                                        timestamp_tolerance_ns));
   }
 
   cv::Mat getImageFromCamera(unsigned camera_index) {

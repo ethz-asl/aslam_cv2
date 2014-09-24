@@ -5,8 +5,7 @@
 
 namespace aslam {
 
-NullVisualPipeline::NullVisualPipeline(const std::shared_ptr<Camera>& camera,
-                                       bool copy_image) :
+NullVisualPipeline::NullVisualPipeline(Camera::Ptr camera, bool copy_image) :
    VisualPipeline(camera, camera, copy_image) { }
 
 NullVisualPipeline::~NullVisualPipeline() { }

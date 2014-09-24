@@ -3,14 +3,14 @@
 
 #include <memory>
 
+#include <aslam/cameras/camera.h>
 #include <aslam/common/macros.h>
+#include <aslam/pipeline/undistorter.h>
 
 namespace cv { class Mat; }
 
 namespace aslam {
 
-class Camera;
-class Undistorter;
 class VisualFrame;
 
 /// \class VisualPipeline
@@ -34,23 +34,20 @@ public:
   ASLAM_POINTER_TYPEDEFS(VisualPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualPipeline);
 
-  VisualPipeline(){}
+  VisualPipeline() : copy_images_(false) {}
 
   /// \brief Construct a visual pipeline from the input and output cameras
   ///
   /// \param[in] input_camera  The intrinsics associated with the raw image.
   /// \param[in] output_camera The intrinsics associated with the keypoints.
   /// \param[in] copy_images    Should we copy the image before storing it in the frame?
-  VisualPipeline(const std::shared_ptr<Camera>& input_camera,
-                 const std::shared_ptr<Camera>& output_camera,
-                 bool copy_images);
+  VisualPipeline(Camera::Ptr input_camera, Camera::Ptr output_camera, bool copy_images);
 
   /// \brief Construct a visual pipeline from the input and output cameras
   ///
   /// \param[in] preprocessing Preprocessing to apply to the image before sending to the pipeline.
   /// \param[in] copy_images    Should we copy the image before storing it in the frame?
-  VisualPipeline(const std::shared_ptr<Undistorter>& preprocessing, bool copy_images);
-
+  VisualPipeline(std::unique_ptr<Undistorter>& preprocessing, bool copy_images);
   virtual ~VisualPipeline();
 
   /// \brief Add an image to the visual processor.
@@ -72,14 +69,14 @@ public:
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getInputCamera() const { return input_camera_; }
+  virtual std::shared_ptr<const Camera> getInputCamera() const { return input_camera_; }
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getOutputCamera() const { return output_camera_; }
+  virtual std::shared_ptr<const Camera> getOutputCamera() const { return output_camera_; }
 
 protected:
   /// \brief Process the frame and fill the results into the frame variable.
@@ -92,7 +89,7 @@ protected:
                                 VisualFrame* frame) const = 0;
 
   /// \brief Preprocessing for the image. Can be null.
-  std::shared_ptr<Undistorter> preprocessing_;
+  std::unique_ptr<Undistorter> preprocessing_;
   /// \brief The intrinsics of the raw image.
   std::shared_ptr<Camera> input_camera_;
   /// \brief The intrinsics of the raw image.

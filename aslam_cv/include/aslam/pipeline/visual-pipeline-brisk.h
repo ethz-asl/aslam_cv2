@@ -24,7 +24,7 @@ public:
 
   /// \brief Initialize the brisk pipeline with a camera.
   ///
-  /// \param[in] camera             The intrinsic calibration of this camera.
+  /// \param[in] camera             The intrinsic calibration of this camera. (Camera gets cloned.)
   /// \param[in] copy_images        Should we deep copy the images passed in?
   /// \param[in] octaves            Number of octaves for BRISK scale computation.
   /// \param[in] uniformity_radius  Gets multiplied on the keypoint scale and determines
@@ -34,10 +34,10 @@ public:
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
   /// \param[in] rotation_invariant Should Brisk estimate the keypoint orientation?
   /// \param[in] scale_invariant    Should Brisk estimate the keypoint scale?
-  BriskVisualPipeline(const std::shared_ptr<Camera>& camera, bool copy_images,
-                      size_t octaves, double uniformity_radius,
-                      double absolute_threshold, size_t max_number_of_keypoints,
-                      bool rotation_invariant, bool scale_invariant);
+  BriskVisualPipeline(Camera::Ptr camera, bool copy_images, size_t octaves,
+                      double uniformity_radius, double absolute_threshold,
+                      size_t max_number_of_keypoints, bool rotation_invariant,
+                      bool scale_invariant);
 
   /// \brief Initialize the brisk pipeline with a preprocessing pipeline.
   ///
@@ -52,10 +52,10 @@ public:
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
   /// \param[in] rotation_invariant Should brisk estimate the keypoint orientation?
   /// \param[in] scale_invariant    Should Brisk estimate the keypoint scale?
-  BriskVisualPipeline(const std::shared_ptr<Undistorter>& preprocessing,
-                      bool copy_images, size_t octaves, double uniformity_radius,
-                      double absolute_threshold, size_t max_number_of_keypoints,
-                      bool rotation_invariant, bool scale_invariant);
+  BriskVisualPipeline(std::unique_ptr<Undistorter>& preprocessing, bool copy_images, size_t octaves,
+                      double uniformity_radius, double absolute_threshold,
+                      size_t max_number_of_keypoints, bool rotation_invariant,
+                      bool scale_invariant);
 
   virtual ~BriskVisualPipeline();
 

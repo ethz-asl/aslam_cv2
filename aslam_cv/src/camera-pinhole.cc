@@ -1,4 +1,8 @@
+#include <memory>
+
 #include <aslam/cameras/camera-pinhole.h>
+#include <aslam/common/undistort-helpers.h>
+
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
 
@@ -244,6 +248,39 @@ void PinholeCamera::getBorderRays(Eigen::MatrixXd& rays) const {
   rays.col(6) = ray;
   backProject4(Eigen::Vector2d(imageWidth() * 0.5, imageHeight() - 1.0), &ray);
   rays.col(7) = ray;
+}
+
+std::unique_ptr<MappedUndistorter> PinholeCamera::createMappedUndistorter(
+    float alpha, float scale, int interpolation_type, bool undistort_to_pinhole) const {
+
+  CHECK_GE(alpha, 0.0); CHECK_LE(alpha, 1.0);
+  CHECK_GT(scale, 0.0);
+
+  // Create a copy of the input camera (=this)
+  Camera::Ptr input_camera(this->clone());
+  CHECK(input_camera);
+
+  // Create the scaled output camera with removed distortion.
+  Eigen::Matrix3d output_camera_matrix = aslam::common::getOptimalNewCameraMatrix(
+      *input_camera, alpha, scale, undistort_to_pinhole);
+
+  Eigen::Vector4d intrinsics;
+  intrinsics <<  output_camera_matrix(0, 0), output_camera_matrix(1, 1),
+                 output_camera_matrix(0, 2), output_camera_matrix(1, 2);
+
+  const int output_width = static_cast<int>(scale * imageWidth());
+  const int output_height = static_cast<int>(scale * imageHeight());
+  aslam::Camera::Ptr output_camera = aslam::createCamera<aslam::PinholeCamera>(intrinsics,
+                                                                               output_width,
+                                                                               output_height);
+  CHECK(output_camera);
+
+  cv::Mat map_u, map_v;
+  aslam::common::buildUndistortMap(*input_camera, *output_camera, undistort_to_pinhole,
+                                   CV_16SC2, map_u, map_v);
+
+  return std::unique_ptr<MappedUndistorter>(
+      new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
 }
 
 void PinholeCamera::printParameters(std::ostream& out, const std::string& text) const {

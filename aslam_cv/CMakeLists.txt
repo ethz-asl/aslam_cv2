@@ -22,6 +22,7 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/visual-pipeline-brisk.cc
                                src/undistorter.cc
                                src/undistorter-mapped.cc
+                               src/undistort-helpers.cc
 )
 
 add_doxygen(NOT_AUTOMATIC)
@@ -41,6 +42,7 @@ catkin_add_gtest(${PROJECT_NAME}_tests
     test/test-thread-pool.cc
     test/test-visual-npipeline.cc
     test/entry-point.cc
+    test/test-undistorters.cc
     )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 
