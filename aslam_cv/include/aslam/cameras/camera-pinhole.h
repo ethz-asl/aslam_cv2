@@ -40,10 +40,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
 
  public:
   /// Copy constructor for clone operation.
-  PinholeCamera(const PinholeCamera& other) : Base(other), distortion_(nullptr) {
-    if (other.distortion_) // Clone distortion if model is set.
-      distortion_.reset(other.distortion_->clone());
-  };
+  PinholeCamera(const PinholeCamera& other) = default;
   void operator=(const PinholeCamera&) = delete;
 
  public:
@@ -53,7 +50,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// @param[in] image_height Image height in pixels.
   /// @param[in] distortion   Pointer to the distortion model.
   PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
-                aslam::Distortion::Ptr distortion);
+                aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
   /// @param[in] intrinsics   Vector containing the intrinsic parameters (fu,fv,cu,cv).
@@ -72,7 +69,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   PinholeCamera(double focallength_cols, double focallength_rows,
                 double imagecenter_cols, double imagecenter_rows,
                 uint32_t image_width, uint32_t image_height,
-                aslam::Distortion::Ptr distortion);
+                aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
   /// @param[in] focallength_cols Focal length in pixels; cols (width-direction).
@@ -178,29 +175,13 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const;
 
   /// \brief Get a set of border rays
-  void getBorderRays(Eigen::MatrixXd & rays) const;
-
-  /// @}
-
-  //////////////////////////////////////////////////////////////
-  /// \name Methods to set/get distortion parameters.
-  /// @{
-
-  /// \brief Returns a pointer to the underlying distortion object.
-  /// @return ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual aslam::Distortion::Ptr distortion() { return distortion_; };
-
-  /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return const_ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual const aslam::Distortion::Ptr distortion() const { return distortion_; };
+  void getBorderRays(Eigen::MatrixXd& rays) const;
 
   /// \brief Create a test camera object for unit testing.
   template<typename DistortionType>
-  static PinholeCamera::Ptr createTestCamera()   {
-    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480,
-                                                DistortionType::createTestDistortion()));
+  static PinholeCamera::Ptr createTestCamera() {
+    aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
+    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480, distortion));
   }
 
   /// \brief Create a test camera object for unit testing. (without distortion)
@@ -242,6 +223,9 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
       return kNumOfParams;
   }
 
+  /// Function to check wheter the given intrinic parameters are valid for this model.
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
+
   /// \brief Print the internal parameters of the camera in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras
@@ -250,9 +234,6 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// @}
 
  private:
-  /// \brief The distortion of this camera.
-  aslam::Distortion::Ptr distortion_;
-
   /// \brief Minimal depth for a valid projection.
   static constexpr double kMinimumDepth = 1e-10;
 };

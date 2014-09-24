@@ -23,44 +23,48 @@ namespace aslam {
 //}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera()
-    : Base(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)),
-      distortion_(nullptr) {
+    : Base(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)) {
   setImageWidth(0);
   setImageHeight(0);
 }
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height,
-                                                 aslam::Distortion::Ptr distortion)
-    : Base(intrinsics),
-      distortion_(distortion) {
-  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
+                                                 aslam::Distortion::UniquePtr& distortion)
+    : Base(intrinsics, distortion) {
+  CHECK(intrinsicsValid(intrinsics));
+
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height)
-    : UnifiedProjectionCamera(intrinsics, image_width, image_height, nullptr) {
+    : Base(intrinsics) {
+  CHECK(intrinsicsValid(intrinsics));
+
+  setImageWidth(image_width);
+  setImageHeight(image_height);
 }
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(double xi, double focallength_cols,
                                                  double focallength_rows, double imagecenter_cols,
                                                  double imagecenter_rows, uint32_t image_width,
                                                  uint32_t image_height,
-                                                 aslam::Distortion::Ptr distortion)
+                                                 aslam::Distortion::UniquePtr& distortion)
     : UnifiedProjectionCamera(
         common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
                               imagecenter_rows),
-        image_width, image_height, distortion) {
-}
+        image_width, image_height, distortion) {}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(double xi, double focallength_cols,
                                                  double focallength_rows, double imagecenter_cols,
                                                  double imagecenter_rows, uint32_t image_width,
                                                  uint32_t image_height)
-    : UnifiedProjectionCamera(xi, focallength_cols, focallength_rows, imagecenter_cols,
-                              imagecenter_rows, image_width, image_height, nullptr) {}
+    : UnifiedProjectionCamera(
+        common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
+                              imagecenter_rows),
+        image_width, image_height) {}
 
 bool UnifiedProjectionCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.
@@ -117,30 +121,25 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
   CHECK_NOTNULL(out_keypoint);
 
   // Determine the parameter source. (if nullptr, use internal)
-  //TODO(schneith): use the new interface to avoid copying...
-  Eigen::VectorXd intrinsics;
+  const Eigen::VectorXd* intrinsics;
   if (!intrinsics_external)
-    intrinsics = getParameters();
+    intrinsics = &getParameters();
   else
-    intrinsics = *intrinsics_external;
+    intrinsics = intrinsics_external;
+  CHECK_EQ(intrinsics->size(), kNumOfParams) << "intrinsics: invalid size!";
 
-  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
-
-  //TODO(schneith): use the new interface to avoid copying...
-  Eigen::VectorXd* distortion_coefficients;
-  Eigen::VectorXd dist_coeff_internal;
+  const Eigen::VectorXd* distortion_coefficients;
   if(!distortion_coefficients_external && distortion_) {
-    dist_coeff_internal = distortion()->getParameters();
-    distortion_coefficients = &dist_coeff_internal;
+    distortion_coefficients = &getDistortion()->getParameters();
   } else {
-    distortion_coefficients = const_cast<Eigen::VectorXd*>(distortion_coefficients_external);
+    distortion_coefficients = distortion_coefficients_external;
   }
 
-  const double& xi = intrinsics[0];
-  const double& fu = intrinsics[1];
-  const double& fv = intrinsics[2];
-  const double& cu = intrinsics[3];
-  const double& cv = intrinsics[4];
+  const double& xi = (*intrinsics)[0];
+  const double& fu = (*intrinsics)[1];
+  const double& fv = (*intrinsics)[2];
+  const double& cu = (*intrinsics)[3];
+  const double& cv = (*intrinsics)[4];
 
   // Project the point.
   const double& x = point_3d[0];
@@ -325,6 +324,15 @@ Eigen::Vector3d UnifiedProjectionCamera::createRandomVisiblePoint(double depth) 
 
   // Muck with the depth. This doesn't change the pointing direction.
   return point_3d * depth;
+}
+
+bool UnifiedProjectionCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
+  return (intrinsics.size() == parameterCount()) &&
+         (intrinsics[0] >= 0.0) && //xi
+         (intrinsics[1] > 0.0)  && //fu
+         (intrinsics[2] > 0.0)  && //fv
+         (intrinsics[3] > 0.0)  && //cu
+         (intrinsics[4] > 0.0);    //cv
 }
 
 void UnifiedProjectionCamera::printParameters(std::ostream& out, const std::string& text) const {

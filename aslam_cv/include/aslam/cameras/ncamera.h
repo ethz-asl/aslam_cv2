@@ -1,14 +1,14 @@
-#ifndef ASLAM_CAMERA_RIG_H_
-#define ASLAM_CAMERA_RIG_H_
+#ifndef ASLAM_NCAMERA_H_
+#define ASLAM_NCAMERA_H_
 
 #include <cstdint>
-#include <vector>
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
+#include <aslam/cameras/camera.h>
 #include <aslam/common/macros.h>
 #include <aslam/common/types.h>
-#include <aslam/cameras/camera.h>
 #include <sm/aligned_allocation.h>
 
 namespace sm {
@@ -42,19 +42,19 @@ class NCamera
   /// The two lists must be parallel arrays (same size). The transformation
   /// at T_C_B[i] corresponds to the camera at cameras[i].
   ///
-  /// @param unique id for this camera rig
+  /// @param id unique id for this camera rig
   /// @param T_C_B a list of transformations that take poinst from B to Ci
   /// @param cameras a list cameras
   /// @param label a human-readable name for this camera rig
-  NCamera(const NCamerasId& id,
-            const TransformationVector& T_C_B, 
-            const std::vector<Camera::Ptr>& cameras,
-            const std::string& label);
+  NCamera(const NCameraId& id,
+          const TransformationVector& T_C_B,
+          const std::vector<Camera::Ptr>& cameras,
+          const std::string& label);
 
   /// \brief initialize from a property tree
   NCamera(const sm::PropertyTree& propertyTree);
   
-  virtual ~NCamera();
+  virtual ~NCamera() {};
 
   /// \brief get the number of cameras
   size_t getNumCameras() const;
@@ -63,7 +63,7 @@ class NCamera
   const Transformation& get_T_C_B(size_t cameraIndex) const;
 
   /// \brief get the pose of body frame with respect to the camera i
-  Transformation& get_T_C_B_mutable(size_t cameraIndex);
+  Transformation& get_T_C_B_Mutable(size_t cameraIndex);
 
   /// \brief set the pose of body frame with respect to the camera i
   void set_T_C_B(size_t cameraIndex, const Transformation& T_Ci_B);
@@ -75,7 +75,10 @@ class NCamera
   const Camera& getCamera(size_t cameraIndex) const;
 
   /// \brief get the geometry object for camera i
-  Camera::Ptr getCameraMutable(size_t cameraIndex);
+  Camera& getCameraMutable(size_t cameraIndex);
+
+  /// \brief get the geometry object for camera i
+  Camera::Ptr getCameraShared(size_t cameraIndex);
 
   /// \brief get the geometry object for camera i
   void setCamera(size_t cameraIndex, Camera::Ptr camera);
@@ -97,27 +100,26 @@ class NCamera
   size_t getCameraIndex(const CameraId& id) const;
   
   /// \brief get the camera id.
-  inline const aslam::NCamerasId& getId() const { return id_; }
+  inline const aslam::NCameraId& getId() const { return id_; }
   
   /// \brief set the camera id.
-  inline void setId(const aslam::NCamerasId& id) { id_ = id; }
+  inline void setId(const aslam::NCameraId& id) { id_ = id; }
 
   /// \brief equality
   bool operator==(const NCamera& other) const;
   
   /// \brief get a label for the camera
-  inline const std::string& getLabel() const {return label_;}
+  inline const std::string& getLabel() const { return label_; }
 
   /// \brief set a label for the camera
   inline void setLabel(const std::string& label) {label_ = label;}
 
  private:
-
   /// \brief internal consistency checks and initialization
   void initInternal();
 
   /// \brief A unique id for this camera system
-  NCamerasId id_;
+  NCameraId id_;
 
   /// \brief The mounting transformations
   TransformationVector T_C_B_;
@@ -134,4 +136,4 @@ class NCamera
 
 } // namespace aslam
 
-#endif /* ASLAM_CAMERA_RIG_H_ */
+#endif /* ASLAM_NCAMERA_H_ */

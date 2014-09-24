@@ -40,7 +40,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
  public:
   /// Copy constructor for clone operation.
-  UnifiedProjectionCamera(const UnifiedProjectionCamera& other) : Base(other), distortion_(nullptr) {
+  UnifiedProjectionCamera(const UnifiedProjectionCamera& other) : Base(other) {
     if (other.distortion_) // Clone distortion if model is set.
       distortion_.reset(other.distortion_->clone());
   };
@@ -53,7 +53,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   /// @param[in] image_height image height in pixels
   /// @param[in] distortion   pointer to the distortion model
   UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
-                          uint32_t image_height, aslam::Distortion::Ptr distortion);
+                          uint32_t image_height, aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a camera without distortion.
   /// @param[in] intrinsics   vector containing the intrinsic parameters (xi,fu,fv,cu.cv)
@@ -75,7 +75,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   UnifiedProjectionCamera(double xi, double focallength_cols, double focallength_rows,
                           double imagecenter_cols, double imagecenter_rows,
                           uint32_t image_width, uint32_t image_height,
-                          aslam::Distortion::Ptr distortion);
+                          aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a camera without distortion.
   /// @param[in] xi               mirror parameter
@@ -181,31 +181,16 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
   /// \brief Create a test camera object for unit testing.
   template<typename DistortionType>
-  static UnifiedProjectionCamera::Ptr createTestCamera()   {
+  static UnifiedProjectionCamera::Ptr createTestCamera() {
+    aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
     return UnifiedProjectionCamera::Ptr(new UnifiedProjectionCamera(0.9, 400, 400, 320, 240, 640, 480,
-                                          DistortionType::createTestDistortion()));
+                                                                    distortion));
   }
 
   /// \brief Create a test camera object for unit testing. (without distortion)
   static UnifiedProjectionCamera::Ptr createTestCamera() {
     return UnifiedProjectionCamera::Ptr(new UnifiedProjectionCamera(0.9, 400, 400, 320, 240, 640, 480));
   }
-
-  /// @}
-
-  //////////////////////////////////////////////////////////////
-  /// \name Methods to set/get distortion parameters.
-  /// @{
-
-  /// \brief Returns a pointer to the underlying distortion object.
-  /// @return ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual aslam::Distortion::Ptr distortion() { return distortion_; };
-
-  /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return const_ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual const aslam::Distortion::Ptr distortion() const { return distortion_; };
 
   /// @}
 
@@ -231,6 +216,9 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
       return kNumOfParams;
   }
 
+  /// Function to check wheter the given intrinic parameters are valid for this model.
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
+
   /// \brief The number of intrinsic parameters.
   virtual int getParameterSize() const {
     return kNumOfParams;
@@ -244,9 +232,6 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   /// @}
 
  private:
-  /// \brief The distortion of this camera.
-  aslam::Distortion::Ptr distortion_;
-
   /// \brief Minimal depth for a valid projection.
   static constexpr double kMinimumDepth = 1e-10;
 };
