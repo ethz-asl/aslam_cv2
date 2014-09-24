@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-
 #include <Eigen/Dense>
 #include <glog/logging.h>
 
@@ -35,7 +34,7 @@ template <typename CameraType, typename DistortionType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
                                       uint32_t image_width, uint32_t image_height,
                                       const Eigen::VectorXd& distortion_parameters) {
-  typename DistortionType::UniquePtr distortion(new DistortionType(distortion_parameters));
+  typename aslam::Distortion::UniquePtr distortion(new DistortionType(distortion_parameters));
   typename CameraType::Ptr camera(new CameraType(intrinsics, image_width,
                                                  image_height, distortion));
   return camera;
@@ -139,10 +138,9 @@ struct ProjectionResult {
 class Camera {
  public:
   ASLAM_POINTER_TYPEDEFS(Camera);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Camera);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -174,12 +172,31 @@ class Camera {
     return out;
   };
 
+  /// \brief Clones the camera instance and returns a pointer to the copy.
+  virtual aslam::Camera* clone() const = 0;
+
+ protected:
+  /// Copy constructor for clone operation.
+  Camera(const Camera& other) :
+  line_delay_nano_seconds_(other.line_delay_nano_seconds_),
+  label_(other.label_),
+  id_(other.id_),
+  image_width_(other.image_width_),
+  image_height_(other.image_height_),
+  intrinsics_(other.intrinsics_) {
+    // Clone distortion if model is set.
+    if (other.distortion_)
+      distortion_.reset(other.distortion_->clone());
+  };
+
+  void operator=(const Camera&) = delete;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Information about the camera
   /// @{
-
+ public:
   /// \brief Get the camera id.
   const aslam::CameraId& getId() const { return id_; }
 
@@ -404,7 +421,8 @@ class Camera {
   bool isProjectable4(const Eigen::Vector4d& point) const;
 
   /// \brief  Check if a given keypoint is inside the imaging box of the camera.
-  bool isKeypointVisible(const Eigen::Vector2d& keypoint) const;
+  template<typename Scalar>
+  bool isKeypointVisible(const Eigen::Matrix<Scalar, 2, 1>& keypoint) const;
 
   /// @}
 

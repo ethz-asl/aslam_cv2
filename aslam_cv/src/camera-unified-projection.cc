@@ -22,9 +22,8 @@ namespace aslam {
 //
 //}
 
-
 UnifiedProjectionCamera::UnifiedProjectionCamera()
-    : Camera(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)) {
+    : Base(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)) {
   setImageWidth(0);
   setImageHeight(0);
 }
@@ -32,7 +31,7 @@ UnifiedProjectionCamera::UnifiedProjectionCamera()
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height,
                                                  aslam::Distortion::UniquePtr& distortion)
-    : Camera(intrinsics, distortion) {
+    : Base(intrinsics, distortion) {
   CHECK(intrinsicsValid(intrinsics));
 
   setImageWidth(image_width);
@@ -41,7 +40,7 @@ UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsi
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height)
-    : Camera(intrinsics) {
+    : Base(intrinsics) {
   CHECK(intrinsicsValid(intrinsics));
 
   setImageWidth(image_width);

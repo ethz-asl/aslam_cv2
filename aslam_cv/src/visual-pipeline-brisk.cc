@@ -83,9 +83,9 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   CHECK_EQ(descriptors.type(), CV_8UC1);
   CHECK(descriptors.isContinuous());
   frame->setBriskDescriptors(
-      Eigen::Map<VisualFrame::DescriptorsType>(descriptors.data,
-                                               descriptors.rows,
-                                               descriptors.cols)
+      Eigen::Map<VisualFrame::DescriptorsT>(descriptors.data,
+                                            descriptors.rows,
+                                            descriptors.cols)
   );
   Eigen::Matrix2Xd ikeypoints(2, keypoints.size());
   Eigen::VectorXd  scales(keypoints.size());

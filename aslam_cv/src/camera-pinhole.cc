@@ -24,7 +24,7 @@ namespace aslam {
 //}
 
 PinholeCamera::PinholeCamera()
-  : Camera( Eigen::Vector4d::Zero() ) {
+    : Base(Eigen::Vector4d::Zero()) {
   setImageWidth(0);
   setImageHeight(0);
 }
@@ -32,7 +32,7 @@ PinholeCamera::PinholeCamera()
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
                              uint32_t image_width, uint32_t image_height,
                              aslam::Distortion::UniquePtr& distortion)
-  : Camera(intrinsics, distortion) {
+  : Base(intrinsics, distortion) {
   CHECK(intrinsicsValid(intrinsics));
 
   setImageWidth(image_width);
@@ -41,8 +41,9 @@ PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
 
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
                              uint32_t image_height)
-    : Camera(intrinsics) {
+    : Base(intrinsics) {
   CHECK(intrinsicsValid(intrinsics));
+
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
@@ -203,22 +204,6 @@ const ProjectionResult PinholeCamera::project3Functional(
   (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
 
   return evaluateProjectionResult(*out_keypoint, point_3d);
-}
-
-inline const ProjectionResult PinholeCamera::evaluateProjectionResult(
-    const Eigen::Vector2d& keypoint,
-    const Eigen::Vector3d& point_3d) const {
-
-  const bool visibility = isKeypointVisible(keypoint);
-
-  if (visibility && (point_3d[2] > kMinimumDepth))
-    return ProjectionResult(ProjectionResult::Status::KEYPOINT_VISIBLE);
-  else if (!visibility && (point_3d[2] > kMinimumDepth))
-    return ProjectionResult(ProjectionResult::Status::KEYPOINT_OUTSIDE_IMAGE_BOX);
-  else if (point_3d[2] < 0.0)
-    return ProjectionResult(ProjectionResult::Status::POINT_BEHIND_CAMERA);
-  else
-    return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
 }
 
 Eigen::Vector2d PinholeCamera::createRandomKeypoint() const {

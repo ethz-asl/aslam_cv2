@@ -3,19 +3,23 @@
 
 #include <Eigen/Core>
 #include <glog/logging.h>
-#include "distortion.h"
+
+#include <aslam/common/crtp-clone.h>
+#include <aslam/cameras/distortion.h>
+#include <aslam/common/macros.h>
 
 namespace aslam {
 
 /// \class FisheyeDistortion
 /// \brief An implementation of the fisheye distortion model for pinhole cameras.
-class FisheyeDistortion : public aslam::Distortion {
+class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion> {
  private:
   /** \brief Number of parameters used for this distortion model. */
   enum { kNumOfParams = 1 };
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
+  ASLAM_POINTER_TYPEDEFS(FisheyeDistortion);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -31,12 +35,17 @@ class FisheyeDistortion : public aslam::Distortion {
     return out;
   };
 
+ public:
+  /// Copy constructor for clone operation.
+  FisheyeDistortion(const FisheyeDistortion&) = default;
+  void operator=(const FisheyeDistortion&) = delete;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Distort methods: applies the distortion model to a point.
   /// @{
-
+ public:
   /// \brief Apply distortion to a point in the normalized image plane using provided distortion
   ///        coefficients. External distortion coefficients can be specified using this function.
   ///        (Ignores the internally stored parameters.
@@ -56,9 +65,8 @@ class FisheyeDistortion : public aslam::Distortion {
   /// @param[in]  point       The point in the normalized image plane. After the function, this
   ///                         point is distorted.
   /// @param[out] out_point   The distorted point.
-  template <typename ScalarType>
-  void distortUsingExternalCoefficients(const Eigen::Map<Eigen::Matrix<ScalarType,
-                                        Eigen::Dynamic,1>>& dist_coeffs,
+  template <typename ScalarType, typename MDistortion>
+  void distortUsingExternalCoefficients(const Eigen::MatrixBase<MDistortion>& dist_coeffs,
                                         const Eigen::Matrix<ScalarType, 2, 1>& point,
                                         Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 

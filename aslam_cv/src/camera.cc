@@ -24,7 +24,7 @@ Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& 
 
 /// Camera constructor without distortion
 Camera::Camera(const Eigen::VectorXd& intrinsics)
-    : intrinsics_(intrinsics) {}
+    : intrinsics_(intrinsics), distortion_(nullptr) {}
 
 void Camera::printParameters(std::ostream& out, const std::string& text) const {
   if(text.size() > 0) {
@@ -137,13 +137,6 @@ bool Camera::isProjectable4(const Eigen::Vector4d& ph) const {
   Eigen::Vector2d k;
   const ProjectionResult& ret = project4(ph, &k);
   return ret.isKeypointVisible();
-}
-
-bool Camera::isKeypointVisible(const Eigen::Vector2d& keypoint) const {
-  return keypoint[0] >= 0.0
-      && keypoint[1] >= 0.0
-      && keypoint[0] < static_cast<double>(imageWidth())
-      && keypoint[1] < static_cast<double>(imageHeight());
 }
 
 void Camera::project3Vectorized(
