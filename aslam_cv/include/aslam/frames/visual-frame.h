@@ -48,7 +48,8 @@ class VisualFrame  {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   VisualFrame();
-  virtual ~VisualFrame();
+
+  virtual ~VisualFrame() {};
 
   virtual bool operator==(const VisualFrame& other) const;
 
@@ -214,13 +215,13 @@ class VisualFrame  {
   const Camera::ConstPtr getCameraGeometry() const;
 
   /// \brief Set the camera geometry.
-  void setCameraGeometry(const Camera::Ptr& camera);
+  void setCameraGeometry(const Camera::ConstPtr& camera);
 
   /// \brief The camera geometry.
   const Camera::ConstPtr getRawCameraGeometry() const;
 
   /// \brief Set the camera geometry.
-  void setRawCameraGeometry(const Camera::Ptr& camera);
+  void setRawCameraGeometry(const Camera::ConstPtr& camera);
 
   /// \brief Convert keypoint coordinates to raw image coordinates.
   ///
@@ -281,8 +282,8 @@ class VisualFrame  {
   int64_t systemStamp_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
-  Camera::Ptr camera_geometry_;
-  Camera::Ptr raw_camera_geometry_;
+  Camera::ConstPtr camera_geometry_;
+  Camera::ConstPtr raw_camera_geometry_;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const VisualFrame& rhs) {

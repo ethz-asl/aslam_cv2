@@ -1,4 +1,7 @@
+#include <utility>
+
 #include <aslam/cameras/camera-pinhole.h>
+
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
 
@@ -21,40 +24,43 @@ namespace aslam {
 //}
 
 PinholeCamera::PinholeCamera()
-    : Base(Eigen::Vector4d::Zero()),
-      distortion_(nullptr) {
+    : Base(Eigen::Vector4d::Zero()) {
   setImageWidth(0);
   setImageHeight(0);
 }
 
-PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
-                             uint32_t image_height, aslam::Distortion::Ptr distortion)
-    : Base(intrinsics),
-      distortion_(distortion) {
-  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
+PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
+                             uint32_t image_width, uint32_t image_height,
+                             aslam::Distortion::UniquePtr& distortion)
+  : Base(intrinsics, distortion) {
+  CHECK(intrinsicsValid(intrinsics));
+
   setImageWidth(image_width);
   setImageHeight(image_height);
 }
 
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
                              uint32_t image_height)
-    : PinholeCamera(intrinsics, image_width, image_height, nullptr) {
+    : Base(intrinsics) {
+  CHECK(intrinsicsValid(intrinsics));
+
+  setImageWidth(image_width);
+  setImageHeight(image_height);
 }
 
 PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
                              double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
-                             uint32_t image_height, aslam::Distortion::Ptr distortion)
+                             uint32_t image_height, aslam::Distortion::UniquePtr& distortion)
     : PinholeCamera(
         Eigen::Vector4d(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows),
-        image_width, image_height, distortion) {
-}
+        image_width, image_height, distortion) {}
 
 PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
                              double imagecenter_cols, double imagecenter_rows, uint32_t image_width,
                              uint32_t image_height)
-    : PinholeCamera(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows,
-                    image_width, image_height, nullptr) {
-}
+    : PinholeCamera(
+        Eigen::Vector4d(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows),
+        image_width, image_height) {}
 
 bool PinholeCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.
@@ -109,29 +115,24 @@ const ProjectionResult PinholeCamera::project3Functional(
   CHECK_NOTNULL(out_keypoint);
 
   // Determine the parameter source. (if nullptr, use internal)
-  //TODO(schneith): use the new interface to avoid copying...
-  Eigen::VectorXd intrinsics;
+  const Eigen::VectorXd* intrinsics;
   if (!intrinsics_external)
-    intrinsics = getParameters();
+    intrinsics = &getParameters();
   else
-    intrinsics = *intrinsics_external;
+    intrinsics = intrinsics_external;
+  CHECK_EQ(intrinsics->size(), kNumOfParams) << "intrinsics: invalid size!";
 
-  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
-
-  //TODO(schneith): use the new interface to avoid copying...
-  Eigen::VectorXd* distortion_coefficients;
-  Eigen::VectorXd dist_coeff_internal;
+  const Eigen::VectorXd* distortion_coefficients;
   if(!distortion_coefficients_external && distortion_) {
-    dist_coeff_internal = distortion()->getParameters();
-    distortion_coefficients = &dist_coeff_internal;
+    distortion_coefficients = &getDistortion()->getParameters();
   } else {
-    distortion_coefficients = const_cast<Eigen::VectorXd*>(distortion_coefficients_external);
+    distortion_coefficients = distortion_coefficients_external;
   }
 
-  const double& fu = intrinsics[0];
-  const double& fv = intrinsics[1];
-  const double& cu = intrinsics[2];
-  const double& cv = intrinsics[3];
+  const double& fu = (*intrinsics)[0];
+  const double& fv = (*intrinsics)[1];
+  const double& cu = (*intrinsics)[2];
+  const double& cv = (*intrinsics)[3];
 
   // Project the point.
   const double& x = point_3d[0];
@@ -244,6 +245,14 @@ void PinholeCamera::getBorderRays(Eigen::MatrixXd& rays) const {
   rays.col(6) = ray;
   backProject4(Eigen::Vector2d(imageWidth() * 0.5, imageHeight() - 1.0), &ray);
   rays.col(7) = ray;
+}
+
+bool PinholeCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
+  return (intrinsics.size() == parameterCount()) &&
+         (intrinsics[0] > 0.0)  && //fu
+         (intrinsics[1] > 0.0)  && //fv
+         (intrinsics[2] > 0.0)  && //cu
+         (intrinsics[3] > 0.0);    //cv
 }
 
 void PinholeCamera::printParameters(std::ostream& out, const std::string& text) const {

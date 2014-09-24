@@ -1,12 +1,12 @@
 #ifndef ASLAM_UNDISTORTER_H_
 #define ASLAM_UNDISTORTER_H_
 
-#include <aslam/common/macros.h>
 #include <opencv2/core/core.hpp>
 
-namespace aslam {
+#include <aslam/cameras/camera.h>
+#include <aslam/common/macros.h>
 
-class Camera;
+namespace aslam {
 
 /// \class Undistorter
 /// \brief A base class for image undistortion and resizing.
@@ -20,8 +20,8 @@ public:
   ///
   /// \param[in] input_camera  The intrinsics associated with the input image.
   /// \param[in] output_camera The intrinsics associated with the output image.
-  Undistorter(const std::shared_ptr<Camera>& input_camera,
-              const std::shared_ptr<Camera>& output_camera);
+  Undistorter(Camera::Ptr input_camera, Camera::Ptr output_camera);
+
   virtual ~Undistorter();
 
   /// \brief Produce an undistorted image from an input image.
@@ -32,14 +32,28 @@ public:
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getInputCamera() const { return input_camera_; }
+  const Camera& getInputCamera() const { return *CHECK_NOTNULL(input_camera_.get()); };
+
+  /// \brief Get the input camera that corresponds to the image
+  ///        passed in to processImage().
+  ///
+  /// Because this processor may do things like image undistortion or
+  /// rectification, the input and output camera may not be the same.
+  Camera::ConstPtr getInputCameraShared() const { return input_camera_; };
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  virtual const std::shared_ptr<Camera>& getOutputCamera() const { return output_camera_; }
+  const Camera& getOutputCamera() const { return *CHECK_NOTNULL(output_camera_.get()); };
+
+  /// \brief Get the output camera that corresponds to the VisualFrame
+  ///        data that comes out.
+  ///
+  /// Because this pipeline may do things like image undistortion or
+  /// rectification, the input and output camera may not be the same.
+  Camera::ConstPtr getOutputCameraShared() const { return output_camera_; };
 
 protected:
   /// \brief The intrinsics of the raw image.
