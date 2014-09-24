@@ -8,7 +8,6 @@
 #include <glog/logging.h>
 #include <opencv2/core/core.hpp>
 
-
 namespace aslam {
 
 VisualNPipeline::VisualNPipeline(
@@ -30,9 +29,9 @@ VisualNPipeline::VisualNPipeline(
   for(size_t i = 0; i < pipelines.size(); ++i) {
     CHECK_NOTNULL(pipelines[i].get());
     // Check that the input cameras actually point to the same object.
-    CHECK_EQ(input_camera_system_->getCameraMutable(i), pipelines[i]->getInputCamera());
+    CHECK(input_camera_system_->getCameraShared(i) == pipelines[i]->getInputCameraShared());
     // Check that the output cameras actually point to the same object.
-    CHECK_EQ(output_camera_system_->getCameraMutable(i), pipelines[i]->getOutputCamera());
+    CHECK(output_camera_system_->getCameraShared(i) == pipelines[i]->getOutputCameraShared());
   }
   CHECK_GT(num_threads, 0u);
   thread_pool_.reset(new ThreadPool(num_threads));

@@ -6,17 +6,16 @@
 #include <mutex>
 #include <vector>
 
-#include <aslam/common/macros.h>
+#include <opencv2/core/core.hpp>
 
-namespace cv { class Mat; }
+#include <aslam/common/macros.h>
+#include <aslam/cameras/ncamera.h>
+#include <aslam/common/thread-pool.h>
+#include <aslam/frames/visual-frame.h>
+#include <aslam/frames/visual-nframe.h>
+#include <aslam/pipeline/visual-pipeline.h>
 
 namespace aslam {
-
-class NCamera;
-class ThreadPool;
-class VisualFrame;
-class VisualNFrame;
-class VisualPipeline;
 
 /// \class VisualNPipeline
 /// \brief An interface for pipelines that turn images into VisualNFrames

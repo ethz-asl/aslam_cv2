@@ -1,6 +1,7 @@
+#include <glog/logging.h>
+
 #include <aslam/cameras/ncamera.h>
 #include <aslam/common/predicates.h>
-#include <glog/logging.h>
 #include <sm/PropertyTree.hpp>
 
 namespace aslam {
@@ -8,7 +9,7 @@ namespace aslam {
 /// \brief default constructor builds an empty camera rig
 NCamera::NCamera() { }
 
-NCamera::NCamera(const NCamerasId& id,
+NCamera::NCamera(const NCameraId& id,
                  const TransformationVector& T_C_B,
                  const std::vector<Camera::Ptr>& cameras,
                  const std::string& label) :
@@ -22,8 +23,6 @@ NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
   // \todo(PTF) fill in
   CHECK(false) << "Not implemented";
 }
-
-NCamera::~NCamera() {}
 
 void NCamera::initInternal(){
   CHECK_EQ(cameras_.size(), T_C_B_.size());
@@ -46,7 +45,7 @@ const Transformation& NCamera::get_T_C_B(size_t cameraIndex) const {
 }
 
 /// \brief get the pose of body frame with respect to the camera i
-Transformation& NCamera::get_T_C_B_mutable(size_t cameraIndex) {
+Transformation& NCamera::get_T_C_B_Mutable(size_t cameraIndex) {
   CHECK_LT(cameraIndex, cameras_.size());
   return T_C_B_[cameraIndex];
 }
@@ -70,7 +69,14 @@ const Camera& NCamera::getCamera(size_t cameraIndex) const {
 }
 
 /// \brief get the geometry object for camera i
-Camera::Ptr NCamera::getCameraMutable(size_t cameraIndex) {
+Camera& NCamera::getCameraMutable(size_t cameraIndex) {
+  CHECK_LT(cameraIndex, cameras_.size());
+  CHECK_NOTNULL(cameras_[cameraIndex].get());
+  return *cameras_[cameraIndex];
+}
+
+/// \brief get the geometry object for camera i
+Camera::Ptr NCamera::getCameraShared(size_t cameraIndex) {
   CHECK_LT(cameraIndex, cameras_.size());
   return cameras_[cameraIndex];
 }
