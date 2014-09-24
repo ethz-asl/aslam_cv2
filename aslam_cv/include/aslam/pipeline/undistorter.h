@@ -7,6 +7,7 @@
 #include <aslam/common/macros.h>
 
 namespace aslam {
+
 /// \class Undistorter
 /// \brief A base class for image undistortion and resizing.
 class Undistorter {
@@ -15,7 +16,7 @@ public:
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Undistorter);
 
 protected:
-  Undistorter();
+  Undistorter() {};
 
 public:
   /// \brief Construct an undistorter pipeline from the input and output cameras
@@ -34,14 +35,28 @@ public:
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  Camera::Ptr getInputCamera() const { return input_camera_; }
+  const Camera& getInputCamera() const { return *CHECK_NOTNULL(input_camera_.get()); };
+
+  /// \brief Get the input camera that corresponds to the image
+  ///        passed in to processImage().
+  ///
+  /// Because this processor may do things like image undistortion or
+  /// rectification, the input and output camera may not be the same.
+  Camera::ConstPtr getInputCameraShared() const { return input_camera_; };
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  Camera::Ptr getOutputCamera() const { return output_camera_; }
+  const Camera& getOutputCamera() const { return *CHECK_NOTNULL(output_camera_.get()); };
+
+  /// \brief Get the output camera that corresponds to the VisualFrame
+  ///        data that comes out.
+  ///
+  /// Because this pipeline may do things like image undistortion or
+  /// rectification, the input and output camera may not be the same.
+  Camera::ConstPtr getOutputCameraShared() const { return output_camera_; };
 
 protected:
   /// \brief The intrinsics of the raw image.

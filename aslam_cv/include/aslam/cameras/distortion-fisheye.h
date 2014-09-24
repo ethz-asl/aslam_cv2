@@ -103,9 +103,9 @@ class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion>
   /// @{
 
   /// \brief Create a test distortion object for unit testing.
-  static FisheyeDistortion::Ptr createTestDistortion() {
+  static FisheyeDistortion::UniquePtr createTestDistortion() {
     Eigen::VectorXd params(1); params << 1.1;
-    return FisheyeDistortion::Ptr(new FisheyeDistortion(params));
+    return FisheyeDistortion::UniquePtr(new FisheyeDistortion(params));
   }
 
   /// @}

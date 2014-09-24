@@ -48,7 +48,8 @@ class VisualFrame  {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   VisualFrame();
-  virtual ~VisualFrame();
+
+  virtual ~VisualFrame() {};
 
   virtual bool operator==(const VisualFrame& other) const;
 

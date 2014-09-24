@@ -2,6 +2,10 @@
 #define ASLAM_CAMERAS_CAMERA_H_
 
 #include <cstdint>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include <Eigen/Dense>
 #include <glog/logging.h>
@@ -33,7 +37,7 @@ template <typename CameraType, typename DistortionType>
 typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
                                       uint32_t image_width, uint32_t image_height,
                                       const Eigen::VectorXd& distortion_parameters) {
-  typename DistortionType::Ptr distortion(new DistortionType(distortion_parameters));
+  typename aslam::Distortion::UniquePtr distortion(new DistortionType(distortion_parameters));
   typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height, distortion));
   return camera;
 }
@@ -149,7 +153,12 @@ class Camera {
  protected:
   Camera() = delete;
 
-  /// \brief Camera base constructor.
+  /// \brief Camera base constructor with distortion.
+  /// @param[in] intrinsics Vector containing the intrinsic parameters.
+  /// @param[in] distortion unique_ptr to the distortion model
+  Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion);
+
+  /// \brief Camera base constructor without distortion.
   /// @param[in] intrinsics Vector containing the intrinsic parameters.
   Camera(const Eigen::VectorXd& intrinsics);
 
@@ -170,7 +179,18 @@ class Camera {
 
  protected:
   /// Copy constructor for clone operation.
-  Camera(const Camera&) = default;
+  Camera(const Camera& other) :
+  line_delay_nano_seconds_(other.line_delay_nano_seconds_),
+  label_(other.label_),
+  id_(other.id_),
+  image_width_(other.image_width_),
+  image_height_(other.image_height_),
+  intrinsics_(other.intrinsics_) {
+    // Clone distortion if model is set.
+    if (other.distortion_)
+      distortion_.reset(other.distortion_->clone());
+  };
+
   void operator=(const Camera&) = delete;
 
   /// @}
@@ -258,6 +278,7 @@ class Camera {
   ///
   /// This vanilla version just repeatedly calls backProject3. Camera implementers
   /// are encouraged to override for efficiency.
+  /// TODO(schneith): implement efficient backProject3Vectorized
   /// @param[in]  keypoints     Keypoints in image coordinates.
   /// @param[out] out_point_3ds Bearing vectors in euclidean coordinates (with z=1 -> non-normalized).
   /// @param[out] out_success   Were the projections successful?
@@ -277,7 +298,7 @@ class Camera {
   /// @return Contains information about the success of the projection. Check
   ///         \ref ProjectionResult for more information.
   const ProjectionResult project4(const Eigen::Vector4d& point_4d,
-                                 Eigen::Vector2d* out_keypoint) const;
+                                  Eigen::Vector2d* out_keypoint) const;
 
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
   ///        projection (& distortion) models to the point.
@@ -287,8 +308,8 @@ class Camera {
   /// @return Contains information about the success of the projection. Check \ref
   ///         ProjectionResult for more information.
   const ProjectionResult project4(const Eigen::Vector4d& point_4d,
-                                 Eigen::Vector2d* out_keypoint,
-                                 Eigen::Matrix<double, 2, 4>* out_jacobian) const;
+                                  Eigen::Vector2d* out_keypoint,
+                                  Eigen::Matrix<double, 2, 4>* out_jacobian) const;
 
   /// \brief Compute the 3d bearing vector in homogeneous coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
@@ -445,24 +466,30 @@ class Camera {
   /// @}
 
   //////////////////////////////////////////////////////////////
-  /// \name Methods to support optimization
+  /// \name Methods to interface the underlying distortion model.
   /// @{
 
   /// \brief Returns a pointer to the underlying distortion object.
-  /// @return ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual aslam::Distortion::Ptr distortion() = 0;
+  /// @return Pointer for the distortion model;
+  ///         NOTE: Returns nullptr if no model is set or not available for the camera type
+  virtual aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
 
   /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return const_ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual const aslam::Distortion::Ptr distortion() const { return nullptr; };
+  /// @return ConstPointer for the distortion model;
+  ///         NOTE: Returns nullptr if no model is set or not available for the camera type
+  virtual const aslam::Distortion* getDistortion() const { return distortion_.get(); };
+
+  /// @}
+
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to access the intrinsic parameters.
+  /// @{
+
+  /// Get the intrinsic parameters (const).
+  inline const Eigen::VectorXd& getParameters() const { return intrinsics_; };
 
   /// Get the intrinsic parameters.
-  const Eigen::VectorXd& getParameters() const { return intrinsics_; };
-
-  /// Get the intrinsic parameters.
-  double* getParametersMutable() { return &intrinsics_.coeffRef(0, 0); };
+  inline double* getParametersMutable() { return &intrinsics_.coeffRef(0, 0); };
 
   /// Set the intrinsic parameters. Parameters are documented in the specialized
   /// camera classes.
@@ -470,6 +497,9 @@ class Camera {
     CHECK_EQ(getParameterSize(), static_cast<size_t>(params.size()));
     intrinsics_ = params;
   }
+
+  /// Function to check wheter the given intrinic parameters are valid for this model.
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) = 0;
 
   /// @}
 
@@ -486,7 +516,7 @@ class Camera {
   /// \param[in] distortionParameters The parameters of the distortion object.
   /// \returns A new camera based on the template types.
   template<typename DerivedCamera, typename DerivedDistortion>
-  static std::shared_ptr<Camera> construct(
+  static typename DerivedCamera::Ptr construct(
       const Eigen::VectorXd& intrinsics,
       uint32_t imageWidth,
       uint32_t imageHeight,
@@ -496,10 +526,10 @@ class Camera {
 
  protected:
   /// Set the image width. Only accessible by derived classes.
-  void setImageWidth(uint32_t width){ image_width_ = width; }
+  void setImageWidth(uint32_t width) { image_width_ = width; }
 
   /// Set the image height. Only accessible by derived classes.
-  void setImageHeight(uint32_t height){ image_height_ = height; }
+  void setImageHeight(uint32_t height) { image_height_ = height; }
 
  private:
   /// The delay per scanline for a rolling shutter camera in nanoseconds.
@@ -516,6 +546,10 @@ class Camera {
  protected:
   /// Parameter vector for the intrinsic parameters of the model.
   Eigen::VectorXd intrinsics_;
+
+  /// \brief The distortion for this camera.
+  ///        NOTE: Can be nullptr if no distortion model is set.
+  aslam::Distortion::UniquePtr distortion_;
 };
 }  // namespace aslam
 #include "camera-inl.h"

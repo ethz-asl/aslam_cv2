@@ -20,8 +20,11 @@ public:
   ASLAM_POINTER_TYPEDEFS(BriskVisualPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(BriskVisualPipeline);
 
+protected:
+  /// Constructor for serialization.
   BriskVisualPipeline();
 
+public:
   /// \brief Initialize the brisk pipeline with a camera.
   ///
   /// \param[in] camera             The intrinsic calibration of this camera. (Camera gets cloned.)

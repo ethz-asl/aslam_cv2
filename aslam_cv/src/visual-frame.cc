@@ -4,10 +4,10 @@
 #include <aslam/common/time.h>
 
 namespace aslam {
-VisualFrame::VisualFrame() :
-    stamp_(getInvalidTime()), hardwareStamp_(getInvalidTime()), systemStamp_(getInvalidTime()) {}
-
-VisualFrame::~VisualFrame(){}
+VisualFrame::VisualFrame()
+    : stamp_(getInvalidTime()),
+      hardwareStamp_(getInvalidTime()),
+      systemStamp_(getInvalidTime()) {}
 
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;

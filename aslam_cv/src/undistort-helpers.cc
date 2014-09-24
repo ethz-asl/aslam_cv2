@@ -45,8 +45,8 @@ static void getUndistortRectangles(const aslam::Camera& input_camera, bool undis
         keypoint_normalized[0] = 1.0 / camera_matrix(0,0) * (keypoint[0] - camera_matrix(0,2));
         keypoint_normalized[1] = 1.0 / camera_matrix(1,1) * (keypoint[1] - camera_matrix(1,2));
 
-        if (input_camera.distortion())
-          input_camera.distortion()->undistort(&keypoint_normalized);
+        if (input_camera.getDistortion())
+          input_camera.getDistortion()->undistort(&keypoint_normalized);
       }
 
       pts[k++] = cvPoint2D32f((float) keypoint_normalized[0], (float) keypoint_normalized[1]);
@@ -175,8 +175,8 @@ void buildUndistortMap(const aslam::Camera& input_camera, const aslam::Camera& o
         keypoint_normalized[1] = 1.0 / output_matrix(1,1) * (keypoint[1] - output_matrix(1,2));
 
         // Transform to input camera incl. distortion
-        if (input_camera.distortion())
-          input_camera.distortion()->distort(&keypoint_normalized);
+        if (input_camera.getDistortion())
+          input_camera.getDistortion()->distort(&keypoint_normalized);
 
         // Transform to input camera plane
         keypoint_dist[0] = input_matrix(0,0) * keypoint_normalized[0] + input_matrix(0,2);

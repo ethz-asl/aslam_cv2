@@ -66,7 +66,7 @@ TYPED_TEST(TestUndistorters, TestMappedUndistorter) {
     // Distort using internal camera functions.
     Eigen::Vector2d keypoint_distorted;
     Eigen::Vector3d point_3d;
-    undistorter->getOutputCamera()->backProject3(keypoint_undistorted, &point_3d);
+    undistorter->getOutputCamera().backProject3(keypoint_undistorted, &point_3d);
     point_3d /= point_3d[2];
     this->camera_->project3(point_3d, &keypoint_distorted);
 
