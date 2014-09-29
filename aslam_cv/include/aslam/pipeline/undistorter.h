@@ -1,10 +1,11 @@
 #ifndef ASLAM_UNDISTORTER_H_
 #define ASLAM_UNDISTORTER_H_
 
-#include <opencv2/core/core.hpp>
-
 #include <aslam/cameras/camera.h>
 #include <aslam/common/macros.h>
+
+// Forward declarations.
+namespace cv { class Mat; };
 
 namespace aslam {
 

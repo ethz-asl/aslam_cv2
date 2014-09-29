@@ -3,6 +3,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/common/crtp-clone.h>
+#include <aslam/common/types.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 
@@ -207,11 +208,9 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   ///                  undistorted image)
   /// @param[in] scale Output image size scaling parameter wrt. to input image size.
   /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
-  /// @param[in] undistort_to_pinhole Undistort image to a pinhole projection
-  ///                                 (remove distortion and projection effects)
   /// @return Pointer to the created mapped undistorter.
   virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
-      int interpolation_type, bool undistort_to_pinhole) const;
+      aslam::InterpolationMethod interpolation_type) const;
 
   /// @}
 
@@ -220,7 +219,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// @{
 
   /// \brief Returns the camera matrix for the pinhole projection.
-  virtual Eigen::Matrix3d getCameraMatrix() const {
+  Eigen::Matrix3d getCameraMatrix() const {
     Eigen::Matrix3d K;
     K << fu(), 0.0,  cu(),
          0.0,  fv(), cv(),

@@ -3,6 +3,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/common/crtp-clone.h>
+#include <aslam/common/types.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 
@@ -210,11 +211,22 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   ///                  undistorted image)
   /// @param[in] scale Output image size scaling parameter wrt. to input image size.
   /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
-  /// @param[in] undistort_to_pinhole Undistort image to a pinhole projection
-  ///                                 (remove distortion and projection effects)
   /// @return Pointer to the created mapped undistorter.
   virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
-      int interpolation_type, bool undistort_to_pinhole) const;
+      aslam::InterpolationMethod interpolation_type) const;
+
+  /// \brief Factory method to create a mapped undistorter for this camera geometry to undistorts
+  ///        the image to a pinhole view.
+  ///        NOTE: The undistorter stores a copy of this camera and changes to this geometry
+  ///              are not connected with the undistorter!
+  /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
+  ///                  will be valid) and 1 (when all the source image pixels will be retained in the
+  ///                  undistorted image)
+  /// @param[in] scale Output image size scaling parameter wrt. to input image size.
+  /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
+  /// @return Pointer to the created mapped undistorter.
+  std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(float alpha, float scale,
+      aslam::InterpolationMethod interpolation_type) const;
 
   /// @}
 
@@ -223,7 +235,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   /// @{
 
   /// \brief Returns the camera matrix for the projection.
-  virtual Eigen::Matrix3d getCameraMatrix() const {
+  Eigen::Matrix3d getCameraMatrix() const {
     Eigen::Matrix3d K;
     K << fu(), 0.0,  cu(),
          0.0,  fv(), cv(),

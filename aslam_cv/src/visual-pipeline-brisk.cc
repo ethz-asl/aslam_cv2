@@ -11,10 +11,10 @@ BriskVisualPipeline::BriskVisualPipeline() {
   // Just for serialization. Not meant to be used.
 }
 
-BriskVisualPipeline::BriskVisualPipeline(Camera::Ptr camera, bool copy_images, size_t octaves,
-                                         double uniformity_radius, double absolute_threshold,
-                                         size_t max_number_of_keypoints, bool rotation_invariant,
-                                         bool scale_invariant)
+BriskVisualPipeline::BriskVisualPipeline(const Camera::ConstPtr& camera, bool copy_images,
+                                         size_t octaves, double uniformity_radius,
+                                         double absolute_threshold, size_t max_number_of_keypoints,
+                                         bool rotation_invariant, bool scale_invariant)
     : VisualPipeline(camera, camera, copy_images) {
   initializeBrisk(octaves, uniformity_radius, absolute_threshold, max_number_of_keypoints,
                   rotation_invariant, scale_invariant);

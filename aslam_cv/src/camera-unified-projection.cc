@@ -1,7 +1,9 @@
 #include <memory>
 
 #include <aslam/cameras/camera-unified-projection.h>
+#include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/eigen-helpers.h>
+#include <aslam/common/types.h>
 #include <aslam/common/undistort-helpers.h>
 #include <aslam/pipeline/undistorter-mapped.h>
 
@@ -331,18 +333,22 @@ Eigen::Vector3d UnifiedProjectionCamera::createRandomVisiblePoint(double depth) 
 }
 
 std::unique_ptr<MappedUndistorter> UnifiedProjectionCamera::createMappedUndistorter(
-    float alpha, float scale, int interpolation_type, bool undistort_to_pinhole) const {
+    float alpha, float scale, aslam::InterpolationMethod interpolation_type) const {
 
   CHECK_GE(alpha, 0.0); CHECK_LE(alpha, 1.0);
   CHECK_GT(scale, 0.0);
 
+  // Only remove distortion effects.
+  const bool undistort_to_pinhole = false;
+
   // Create a copy of the input camera (=this)
-  Camera::Ptr input_camera(this->clone());
+  UnifiedProjectionCamera::Ptr input_camera(dynamic_cast<UnifiedProjectionCamera*>(this->clone()));
   CHECK(input_camera);
 
   // Create the scaled output camera with removed distortion.
-  Eigen::Matrix3d output_camera_matrix = aslam::common::getOptimalNewCameraMatrix(
-      *input_camera, alpha, scale, undistort_to_pinhole);
+  Eigen::Matrix3d output_camera_matrix = common::getOptimalNewCameraMatrix(*input_camera, alpha,
+                                                                           scale,
+                                                                           undistort_to_pinhole);
 
   Eigen::Matrix<double, parameterCount(), 1> intrinsics;
   intrinsics <<  xi(), output_camera_matrix(0, 0), output_camera_matrix(1, 1),
@@ -350,13 +356,48 @@ std::unique_ptr<MappedUndistorter> UnifiedProjectionCamera::createMappedUndistor
 
   const int output_width = static_cast<int>(scale * imageWidth());
   const int output_height = static_cast<int>(scale * imageHeight());
-  aslam::Camera::Ptr output_camera = aslam::createCamera<aslam::UnifiedProjectionCamera>(
+  UnifiedProjectionCamera::Ptr output_camera = aslam::createCamera<aslam::UnifiedProjectionCamera>(
       intrinsics, output_width, output_height);
   CHECK(output_camera);
 
   cv::Mat map_u, map_v;
-  aslam::common::buildUndistortMap(*input_camera, *output_camera, undistort_to_pinhole,
-                                   CV_16SC2, map_u, map_v);
+  aslam::common::buildUndistortMap(*input_camera, *output_camera, undistort_to_pinhole, CV_16SC2,
+                                   map_u, map_v);
+
+  return std::unique_ptr<MappedUndistorter>(
+      new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
+}
+
+std::unique_ptr<MappedUndistorter> UnifiedProjectionCamera::createMappedUndistorterToPinhole(
+    float alpha, float scale, aslam::InterpolationMethod interpolation_type) const {
+
+  CHECK_GE(alpha, 0.0); CHECK_LE(alpha, 1.0);
+  CHECK_GT(scale, 0.0);
+
+  // Undistort to pinhole view.
+  const bool undistort_to_pinhole = true;
+
+  // Create a copy of the input camera (=this)
+  UnifiedProjectionCamera::Ptr input_camera(dynamic_cast<UnifiedProjectionCamera*>(this->clone()));
+  CHECK(input_camera);
+
+  // Create the scaled output camera with removed distortion.
+  Eigen::Matrix3d output_camera_matrix = aslam::common::getOptimalNewCameraMatrix(
+      *input_camera, alpha, scale, undistort_to_pinhole);
+
+  Eigen::Matrix<double, PinholeCamera::parameterCount(), 1> intrinsics;
+  intrinsics <<  output_camera_matrix(0, 0), output_camera_matrix(1, 1),
+                 output_camera_matrix(0, 2), output_camera_matrix(1, 2);
+
+  const int output_width = static_cast<int>(scale * imageWidth());
+  const int output_height = static_cast<int>(scale * imageHeight());
+  PinholeCamera::Ptr output_camera = aslam::createCamera<aslam::PinholeCamera>(
+      intrinsics, output_width, output_height);
+  CHECK(output_camera);
+
+  cv::Mat map_u, map_v;
+  aslam::common::buildUndistortMap(*input_camera, *output_camera, undistort_to_pinhole, CV_16SC2,
+                                   map_u, map_v);
 
   return std::unique_ptr<MappedUndistorter>(
       new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
