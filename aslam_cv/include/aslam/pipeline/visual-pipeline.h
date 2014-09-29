@@ -11,7 +11,6 @@
 #include <aslam/frames/visual-frame.h>
 
 namespace aslam {
-
 /// \class VisualPipeline
 /// \brief An interface for processors that turn images into VisualFrames
 ///
@@ -33,22 +32,25 @@ public:
   ASLAM_POINTER_TYPEDEFS(VisualPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualPipeline);
 
-  VisualPipeline() {};
+protected:
+  VisualPipeline() : copy_images_(false) {};
 
+public:
   /// \brief Construct a visual pipeline from the input and output cameras
   ///
   /// \param[in] input_camera  The intrinsics associated with the raw image.
   /// \param[in] output_camera The intrinsics associated with the keypoints.
   /// \param[in] copy_images    Should we copy the image before storing it in the frame?
-  VisualPipeline(Camera::Ptr input_camera, Camera::Ptr output_camera, bool copy_images);
+  VisualPipeline(const Camera::ConstPtr& input_camera, const Camera::ConstPtr& output_camera,
+                 bool copy_images);
 
   /// \brief Construct a visual pipeline from the input and output cameras
   ///
   /// \param[in] preprocessing Preprocessing to apply to the image before sending to the pipeline.
   /// \param[in] copy_images    Should we copy the image before storing it in the frame?
-  VisualPipeline(Undistorter::Ptr preprocessing, bool copy_images);
+  VisualPipeline(std::unique_ptr<Undistorter>& preprocessing, bool copy_images);
 
-  virtual ~VisualPipeline();
+  virtual ~VisualPipeline() {};
 
   /// \brief Add an image to the visual processor.
   ///
@@ -102,7 +104,7 @@ protected:
                                 VisualFrame* frame) const = 0;
 
   /// \brief Preprocessing for the image. Can be null.
-  std::shared_ptr<Undistorter> preprocessing_;
+  const std::unique_ptr<Undistorter> preprocessing_;
   /// \brief The intrinsics of the raw image.
   std::shared_ptr<const Camera> input_camera_;
   /// \brief The intrinsics of the raw image.

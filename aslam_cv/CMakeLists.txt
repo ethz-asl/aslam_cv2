@@ -41,6 +41,7 @@ catkin_add_gtest(${PROJECT_NAME}_tests
     test/test-thread-pool.cc
     test/test-visual-npipeline.cc
     test/entry-point.cc
+    test/test-undistorters.cc
     )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 

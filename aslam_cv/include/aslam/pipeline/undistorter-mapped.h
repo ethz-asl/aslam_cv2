@@ -1,7 +1,11 @@
 #ifndef ASLAM_MAPPED_UNDISTORTER_H_
 #define ASLAM_MAPPED_UNDISTORTER_H_
 
-#include "undistorter.h"
+#include <opencv2/core/core.hpp>
+
+#include <aslam/common/types.h>
+#include <aslam/cameras/camera.h>
+#include <aslam/pipeline/undistorter.h>
 
 namespace aslam {
 
@@ -15,48 +19,43 @@ public:
   ASLAM_POINTER_TYPEDEFS(MappedUndistorter);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MappedUndistorter);
 
+protected:
   MappedUndistorter();
 
-  /// \brief Create an undistorter.
+public:
+  /// \brief Create a mapped undistorter using externally provided maps.
   ///
-  /// The interpolation types are from OpenCV:
-  ///
-  /// - cv::INTER_NEAREST  - A nearest-neighbor interpolation.
-  /// - cv::INTER_LINEAR   - A bilinear interpolation (used by default).
-  /// - cv::INTER_AREA     - Resampling using pixel area relation. It may be a
-  ///                        preferred method for image decimation, as it gives
-  ///                        moire-free results.  But when the image is zoomed,
-  ///                        it is similar to the INTER_NEAREST method.
-  /// - cv::INTER_CUBIC    - A bicubic interpolation over 4x4 pixel neighborhood.
-  /// - cv::INTER_LANCZOS4 - A Lanczos interpolation over 8x8 pixel neighborhood.
-  ///
-  /// Map matrices (map_x and map_y) must be the size of the output camera geometry.
+  /// Map matrices (map_u and map_v) must be the size of the output camera geometry.
   /// This will be checked by the constructor.
   ///
   /// \param[in] input_camera  The camera intrinsics for the original image.
   /// \param[in] output_camera The camera intrinsics after undistortion.
-  /// \param[in] map_x         The map from input to output x coordinates.
-  /// \param[in] map_y         The map from input to output y coordinates.
-  /// \param[in] interpolation_method An enum specifying the interpolation types.
-  /// \param[in] copy_image    Should we copy the input image?
-  MappedUndistorter(const std::shared_ptr<Camera>& input_camera,
-                    const std::shared_ptr<Camera>& output_camera,
-                    const cv::Mat& map_x, const cv::Mat& map_y, int interpolation);
+  /// \param[in] map_u         The map from input to output u coordinates.
+  /// \param[in] map_v         The map from input to output v coordinates.
+  /// \param[in] interpolation Interpolation method used for undistortion.
+  ///                          (\ref InterpolationMethod)
+  MappedUndistorter(aslam::Camera::Ptr input_camera, aslam::Camera::Ptr output_camera,
+                    const cv::Mat& map_u, const cv::Mat& map_v, InterpolationMethod interpolation);
 
-  virtual ~MappedUndistorter();
+  virtual ~MappedUndistorter() = default;
 
   /// \brief Produce an undistorted image from an input image.
-  virtual void undistortImage(const cv::Mat& input_image, cv::Mat* output_image) const;
+  virtual void processImage(const cv::Mat& input_image, cv::Mat* output_image) const;
+
+  /// Get the undistorter map for the u-coordinate.
+  const cv::Mat& getUndistortMapU() const { return map_u_; };
+
+  /// Get the undistorter map for the u-coordinate.
+  const cv::Mat& getUndistortMapV() const { return map_v_; };
 
 private:
-  /// \brief LUT for x coordinates.
-  cv::Mat map_x_;
-  /// \brief LUT for y coordinates.
-  cv::Mat map_y_;
+  /// \brief LUT for u coordinates.
+  const cv::Mat map_u_;
+  /// \brief LUT for v coordinates.
+  const cv::Mat map_v_;
   /// \brief Interpolation strategy
-  int interpolation_method_;
+  InterpolationMethod interpolation_method_;
 };
 
 }  // namespace aslam
-
-#endif // ASLAM_UNDISTORTER_H_
+#endif // ASLAM_MAPPED_UNDISTORTER_H_

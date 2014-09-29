@@ -1,10 +1,11 @@
 #ifndef ASLAM_UNDISTORTER_H_
 #define ASLAM_UNDISTORTER_H_
 
-#include <opencv2/core/core.hpp>
-
 #include <aslam/cameras/camera.h>
 #include <aslam/common/macros.h>
+
+// Forward declarations.
+namespace cv { class Mat; };
 
 namespace aslam {
 
@@ -14,15 +15,18 @@ class Undistorter {
 public:
   ASLAM_POINTER_TYPEDEFS(Undistorter);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Undistorter);
-  Undistorter();
 
+protected:
+  Undistorter() {};
+
+public:
   /// \brief Construct an undistorter pipeline from the input and output cameras
   ///
   /// \param[in] input_camera  The intrinsics associated with the input image.
   /// \param[in] output_camera The intrinsics associated with the output image.
   Undistorter(Camera::Ptr input_camera, Camera::Ptr output_camera);
 
-  virtual ~Undistorter();
+  virtual ~Undistorter() {};
 
   /// \brief Produce an undistorted image from an input image.
   virtual void processImage(const cv::Mat& input_image, cv::Mat* output_image) const = 0;
@@ -57,9 +61,9 @@ public:
 
 protected:
   /// \brief The intrinsics of the raw image.
-  std::shared_ptr<Camera> input_camera_;
+  Camera::Ptr input_camera_;
   /// \brief The intrinsics of the raw image.
-  std::shared_ptr<Camera> output_camera_;
+  Camera::Ptr output_camera_;
 };
 
 } // namespace aslam

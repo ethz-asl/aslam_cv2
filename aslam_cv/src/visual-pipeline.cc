@@ -8,15 +8,14 @@
 
 namespace aslam {
 
-VisualPipeline::VisualPipeline(Camera::Ptr input_camera, Camera::Ptr output_camera,
-                               bool copy_images)
+VisualPipeline::VisualPipeline(const Camera::ConstPtr& input_camera,
+                               const Camera::ConstPtr& output_camera, bool copy_images)
 : input_camera_(input_camera), output_camera_(output_camera),
-  copy_images_(copy_images) { }
+  copy_images_(copy_images) {}
 
-VisualPipeline::~VisualPipeline() { }
 
-VisualPipeline::VisualPipeline(Undistorter::Ptr preprocessing, bool copy_images)
-: preprocessing_(preprocessing),
+VisualPipeline::VisualPipeline(std::unique_ptr<Undistorter>& preprocessing, bool copy_images)
+: preprocessing_(std::move(preprocessing)),
   copy_images_(copy_images) {
   CHECK_NOTNULL(preprocessing.get());
   input_camera_ = preprocessing->getInputCameraShared();
