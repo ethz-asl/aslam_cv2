@@ -1,8 +1,11 @@
 #ifndef ASLAM_MAPPED_UNDISTORTER_H_
 #define ASLAM_MAPPED_UNDISTORTER_H_
 
-#include <aslam/pipeline/undistorter.h>
+#include <opencv2/core/core.hpp>
+
+#include <aslam/common/types.h>
 #include <aslam/cameras/camera.h>
+#include <aslam/pipeline/undistorter.h>
 
 namespace aslam {
 
@@ -22,16 +25,6 @@ protected:
 public:
   /// \brief Create a mapped undistorter using externally provided maps.
   ///
-  /// The interpolation types are from OpenCV:
-  /// - cv::INTER_NEAREST  - A nearest-neighbor interpolation.
-  /// - cv::INTER_LINEAR   - A bilinear interpolation (used by default).
-  /// - cv::INTER_AREA     - Resampling using pixel area relation. It may be a
-  ///                        preferred method for image decimation, as it gives
-  ///                        moire-free results.  But when the image is zoomed,
-  ///                        it is similar to the INTER_NEAREST method.
-  /// - cv::INTER_CUBIC    - A bicubic interpolation over 4x4 pixel neighborhood.
-  /// - cv::INTER_LANCZOS4 - A Lanczos interpolation over 8x8 pixel neighborhood.
-  ///
   /// Map matrices (map_u and map_v) must be the size of the output camera geometry.
   /// This will be checked by the constructor.
   ///
@@ -39,9 +32,10 @@ public:
   /// \param[in] output_camera The camera intrinsics after undistortion.
   /// \param[in] map_u         The map from input to output u coordinates.
   /// \param[in] map_v         The map from input to output v coordinates.
-  /// \param[in] interpolation An enum specifying the interpolation types.
+  /// \param[in] interpolation Interpolation method used for undistortion.
+  ///                          (\ref InterpolationMethod)
   MappedUndistorter(aslam::Camera::Ptr input_camera, aslam::Camera::Ptr output_camera,
-                    const cv::Mat& map_u, const cv::Mat& map_v, int interpolation);
+                    const cv::Mat& map_u, const cv::Mat& map_v, InterpolationMethod interpolation);
 
   virtual ~MappedUndistorter() = default;
 
@@ -60,9 +54,8 @@ private:
   /// \brief LUT for v coordinates.
   const cv::Mat map_v_;
   /// \brief Interpolation strategy
-  int interpolation_method_;
+  InterpolationMethod interpolation_method_;
 };
 
 }  // namespace aslam
-
-#endif // ASLAM_UNDISTORTER_H_
+#endif // ASLAM_MAPPED_UNDISTORTER_H_

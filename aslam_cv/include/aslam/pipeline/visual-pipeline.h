@@ -41,7 +41,8 @@ public:
   /// \param[in] input_camera  The intrinsics associated with the raw image.
   /// \param[in] output_camera The intrinsics associated with the keypoints.
   /// \param[in] copy_images    Should we copy the image before storing it in the frame?
-  VisualPipeline(Camera::Ptr input_camera, Camera::Ptr output_camera, bool copy_images);
+  VisualPipeline(const Camera::ConstPtr& input_camera, const Camera::ConstPtr& output_camera,
+                 bool copy_images);
 
   /// \brief Construct a visual pipeline from the input and output cameras
   ///
@@ -103,7 +104,7 @@ protected:
                                 VisualFrame* frame) const = 0;
 
   /// \brief Preprocessing for the image. Can be null.
-  std::unique_ptr<Undistorter> preprocessing_;
+  const std::unique_ptr<Undistorter> preprocessing_;
   /// \brief The intrinsics of the raw image.
   std::shared_ptr<const Camera> input_camera_;
   /// \brief The intrinsics of the raw image.

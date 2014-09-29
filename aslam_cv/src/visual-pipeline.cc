@@ -8,8 +8,8 @@
 
 namespace aslam {
 
-VisualPipeline::VisualPipeline(Camera::Ptr input_camera, Camera::Ptr output_camera,
-                               bool copy_images)
+VisualPipeline::VisualPipeline(const Camera::ConstPtr& input_camera,
+                               const Camera::ConstPtr& output_camera, bool copy_images)
 : input_camera_(input_camera), output_camera_(output_camera),
   copy_images_(copy_images) {}
 

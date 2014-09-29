@@ -11,6 +11,7 @@
 #include <glog/logging.h>
 
 #include <aslam/common/macros.h>
+#include <aslam/common/types.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/cameras/distortion.h>
 
@@ -384,21 +385,16 @@ class Camera {
   ///                  will be valid) and 1 (when all the source image pixels will be retained in the
   ///                  undistorted image)
   /// @param[in] scale Output image size scaling parameter wrt. to input image size.
-  /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
-  /// @param[in] undistort_to_pinhole Undistort image to a pinhole projection
-  ///                                 (remove distortion and projection effects)
+  /// @param[in] interpolation_type Check \ref InterpolationMethod to see the available types.
   /// @return Pointer to the created mapped undistorter.
   virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
-      int interpolation_type, bool undistort_to_pinhole) const = 0;
+      aslam::InterpolationMethod interpolation_type) const = 0;
 
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Methods to support rolling shutter cameras
   /// @{
-
-  /// \brief Returns the camera matrix for the pinhole projection.
-  virtual Eigen::Matrix3d getCameraMatrix() const = 0;
 
   /// \brief  Return the temporal offset of a rolling shutter camera.
   ///         Global shutter cameras return zero.
