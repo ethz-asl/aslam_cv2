@@ -34,11 +34,14 @@ bool VisualFrame::hasKeypointMeasurementUncertainties() const{
 bool VisualFrame::hasKeypointOrientations() const{
   return aslam::channels::has_VISUAL_KEYPOINT_ORIENTATIONS_Channel(channels_);
 }
+bool VisualFrame::hasKeypointScores() const {
+  return aslam::channels::has_VISUAL_KEYPOINT_SCORES_Channel(channels_);
+}
 bool VisualFrame::hasKeypointScales() const{
   return aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_);
 }
-bool VisualFrame::hasBriskDescriptors() const{
-  return aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_);
+bool VisualFrame::hasDescriptors() const{
+  return aslam::channels::has_DESCRIPTORS_Channel(channels_);
 }
 bool VisualFrame::hasRawImage() const {
   return aslam::channels::has_RAW_IMAGE_Channel(channels_);
@@ -56,8 +59,11 @@ const Eigen::VectorXd& VisualFrame::getKeypointScales() const {
 const Eigen::VectorXd& VisualFrame::getKeypointOrientations() const {
   return aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
 }
-const VisualFrame::DescriptorsT& VisualFrame::getBriskDescriptors() const {
-  return aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+const Eigen::VectorXd& VisualFrame::getKeypointScores() const {
+  return aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+}
+const VisualFrame::DescriptorsT& VisualFrame::getDescriptors() const {
+  return aslam::channels::get_DESCRIPTORS_Data(channels_);
 }
 const cv::Mat& VisualFrame::getRawImage() const {
   return aslam::channels::get_RAW_IMAGE_Data(channels_);
@@ -83,9 +89,14 @@ Eigen::VectorXd* VisualFrame::getKeypointOrientationsMutable() {
       aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
     return &orientations;
 }
-VisualFrame::DescriptorsT* VisualFrame::getBriskDescriptorsMutable() {
+Eigen::VectorXd* VisualFrame::getKeypointScoresMutable() {
+  Eigen::VectorXd& scores =
+      aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+    return &scores;
+}
+VisualFrame::DescriptorsT* VisualFrame::getDescriptorsMutable() {
   VisualFrame::DescriptorsT& descriptors =
-      aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
   return &descriptors;
 }
 cv::Mat* VisualFrame::getRawImageMutable() {
@@ -119,9 +130,15 @@ double VisualFrame::getKeypointOrientation(size_t index) const {
   CHECK_LT(static_cast<int>(index), data.cols());
   return data.coeff(0, index);
 }
-const unsigned char* VisualFrame::getBriskDescriptor(size_t index) const {
+double VisualFrame::getKeypointScore(size_t index) const {
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+  CHECK_LT(static_cast<int>(index), data.cols());
+  return data.coeff(0, index);
+}
+const unsigned char* VisualFrame::getDescriptor(size_t index) const {
   VisualFrame::DescriptorsT& descriptors =
-      aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
   CHECK_LT(static_cast<int>(index), descriptors.cols());
   return &descriptors.coeffRef(0, index);
 }
@@ -162,22 +179,31 @@ void VisualFrame::setKeypointOrientations(
       aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
   data = orientations_new;
 }
-void VisualFrame::setBriskDescriptors(
+void VisualFrame::setKeypointScores(
+    const Eigen::VectorXd& scores_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_SCORES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_SCORES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+  data = scores_new;
+}
+void VisualFrame::setDescriptors(
     const DescriptorsT& descriptors_new) {
-  if (!aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_)) {
-    aslam::channels::add_BRISK_DESCRIPTORS_Channel(&channels_);
+  if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
+    aslam::channels::add_DESCRIPTORS_Channel(&channels_);
   }
   VisualFrame::DescriptorsT& descriptors =
-      aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
-void VisualFrame::setBriskDescriptors(
+void VisualFrame::setDescriptors(
     const Eigen::Map<const DescriptorsT>& descriptors_new) {
-  if (!aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_)) {
-    aslam::channels::add_BRISK_DESCRIPTORS_Channel(&channels_);
+  if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
+    aslam::channels::add_DESCRIPTORS_Channel(&channels_);
   }
   VisualFrame::DescriptorsT& descriptors =
-      aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
 
@@ -222,12 +248,20 @@ void VisualFrame::swapKeypointOrientations(Eigen::VectorXd* orientations_new) {
       aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
   data.swap(*orientations_new);
 }
-void VisualFrame::swapBriskDescriptors(DescriptorsT* descriptors_new) {
-  if (!aslam::channels::has_BRISK_DESCRIPTORS_Channel(channels_)) {
-    aslam::channels::add_BRISK_DESCRIPTORS_Channel(&channels_);
+void VisualFrame::swapKeypointScores(Eigen::VectorXd* scores_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_SCORES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_SCORES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+  data.swap(*scores_new);
+}
+void VisualFrame::swapDescriptors(DescriptorsT* descriptors_new) {
+  if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
+    aslam::channels::add_DESCRIPTORS_Channel(&channels_);
   }
   VisualFrame::DescriptorsT& descriptors =
-      aslam::channels::get_BRISK_DESCRIPTORS_Data(channels_);
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
   descriptors.swap(*descriptors_new);
 }
 

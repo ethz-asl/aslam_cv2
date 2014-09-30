@@ -15,7 +15,7 @@ EXPECT_EQ(camera, frame.getCameraGeometry());
 
 TEST(Frame, DeathGetElementFromOnUnsetData) {
 aslam::VisualFrame frame;
-EXPECT_DEATH(frame.getBriskDescriptor(0), "^");
+EXPECT_DEATH(frame.getDescriptor(0), "^");
 EXPECT_DEATH(frame.getKeypointMeasurement(0), "^");
 EXPECT_DEATH(frame.getKeypointMeasurementUncertainty(0), "^");
 EXPECT_DEATH(frame.getKeypointScale(0), "^");
@@ -24,7 +24,7 @@ EXPECT_DEATH(frame.getKeypointOrientation(0), "^");
 
 TEST(Frame, DeathOnGetUnsetData) {
 aslam::VisualFrame frame;
-EXPECT_DEATH(frame.getBriskDescriptors(), "^");
+EXPECT_DEATH(frame.getDescriptors(), "^");
 EXPECT_DEATH(frame.getKeypointMeasurements(), "^");
 EXPECT_DEATH(frame.getKeypointMeasurementUncertainties(), "^");
 EXPECT_DEATH(frame.getKeypointScales(), "^");
@@ -34,7 +34,7 @@ EXPECT_DEATH(frame.getRawImage(), "^");
 
 TEST(Frame, DeathOnGetMutableUnsetData) {
 aslam::VisualFrame frame;
-EXPECT_DEATH(frame.getBriskDescriptorsMutable(), "^");
+EXPECT_DEATH(frame.getDescriptorsMutable(), "^");
 EXPECT_DEATH(frame.getKeypointMeasurementsMutable(), "^");
 EXPECT_DEATH(frame.getKeypointMeasurementUncertaintiesMutable(), "^");
 EXPECT_DEATH(frame.getKeypointScalesMutable(), "^");
@@ -47,13 +47,13 @@ aslam::VisualFrame frame;
 aslam::VisualFrame::DescriptorsT data;
 data.resize(48, 10);
 data.setRandom();
-frame.setBriskDescriptors(data);
+frame.setDescriptors(data);
 const aslam::VisualFrame::DescriptorsT& data_2 =
-    frame.getBriskDescriptors();
+    frame.getDescriptors();
 EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
-EXPECT_EQ(&data_2, frame.getBriskDescriptorsMutable());
+EXPECT_EQ(&data_2, frame.getDescriptorsMutable());
 for (int i = 0; i < data.cols(); ++i) {
-  const unsigned char* data_ptr = frame.getBriskDescriptor(i);
+  const unsigned char* data_ptr = frame.getDescriptor(i);
   EXPECT_EQ(&data_2.coeffRef(0, i), data_ptr);
 }
 }
