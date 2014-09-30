@@ -74,7 +74,7 @@ class VisualFrame  {
   bool hasKeypointScales() const;
 
   /// \brief Are there descriptors stored in this frame?
-  bool hasBriskDescriptors() const;
+  bool hasDescriptors() const;
 
   /// \brief Is there a raw image stored in this frame?
   bool hasRawImage() const;
@@ -100,7 +100,7 @@ class VisualFrame  {
   const Eigen::VectorXd& getKeypointScales() const;
 
   /// \brief The descriptors stored in a frame.
-  const DescriptorsT& getBriskDescriptors() const;
+  const DescriptorsT& getDescriptors() const;
 
   /// \brief The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
@@ -126,7 +126,7 @@ class VisualFrame  {
   Eigen::VectorXd* getKeypointScalesMutable();
 
   /// \brief A pointer to the descriptors, can be used to swap in new data.
-  DescriptorsT* getBriskDescriptorsMutable();
+  DescriptorsT* getDescriptorsMutable();
 
   /// \brief A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
@@ -155,7 +155,7 @@ class VisualFrame  {
   double getKeypointScale(size_t index) const;
 
   /// \brief Return pointer location of the descriptor pointed to by index.
-  const unsigned char* getBriskDescriptor(size_t index) const;
+  const unsigned char* getDescriptor(size_t index) const;
 
   /// \brief Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
@@ -174,10 +174,10 @@ class VisualFrame  {
   void setKeypointScales(const Eigen::VectorXd& scales);
 
   /// \brief Replace (copy) the internal descriptors by the passed ones.
-  void setBriskDescriptors(const DescriptorsT& descriptors);
+  void setDescriptors(const DescriptorsT& descriptors);
 
   /// \brief Replace (copy) the internal descriptors by the passed ones.
-  void setBriskDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+  void setDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
 
   /// \brief Replace (copy) the internal raw image by the passed ones.
   ///        This is a shallow copy by default. Please clone the image if it
@@ -213,7 +213,7 @@ class VisualFrame  {
   void swapKeypointScales(Eigen::VectorXd* scales);
 
   /// \brief Replace (swap) the internal descriptors by the passed ones.
-  void swapBriskDescriptors(DescriptorsT* descriptors);
+  void swapDescriptors(DescriptorsT* descriptors);
 
   /// \brief Swap channel data with the data passed in. This will only work
   ///        if the channel data type has a swap() method.
@@ -290,10 +290,10 @@ class VisualFrame  {
   inline void setSystemTimestamp(int64_t stamp) { systemStamp_ = stamp; }
 
   /// \brief Set the size of the descriptor in bytes.
-  int32_t getBriskDescriptorSizeBytes() const { return num_bytes_descriptor_; };
+  int32_t getDescriptorSizeBytes() const { return num_bytes_descriptor_; };
 
   /// \brief Set the size of the descriptor in bytes.
-  void setBriskDescriptorSizeBytes(size_t num_bytes) { num_bytes_descriptor_= num_bytes; };
+  void setDescriptorSizeBytes(size_t num_bytes) { num_bytes_descriptor_= num_bytes; };
 
   /// \brief print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;

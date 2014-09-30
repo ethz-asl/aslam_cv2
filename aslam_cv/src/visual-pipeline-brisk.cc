@@ -78,7 +78,7 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   //           code may rely on the keypoints being set.
   CHECK_EQ(descriptors.type(), CV_8UC1);
   CHECK(descriptors.isContinuous());
-  frame->setBriskDescriptors(
+  frame->setDescriptors(
       Eigen::Map<VisualFrame::DescriptorsT>(descriptors.data,
                                             descriptors.rows,
                                             descriptors.cols)
@@ -101,7 +101,7 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   frame->swapKeypointScores(&scores);
   frame->swapKeypointOrientations(&orientations);
   frame->swapKeypointScales(&scales);
-  frame->setBriskDescriptorSizeBytes(extractor_->descriptorSize());
+  frame->setDescriptorSizeBytes(extractor_->descriptorSize());
 }
 
 }  // namespace aslam
