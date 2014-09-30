@@ -86,6 +86,7 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   Eigen::Matrix2Xd ikeypoints(2, keypoints.size());
   Eigen::VectorXd  scales(keypoints.size());
   Eigen::VectorXd  orientations(keypoints.size());
+  Eigen::VectorXd  scores(keypoints.size());
   // \TODO(ptf) Who knows a good formula for uncertainty based on octave?
   //            See https://github.com/ethz-asl/aslam_cv2/issues/73
   for(size_t i = 0; i < keypoints.size(); ++i) {
@@ -94,10 +95,13 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
     ikeypoints(1,i)  = kp.pt.y;
     scales[i]        = kp.size;
     orientations[i]  = kp.angle;
+    scores[i]        = kp.response;
   }
   frame->swapKeypointMeasurements(&ikeypoints);
+  frame->swapKeypointScores(&scores);
   frame->swapKeypointOrientations(&orientations);
   frame->swapKeypointScales(&scales);
+  frame->setBriskDescriptorSizeBytes(extractor_->descriptorSize());
 }
 
 }  // namespace aslam

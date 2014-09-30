@@ -17,9 +17,9 @@ VisualPipeline::VisualPipeline(const Camera::ConstPtr& input_camera,
 VisualPipeline::VisualPipeline(std::unique_ptr<Undistorter>& preprocessing, bool copy_images)
 : preprocessing_(std::move(preprocessing)),
   copy_images_(copy_images) {
-  CHECK_NOTNULL(preprocessing.get());
-  input_camera_ = preprocessing->getInputCameraShared();
-  output_camera_ = preprocessing->getOutputCameraShared();
+  CHECK_NOTNULL(preprocessing_.get());
+  input_camera_ = preprocessing_->getInputCameraShared();
+  output_camera_ = preprocessing_->getOutputCameraShared();
 }
 
 std::shared_ptr<VisualFrame> VisualPipeline::processImage(
