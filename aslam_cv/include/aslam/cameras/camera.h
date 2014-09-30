@@ -157,11 +157,16 @@ class Camera {
   /// \brief Camera base constructor with distortion.
   /// @param[in] intrinsics Vector containing the intrinsic parameters.
   /// @param[in] distortion unique_ptr to the distortion model
-  Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion);
+  /// @param[in] image_width Image width in pixels.
+  /// @param[in] image_height Image height in pixels.
+  Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
+         uint32_t image_width, uint32_t image_height);
 
   /// \brief Camera base constructor without distortion.
   /// @param[in] intrinsics Vector containing the intrinsic parameters.
-  Camera(const Eigen::VectorXd& intrinsics);
+  /// @param[in] image_width Image width in pixels.
+  /// @param[in] image_height Image height in pixels.
+  Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height);
 
  public:
   virtual ~Camera() {};
@@ -520,13 +525,6 @@ class Camera {
 
   /// @}
 
- protected:
-  /// Set the image width. Only accessible by derived classes.
-  void setImageWidth(uint32_t width) { image_width_ = width; }
-
-  /// Set the image height. Only accessible by derived classes.
-  void setImageHeight(uint32_t height) { image_height_ = height; }
-
  private:
   /// The delay per scanline for a rolling shutter camera in nanoseconds.
   uint64_t line_delay_nano_seconds_;
@@ -535,9 +533,9 @@ class Camera {
   /// The id of this camera.
   aslam::CameraId id_;
   /// The width of the image
-  uint32_t image_width_;
+  const uint32_t image_width_;
   /// The height of the image
-  uint32_t image_height_;
+  const uint32_t image_height_;
 
  protected:
   /// Parameter vector for the intrinsic parameters of the model.
