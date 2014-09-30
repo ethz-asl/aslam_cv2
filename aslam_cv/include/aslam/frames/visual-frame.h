@@ -67,6 +67,9 @@ class VisualFrame  {
   /// \brief Are there keypoint orientations stored in this frame?
   bool hasKeypointOrientations() const;
 
+  /// \brief Are there keypoint scores stored in this frame?
+  bool hasKeypointScores() const;
+
   /// \brief Are there keypoint scales stored in this frame?
   bool hasKeypointScales() const;
 
@@ -90,6 +93,9 @@ class VisualFrame  {
   /// \brief The keypoint orientations stored in a frame.
   const Eigen::VectorXd& getKeypointOrientations() const;
 
+  /// \brief The keypoint scores stored in a frame.
+  const Eigen::VectorXd& getKeypointScores() const;
+
   /// \brief The keypoint scales stored in a frame.
   const Eigen::VectorXd& getKeypointScales() const;
 
@@ -112,6 +118,9 @@ class VisualFrame  {
 
   /// \brief A pointer to the keypoint orientations, can be used to swap in new data.
   Eigen::VectorXd* getKeypointOrientationsMutable();
+
+  /// \brief A pointer to the keypoint scores, can be used to swap in new data.
+  Eigen::VectorXd* getKeypointScoresMutable();
 
   /// \brief A pointer to the keypoint scales, can be used to swap in new data.
   Eigen::VectorXd* getKeypointScalesMutable();
@@ -139,6 +148,9 @@ class VisualFrame  {
   /// \brief Return the keypoint orientation at index.
   double getKeypointOrientation(size_t index) const;
 
+  /// \brief Return the keypoint score at index.
+  double getKeypointScore(size_t index) const;
+
   /// \brief Return the keypoint scale at index.
   double getKeypointScale(size_t index) const;
 
@@ -154,6 +166,9 @@ class VisualFrame  {
 
   /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointOrientations(const Eigen::VectorXd& orientations);
+
+  /// \brief Replace (copy) the internal keypoint scores by the passed ones.
+  void setKeypointScores(const Eigen::VectorXd& scores);
 
   /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointScales(const Eigen::VectorXd& scales);
@@ -190,6 +205,9 @@ class VisualFrame  {
 
   /// \brief Replace (swap) the internal keypoint orientations by the passed ones.
   void swapKeypointOrientations(Eigen::VectorXd* orientations);
+
+  /// \brief Replace (swap) the internal keypoint scores by the passed ones.
+  void swapKeypointScores(Eigen::VectorXd* scores);
 
   /// \brief Replace (swap) the internal keypoint orientations by the passed ones.
   void swapKeypointScales(Eigen::VectorXd* scales);
@@ -271,6 +289,12 @@ class VisualFrame  {
   /// \brief set the system (host computer) timestamp.
   inline void setSystemTimestamp(int64_t stamp) { systemStamp_ = stamp; }
 
+  /// \brief Set the size of the descriptor in bytes.
+  int32_t getBriskDescriptorSizeBytes() const { return num_bytes_descriptor_; };
+
+  /// \brief Set the size of the descriptor in bytes.
+  void setBriskDescriptorSizeBytes(size_t num_bytes) { num_bytes_descriptor_= num_bytes; };
+
   /// \brief print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
  private:
@@ -280,6 +304,8 @@ class VisualFrame  {
   int64_t hardwareStamp_;
   /// \brief host system timestamp in integer nanoseconds since epoch.
   int64_t systemStamp_;
+  /// \brief Descriptor size in bytes.
+  size_t num_bytes_descriptor_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
   Camera::ConstPtr camera_geometry_;
