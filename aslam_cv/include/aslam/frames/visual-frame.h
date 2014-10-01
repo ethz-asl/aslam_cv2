@@ -76,6 +76,9 @@ class VisualFrame  {
   /// \brief Are there descriptors stored in this frame?
   bool hasDescriptors() const;
 
+  /// \brief Are there track ids stored in this frame?
+  bool hasTrackIds() const;
+
   /// \brief Is there a raw image stored in this frame?
   bool hasRawImage() const;
 
@@ -102,6 +105,9 @@ class VisualFrame  {
   /// \brief The descriptors stored in a frame.
   const DescriptorsT& getDescriptors() const;
 
+  /// \brief The track ids stored in this frame.
+  const Eigen::VectorXi& getTrackIds() const;
+
   /// \brief The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
 
@@ -127,6 +133,9 @@ class VisualFrame  {
 
   /// \brief A pointer to the descriptors, can be used to swap in new data.
   DescriptorsT* getDescriptorsMutable();
+
+  /// \brief A pointer to the track ids, can be used to swap in new data.
+  Eigen::VectorXi* getTrackIdsMutable();
 
   /// \brief A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
@@ -157,6 +166,9 @@ class VisualFrame  {
   /// \brief Return pointer location of the descriptor pointed to by index.
   const unsigned char* getDescriptor(size_t index) const;
 
+  /// \brief Return the track id at index. (-1: not tracked)
+  int getTrackId(size_t index) const;
+
   /// \brief Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
 
@@ -178,6 +190,9 @@ class VisualFrame  {
 
   /// \brief Replace (copy) the internal descriptors by the passed ones.
   void setDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+
+  /// \brief Replace (copy) the internal track ids by the passed ones.
+  void setTrackIds(const Eigen::VectorXi& track_ids);
 
   /// \brief Replace (copy) the internal raw image by the passed ones.
   ///        This is a shallow copy by default. Please clone the image if it
@@ -214,6 +229,9 @@ class VisualFrame  {
 
   /// \brief Replace (swap) the internal descriptors by the passed ones.
   void swapDescriptors(DescriptorsT* descriptors);
+
+  /// \brief Replace (swap) the internal track ids by the passed ones.
+  void swapTrackIds(Eigen::VectorXi* track_ids);
 
   /// \brief Swap channel data with the data passed in. This will only work
   ///        if the channel data type has a swap() method.
