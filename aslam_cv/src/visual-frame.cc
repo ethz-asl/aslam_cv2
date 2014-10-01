@@ -43,6 +43,9 @@ bool VisualFrame::hasKeypointScales() const{
 bool VisualFrame::hasDescriptors() const{
   return aslam::channels::has_DESCRIPTORS_Channel(channels_);
 }
+bool VisualFrame::hasTrackIds() const {
+  return aslam::channels::has_TRACK_IDS_Channel(channels_);
+}
 bool VisualFrame::hasRawImage() const {
   return aslam::channels::has_RAW_IMAGE_Channel(channels_);
 }
@@ -64,6 +67,9 @@ const Eigen::VectorXd& VisualFrame::getKeypointScores() const {
 }
 const VisualFrame::DescriptorsT& VisualFrame::getDescriptors() const {
   return aslam::channels::get_DESCRIPTORS_Data(channels_);
+}
+const Eigen::VectorXi& VisualFrame::getTrackIds() const {
+  return aslam::channels::get_TRACK_IDS_Data(channels_);
 }
 const cv::Mat& VisualFrame::getRawImage() const {
   return aslam::channels::get_RAW_IMAGE_Data(channels_);
@@ -98,6 +104,11 @@ VisualFrame::DescriptorsT* VisualFrame::getDescriptorsMutable() {
   VisualFrame::DescriptorsT& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   return &descriptors;
+}
+Eigen::VectorXi* VisualFrame::getTrackIdsMutable() {
+  Eigen::VectorXi& track_ids =
+      aslam::channels::get_TRACK_IDS_Data(channels_);
+  return &track_ids;
 }
 cv::Mat* VisualFrame::getRawImageMutable() {
   cv::Mat& image =
@@ -141,6 +152,12 @@ const unsigned char* VisualFrame::getDescriptor(size_t index) const {
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   CHECK_LT(static_cast<int>(index), descriptors.cols());
   return &descriptors.coeffRef(0, index);
+}
+int VisualFrame::getTrackId(size_t index) const {
+  Eigen::VectorXi& track_ids =
+      aslam::channels::get_TRACK_IDS_Data(channels_);
+  CHECK_LT(static_cast<int>(index), track_ids.cols());
+  return track_ids.coeff(0, index);
 }
 
 void VisualFrame::setKeypointMeasurements(
@@ -206,6 +223,14 @@ void VisualFrame::setDescriptors(
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
+void VisualFrame::setTrackIds(const Eigen::VectorXi& track_ids_new) {
+  if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
+    aslam::channels::add_TRACK_IDS_Channel(&channels_);
+  }
+  Eigen::VectorXi& data =
+      aslam::channels::get_TRACK_IDS_Data(channels_);
+  data = track_ids_new;
+}
 
 void VisualFrame::setRawImage(const cv::Mat& image_new) {
   if (!aslam::channels::has_RAW_IMAGE_Channel(channels_)) {
@@ -265,6 +290,13 @@ void VisualFrame::swapDescriptors(DescriptorsT* descriptors_new) {
   descriptors.swap(*descriptors_new);
 }
 
+void VisualFrame::swapTrackIds(Eigen::VectorXi* track_ids_new) {
+  if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
+    aslam::channels::add_TRACK_IDS_Channel(&channels_);
+  }
+  Eigen::VectorXi& track_ids = aslam::channels::get_TRACK_IDS_Data(channels_);
+  track_ids.swap(*track_ids_new);
+}
 
 const Camera::ConstPtr VisualFrame::getCameraGeometry() const {
   return camera_geometry_;
