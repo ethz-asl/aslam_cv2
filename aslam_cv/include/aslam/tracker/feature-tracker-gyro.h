@@ -10,11 +10,10 @@
 #include <aslam/common/macros.h>
 #include <aslam/tracker/feature-tracker.h>
 
-
-// Some forward declarations.
-class BinaryFeatureStore;
-namespace aslam { class VisualFrame; }
-namespace aslam { class Camera; }
+namespace aslam {
+class VisualFrame;
+class Camera;
+}
 
 namespace aslam {
 /// \class GyroTracker

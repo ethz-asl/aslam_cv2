@@ -10,7 +10,6 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/common/macros.h>
 
-// Some forward declarations.
 namespace aslam { class VisualFrame; }
 
 namespace aslam {

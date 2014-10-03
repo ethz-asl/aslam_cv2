@@ -1,3 +1,4 @@
+#include <memory>
 #include <vector>
 
 #include <Eigen/Dense>
@@ -87,14 +88,16 @@ void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
   for (size_t i = 0; i < matches_prev_current.size(); ++i) {
     CHECK_LT(matches_prev_current[i].first, static_cast<int>(previous_frame.getTrackIds().rows()));
     CHECK_LT(matches_prev_current[i].second, static_cast<int>(current_track_ids.size()));
-    current_track_ids(matches_prev_current[i].second) = previous_frame.getTrackId(matches_prev_current[i].first);
-    current_track_lengths_[matches_prev_current[i].second] = previous_track_lengths_[matches_prev_current[i].first] + 1;
+    current_track_ids(matches_prev_current[i].second) = previous_frame.getTrackId(
+        matches_prev_current[i].first);
+    current_track_lengths_[matches_prev_current[i].second] =
+        previous_track_lengths_[matches_prev_current[i].first] + 1;
 
     // Check if this is a continued track.
     if (current_track_ids(matches_prev_current[i].second) >= 0) {
       // Put the current keypoint into the bucket.
       CHECK_LT(matches_prev_current[i].second, current_num_pts);
-      const Eigen::Block<Eigen::Matrix2Xd, 2, 1> keypoint = current_frame.getKeypointMeasurement(
+      const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint = current_frame.getKeypointMeasurement(
           matches_prev_current[i].second);
       int bin_index = compute_bin_index(keypoint);
       buckets[bin_index].push_back(0);
@@ -128,7 +131,7 @@ void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
       ++candidate_idx) {
     int match_idx = candidates[candidate_idx].first;
     int index_in_curr = matches_prev_current[match_idx].second;
-    const Eigen::Block<Eigen::Matrix2Xd, 2, 1> keypoint = current_frame.getKeypointMeasurement(
+    const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint = current_frame.getKeypointMeasurement(
         index_in_curr);
     const double& keypoint_score = current_frame.getKeypointScore(index_in_curr);
     if (keypoint_score < kKeypointScoreThresholdUnconditional) {
@@ -153,7 +156,7 @@ void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
       ++candidate_idx) {
     int match_idx = candidates[candidate_idx].first;
     int index_in_curr = matches_prev_current[match_idx].second;
-    const Eigen::Block<Eigen::Matrix2Xd, 2, 1> keypoint = current_frame.getKeypointMeasurement(
+    const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint = current_frame.getKeypointMeasurement(
         index_in_curr);
     const double& keypoint_score = current_frame.getKeypointScore(index_in_curr);
     if (keypoint_score < kKeypointScoreThresholdStrong) {
@@ -209,8 +212,7 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
   matches_prev_current->clear();
 
   struct KeypointAndIndex {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW  //TODO(schneith): Do we need this for alinged allocation?
-                                     //                It produces a compiler warning...
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Eigen::Vector2d measurement;
     int index;
   };
