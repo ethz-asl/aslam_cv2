@@ -79,10 +79,12 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   CHECK_EQ(descriptors.type(), CV_8UC1);
   CHECK(descriptors.isContinuous());
   frame->setDescriptors(
+      // Switch cols/rows as Eigen is col-major and cv::Mat is row-major
       Eigen::Map<VisualFrame::DescriptorsT>(descriptors.data,
-                                            descriptors.rows,
-                                            descriptors.cols)
+                                            descriptors.cols,
+                                            descriptors.rows)
   );
+
   Eigen::Matrix2Xd ikeypoints(2, keypoints.size());
   Eigen::VectorXd  scales(keypoints.size());
   Eigen::VectorXd  orientations(keypoints.size());
