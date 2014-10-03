@@ -1,12 +1,13 @@
+#include <map>
 #include <memory>
 
+#include <Eigen/Dense>
 #include <glog/logging.h>
 #include <opencv2/highgui/highgui.hpp>
 
-#include <aslam/tracker/feature-tracker.h>
 #include <aslam/frames/visual-frame.h>
+#include <aslam/tracker/feature-tracker.h>
 
-// Some forward declarations.
 namespace aslam { class Camera; }
 
 namespace aslam {
@@ -25,7 +26,7 @@ void FeatureTracker::drawTracks(std::shared_ptr<VisualFrame> current_frame_ptr,
   CHECK_NOTNULL(track_image);
 
   struct Track {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW             // TODO(schneith): Do we need this?
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Track() : track_id(-1), length(0) {};
     int track_id;
     Eigen::Vector2d starting_point;
