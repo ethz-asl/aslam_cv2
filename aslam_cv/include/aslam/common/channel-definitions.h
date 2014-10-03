@@ -5,9 +5,11 @@
 #include <aslam/common/channel-declaration.h>
 
 /// Coordinates of the raw keypoints. (keypoint detector output)
+/// (cols are keypoints)
 DECLARE_CHANNEL(VISUAL_KEYPOINT_MEASUREMENTS, Eigen::Matrix2Xd);
 
 /// Keypoint coordinate uncertainties of the raw keypoints. (keypoint detector output)
+/// (cols are uncertainties)
 DECLARE_CHANNEL(VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES, Eigen::VectorXd);
 
 /// Keypoint orientation from keypoint extractor. (keypoint detector output)
@@ -23,6 +25,7 @@ DECLARE_CHANNEL(VISUAL_KEYPOINT_SCALES, Eigen::VectorXd);
 DECLARE_CHANNEL(VISUAL_KEYPOINT_SCORES, Eigen::VectorXd);
 
 /// The keypoint descriptors. (extractor output)
+/// (cols are descriptors)
 DECLARE_CHANNEL(DESCRIPTORS, Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>);
 
 /// Track ID's for tracked features. (-1 if not tracked); (feature tracker output)

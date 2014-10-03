@@ -7,7 +7,8 @@ namespace aslam {
 VisualFrame::VisualFrame()
     : stamp_(getInvalidTime()),
       hardwareStamp_(getInvalidTime()),
-      systemStamp_(getInvalidTime()) {}
+      systemStamp_(getInvalidTime()),
+      num_bytes_descriptor_(0) {}
 
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
@@ -126,26 +127,26 @@ VisualFrame::getKeypointMeasurement(size_t index) const {
 double VisualFrame::getKeypointMeasurementUncertainty(size_t index) const {
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
-  CHECK_LT(static_cast<int>(index), data.cols());
+  CHECK_LT(static_cast<int>(index), data.rows());
   return data.coeff(0, index);
 }
 double VisualFrame::getKeypointScale(size_t index) const {
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-  CHECK_LT(static_cast<int>(index), data.cols());
-  return data.coeff(0, index);
+  CHECK_LT(static_cast<int>(index), data.rows());
+  return data.coeff(index, 0);
 }
 double VisualFrame::getKeypointOrientation(size_t index) const {
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
-  CHECK_LT(static_cast<int>(index), data.cols());
-  return data.coeff(0, index);
+  CHECK_LT(static_cast<int>(index), data.rows());
+  return data.coeff(index, 0);
 }
 double VisualFrame::getKeypointScore(size_t index) const {
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
-  CHECK_LT(static_cast<int>(index), data.cols());
-  return data.coeff(0, index);
+  CHECK_LT(static_cast<int>(index), data.rows());
+  return data.coeff(index, 0);
 }
 const unsigned char* VisualFrame::getDescriptor(size_t index) const {
   VisualFrame::DescriptorsT& descriptors =
@@ -156,8 +157,8 @@ const unsigned char* VisualFrame::getDescriptor(size_t index) const {
 int VisualFrame::getTrackId(size_t index) const {
   Eigen::VectorXi& track_ids =
       aslam::channels::get_TRACK_IDS_Data(channels_);
-  CHECK_LT(static_cast<int>(index), track_ids.cols());
-  return track_ids.coeff(0, index);
+  CHECK_LT(static_cast<int>(index), track_ids.rows());
+  return track_ids.coeff(index, 0);
 }
 
 void VisualFrame::setKeypointMeasurements(
