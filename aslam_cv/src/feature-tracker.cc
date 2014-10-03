@@ -10,7 +10,6 @@
 namespace aslam { class Camera; }
 
 namespace aslam {
-
 FeatureTracker::FeatureTracker()
     : camera_(nullptr),
       current_track_id_(0) {}
@@ -26,12 +25,8 @@ void FeatureTracker::drawTracks(std::shared_ptr<VisualFrame> current_frame_ptr,
   CHECK_NOTNULL(track_image);
 
   struct Track {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW                                                       // TODO(schneith): Do we need this?
-    Track()
-        : track_id(-1),
-          length(0) {
-    };
-
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW             // TODO(schneith): Do we need this?
+    Track() : track_id(-1), length(0) {};
     int track_id;
     Eigen::Vector2d starting_point;
     Eigen::Vector2d end_point;
