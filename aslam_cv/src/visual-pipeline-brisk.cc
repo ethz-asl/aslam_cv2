@@ -79,7 +79,7 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   CHECK_EQ(descriptors.type(), CV_8UC1);
   CHECK(descriptors.isContinuous());
   frame->setDescriptors(
-      // Switch cols/rows as Eigen is col-major and Eigen is row-major
+      // Switch cols/rows as Eigen is col-major and cv::Mat is row-major
       Eigen::Map<VisualFrame::DescriptorsT>(descriptors.data,
                                             descriptors.cols,
                                             descriptors.rows)
