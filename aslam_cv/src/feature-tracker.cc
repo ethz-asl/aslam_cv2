@@ -38,7 +38,7 @@ void FeatureTracker::drawTracks(std::shared_ptr<VisualFrame> current_frame_ptr,
 
   // Create the image
   const cv::Mat& raw_image = current_frame.getRawImage();
-  cv::cvtColor(raw_image, *track_image, CV_GRAY2BGR);       //TODO(schneith): make color working
+  cv::cvtColor(raw_image, *track_image, CV_GRAY2BGR);
 
   // Check for new tracks and store it.
   Eigen::VectorXi current_track_ids = current_frame.getTrackIds();
