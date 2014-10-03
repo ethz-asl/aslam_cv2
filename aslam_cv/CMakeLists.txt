@@ -22,6 +22,8 @@ cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/visual-pipeline-brisk.cc
                                src/undistorter.cc
                                src/undistorter-mapped.cc
+                               src/feature-tracker.cc
+                               src/feature-tracker-gyro.cc
                                src/statistics.cc
 )
 
