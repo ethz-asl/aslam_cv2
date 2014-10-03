@@ -77,7 +77,8 @@ class GyroTracker : public FeatureTracker {
   /// Track length corresponding to the feature vector in the previous frame.
   std::vector<int> previous_track_lengths_;
 
-  //TODO(schneith): add documentation for the parameters && make settings??
+  //TODO(schneith): Add documentation for the parameters
+  //TODO(schneith): Evaluate good value for kKeypointScoreThreshold
   const float kKeypointScoreThreshold = 5.0;
   const int kNumberOfTrackingBuckets = 4;
   const int kNumberOfKeyPointsUseUnconditional = 100;
