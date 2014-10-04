@@ -258,7 +258,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
 
  private:
   /// \brief Minimal depth for a valid projection.
-  static constexpr double kMinimumDepth = 1e-10;
+  static const double kMinimumDepth;
 };
 
 }  // namespace aslam
