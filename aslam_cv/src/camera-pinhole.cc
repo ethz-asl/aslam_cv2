@@ -298,4 +298,5 @@ void PinholeCamera::printParameters(std::ostream& out, const std::string& text) 
     distortion_->printParameters(out, text);
   }
 }
+const double PinholeCamera::kMinimumDepth = 1e-10;
 }  // namespace aslam
