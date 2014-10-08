@@ -6,9 +6,6 @@
 
 namespace aslam {
 
-typedef kindr::minimal::QuatTransformation Transformation;
-typedef kindr::minimal::QuatTransformation::Rotation Rotation;
-
 /// Interpolation method used for image undistortion. (Wrapper for OpenCV types)
 enum class InterpolationMethod : int {
   /// A bilinear interpolation (used by default).
