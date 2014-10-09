@@ -8,7 +8,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/common/macros.h>
-#include <aslam/common/types.h>
+#include <aslam/common/pose-types.h>
 #include <sm/aligned_allocation.h>
 
 namespace sm {
