@@ -6,17 +6,16 @@
 #include <mutex>
 #include <vector>
 
-#include <aslam/common/macros.h>
+#include <opencv2/core/core.hpp>
 
-namespace cv { class Mat; }
+#include <aslam/common/macros.h>
+#include <aslam/cameras/ncamera.h>
+#include <aslam/common/thread-pool.h>
+#include <aslam/frames/visual-frame.h>
+#include <aslam/frames/visual-nframe.h>
+#include <aslam/pipeline/visual-pipeline.h>
 
 namespace aslam {
-
-class NCamera;
-class ThreadPool;
-class VisualFrame;
-class VisualNFrame;
-class VisualPipeline;
 
 /// \class VisualNPipeline
 /// \brief An interface for pipelines that turn images into VisualNFrames
@@ -54,15 +53,15 @@ class VisualNPipeline {
   /// \param[in] pipelines              The ordered image pipelines, one pipeline
   ///                                   per camera in the same order as they are
   ///                                   indexed in the camera system.
-  /// \param[in] input_cameras          The camera system of the raw images.
-  /// \param[in] output_cameras         The camera system of the processed images.
+  /// \param[in] input_camera_system    The camera system of the raw images.
+  /// \param[in] output_camera_system   The camera system of the processed images.
   /// \param[in] timestamp_tolerance_ns How close should two image timestamps be
   ///                                   for us to consider them part of the same
   ///                                   synchronized frame?
   VisualNPipeline(unsigned num_threads,
                   const std::vector<std::shared_ptr<VisualPipeline>>& pipelines,
-                  const std::shared_ptr<NCamera>& input_cameras,
-                  const std::shared_ptr<NCamera>& output_cameras,
+                  const std::shared_ptr<NCamera>& input_camera_system,
+                  const std::shared_ptr<NCamera>& output_camera_system,
                   int64_t timestamp_tolerance_ns);
 
   ~VisualNPipeline();
@@ -104,14 +103,14 @@ class VisualNPipeline {
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  const std::shared_ptr<NCamera>& getInputNCameras() const;
+  std::shared_ptr<const NCamera> getInputNCameras() const;
 
   /// \brief Get the output camera system that corresponds to the VisualNFrame
   ///        data that comes out.
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera systems may not be the same.
-  const std::shared_ptr<NCamera>& getOutputNCameras() const;
+  std::shared_ptr<const NCamera> getOutputNCameras() const;
 
   /// \brief Blocks until all waiting frames are processed.
   void waitForAllWorkToComplete() const;
@@ -141,9 +140,9 @@ class VisualNPipeline {
   std::shared_ptr<aslam::ThreadPool> thread_pool_;
 
   /// \brief The camera system of the raw images.
-  std::shared_ptr<NCamera> input_cameras_;
+  std::shared_ptr<NCamera> input_camera_system_;
   /// \brief The camera system of the processed images.
-  std::shared_ptr<NCamera> output_cameras_;
+  std::shared_ptr<NCamera> output_camera_system_;
 
   /// \brief The tolerance for associating host timestamps as being captured
   ///        at the same time

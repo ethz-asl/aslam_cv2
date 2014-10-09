@@ -3,7 +3,10 @@
 
 #include <Eigen/Core>
 #include <glog/logging.h>
-#include "distortion.h"
+
+#include <aslam/common/crtp-clone.h>
+#include <aslam/cameras/distortion.h>
+#include <aslam/common/macros.h>
 
 namespace aslam {
 
@@ -13,7 +16,7 @@ namespace aslam {
 ///        The ordering of the parameter vector is: k1 k2 p1 p2
 ///        NOTE: The inverse transformation (undistort) in this case is not available in
 ///        closed form and so it is computed iteratively!
-class RadTanDistortion : public aslam::Distortion {
+class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
 
  private:
   /** \brief Number of parameters used for this distortion model. */
@@ -21,6 +24,7 @@ class RadTanDistortion : public aslam::Distortion {
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
+  ASLAM_POINTER_TYPEDEFS(RadTanDistortion);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -36,12 +40,17 @@ class RadTanDistortion : public aslam::Distortion {
     return out;
   };
 
+ public:
+  /// Copy constructor for clone operation.
+  RadTanDistortion(const RadTanDistortion&) = default;
+  void operator=(const RadTanDistortion&) = delete;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Distort methods: applies the distortion model to a point.
   /// @{
-
+ public:
   /// \brief Apply distortion to a point in the normalized image plane using provided distortion
   ///        coefficients. External distortion coefficients can be specified using this function.
   ///        (Ignores the internally stored parameters.
@@ -89,9 +98,9 @@ class RadTanDistortion : public aslam::Distortion {
   /// @{
 
   /// \brief Create a test distortion object for unit testing.
-  static RadTanDistortion::Ptr createTestDistortion() {
+  static RadTanDistortion::UniquePtr createTestDistortion() {
     Eigen::VectorXd params(4); params << -0.13,  0.08, -0.00026, -0.00024;
-    return RadTanDistortion::Ptr(new RadTanDistortion(params));
+    return RadTanDistortion::UniquePtr(new RadTanDistortion(params));
   }
 
   /// @}

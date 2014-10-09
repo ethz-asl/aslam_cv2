@@ -2,10 +2,15 @@
 #define ASLAM_UNIFIED_PROJECTION_CAMERA_H_
 
 #include <aslam/cameras/camera.h>
+#include <aslam/common/crtp-clone.h>
+#include <aslam/common/types.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 
 namespace aslam {
+
+// Forward declarations.
+class MappedUndistorter;
 
 /// \class UnifiedProjectionCamera
 /// \brief An implementation of the unified projection camera model with (optional) distortion.
@@ -18,11 +23,10 @@ namespace aslam {
 ///             (2) Joao P. Barreto and Helder Araujo. Issues on the geometry of central
 ///                 catadioptric image formation. In CVPR, volume 2, pages 422–427, 2001.
 ///                 (http://home.isr.uc.pt/~jpbar/Publication_Source/cvpr2001.pdf)
-class UnifiedProjectionCamera : public Camera {
+class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectionCamera> {
   enum { kNumOfParams = 5 };
  public:
   ASLAM_POINTER_TYPEDEFS(UnifiedProjectionCamera);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(UnifiedProjectionCamera);
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -39,12 +43,21 @@ class UnifiedProjectionCamera : public Camera {
   UnifiedProjectionCamera();
 
  public:
+  /// Copy constructor for clone operation.
+  UnifiedProjectionCamera(const UnifiedProjectionCamera& other) : Base(other) {
+    if (other.distortion_) // Clone distortion if model is set.
+      distortion_.reset(other.distortion_->clone());
+  };
+
+  void operator=(const UnifiedProjectionCamera&) = delete;
+
+ public:
   /// \brief Construct a camera with distortion.
   /// @param[in] intrinsics   vector containing the intrinsic parameters (xi,fu,fv,cu.cv)
   /// @param[in] image_height image height in pixels
   /// @param[in] distortion   pointer to the distortion model
   UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
-                          uint32_t image_height, aslam::Distortion::Ptr distortion);
+                          uint32_t image_height, aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a camera without distortion.
   /// @param[in] intrinsics   vector containing the intrinsic parameters (xi,fu,fv,cu.cv)
@@ -66,7 +79,7 @@ class UnifiedProjectionCamera : public Camera {
   UnifiedProjectionCamera(double xi, double focallength_cols, double focallength_rows,
                           double imagecenter_cols, double imagecenter_rows,
                           uint32_t image_width, uint32_t image_height,
-                          aslam::Distortion::Ptr distortion);
+                          aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a camera without distortion.
   /// @param[in] xi               mirror parameter
@@ -172,9 +185,10 @@ class UnifiedProjectionCamera : public Camera {
 
   /// \brief Create a test camera object for unit testing.
   template<typename DistortionType>
-  static UnifiedProjectionCamera::Ptr createTestCamera()   {
+  static UnifiedProjectionCamera::Ptr createTestCamera() {
+    aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
     return UnifiedProjectionCamera::Ptr(new UnifiedProjectionCamera(0.9, 400, 400, 320, 240, 640, 480,
-                                          DistortionType::createTestDistortion()));
+                                                                    distortion));
   }
 
   /// \brief Create a test camera object for unit testing. (without distortion)
@@ -185,24 +199,49 @@ class UnifiedProjectionCamera : public Camera {
   /// @}
 
   //////////////////////////////////////////////////////////////
-  /// \name Methods to set/get distortion parameters.
+  /// \name Methods to create an undistorter for this camera.
   /// @{
 
-  /// \brief Returns a pointer to the underlying distortion object.
-  /// @return ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual aslam::Distortion::Ptr distortion() { return distortion_; };
+ public:
+  /// \brief Factory method to create a mapped undistorter for this camera geometry.
+  ///        NOTE: The undistorter stores a copy of this camera and changes to this geometry
+  ///              are not connected with the undistorter!
+  /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
+  ///                  will be valid) and 1 (when all the source image pixels will be retained in the
+  ///                  undistorted image)
+  /// @param[in] scale Output image size scaling parameter wrt. to input image size.
+  /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
+  /// @return Pointer to the created mapped undistorter.
+  virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
+      aslam::InterpolationMethod interpolation_type) const;
 
-  /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return const_ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual const aslam::Distortion::Ptr distortion() const { return distortion_; };
+  /// \brief Factory method to create a mapped undistorter for this camera geometry to undistorts
+  ///        the image to a pinhole view.
+  ///        NOTE: The undistorter stores a copy of this camera and changes to this geometry
+  ///              are not connected with the undistorter!
+  /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
+  ///                  will be valid) and 1 (when all the source image pixels will be retained in the
+  ///                  undistorted image)
+  /// @param[in] scale Output image size scaling parameter wrt. to input image size.
+  /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
+  /// @return Pointer to the created mapped undistorter.
+  std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(float alpha, float scale,
+      aslam::InterpolationMethod interpolation_type) const;
 
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Methods to access intrinsics.
   /// @{
+
+  /// \brief Returns the camera matrix for the projection.
+  Eigen::Matrix3d getCameraMatrix() const {
+    Eigen::Matrix3d K;
+    K << fu(), 0.0,  cu(),
+         0.0,  fv(), cv(),
+         0.0,  0.0,  1.0;
+    return K;
+  }
 
   /// \brief The horizontal focal length in pixels.
   double xi() const { return intrinsics_[0]; };
@@ -222,6 +261,9 @@ class UnifiedProjectionCamera : public Camera {
       return kNumOfParams;
   }
 
+  /// Function to check wheter the given intrinic parameters are valid for this model.
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
+
   /// \brief The number of intrinsic parameters.
   virtual int getParameterSize() const {
     return kNumOfParams;
@@ -235,9 +277,6 @@ class UnifiedProjectionCamera : public Camera {
   /// @}
 
  private:
-  /// \brief The distortion of this camera.
-  aslam::Distortion::Ptr distortion_;
-
   /// \brief Minimal depth for a valid projection.
   static constexpr double kMinimumDepth = 1e-10;
 };

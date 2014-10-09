@@ -15,9 +15,9 @@ public:
   /// \param[in] camera The camera that produces the images.
   /// \param[in] copyImages If true, images passed in are cloned before storing
   ///                       in the frame.
-  NullVisualPipeline(const std::shared_ptr<Camera>& camera, bool copyImages);
+  NullVisualPipeline(const Camera::ConstPtr& camera, bool copyImages);
 
-  virtual ~NullVisualPipeline();
+  virtual ~NullVisualPipeline() {};
 
 protected:
   /// \brief Process the frame and fill the results into the frame variable

@@ -11,26 +11,22 @@ BriskVisualPipeline::BriskVisualPipeline() {
   // Just for serialization. Not meant to be used.
 }
 
-BriskVisualPipeline::BriskVisualPipeline(
-    const std::shared_ptr<Camera>& camera, bool copy_images, size_t octaves,
-    double uniformity_radius, double absolute_threshold,
-    size_t max_number_of_keypoints, bool rotation_invariant,
-    bool scale_invariant) : VisualPipeline(camera, camera, copy_images) {
-  CHECK_NOTNULL(camera.get());
-  initializeBrisk(octaves, uniformity_radius, absolute_threshold,
-                  max_number_of_keypoints, rotation_invariant,
-                  scale_invariant);
+BriskVisualPipeline::BriskVisualPipeline(const Camera::ConstPtr& camera, bool copy_images,
+                                         size_t octaves, double uniformity_radius,
+                                         double absolute_threshold, size_t max_number_of_keypoints,
+                                         bool rotation_invariant, bool scale_invariant)
+    : VisualPipeline(camera, camera, copy_images) {
+  initializeBrisk(octaves, uniformity_radius, absolute_threshold, max_number_of_keypoints,
+                  rotation_invariant, scale_invariant);
 }
 
-BriskVisualPipeline::BriskVisualPipeline(
-    const Undistorter::Ptr& preprocessing, bool copy_images, size_t octaves,
-    double uniformity_radius, double absolute_threshold,
-    size_t max_number_of_keypoints, bool rotation_invariant,
-    bool scale_invariant) :
-        VisualPipeline(preprocessing, copy_images) {
-  initializeBrisk(octaves, uniformity_radius, absolute_threshold,
-                  max_number_of_keypoints, rotation_invariant,
-                  scale_invariant);
+BriskVisualPipeline::BriskVisualPipeline(std::unique_ptr<Undistorter>& preprocessing,
+                                         bool copy_images, size_t octaves, double uniformity_radius,
+                                         double absolute_threshold, size_t max_number_of_keypoints,
+                                         bool rotation_invariant, bool scale_invariant)
+    : VisualPipeline(preprocessing, copy_images) {
+  initializeBrisk(octaves, uniformity_radius, absolute_threshold, max_number_of_keypoints,
+                  rotation_invariant, scale_invariant);
 }
 
 BriskVisualPipeline::~BriskVisualPipeline() { }
@@ -82,14 +78,17 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   //           code may rely on the keypoints being set.
   CHECK_EQ(descriptors.type(), CV_8UC1);
   CHECK(descriptors.isContinuous());
-  frame->setBriskDescriptors(
+  frame->setDescriptors(
+      // Switch cols/rows as Eigen is col-major and cv::Mat is row-major
       Eigen::Map<VisualFrame::DescriptorsT>(descriptors.data,
-                                            descriptors.rows,
-                                            descriptors.cols)
+                                            descriptors.cols,
+                                            descriptors.rows)
   );
+
   Eigen::Matrix2Xd ikeypoints(2, keypoints.size());
   Eigen::VectorXd  scales(keypoints.size());
   Eigen::VectorXd  orientations(keypoints.size());
+  Eigen::VectorXd  scores(keypoints.size());
   // \TODO(ptf) Who knows a good formula for uncertainty based on octave?
   //            See https://github.com/ethz-asl/aslam_cv2/issues/73
   for(size_t i = 0; i < keypoints.size(); ++i) {
@@ -98,10 +97,13 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
     ikeypoints(1,i)  = kp.pt.y;
     scales[i]        = kp.size;
     orientations[i]  = kp.angle;
+    scores[i]        = kp.response;
   }
   frame->swapKeypointMeasurements(&ikeypoints);
+  frame->swapKeypointScores(&scores);
   frame->swapKeypointOrientations(&orientations);
   frame->swapKeypointScales(&scales);
+  frame->setDescriptorSizeBytes(extractor_->descriptorSize());
 }
 
 }  // namespace aslam

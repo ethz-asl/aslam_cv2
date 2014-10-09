@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <opencv2/core/core.hpp>
+
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/distortion-radtan.h>
@@ -7,7 +9,6 @@
 #include <aslam/pipeline/visual-pipeline-null.h>
 #include <aslam/pipeline/visual-pipeline.h>
 #include <aslam/pipeline/visual-npipeline.h>
-#include <opencv2/core/core.hpp>
 
 using namespace aslam;
 
@@ -16,45 +17,29 @@ class VisualNPipelineTest : public ::testing::Test {
   typedef aslam::RadTanDistortion DistortionType;
   typedef aslam::PinholeCamera CameraType;
 
-  virtual void SetUp() { }
-
   void constructNCamera(unsigned num_cameras,
                         unsigned num_threads,
                         int64_t timestamp_tolerance_ns) {
-    //random intrinsics
-    double fu = 300;
-    double fv = 320;
-    double cu = 340;
-    double cv = 220;
-    double res_u = 640;
-    double res_v = 480;
 
-    Eigen::VectorXd intrinsics(4);
-    intrinsics << fu, fv, cu, cv;
-
-    //random radtan distortion parameters
-    Eigen::VectorXd distortion_param(4);
-    distortion_param << 0.8, 0.01, 0.2, 0.02;
-
-    NCamerasId id;
+    NCameraId id;
     id.randomize();
     Aligned<std::vector, kindr::minimal::QuatTransformation>::type T_C_B;
     std::vector<Camera::Ptr> cameras;
-    std::vector<std::shared_ptr<VisualPipeline>> pipelines;
+    std::vector<VisualPipeline::Ptr> pipelines;
     for(unsigned i = 0; i < num_cameras; ++i) {
       kindr::minimal::QuatTransformation T;
       T_C_B.push_back(T);
 
-      std::shared_ptr<Camera> camera = Camera::construct<CameraType, DistortionType>(
-          intrinsics, res_u, res_v, distortion_param);
+      CameraType::Ptr camera = CameraType::createTestCamera<DistortionType>();
       cameras.push_back(camera);
-      pipelines.push_back( std::shared_ptr<VisualPipeline>(new NullVisualPipeline(camera, false)));
+      pipelines.push_back(std::shared_ptr<VisualPipeline>(new NullVisualPipeline(camera, false)));
     }
-    camera_rig_.reset( new NCamera(id, T_C_B, cameras, "Test Camera System"));
+    camera_rig_.reset(new NCamera(id, T_C_B, cameras, "Test Camera System"));
 
-    pipeline_.reset( new VisualNPipeline(num_threads, pipelines,
-                                         camera_rig_, camera_rig_,
-                                         timestamp_tolerance_ns));
+    pipeline_.reset(new VisualNPipeline(num_threads, pipelines,
+                                        camera_rig_, camera_rig_,
+                                        timestamp_tolerance_ns));
+
   }
 
   cv::Mat getImageFromCamera(unsigned camera_index) {
@@ -65,9 +50,8 @@ class VisualNPipelineTest : public ::testing::Test {
                    CV_8UC1, uint8_t(camera_index));
   }
 
-  std::shared_ptr<NCamera> camera_rig_;
-  std::shared_ptr<VisualNPipeline> pipeline_;
-
+  NCamera::Ptr camera_rig_;
+  VisualNPipeline::Ptr pipeline_;
 };
 
 TEST_F(VisualNPipelineTest, buildNFramesOutOfOrder) {
@@ -103,7 +87,6 @@ TEST_F(VisualNPipelineTest, buildNFramesOutOfOrder) {
   ASSERT_EQ(1000, nframes->getFrame(0).getTimestamp());
   ASSERT_EQ(1001, nframes->getFrame(1).getTimestamp());
 }
-
 
 TEST_F(VisualNPipelineTest, testBuildAndClear) {
   this->constructNCamera(2, 4, 100);

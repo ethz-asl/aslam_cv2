@@ -4,25 +4,27 @@ project(aslam_cv)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
-cs_add_library(${PROJECT_NAME} 
+cs_add_library(${PROJECT_NAME} src/camera.cc
                                src/camera-pinhole.cc
                                src/camera-unified-projection.cc
-                               src/camera.cc
-                               src/channel-serialization.cc
-                               src/distortion-equidistant.cc
+                               src/distortion.cc
                                src/distortion-fisheye.cc
                                src/distortion-radtan.cc
-                               src/distortion.cc
+                               src/distortion-equidistant.cc
                                src/ncamera.cc
-                               src/thread-pool.cc
-                               src/undistorter-mapped.cc
-                               src/undistorter.cc
+                               src/channel-serialization.cc
                                src/visual-frame.cc
                                src/visual-nframe.cc
-                               src/visual-npipeline.cc
-                               src/visual-pipeline-brisk.cc
-                               src/visual-pipeline-null.cc
+                               src/thread-pool.cc
                                src/visual-pipeline.cc
+                               src/visual-npipeline.cc
+                               src/visual-pipeline-null.cc
+                               src/visual-pipeline-brisk.cc
+                               src/undistorter.cc
+                               src/undistorter-mapped.cc
+                               src/feature-tracker.cc
+                               src/feature-tracker-gyro.cc
+                               src/statistics.cc
 )
 
 add_doxygen(NOT_AUTOMATIC)
@@ -34,7 +36,6 @@ endif()
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 catkin_add_gtest(${PROJECT_NAME}_tests 
-    test/entry-point.cc
     test/test-cameras.cc
     test/test-channel-serialization.cc
     test/test-channels.cc
@@ -43,6 +44,8 @@ catkin_add_gtest(${PROJECT_NAME}_tests
     test/test-thread-pool.cc
     test/test-visual-frame.cc
     test/test-visual-npipeline.cc
+    test/entry-point.cc
+    test/test-undistorters.cc
     )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 

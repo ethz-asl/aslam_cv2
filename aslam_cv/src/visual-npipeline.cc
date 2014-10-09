@@ -8,31 +8,30 @@
 #include <glog/logging.h>
 #include <opencv2/core/core.hpp>
 
-
 namespace aslam {
 
 VisualNPipeline::VisualNPipeline(
     unsigned num_threads,
     const std::vector<std::shared_ptr<VisualPipeline> >& pipelines,
-    const std::shared_ptr<NCamera>& input_cameras,
-    const std::shared_ptr<NCamera>& output_cameras, int64_t timestamp_tolerance_ns) :
+    const std::shared_ptr<NCamera>& input_camera_system,
+    const std::shared_ptr<NCamera>& output_camera_system, int64_t timestamp_tolerance_ns) :
       pipelines_(pipelines),
-      input_cameras_(input_cameras), output_cameras_(output_cameras),
+      input_camera_system_(input_camera_system), output_camera_system_(output_camera_system),
       timestamp_tolerance_ns_(timestamp_tolerance_ns) {
   // Defensive programming ninjitsu.
-  CHECK_NOTNULL(input_cameras.get());
-  CHECK_NOTNULL(output_cameras.get());
-  CHECK_GT(input_cameras->numCameras(), 0u);
-  CHECK_EQ(input_cameras->numCameras(), output_cameras->numCameras());
-  CHECK_EQ(input_cameras->numCameras(), pipelines.size());
+  CHECK_NOTNULL(input_camera_system_.get());
+  CHECK_NOTNULL(output_camera_system.get());
+  CHECK_GT(input_camera_system_->numCameras(), 0u);
+  CHECK_EQ(input_camera_system_->numCameras(), output_camera_system_->numCameras());
+  CHECK_EQ(input_camera_system_->numCameras(), pipelines.size());
   CHECK_GE(timestamp_tolerance_ns, 0);
 
   for(size_t i = 0; i < pipelines.size(); ++i) {
     CHECK_NOTNULL(pipelines[i].get());
     // Check that the input cameras actually point to the same object.
-    CHECK_EQ(input_cameras->getCameraMutable(i), pipelines[i]->getInputCamera());
+    CHECK(input_camera_system_->getCameraShared(i) == pipelines[i]->getInputCameraShared());
     // Check that the output cameras actually point to the same object.
-    CHECK_EQ(output_cameras->getCameraMutable(i), pipelines[i]->getOutputCamera());
+    CHECK(output_camera_system_->getCameraShared(i) == pipelines[i]->getOutputCameraShared());
   }
   CHECK_GT(num_threads, 0u);
   thread_pool_.reset(new ThreadPool(num_threads));
@@ -84,12 +83,12 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
   return rval;
 }
 
-const std::shared_ptr<NCamera>& VisualNPipeline::getInputNCameras() const {
-  return input_cameras_;
+std::shared_ptr<const NCamera> VisualNPipeline::getInputNCameras() const {
+  return input_camera_system_;
 }
 
-const std::shared_ptr<NCamera>& VisualNPipeline::getOutputNCameras() const {
-  return output_cameras_;
+std::shared_ptr<const NCamera> VisualNPipeline::getOutputNCameras() const {
+  return output_camera_system_;
 }
 
 size_t VisualNPipeline::getNumFramesProcessing() const {
@@ -135,7 +134,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
     }
 
     if(create_new_nframes) {
-      std::shared_ptr<VisualNFrame> nframes(new VisualNFrame(output_cameras_));
+      std::shared_ptr<VisualNFrame> nframes(new VisualNFrame(output_camera_system_));
       bool replaced;
       std::tie(proc_it, replaced) = processing_.insert(
           std::make_pair(frame->getTimestamp(), nframes)

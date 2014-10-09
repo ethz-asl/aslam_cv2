@@ -2,10 +2,15 @@
 #define ASLAM_CAMERAS_PINHOLE_CAMERA_H_
 
 #include <aslam/cameras/camera.h>
+#include <aslam/common/crtp-clone.h>
+#include <aslam/common/types.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 
 namespace aslam {
+
+// Forward declarations.
+class MappedUndistorter;
 
 /// \class PinholeCamera
 /// \brief An implementation of the pinhole camera model with (optional) distortion.
@@ -18,11 +23,10 @@ namespace aslam {
 ///
 ///  Intrinsic parameters ordering: fu, fv, cu, cv
 ///  Reference: http://en.wikipedia.org/wiki/Pinhole_camera_model
-class PinholeCamera : public Camera {
+class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   enum { kNumOfParams = 4 };
  public:
   ASLAM_POINTER_TYPEDEFS(PinholeCamera);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(PinholeCamera);
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -39,13 +43,18 @@ class PinholeCamera : public Camera {
   PinholeCamera();
 
  public:
+  /// Copy constructor for clone operation.
+  PinholeCamera(const PinholeCamera& other) = default;
+  void operator=(const PinholeCamera&) = delete;
+
+ public:
   /// \brief Construct a PinholeCamera with distortion.
   /// @param[in] intrinsics   Vector containing the intrinsic parameters (fu,fv,cu,cv).
   /// @param[in] image_width  Image width in pixels.
   /// @param[in] image_height Image height in pixels.
   /// @param[in] distortion   Pointer to the distortion model.
   PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
-                aslam::Distortion::Ptr distortion);
+                aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
   /// @param[in] intrinsics   Vector containing the intrinsic parameters (fu,fv,cu,cv).
@@ -64,7 +73,7 @@ class PinholeCamera : public Camera {
   PinholeCamera(double focallength_cols, double focallength_rows,
                 double imagecenter_cols, double imagecenter_rows,
                 uint32_t image_width, uint32_t image_height,
-                aslam::Distortion::Ptr distortion);
+                aslam::Distortion::UniquePtr& distortion);
 
   /// \brief Construct a PinholeCamera without distortion.
   /// @param[in] focallength_cols Focal length in pixels; cols (width-direction).
@@ -170,35 +179,38 @@ class PinholeCamera : public Camera {
   virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const;
 
   /// \brief Get a set of border rays
-  void getBorderRays(Eigen::MatrixXd & rays) const;
-
-  /// @}
-
-  //////////////////////////////////////////////////////////////
-  /// \name Methods to set/get distortion parameters.
-  /// @{
-
-  /// \brief Returns a pointer to the underlying distortion object.
-  /// @return ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual aslam::Distortion::Ptr distortion() { return distortion_; };
-
-  /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return const_ptr to distortion model; nullptr if none is set or not available
-  ///         for the camera type
-  virtual const aslam::Distortion::Ptr distortion() const { return distortion_; };
+  void getBorderRays(Eigen::MatrixXd& rays) const;
 
   /// \brief Create a test camera object for unit testing.
   template<typename DistortionType>
-  static PinholeCamera::Ptr createTestCamera()   {
-    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480,
-                                                DistortionType::createTestDistortion()));
+  static PinholeCamera::Ptr createTestCamera() {
+    aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
+    return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480, distortion));
   }
 
   /// \brief Create a test camera object for unit testing. (without distortion)
   static PinholeCamera::Ptr createTestCamera() {
     return PinholeCamera::Ptr(new PinholeCamera(400, 400, 320, 240, 640, 480));
   }
+
+  /// @}
+
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to create an undistorter for this camera.
+  /// @{
+
+ public:
+  /// \brief Factory method to create a mapped undistorter for this camera geometry.
+  ///        NOTE: The undistorter stores a copy of this camera and changes to this geometry
+  ///              are not connected with the undistorter!
+  /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
+  ///                  will be valid) and 1 (when all the source image pixels will be retained in the
+  ///                  undistorted image)
+  /// @param[in] scale Output image size scaling parameter wrt. to input image size.
+  /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
+  /// @return Pointer to the created mapped undistorter.
+  virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
+      aslam::InterpolationMethod interpolation_type) const;
 
   /// @}
 
@@ -234,6 +246,9 @@ class PinholeCamera : public Camera {
       return kNumOfParams;
   }
 
+  /// Function to check wheter the given intrinic parameters are valid for this model.
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
+
   /// \brief Print the internal parameters of the camera in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras
@@ -242,11 +257,8 @@ class PinholeCamera : public Camera {
   /// @}
 
  private:
-  /// \brief The distortion of this camera.
-  aslam::Distortion::Ptr distortion_;
-
   /// \brief Minimal depth for a valid projection.
-  static constexpr double kMinimumDepth = 1e-10;
+  static const double kMinimumDepth;
 };
 
 }  // namespace aslam
