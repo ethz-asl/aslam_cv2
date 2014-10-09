@@ -52,11 +52,11 @@ struct Point3dFunctor : public aslam::common::NumDiffFunctor<2, 3> {
                   typename NumDiffFunctor::ValueType& fvec,
                   typename NumDiffFunctor::JacobianType* Jout) const {
     typename NumDiffFunctor::ValueType out_keypoint;
-    CHECK(camera_->distortion()) << "Distortion model not set!";
-    Eigen::VectorXd dist_coeffs = camera_->distortion()->getParameters();
-    aslam::ProjectionResult res = camera_->project3Functional(x, nullptr,
-                                                              &dist_coeffs, &out_keypoint,
-                                                              Jout, nullptr, nullptr);
+    CHECK(camera_->getDistortion()) << "Distortion model not set!";
+    Eigen::VectorXd dist_coeffs = camera_->getDistortion()->getParameters();
+    aslam::ProjectionResult res = camera_->project3Functional(x, nullptr, &dist_coeffs,
+                                                              &out_keypoint, Jout, nullptr,
+                                                              nullptr);
     fvec = out_keypoint;
     return static_cast<bool>(res);
   };
@@ -87,8 +87,8 @@ struct IntrinsicJacobianFunctor : public aslam::common::NumDiffFunctor<2, numInt
       typename aslam::common::NumDiffFunctor<2, numIntrinsics>::ValueType& fvec,
       typename aslam::common::NumDiffFunctor<2, numIntrinsics>::JacobianType* Jout) const {
 
-    CHECK(camera_->distortion()) << "Distortion model not set";
-    Eigen::VectorXd dist_coeffs = camera_->distortion()->getParameters();
+    CHECK(camera_->getDistortion()) << "Distortion model not set";
+    Eigen::VectorXd dist_coeffs = camera_->getDistortion()->getParameters();
 
     typename aslam::common::NumDiffFunctor<2, numIntrinsics>::ValueType out_keypoint;
     Eigen::Matrix<double, 2, Eigen::Dynamic> JoutDynamic;
@@ -138,8 +138,8 @@ struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, 4> {
       typename NumDiffFunctor::ValueType& fvec,
       typename NumDiffFunctor::JacobianType* Jout) const {
 
-    CHECK(camera_->distortion()) << "Distortion model not set";
-    Eigen::VectorXd dist_coeffs = camera_->distortion()->getParameters();
+    CHECK(camera_->getDistortion()) << "Distortion model not set";
+    Eigen::VectorXd dist_coeffs = camera_->getDistortion()->getParameters();
 
     typename NumDiffFunctor::ValueType out_keypoint;
 
@@ -171,8 +171,8 @@ TYPED_TEST(TestCameras, JacobianWrtDistortion) {
   Eigen::Vector3d point_3d = this->camera_->createRandomVisiblePoint(3);
 
   // Using the test distortion parameters.
-  CHECK(this->camera_->distortion());
-  Eigen::VectorXd dist_coeffs = this->camera_->distortion()->getParameters();
+  CHECK(this->camera_->getDistortion());
+  Eigen::VectorXd dist_coeffs = this->camera_->getDistortion()->getParameters();
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(DistortionJacobianFunctor,
                                   dist_coeffs, 1e-3, 1e-1 , this->camera_, point_3d);
@@ -260,6 +260,20 @@ TYPED_TEST(TestCameras, CameraTest_isInvertible) {
   }
 
   ASSERT_TRUE(aslam::common::MatricesEqual(points1, points3, 1e-4));
+}
+
+TYPED_TEST(TestCameras, TestClone) {
+  aslam::Camera::Ptr cam1(this->camera_->clone());
+
+  EXPECT_TRUE(this->camera_.get() != nullptr); // Check both are valid objects.
+  EXPECT_TRUE(cam1.get() != nullptr);
+  EXPECT_TRUE(this->camera_.get() != cam1.get());  // Check those are two different instances.
+  EXPECT_TRUE(*(this->camera_) == *cam1);  // Check that the copy is the same as the original.
+
+  // Check that the distortion object is copied aswell.
+  EXPECT_TRUE(this->camera_->getDistortion() != cam1->getDistortion());
+  // Check that the copy is the same as the original.
+  EXPECT_TRUE(*(this->camera_->getDistortion()) == *cam1->getDistortion());
 }
 
 ///////////////////////////////////////////////
@@ -447,16 +461,3 @@ TEST(CameraComparison, TestEquality) {
   EXPECT_FALSE(*pinhole_C == *pinhole_D);  // Different intrinsics and distortion coeffs.
 }
 
-TEST(CameraComparison, TestStatus) {
-  using namespace aslam;
-  Eigen::VectorXd dvec(4);
-
-  dvec << 0.5, 0.3, 0.2, 0.01;
-  Distortion::Ptr distortion = std::make_shared<RadTanDistortion>(dvec);
-  Camera::Ptr camera = std::make_shared<PinholeCamera>(240, 480, 100, 200, 500, 500, distortion);
-
-  Eigen::Matrix<double, 3, 1> point(0, 0, -1);
-  Eigen::Matrix<double, 2, 1> keypoint;
-  ProjectionResult result = camera->project3(point, &keypoint);
-  EXPECT_TRUE(result == ProjectionResult::POINT_BEHIND_CAMERA);
-}

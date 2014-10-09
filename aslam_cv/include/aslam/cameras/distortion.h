@@ -18,7 +18,7 @@ namespace aslam {
 class Distortion {
  public:
   ASLAM_POINTER_TYPEDEFS(Distortion);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(Distortion);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
 
@@ -48,6 +48,15 @@ class Distortion {
     this->printParameters(out, std::string(""));
     return out;
   };
+
+ protected:
+  /// Copy constructor for clone operation.
+  Distortion(const Distortion&) = default;
+  void operator=(const Distortion&) = delete;
+
+ public:
+  /// \brief Clones the camera instance and returns a pointer to the copy.
+  virtual aslam::Distortion* clone() const = 0;
 
   /// @}
 
@@ -136,11 +145,11 @@ class Distortion {
 
   /// \brief Get the distortion model coefficients.
   /// @return Vector containing the coefficients.
-  const Eigen::VectorXd& getParameters() const;
+  inline const Eigen::VectorXd& getParameters() const { return distortion_coefficients_; };
 
   /// \brief Get the pointer to the distortion model coefficients.
   /// @return Pointer to the first coefficient.
-  double* getParametersMutable();
+  inline double* getParametersMutable() { return &distortion_coefficients_.coeffRef(0, 0); };
 
   /// \brief Returns the number of parameters used in the distortion model.
   ///        NOTE: Use the constexpr function parameterCount if you know the exact distortion type.

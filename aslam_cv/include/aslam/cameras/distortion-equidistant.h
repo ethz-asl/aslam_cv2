@@ -3,7 +3,10 @@
 
 #include <Eigen/Core>
 #include <glog/logging.h>
-#include "distortion.h"
+
+#include <aslam/common/crtp-clone.h>
+#include <aslam/cameras/distortion.h>
+#include <aslam/common/macros.h>
 
 namespace aslam {
 
@@ -14,7 +17,7 @@ namespace aslam {
 ///        The ordering of the parameter vector is: k1 k2 k3 k4
 ///        NOTE: The inverse transformation (undistort) in this case is not available in
 ///        closed form and so it is computed iteratively!
-class EquidistantDistortion : public aslam::Distortion {
+class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDistortion> {
 
  private:
   /** \brief Number of parameters used for this distortion model. */
@@ -22,6 +25,7 @@ class EquidistantDistortion : public aslam::Distortion {
 
  public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
+  ASLAM_POINTER_TYPEDEFS(EquidistantDistortion);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -37,12 +41,17 @@ class EquidistantDistortion : public aslam::Distortion {
     return out;
   };
 
+ public:
+  /// Copy constructor for clone operation.
+  EquidistantDistortion(const EquidistantDistortion&) = default;
+  void operator=(const EquidistantDistortion&) = delete;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
   /// \name Distort methods: applies the distortion model to a point.
   /// @{
-
+ public:
   /// \brief Apply distortion to a point in the normalized image plane using provided distortion
   ///        coefficients. External distortion coefficients can be specified using this function.
   ///        (Ignores the internally stored parameters.
@@ -101,9 +110,9 @@ class EquidistantDistortion : public aslam::Distortion {
   /// @{
 
   /// \brief Create a test distortion object for unit testing.
-  static EquidistantDistortion::Ptr createTestDistortion() {
+  static EquidistantDistortion::UniquePtr createTestDistortion() {
     Eigen::VectorXd params(4); params << 0.2, 0.01, 0.3, 0.05;
-    return EquidistantDistortion::Ptr(new EquidistantDistortion(params));
+    return EquidistantDistortion::UniquePtr(new EquidistantDistortion(params));
   }
 
   /// @}

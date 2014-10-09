@@ -74,11 +74,9 @@ TYPED_TEST(TestDistortions, DistortAndUndistortImageCenter) {
 /// Wrapper that brings the distortion function to the form needed by the differentiator.
 struct Point3dJacobianFunctor : public aslam::common::NumDiffFunctor<2, 2> {
 
-  Point3dJacobianFunctor(aslam::Distortion::ConstPtr distortion, const Eigen::VectorXd& dist_coeffs)
+  Point3dJacobianFunctor(const aslam::Distortion& distortion, const Eigen::VectorXd& dist_coeffs)
       : distortion_(distortion),
-        dist_coeffs_(dist_coeffs){
-    CHECK(distortion);
-  };
+        dist_coeffs_(dist_coeffs){};
 
   virtual ~Point3dJacobianFunctor() {};
 
@@ -89,15 +87,15 @@ struct Point3dJacobianFunctor : public aslam::common::NumDiffFunctor<2, 2> {
 
     // Get function value and Jacobian
     if(Jout)
-      distortion_->distortUsingExternalCoefficients(&dist_coeffs_, &out_keypoint, Jout);
+      distortion_.distortUsingExternalCoefficients(&dist_coeffs_, &out_keypoint, Jout);
     else
-      distortion_->distortUsingExternalCoefficients(&dist_coeffs_, &out_keypoint, nullptr);
-    fvec = out_keypoint;
+      distortion_.distortUsingExternalCoefficients(&dist_coeffs_, &out_keypoint, nullptr);
 
+    fvec = out_keypoint;
     return true;
   };
 
-  aslam::Distortion::ConstPtr distortion_;
+  const aslam::Distortion& distortion_;
   const Eigen::VectorXd dist_coeffs_;
 };
 
@@ -106,18 +104,16 @@ TYPED_TEST(TestDistortions, JacobianWrtKeypoint) {
   Eigen::VectorXd dist_coeffs = this->distortion_->getParameters();
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(Point3dJacobianFunctor, keypoint, 1e-6, 1e-4,
-                                  this->distortion_, dist_coeffs);
+                                  *(this->distortion_), dist_coeffs);
 }
 
 /// Wrapper that brings the distortion function to the form needed by the differentiator.
 template<int numDistortion>
 struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, numDistortion> {
 
-  DistortionJacobianFunctor(aslam::Distortion::ConstPtr distortion, const Eigen::Vector2d& keypoint)
+  DistortionJacobianFunctor(const aslam::Distortion& distortion, const Eigen::Vector2d& keypoint)
       : distortion_(distortion),
-        keypoint_(keypoint) {
-    CHECK(distortion);
-  };
+        keypoint_(keypoint) {};
 
   virtual ~DistortionJacobianFunctor() {};
 
@@ -132,19 +128,20 @@ struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, numDi
     Eigen::Matrix<double, Eigen::Dynamic, 1> xDynamic = x;
 
     // Get value
-    distortion_->distortUsingExternalCoefficients(&xDynamic, &out_keypoint, nullptr);
+    distortion_.distortUsingExternalCoefficients(&xDynamic, &out_keypoint, nullptr);
+
     fvec = out_keypoint;
 
     // Get Jacobian wrt distortion coeffs.
     if(Jout) {
-      distortion_->distortParameterJacobian(&xDynamic, keypoint_, &JoutDynamic);
+      distortion_.distortParameterJacobian(&xDynamic, keypoint_, &JoutDynamic);
       (*Jout) = JoutDynamic;
     }
 
     return true;
   };
 
-  aslam::Distortion::ConstPtr distortion_;
+  const aslam::Distortion& distortion_;
   const Eigen::Vector2d keypoint_;
 };
 
@@ -153,5 +150,5 @@ TYPED_TEST(TestDistortions, JacobianWrtDistortion) {
   Eigen::VectorXd dist_coeffs = this->distortion_->getParameters();
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(DistortionJacobianFunctor<TypeParam::parameterCount()>,
-                                  dist_coeffs, 1e-6, 1e-4, this->distortion_, keypoint);
+                                  dist_coeffs, 1e-6, 1e-4, *(this->distortion_), keypoint);
 }

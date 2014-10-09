@@ -1,5 +1,11 @@
-#include <aslam/common/eigen-helpers.h>
+#include <memory>
+
 #include <aslam/cameras/camera-unified-projection.h>
+#include <aslam/cameras/camera-pinhole.h>
+#include <aslam/common/eigen-helpers.h>
+#include <aslam/common/types.h>
+#include <aslam/common/undistort-helpers.h>
+#include <aslam/pipeline/undistorter-mapped.h>
 
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
@@ -23,44 +29,39 @@ namespace aslam {
 //}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera()
-    : Camera(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0)),
-      distortion_(nullptr) {
-  setImageWidth(0);
-  setImageHeight(0);
-}
+    : Base(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0), 0, 0) {}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height,
-                                                 aslam::Distortion::Ptr distortion)
-    : Camera(intrinsics),
-      distortion_(distortion) {
-  CHECK_EQ(intrinsics.size(), kNumOfParams)<< "intrinsics: invalid size!";
-  setImageWidth(image_width);
-  setImageHeight(image_height);
+                                                 aslam::Distortion::UniquePtr& distortion)
+    : Base(intrinsics, distortion, image_width, image_height) {
+  CHECK(intrinsicsValid(intrinsics));
 }
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height)
-    : UnifiedProjectionCamera(intrinsics, image_width, image_height, nullptr) {
+    : Base(intrinsics, image_width, image_height) {
+  CHECK(intrinsicsValid(intrinsics));
 }
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(double xi, double focallength_cols,
                                                  double focallength_rows, double imagecenter_cols,
                                                  double imagecenter_rows, uint32_t image_width,
                                                  uint32_t image_height,
-                                                 aslam::Distortion::Ptr distortion)
+                                                 aslam::Distortion::UniquePtr& distortion)
     : UnifiedProjectionCamera(
         common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
                               imagecenter_rows),
-        image_width, image_height, distortion) {
-}
+        image_width, image_height, distortion) {}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(double xi, double focallength_cols,
                                                  double focallength_rows, double imagecenter_cols,
                                                  double imagecenter_rows, uint32_t image_width,
                                                  uint32_t image_height)
-    : UnifiedProjectionCamera(xi, focallength_cols, focallength_rows, imagecenter_cols,
-                              imagecenter_rows, image_width, image_height, nullptr) {}
+    : UnifiedProjectionCamera(
+        common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
+                              imagecenter_rows),
+        image_width, image_height) {}
 
 bool UnifiedProjectionCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.
@@ -117,30 +118,25 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
   CHECK_NOTNULL(out_keypoint);
 
   // Determine the parameter source. (if nullptr, use internal)
-  //TODO(schneith): use the new interface to avoid copying...
-  Eigen::VectorXd intrinsics;
+  const Eigen::VectorXd* intrinsics;
   if (!intrinsics_external)
-    intrinsics = getParameters();
+    intrinsics = &getParameters();
   else
-    intrinsics = *intrinsics_external;
+    intrinsics = intrinsics_external;
+  CHECK_EQ(intrinsics->size(), kNumOfParams) << "intrinsics: invalid size!";
 
-  CHECK_EQ(intrinsics.size(), kNumOfParams) << "intrinsics: invalid size!";
-
-  //TODO(schneith): use the new interface to avoid copying...
-  Eigen::VectorXd* distortion_coefficients;
-  Eigen::VectorXd dist_coeff_internal;
+  const Eigen::VectorXd* distortion_coefficients;
   if(!distortion_coefficients_external && distortion_) {
-    dist_coeff_internal = distortion()->getParameters();
-    distortion_coefficients = &dist_coeff_internal;
+    distortion_coefficients = &getDistortion()->getParameters();
   } else {
-    distortion_coefficients = const_cast<Eigen::VectorXd*>(distortion_coefficients_external);
+    distortion_coefficients = distortion_coefficients_external;
   }
 
-  const double& xi = intrinsics[0];
-  const double& fu = intrinsics[1];
-  const double& fv = intrinsics[2];
-  const double& cu = intrinsics[3];
-  const double& cv = intrinsics[4];
+  const double& xi = (*intrinsics)[0];
+  const double& fu = (*intrinsics)[1];
+  const double& fv = (*intrinsics)[2];
+  const double& cu = (*intrinsics)[3];
+  const double& cv = (*intrinsics)[4];
 
   // Project the point.
   const double& x = point_3d[0];
@@ -325,6 +321,86 @@ Eigen::Vector3d UnifiedProjectionCamera::createRandomVisiblePoint(double depth) 
 
   // Muck with the depth. This doesn't change the pointing direction.
   return point_3d * depth;
+}
+
+std::unique_ptr<MappedUndistorter> UnifiedProjectionCamera::createMappedUndistorter(
+    float alpha, float scale, aslam::InterpolationMethod interpolation_type) const {
+
+  CHECK_GE(alpha, 0.0); CHECK_LE(alpha, 1.0);
+  CHECK_GT(scale, 0.0);
+
+  // Only remove distortion effects.
+  const bool undistort_to_pinhole = false;
+
+  // Create a copy of the input camera (=this)
+  UnifiedProjectionCamera::Ptr input_camera(dynamic_cast<UnifiedProjectionCamera*>(this->clone()));
+  CHECK(input_camera);
+
+  // Create the scaled output camera with removed distortion.
+  Eigen::Matrix3d output_camera_matrix = common::getOptimalNewCameraMatrix(*input_camera, alpha,
+                                                                           scale,
+                                                                           undistort_to_pinhole);
+
+  Eigen::Matrix<double, parameterCount(), 1> intrinsics;
+  intrinsics <<  xi(), output_camera_matrix(0, 0), output_camera_matrix(1, 1),
+                       output_camera_matrix(0, 2), output_camera_matrix(1, 2);
+
+  const int output_width = static_cast<int>(scale * imageWidth());
+  const int output_height = static_cast<int>(scale * imageHeight());
+  UnifiedProjectionCamera::Ptr output_camera = aslam::createCamera<aslam::UnifiedProjectionCamera>(
+      intrinsics, output_width, output_height);
+  CHECK(output_camera);
+
+  cv::Mat map_u, map_v;
+  aslam::common::buildUndistortMap(*input_camera, *output_camera, undistort_to_pinhole, CV_16SC2,
+                                   map_u, map_v);
+
+  return std::unique_ptr<MappedUndistorter>(
+      new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
+}
+
+std::unique_ptr<MappedUndistorter> UnifiedProjectionCamera::createMappedUndistorterToPinhole(
+    float alpha, float scale, aslam::InterpolationMethod interpolation_type) const {
+
+  CHECK_GE(alpha, 0.0); CHECK_LE(alpha, 1.0);
+  CHECK_GT(scale, 0.0);
+
+  // Undistort to pinhole view.
+  const bool undistort_to_pinhole = true;
+
+  // Create a copy of the input camera (=this)
+  UnifiedProjectionCamera::Ptr input_camera(dynamic_cast<UnifiedProjectionCamera*>(this->clone()));
+  CHECK(input_camera);
+
+  // Create the scaled output camera with removed distortion.
+  Eigen::Matrix3d output_camera_matrix = aslam::common::getOptimalNewCameraMatrix(
+      *input_camera, alpha, scale, undistort_to_pinhole);
+
+  Eigen::Matrix<double, PinholeCamera::parameterCount(), 1> intrinsics;
+  intrinsics <<  output_camera_matrix(0, 0), output_camera_matrix(1, 1),
+                 output_camera_matrix(0, 2), output_camera_matrix(1, 2);
+
+  const int output_width = static_cast<int>(scale * imageWidth());
+  const int output_height = static_cast<int>(scale * imageHeight());
+  PinholeCamera::Ptr output_camera = aslam::createCamera<aslam::PinholeCamera>(
+      intrinsics, output_width, output_height);
+  CHECK(output_camera);
+
+  cv::Mat map_u, map_v;
+  aslam::common::buildUndistortMap(*input_camera, *output_camera, undistort_to_pinhole, CV_16SC2,
+                                   map_u, map_v);
+
+  return std::unique_ptr<MappedUndistorter>(
+      new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
+}
+
+bool UnifiedProjectionCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
+  return (intrinsics.size() == parameterCount()) &&
+         (intrinsics[0] >= 0.0) && //xi
+         (intrinsics[1] > 0.0)  && //fu
+         (intrinsics[2] > 0.0)  && //fv
+         (intrinsics[3] > 0.0)  && //cu
+         (intrinsics[4] > 0.0);    //cv
 }
 
 void UnifiedProjectionCamera::printParameters(std::ostream& out, const std::string& text) const {

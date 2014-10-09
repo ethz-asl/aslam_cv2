@@ -48,7 +48,8 @@ class VisualFrame  {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   VisualFrame();
-  virtual ~VisualFrame();
+
+  virtual ~VisualFrame() {};
 
   virtual bool operator==(const VisualFrame& other) const;
 
@@ -66,11 +67,17 @@ class VisualFrame  {
   /// \brief Are there keypoint orientations stored in this frame?
   bool hasKeypointOrientations() const;
 
+  /// \brief Are there keypoint scores stored in this frame?
+  bool hasKeypointScores() const;
+
   /// \brief Are there keypoint scales stored in this frame?
   bool hasKeypointScales() const;
 
   /// \brief Are there descriptors stored in this frame?
-  bool hasBriskDescriptors() const;
+  bool hasDescriptors() const;
+
+  /// \brief Are there track ids stored in this frame?
+  bool hasTrackIds() const;
 
   /// \brief Is there a raw image stored in this frame?
   bool hasRawImage() const;
@@ -89,11 +96,17 @@ class VisualFrame  {
   /// \brief The keypoint orientations stored in a frame.
   const Eigen::VectorXd& getKeypointOrientations() const;
 
+  /// \brief The keypoint scores stored in a frame.
+  const Eigen::VectorXd& getKeypointScores() const;
+
   /// \brief The keypoint scales stored in a frame.
   const Eigen::VectorXd& getKeypointScales() const;
 
   /// \brief The descriptors stored in a frame.
-  const DescriptorsT& getBriskDescriptors() const;
+  const DescriptorsT& getDescriptors() const;
+
+  /// \brief The track ids stored in this frame.
+  const Eigen::VectorXi& getTrackIds() const;
 
   /// \brief The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
@@ -112,11 +125,17 @@ class VisualFrame  {
   /// \brief A pointer to the keypoint orientations, can be used to swap in new data.
   Eigen::VectorXd* getKeypointOrientationsMutable();
 
+  /// \brief A pointer to the keypoint scores, can be used to swap in new data.
+  Eigen::VectorXd* getKeypointScoresMutable();
+
   /// \brief A pointer to the keypoint scales, can be used to swap in new data.
   Eigen::VectorXd* getKeypointScalesMutable();
 
   /// \brief A pointer to the descriptors, can be used to swap in new data.
-  DescriptorsT* getBriskDescriptorsMutable();
+  DescriptorsT* getDescriptorsMutable();
+
+  /// \brief A pointer to the track ids, can be used to swap in new data.
+  Eigen::VectorXi* getTrackIdsMutable();
 
   /// \brief A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
@@ -138,11 +157,17 @@ class VisualFrame  {
   /// \brief Return the keypoint orientation at index.
   double getKeypointOrientation(size_t index) const;
 
+  /// \brief Return the keypoint score at index.
+  double getKeypointScore(size_t index) const;
+
   /// \brief Return the keypoint scale at index.
   double getKeypointScale(size_t index) const;
 
   /// \brief Return pointer location of the descriptor pointed to by index.
-  const unsigned char* getBriskDescriptor(size_t index) const;
+  const unsigned char* getDescriptor(size_t index) const;
+
+  /// \brief Return the track id at index. (-1: not tracked)
+  int getTrackId(size_t index) const;
 
   /// \brief Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
@@ -154,14 +179,20 @@ class VisualFrame  {
   /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointOrientations(const Eigen::VectorXd& orientations);
 
+  /// \brief Replace (copy) the internal keypoint scores by the passed ones.
+  void setKeypointScores(const Eigen::VectorXd& scores);
+
   /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointScales(const Eigen::VectorXd& scales);
 
   /// \brief Replace (copy) the internal descriptors by the passed ones.
-  void setBriskDescriptors(const DescriptorsT& descriptors);
+  void setDescriptors(const DescriptorsT& descriptors);
 
   /// \brief Replace (copy) the internal descriptors by the passed ones.
-  void setBriskDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+  void setDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+
+  /// \brief Replace (copy) the internal track ids by the passed ones.
+  void setTrackIds(const Eigen::VectorXi& track_ids);
 
   /// \brief Replace (copy) the internal raw image by the passed ones.
   ///        This is a shallow copy by default. Please clone the image if it
@@ -190,11 +221,17 @@ class VisualFrame  {
   /// \brief Replace (swap) the internal keypoint orientations by the passed ones.
   void swapKeypointOrientations(Eigen::VectorXd* orientations);
 
+  /// \brief Replace (swap) the internal keypoint scores by the passed ones.
+  void swapKeypointScores(Eigen::VectorXd* scores);
+
   /// \brief Replace (swap) the internal keypoint orientations by the passed ones.
   void swapKeypointScales(Eigen::VectorXd* scales);
 
   /// \brief Replace (swap) the internal descriptors by the passed ones.
-  void swapBriskDescriptors(DescriptorsT* descriptors);
+  void swapDescriptors(DescriptorsT* descriptors);
+
+  /// \brief Replace (swap) the internal track ids by the passed ones.
+  void swapTrackIds(Eigen::VectorXi* track_ids);
 
   /// \brief Swap channel data with the data passed in. This will only work
   ///        if the channel data type has a swap() method.
@@ -214,13 +251,13 @@ class VisualFrame  {
   const Camera::ConstPtr getCameraGeometry() const;
 
   /// \brief Set the camera geometry.
-  void setCameraGeometry(const Camera::Ptr& camera);
+  void setCameraGeometry(const Camera::ConstPtr& camera);
 
   /// \brief The camera geometry.
   const Camera::ConstPtr getRawCameraGeometry() const;
 
   /// \brief Set the camera geometry.
-  void setRawCameraGeometry(const Camera::Ptr& camera);
+  void setRawCameraGeometry(const Camera::ConstPtr& camera);
 
   /// \brief Convert keypoint coordinates to raw image coordinates.
   ///
@@ -270,6 +307,12 @@ class VisualFrame  {
   /// \brief set the system (host computer) timestamp.
   inline void setSystemTimestamp(int64_t stamp) { systemStamp_ = stamp; }
 
+  /// \brief Set the size of the descriptor in bytes.
+  int32_t getDescriptorSizeBytes() const { return num_bytes_descriptor_; };
+
+  /// \brief Set the size of the descriptor in bytes.
+  void setDescriptorSizeBytes(size_t num_bytes) { num_bytes_descriptor_= num_bytes; };
+
   /// \brief print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
  private:
@@ -279,10 +322,12 @@ class VisualFrame  {
   int64_t hardwareStamp_;
   /// \brief host system timestamp in integer nanoseconds since epoch.
   int64_t systemStamp_;
+  /// \brief Descriptor size in bytes.
+  size_t num_bytes_descriptor_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
-  Camera::Ptr camera_geometry_;
-  Camera::Ptr raw_camera_geometry_;
+  Camera::ConstPtr camera_geometry_;
+  Camera::ConstPtr raw_camera_geometry_;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const VisualFrame& rhs) {

@@ -20,8 +20,11 @@ public:
   ASLAM_POINTER_TYPEDEFS(BriskVisualPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(BriskVisualPipeline);
 
+protected:
+  /// Constructor for serialization.
   BriskVisualPipeline();
 
+public:
   /// \brief Initialize the brisk pipeline with a camera.
   ///
   /// \param[in] camera             The intrinsic calibration of this camera.
@@ -34,10 +37,10 @@ public:
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
   /// \param[in] rotation_invariant Should Brisk estimate the keypoint orientation?
   /// \param[in] scale_invariant    Should Brisk estimate the keypoint scale?
-  BriskVisualPipeline(const std::shared_ptr<Camera>& camera, bool copy_images,
-                      size_t octaves, double uniformity_radius,
-                      double absolute_threshold, size_t max_number_of_keypoints,
-                      bool rotation_invariant, bool scale_invariant);
+  BriskVisualPipeline(const Camera::ConstPtr& camera, bool copy_images, size_t octaves,
+                      double uniformity_radius, double absolute_threshold,
+                      size_t max_number_of_keypoints, bool rotation_invariant,
+                      bool scale_invariant);
 
   /// \brief Initialize the brisk pipeline with a preprocessing pipeline.
   ///
@@ -52,10 +55,10 @@ public:
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
   /// \param[in] rotation_invariant Should brisk estimate the keypoint orientation?
   /// \param[in] scale_invariant    Should Brisk estimate the keypoint scale?
-  BriskVisualPipeline(const std::shared_ptr<Undistorter>& preprocessing,
-                      bool copy_images, size_t octaves, double uniformity_radius,
-                      double absolute_threshold, size_t max_number_of_keypoints,
-                      bool rotation_invariant, bool scale_invariant);
+  BriskVisualPipeline(std::unique_ptr<Undistorter>& preprocessing, bool copy_images, size_t octaves,
+                      double uniformity_radius, double absolute_threshold,
+                      size_t max_number_of_keypoints, bool rotation_invariant,
+                      bool scale_invariant);
 
   virtual ~BriskVisualPipeline();
 
