@@ -193,7 +193,7 @@ template<typename Scalar>
 typename QuatTransformationTemplate<Scalar>::Vector6 
 QuatTransformationTemplate<Scalar>::log() const {
   AngleAxisTemplate<Scalar> angleaxis(q_A_B_);
-  return Eigen::stack(A_t_A_B_,angleaxis.axis()*angleaxis.angle());
+  return (Vector6() << A_t_A_B_,(angleaxis.axis()*angleaxis.angle())).finished();
 }
 
 
