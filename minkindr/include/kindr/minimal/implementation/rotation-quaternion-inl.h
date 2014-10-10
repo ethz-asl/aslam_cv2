@@ -52,6 +52,20 @@ RotationQuaternionTemplate<Scalar>::RotationQuaternionTemplate(
              static_cast<Scalar>(1e-4));
 }
 
+
+/// \brief initialize from real and imaginary components (real first)
+template<typename Scalar>
+RotationQuaternionTemplate<Scalar>::RotationQuaternionTemplate(
+    const Vector3& omega) :
+    q_A_B_(cos(omega.norm()/Scalar(2)),
+           sin(omega.norm()/Scalar(2))*omega.normalized()[0],
+           sin(omega.norm()/Scalar(2))*omega.normalized()[1],
+           sin(omega.norm()/Scalar(2))*omega.normalized()[2])
+    {
+  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0),
+             static_cast<Scalar>(1e-4));
+    }
+
 /// \brief initialize from a rotation matrix
 template<typename Scalar>
 RotationQuaternionTemplate<Scalar>::RotationQuaternionTemplate(

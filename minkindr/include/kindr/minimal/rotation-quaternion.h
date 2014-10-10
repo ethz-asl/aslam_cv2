@@ -43,6 +43,9 @@ class RotationQuaternionTemplate {
   /// \brief initialize from real and imaginary components (real first)
   RotationQuaternionTemplate(const Vector4& quat);
   
+  /// \brief initialize from angle scaled axis
+  RotationQuaternionTemplate(const Vector3& omega);
+
 
   /// \brief initialize from real and imaginary components (real first)
   RotationQuaternionTemplate(Scalar w, Scalar x, Scalar y, Scalar z);

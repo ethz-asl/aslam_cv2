@@ -49,7 +49,7 @@ QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
 template<typename Scalar>
 QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
      const QuatTransformationTemplate<Scalar>::Vector6& x) : 
-  q_A_B_(AngleAxisTemplate<Scalar>(x.template tail<3>())),
+  q_A_B_(Vector3(x.template tail<3>())),
   A_t_A_B_(x.template head<3>()) {
 }
                                                               
