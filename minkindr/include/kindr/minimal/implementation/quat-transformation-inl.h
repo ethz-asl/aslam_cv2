@@ -43,6 +43,16 @@ QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
 
 }
 
+/// \brief a constructor based on the exponential map
+/// translational part in the first 3 dimensions, 
+/// rotational part in the last 3 dimensions
+template<typename Scalar>
+QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
+     const QuatTransformationTemplate<Scalar>::Vector6& x) : 
+  q_A_B_(AngleAxisTemplate<Scalar>(x.template tail<3>())),
+  A_t_A_B_(x.template head<3>()) {
+}
+                                                              
 template<typename Scalar>
 QuatTransformationTemplate<Scalar>::~QuatTransformationTemplate() {
 
@@ -175,6 +185,15 @@ template<typename Scalar>
 QuatTransformationTemplate<Scalar>
 QuatTransformationTemplate<Scalar>::inverted() const {
   return QuatTransformation(q_A_B_.inverted(), -q_A_B_.inverseRotate(A_t_A_B_));
+}
+
+/// \brief get the logarithmic map of the transformation
+/// note: this is the log map of SO(3)xR(3) and not SE(3)
+template<typename Scalar>
+typename QuatTransformationTemplate<Scalar>::Vector6 
+QuatTransformationTemplate<Scalar>::log() const {
+  AngleAxisTemplate<Scalar> angleaxis(q_A_B_);
+  return (Vector6() << A_t_A_B_,(angleaxis.axis()*angleaxis.angle())).finished();
 }
 
 

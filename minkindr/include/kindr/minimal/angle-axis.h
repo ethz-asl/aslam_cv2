@@ -55,6 +55,9 @@ class AngleAxisTemplate {
   /// \brief initialize from an Eigen quaternion
   AngleAxisTemplate(const RotationQuaternionTemplate<Scalar>& quat);
   
+  /// \brief initialize from a angle-scaled axis vector
+  AngleAxisTemplate(const Vector3& angleAxis);
+
   virtual ~AngleAxisTemplate();
 
   /// \brief Returns the rotation angle.
