@@ -20,10 +20,10 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
   ~SimpleMatchProblem() {
   }
 
-  virtual int getLengthApples() const {
+  virtual int numApples() const {
     return apples_.size();
   }
-  virtual int getLengthBananas() const {
+  virtual int numBananas() const {
     return bananas_.size();
   }
 
@@ -88,13 +88,13 @@ TEST(TestMatcher, GreedyMatcher) {
   aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
   mp.setApples(apples.begin(), apples.end());
-  EXPECT_EQ(5u, mp.getLengthApples());
+  EXPECT_EQ(5u, mp.numApples());
 
   me.match(mp);
   EXPECT_EQ(0u, mp.getMatches().size());
 
   mp.setBananas(bananas.begin(), bananas.end());
-  EXPECT_EQ(6, mp.getLengthBananas());
+  EXPECT_EQ(6, mp.numBananas());
 
   me.match(mp);
   EXPECT_EQ(5u, mp.getMatches().size());

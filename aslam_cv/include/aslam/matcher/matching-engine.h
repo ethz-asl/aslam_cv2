@@ -12,7 +12,6 @@ namespace aslam {
 
 template<typename MATCHING_PROBLEM>
 class MatchingEngine {
-
  public:
   typedef MATCHING_PROBLEM MatchingProblemT;
   typedef typename MatchingProblemT::ScoreT ScoreT;
@@ -24,7 +23,6 @@ class MatchingEngine {
   virtual ~MatchingEngine() {};
 
   virtual bool match(MatchingProblemT &problem) = 0;
-
 };
 }
 #endif //ASLAM_CV_MATCHINGENGINE_H_

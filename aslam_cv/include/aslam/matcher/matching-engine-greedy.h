@@ -16,32 +16,25 @@ namespace aslam {
 
 template<typename MatchingProblem>
 class MatchingEngineGreedy : public MatchingEngine<MatchingProblem> {
-
  public:
-
   ASLAM_POINTER_TYPEDEFS(MatchingEngineGreedy);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngineGreedy);
 
   MatchingEngineGreedy() {};
   virtual ~MatchingEngineGreedy() {};
   virtual bool match(MatchingProblem &problem);
-
 };
 
 template<typename MatchingProblem>
 bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem &problem) {
-
   bool status = problem.doSetup();
-
-  int numA = problem.getLengthApples();
-  int numB = problem.getLengthBananas();
+  int numA = problem.numApples();
+  int numB = problem.numBananas();
 
   typename MatchingProblem::MatchesT matches;
 
   std::vector<typename MatchingProblem::CandidatesT> candidates(numB);
-
   int a, b;
-
   int totalNumCandidates = 0;
   for (b = 0; b < numB; ++b) {
     problem.getAppleCandidatesOfBanana(b, &candidates[b]);
@@ -80,7 +73,6 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem &problem) {
 
   return status;
 }
-
 }
 
 #endif //ASLAM_CV_MATCHINGENGINE_GREEDY_H_
