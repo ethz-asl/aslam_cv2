@@ -49,8 +49,8 @@ public:
   MatchingProblem() {};
   virtual ~MatchingProblem() {};
 
-  virtual int getLengthApples() const = 0;
-  virtual int getLengthBananas() const = 0;
+  virtual int numApples() const = 0;
+  virtual int numBananas() const = 0;
 
   /// Get a short list of candidates in list a for index b
   ///
@@ -68,10 +68,10 @@ public:
   virtual void getAppleCandidatesOfBanana(int /*b*/, CandidatesT *candidates) {
     CHECK_NOTNULL(candidates);
     candidates->clear();
-    candidates->reserve(getLengthApples());
+    candidates->reserve(numApples());
 
     // just returns all apples with no score
-    for (int i = 0; i < getLengthApples(); ++i) {
+    for (int i = 0; i < numApples(); ++i) {
       candidates->emplace_back(i, 0);
     }
   };
