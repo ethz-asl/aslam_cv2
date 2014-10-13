@@ -4,27 +4,28 @@ project(aslam_cv)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
-cs_add_library(${PROJECT_NAME} src/camera.cc
+cs_add_library(${PROJECT_NAME} 
+                               src/camera.cc
                                src/camera-pinhole.cc
                                src/camera-unified-projection.cc
+                               src/channel-serialization.cc
                                src/distortion.cc
+                               src/distortion-equidistant.cc
                                src/distortion-fisheye.cc
                                src/distortion-radtan.cc
-                               src/distortion-equidistant.cc
+                               src/feature-tracker-gyro.cc
+                               src/feature-tracker.cc
                                src/ncamera.cc
-                               src/channel-serialization.cc
-                               src/visual-frame.cc
-                               src/visual-nframe.cc
+                               src/statistics.cc
                                src/thread-pool.cc
-                               src/visual-pipeline.cc
-                               src/visual-npipeline.cc
-                               src/visual-pipeline-null.cc
-                               src/visual-pipeline-brisk.cc
                                src/undistorter.cc
                                src/undistorter-mapped.cc
-                               src/feature-tracker.cc
-                               src/feature-tracker-gyro.cc
-                               src/statistics.cc
+                               src/visual-frame.cc
+                               src/visual-nframe.cc
+                               src/visual-npipeline.cc
+                               src/visual-pipeline-brisk.cc
+                               src/visual-pipeline-null.cc
+                               src/visual-pipeline.cc
 )
 
 add_doxygen(NOT_AUTOMATIC)
@@ -36,15 +37,16 @@ endif()
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 catkin_add_gtest(${PROJECT_NAME}_tests 
+    test/entry-point.cc
     test/test-cameras.cc
-    test/test-distortions.cc  
     test/test-channel-serialization.cc
     test/test-channels.cc
-    test/test-visual-frame.cc
+    test/test-distortions.cc  
+    test/test-matcher.cc
     test/test-thread-pool.cc
-    test/test-visual-npipeline.cc
-    test/entry-point.cc
     test/test-undistorters.cc
+    test/test-visual-frame.cc
+    test/test-visual-npipeline.cc
     )
 target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
 

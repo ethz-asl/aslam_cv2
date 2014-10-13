@@ -1,6 +1,8 @@
 #ifndef ASLAM_CV_MATCHINGENGINE_H_
 #define ASLAM_CV_MATCHINGENGINE_H_
 
+#include <aslam/common/macros.h>
+
 /// \addtogroup Matching
 /// @{
 ///
@@ -8,15 +10,19 @@
 
 namespace aslam {
 
-template <typename MATCHING_PROBLEM_T>
+template<typename MATCHING_PROBLEM>
 class MatchingEngine {
+ public:
+  typedef MATCHING_PROBLEM MatchingProblemT;
+  typedef typename MatchingProblemT::ScoreT ScoreT;
 
-public:
-  typedef MATCHING_PROBLEM_T Matching_Problem_t;
-  typedef Matching_Problem_t::Score_t Score_t;
+  ASLAM_POINTER_TYPEDEFS(MatchingEngine);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngine);
 
-  virtual bool match(Matching_Problem &problem) = 0;
+  MatchingEngine() {};
+  virtual ~MatchingEngine() {};
 
+  virtual bool match(MatchingProblemT *problem) = 0;
 };
 }
 #endif //ASLAM_CV_MATCHINGENGINE_H_

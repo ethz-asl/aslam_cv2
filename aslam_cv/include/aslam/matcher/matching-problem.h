@@ -16,31 +16,41 @@ namespace aslam {
 ///
 /// \brief defines the specifics of a matching problem
 ///
-/// The problem is assumed to have two lists (A and B) whose elements
+/// The problem is assumed to have two lists (Apples and Bananas) whose elements
 /// can be referenced by a linear index. The problem defines the score
 /// and scoring function between two elements of the lists, and a
-/// method to get a short list of candiates from list A for elements
-/// of list B.
+/// method to get a short list of candidates from list Apples for elements
+/// of list Bananas.
+/// 
+/// The match is not necessarily symmetric. For example, Apples can
+/// represent a reference and Bananas queries.
 ///
-template <typename SCORE_T>
+template <typename SCORE>
 class MatchingProblem {
 public:
-  typedef SCORE_T Score_t;
+  typedef SCORE ScoreT;
     
-  typedef Match<Score_t> Match;
+  typedef Match<ScoreT> MatchT;
 
   struct Candidate {
     int index;
-    Score_t score; /// a preliminary score that can be used for
-                   /// sorting, rough thresholding; but actuall match
+    ScoreT score; /// a preliminary score that can be used for
+                   /// sorting, rough thresholding; but actual match
                    /// score will get recomputed.
+    Candidate(int _index, const ScoreT& _score) : index(_index), score(_score) {}
   };
 
-  typedef std::vector<Match> Matches_t;
-  typedef std::vector<Candidate> Candidates_t;
+  typedef std::vector<MatchT> MatchesT;
+  typedef std::vector<Candidate> CandidatesT;
 
-  virtual int getLengthA() = 0;
-  virtual int getLengthB() = 0;
+  ASLAM_POINTER_TYPEDEFS(MatchingProblem);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblem);
+
+  MatchingProblem() {};
+  virtual ~MatchingProblem() {};
+
+  virtual size_t numApples() const = 0;
+  virtual size_t numBananas() const = 0;
 
   /// Get a short list of candidates in list a for index b
   ///
@@ -54,18 +64,28 @@ public:
   /// using the computeScore function.
   ///
   /// \param[in] b The index of b queried for candidates.
-  /// \param[out] candidates Candidates from the A-list that could potentially match this element of B.
-  virtual int getCandidatesOfB(int b, Candidates_t *candidates) = 0;
+  /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
+  virtual void getAppleCandidatesOfBanana(int /*b*/, CandidatesT *candidates) {
+    CHECK_NOTNULL(candidates);
+    candidates->clear();
+    candidates->reserve(numApples());
+
+    // just returns all apples with no score
+    for (unsigned int i = 0; i < numApples(); ++i) {
+      candidates->emplace_back(i, 0);
+    }
+  };
 
   /// \brief compute the match score between items referenced by a and b.
-  /// Note: this will be called multilple times from different threads.
-  virtual Score_t computeScore(int a, int b) = 0;
+  /// Note: this can be called multiple times from different threads.
+  /// Warning: these are scores and *not* distances, higher values are better
+  virtual ScoreT computeScore(int a, int b) = 0;
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
 
   /// Called at the end of the matching process to set the output. 
-  virtual void setBestMatches(const Matches_t &bestMatches) = 0;
+  virtual void setBestMatches(const MatchesT &bestMatches) = 0;
 
 };
 }
