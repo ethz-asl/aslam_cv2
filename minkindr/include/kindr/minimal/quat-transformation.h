@@ -46,7 +46,7 @@ class QuatTransformationTemplate {
   /// \brief a constructor based on the exponential map
   /// translational part in the first 3 dimensions, 
   /// rotational part in the last 3 dimensions
-  QuatTransformationTemplate(const Vector6& x);
+  QuatTransformationTemplate(const Vector6& x_t_r);
 
   virtual ~QuatTransformationTemplate();
 

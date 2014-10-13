@@ -53,17 +53,16 @@ RotationQuaternionTemplate<Scalar>::RotationQuaternionTemplate(
 }
 
 
-/// \brief initialize from real and imaginary components (real first)
+/// \brief initialize from axis-scaled angle vector
 template<typename Scalar>
 RotationQuaternionTemplate<Scalar>::RotationQuaternionTemplate(
-    const Vector3& omega) :
-    q_A_B_(cos(omega.norm()/Scalar(2)),
-           sin(omega.norm()/Scalar(2))*omega.normalized()[0],
-           sin(omega.norm()/Scalar(2))*omega.normalized()[1],
-           sin(omega.norm()/Scalar(2))*omega.normalized()[2])
+    const Vector3& axis_scale_angle) :
+    q_A_B_(cos(axis_scale_angle.norm()/Scalar(2)),
+           sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[0],
+           sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[1],
+           sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[2])
     {
-  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0),
-             static_cast<Scalar>(1e-4));
+  CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), static_cast<Scalar>(1e-4));
     }
 
 /// \brief initialize from a rotation matrix

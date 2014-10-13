@@ -48,9 +48,9 @@ QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
 /// rotational part in the last 3 dimensions
 template<typename Scalar>
 QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
-     const QuatTransformationTemplate<Scalar>::Vector6& x) : 
-  q_A_B_(Vector3(x.template tail<3>())),
-  A_t_A_B_(x.template head<3>()) {
+     const QuatTransformationTemplate<Scalar>::Vector6& x_t_r) : 
+  q_A_B_(Vector3(x_t_r.template tail<3>())),
+  A_t_A_B_(x_t_r.template head<3>()) {
 }
                                                               
 template<typename Scalar>
@@ -189,11 +189,12 @@ QuatTransformationTemplate<Scalar>::inverted() const {
 
 /// \brief get the logarithmic map of the transformation
 /// note: this is the log map of SO(3)xR(3) and not SE(3)
+/// \return vector form of log map with first 3 components the translational part and the last three the rotational part.
 template<typename Scalar>
 typename QuatTransformationTemplate<Scalar>::Vector6 
 QuatTransformationTemplate<Scalar>::log() const {
   AngleAxisTemplate<Scalar> angleaxis(q_A_B_);
-  return (Vector6() << A_t_A_B_,(angleaxis.axis()*angleaxis.angle())).finished();
+  return (Vector6() << A_t_A_B_, (angleaxis.axis()*angleaxis.angle())).finished();
 }
 
 
