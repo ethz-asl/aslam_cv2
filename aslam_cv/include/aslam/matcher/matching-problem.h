@@ -49,8 +49,8 @@ public:
   MatchingProblem() {};
   virtual ~MatchingProblem() {};
 
-  virtual int numApples() const = 0;
-  virtual int numBananas() const = 0;
+  virtual size_t numApples() const = 0;
+  virtual size_t numBananas() const = 0;
 
   /// Get a short list of candidates in list a for index b
   ///
@@ -71,7 +71,7 @@ public:
     candidates->reserve(numApples());
 
     // just returns all apples with no score
-    for (int i = 0; i < numApples(); ++i) {
+    for (unsigned int i = 0; i < numApples(); ++i) {
       candidates->emplace_back(i, 0);
     }
   };
