@@ -30,7 +30,7 @@ class RotationQuaternionTemplate {
   typedef Eigen::Matrix<Scalar, 3, 1> Vector3;
 
   typedef Vector3 Imaginary;
-  
+
   typedef Eigen::Matrix<Scalar, 4, 1> Vector4;
 
   typedef Eigen::Quaternion<Scalar> Implementation;
@@ -42,14 +42,13 @@ class RotationQuaternionTemplate {
 
   /// \brief initialize from real and imaginary components (real first)
   RotationQuaternionTemplate(const Vector4& quat);
-  
+
   /// \brief initialize from angle scaled axis
   RotationQuaternionTemplate(const Vector3& angle_scaled_axis);
 
-
   /// \brief initialize from real and imaginary components (real first)
   RotationQuaternionTemplate(Scalar w, Scalar x, Scalar y, Scalar z);
-  
+
   /// \brief initialize from real and imaginary components
   RotationQuaternionTemplate(Scalar real, const Imaginary& imaginary);
 
@@ -61,7 +60,7 @@ class RotationQuaternionTemplate {
 
   /// \brief initialize from an AngleAxis
   RotationQuaternionTemplate(const AngleAxisTemplate<Scalar>& angleAxis);
-  
+
   virtual ~RotationQuaternionTemplate();
 
   /// \brief the real component of the quaternion
@@ -125,8 +124,7 @@ class RotationQuaternionTemplate {
   Scalar squaredNorm() const;
 
   /// \brief get the angle between this and the other quaternion
-  Scalar getDisparityAngle(
-      const RotationQuaternionTemplate<Scalar>& rhs) const;
+  Scalar getDisparityAngle(const RotationQuaternionTemplate<Scalar>& rhs) const;
 
   /// \brief enforce the unit length constraint
   RotationQuaternionTemplate<Scalar>& normalize();
@@ -149,7 +147,7 @@ class RotationQuaternionTemplate {
 
  private:
   Implementation q_A_B_;
-  
+
 };
 
 typedef RotationQuaternionTemplate<double> RotationQuaternion;
@@ -158,8 +156,8 @@ template<typename Scalar>
 std::ostream& operator<<(std::ostream& out,
                          const RotationQuaternionTemplate<Scalar>& rhs);
 
-} // namespace minimal
-} // namespace kindr
+}  // namespace minimal
+}  // namespace kindr
 
 #include <kindr/minimal/implementation/rotation-quaternion-inl.h>
 

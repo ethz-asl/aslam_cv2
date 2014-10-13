@@ -60,8 +60,7 @@ RotationQuaternionTemplate<Scalar>::RotationQuaternionTemplate(
     q_A_B_(cos(axis_scale_angle.norm()/Scalar(2)),
            sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[0],
            sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[1],
-           sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[2])
-    {
+           sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[2]) {
   CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), static_cast<Scalar>(1e-4));
     }
 
