@@ -8,6 +8,19 @@
 
 #include <aslam/common/statistics/accumulator.h>
 
+///
+// Example usage:
+//
+// #define ENABLE_STATISTICS 1 // Turn on/off the statistics calculation
+// #include <aslam/common/statistics/statistics.h>
+//
+// double my_distance = measureDistance();
+// aslam::statistics::DebugStatsCollector distance_stat("Distance measurement");
+// distance_stat.AddSample(my_distance);
+//
+// std::cout << statistics::Statistics::Print();
+///
+
 namespace aslam {
 namespace statistics {
 const double kNumSecondsPerNanosecond = 1.e-9;
