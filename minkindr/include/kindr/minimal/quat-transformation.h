@@ -25,6 +25,7 @@ class QuatTransformationTemplate {
 
   typedef Eigen::Matrix<Scalar, 3, 1> Vector3;
   typedef Eigen::Matrix<Scalar, 4, 1> Vector4;
+  typedef Eigen::Matrix<Scalar, 6, 1> Vector6;
 
   typedef Eigen::Matrix<Scalar, 3, 1> Position;
   typedef RotationQuaternionTemplate<Scalar> Rotation;
@@ -42,6 +43,11 @@ class QuatTransformationTemplate {
   QuatTransformationTemplate(const Position& A_t_A_B,
                              const typename Rotation::Implementation& q_A_B);
   
+  /// \brief a constructor based on the exponential map
+  /// translational part in the first 3 dimensions, 
+  /// rotational part in the last 3 dimensions
+  QuatTransformationTemplate(const Vector6& x);
+
   virtual ~QuatTransformationTemplate();
 
   void setIdentity();
@@ -84,6 +90,8 @@ class QuatTransformationTemplate {
   ///        component)
   Vector3 inverseTransformVector(const Vector3& rhs) const;
 
+  /// \brief get the logarithmic map of the transformation
+  Vector6 log() const;
 
   /// \brief return a copy of the transformation inverted
   QuatTransformationTemplate<Scalar> inverted() const;
