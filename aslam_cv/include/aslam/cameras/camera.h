@@ -495,7 +495,7 @@ class Camera {
   /// Set the intrinsic parameters. Parameters are documented in the specialized
   /// camera classes.
   void setParameters(const Eigen::VectorXd& params) {
-    CHECK_EQ(getParameterSize(), static_cast<size_t>(params.size()));
+    CHECK_EQ(getParameterSize(), params.size());
     intrinsics_ = params;
   }
 
