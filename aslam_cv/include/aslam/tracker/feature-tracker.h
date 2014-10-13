@@ -25,8 +25,10 @@ class FeatureTracker {
   /// Constructor for serialization.
   FeatureTracker();
 
- public:
+ protected:
   FeatureTracker(const std::shared_ptr<const aslam::Camera>& input_camera);
+
+ public:
   virtual ~FeatureTracker() {};
 
   /// \brief Add a new VisualFrame to the tracker.
