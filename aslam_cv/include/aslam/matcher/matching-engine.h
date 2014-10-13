@@ -22,7 +22,7 @@ class MatchingEngine {
   MatchingEngine() {};
   virtual ~MatchingEngine() {};
 
-  virtual bool match(MatchingProblemT &problem) = 0;
+  virtual bool match(MatchingProblemT *problem) = 0;
 };
 }
 #endif //ASLAM_CV_MATCHINGENGINE_H_

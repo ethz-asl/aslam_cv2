@@ -22,32 +22,32 @@ class MatchingEngineGreedy : public MatchingEngine<MatchingProblem> {
 
   MatchingEngineGreedy() {};
   virtual ~MatchingEngineGreedy() {};
-  virtual bool match(MatchingProblem &problem);
+  virtual bool match(MatchingProblem *problem);
 };
 
 template<typename MatchingProblem>
-bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem &problem) {
-  bool status = problem.doSetup();
-  int numA = problem.numApples();
-  int numB = problem.numBananas();
+bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem *problem) {
+  CHECK_NOTNULL(problem);
+  bool status = problem->doSetup();
+  size_t numA = problem->numApples();
+  size_t numB = problem->numBananas();
 
   typename MatchingProblem::MatchesT matches;
 
   std::vector<typename MatchingProblem::CandidatesT> candidates(numB);
-  int a, b;
   int totalNumCandidates = 0;
-  for (b = 0; b < numB; ++b) {
-    problem.getAppleCandidatesOfBanana(b, &candidates[b]);
+  for (unsigned int b = 0; b < numB; ++b) {
+    problem->getAppleCandidatesOfBanana(b, &candidates[b]);
     totalNumCandidates += candidates[b].size();
   }
 
   matches.reserve(totalNumCandidates);
-  for (b = 0; b < numB; ++b) {
+  for (unsigned int b = 0; b < numB; ++b) {
     // compute the score for each candidate and put in queue
     for (unsigned int c = 0; c < candidates[b].size(); ++c) {
-      a = candidates[b][c].index;
+      int a = candidates[b][c].index;
 
-      typename MatchingProblem::ScoreT score = problem.computeScore(a, b);
+      typename MatchingProblem::ScoreT score = problem->computeScore(a, b);
       matches.emplace_back(a, b, score);
     }
   }
@@ -55,11 +55,11 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem &problem) {
   std::sort(matches.rbegin(), matches.rend());
 
   // compress in place best unique match
-  std::vector<bool> assignedA(numA, false);
+  std::vector<unsigned char> assignedA(numA, false);
   auto match_out = matches.begin();
   for (auto match_in = matches.begin(); match_in != matches.end(); ++match_in) {
-    a = match_in->getIndexA();
-    b = match_in->getIndexB();
+    int a = match_in->getIndexA();
+    //int b = match_in->getIndexB();
     if (!assignedA[a]) {
       assignedA[a] = true;
       *match_out++ = *match_in;
@@ -69,7 +69,7 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem &problem) {
   // trim end of vector
   matches.erase(match_out, matches.end());
 
-  problem.setBestMatches(matches);
+  problem->setBestMatches(matches);
 
   return status;
 }

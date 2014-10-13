@@ -20,10 +20,10 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
   ~SimpleMatchProblem() {
   }
 
-  virtual int numApples() const {
+  virtual size_t numApples() const {
     return apples_.size();
   }
-  virtual int numBananas() const {
+  virtual size_t numBananas() const {
     return bananas_.size();
   }
 
@@ -42,17 +42,20 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
   }
 
   template<typename iter>
-  void setApples(iter first, iter last) {
+  void setApples(const iter& first, const iter& last) {
     apples_.clear();
     apples_.insert(apples_.end(), first, last);
   }
   template<typename iter>
-  void setBananas(iter first, iter last) {
+  void setBananas(const iter& first, const iter& last) {
     bananas_.clear();
     bananas_.insert(bananas_.end(), first, last);
   }
-  MatchesT &getMatches() {
+  const MatchesT &getMatches() const {
     return matches_;
+  }
+  void sortMatches() {
+    std::sort(matches_.begin(),matches_.end());
   }
 };
 
@@ -69,13 +72,13 @@ TEST(TestMatcher, EmptyMatch) {
   SimpleMatchProblem mp;
   aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
-  me.match(mp);
-  EXPECT_EQ(0u, mp.getMatches().size());
+  me.match(&mp);
+  EXPECT_TRUE(mp.getMatches().empty());
 
   std::vector<float> bananas { 1.1, 2.2, 3.3 };
   mp.setBananas(bananas.begin(), bananas.end());
-  me.match(mp);
-  EXPECT_EQ(0u, mp.getMatches().size());
+  me.match(&mp);
+  EXPECT_TRUE(mp.getMatches().empty());
 }
 
 TEST(TestMatcher, GreedyMatcher) {
@@ -90,16 +93,16 @@ TEST(TestMatcher, GreedyMatcher) {
   mp.setApples(apples.begin(), apples.end());
   EXPECT_EQ(5u, mp.numApples());
 
-  me.match(mp);
-  EXPECT_EQ(0u, mp.getMatches().size());
+  me.match(&mp);
+  EXPECT_TRUE(mp.getMatches().empty());
 
   mp.setBananas(bananas.begin(), bananas.end());
   EXPECT_EQ(6, mp.numBananas());
 
-  me.match(mp);
+  me.match(&mp);
   EXPECT_EQ(5u, mp.getMatches().size());
 
-  std::sort(mp.getMatches().begin(), mp.getMatches().end());
+  mp.sortMatches();
 
   for (auto &match : mp.getMatches()) {
     EXPECT_EQ(match.getIndexA(), ind_a_of_b[match.getIndexB()]);
