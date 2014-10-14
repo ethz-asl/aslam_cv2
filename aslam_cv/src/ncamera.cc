@@ -82,6 +82,12 @@ Camera::Ptr NCamera::getCameraShared(size_t cameraIndex) {
 }
 
 /// \brief get the geometry object for camera i
+Camera::ConstPtr NCamera::getCameraShared(size_t cameraIndex) const {
+  CHECK_LT(cameraIndex, cameras_.size());
+  return cameras_[cameraIndex];
+}
+
+/// \brief get the geometry object for camera i
 void NCamera::setCamera(size_t cameraIndex, Camera::Ptr camera) {
   CHECK_LT(cameraIndex, cameras_.size());
   cameras_[cameraIndex] = camera;

@@ -81,6 +81,9 @@ class NCamera
   Camera::Ptr getCameraShared(size_t cameraIndex);
 
   /// \brief get the geometry object for camera i
+  Camera::ConstPtr getCameraShared(size_t cameraIndex) const;
+
+  /// \brief get the geometry object for camera i
   void setCamera(size_t cameraIndex, Camera::Ptr camera);
   
   /// \brief how many cameras does this system have?
