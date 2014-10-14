@@ -63,7 +63,6 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   /// @param[in] intrinsics   vector containing the intrinsic parameters (xi,fu,fv,cu.cv)
   /// @param[in] image_width  image width in pixels
   /// @param[in] image_height image height in pixels
-  /// @param[in] distortion   pointer to the distortion model
   UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
                           uint32_t image_height);
 
