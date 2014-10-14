@@ -16,8 +16,10 @@ FeatureTracker::FeatureTracker()
       current_track_id_(0) {}
 
 FeatureTracker::FeatureTracker(const std::shared_ptr<const aslam::Camera>& input_camera)
-    : camera_(CHECK_NOTNULL(input_camera.get())),
-      current_track_id_(0) {}
+    : camera_(input_camera),
+      current_track_id_(0) {
+  CHECK(camera_);
+}
 
 void FeatureTracker::drawTracks(std::shared_ptr<VisualFrame> current_frame_ptr,
                                 cv::Mat* track_image) {
