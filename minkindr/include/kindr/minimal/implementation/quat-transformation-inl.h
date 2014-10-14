@@ -43,14 +43,21 @@ QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
 
 }
 
+template<typename Scalar>
+QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
+    const TransformationMatrix& T) :
+    q_A_B_(T.template topLeftCorner<3,3>().eval()),
+    A_t_A_B_(T.template topRightCorner<3,1>().eval()) {
+}
+
 /// \brief a constructor based on the exponential map
 /// translational part in the first 3 dimensions, 
 /// rotational part in the last 3 dimensions
 template<typename Scalar>
 QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
      const QuatTransformationTemplate<Scalar>::Vector6& x_t_r) : 
-  q_A_B_(Vector3(x_t_r.template tail<3>())),
-  A_t_A_B_(x_t_r.template head<3>()) {
+  q_A_B_(x_t_r.template tail<3>().eval()),
+  A_t_A_B_(x_t_r.template head<3>().eval()) {
 }
                                                               
 template<typename Scalar>

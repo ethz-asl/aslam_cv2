@@ -3,6 +3,7 @@
 #include <kindr/minimal/rotation-quaternion.h>
 #include <kindr/minimal/angle-axis.h>
 #include <glog/logging.h>
+#include <boost/math/special_functions/sinc.hpp>
 
 namespace kindr {
 namespace minimal {
@@ -52,17 +53,18 @@ RotationQuaternionTemplate<Scalar>::RotationQuaternionTemplate(
              static_cast<Scalar>(1e-4));
 }
 
-
 /// \brief initialize from axis-scaled angle vector
 template<typename Scalar>
 RotationQuaternionTemplate<Scalar>::RotationQuaternionTemplate(
-    const Vector3& axis_scale_angle) :
-    q_A_B_(cos(axis_scale_angle.norm()/Scalar(2)),
-           sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[0],
-           sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[1],
-           sin(axis_scale_angle.norm()/Scalar(2))*axis_scale_angle.normalized()[2]) {
+    const Vector3& axis_scale_angle) {
+  Scalar half_angle = axis_scale_angle.norm()/static_cast<Scalar>(2.0);
+  Scalar half_sinc_angle = (boost::math::sinc_pi(half_angle))/static_cast<Scalar>(2.0);
+  q_A_B_ = Implementation(cos(half_angle),
+                          half_sinc_angle*axis_scale_angle[0],
+                          half_sinc_angle*axis_scale_angle[1],
+                          half_sinc_angle*axis_scale_angle[2]);
   CHECK_NEAR(squaredNorm(), static_cast<Scalar>(1.0), static_cast<Scalar>(1e-4));
-    }
+}
 
 /// \brief initialize from a rotation matrix
 template<typename Scalar>
