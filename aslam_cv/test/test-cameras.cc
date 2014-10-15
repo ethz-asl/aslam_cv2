@@ -175,8 +175,7 @@ TYPED_TEST(TestCameras, JacobianWrtDistortion) {
   Eigen::VectorXd dist_coeffs = this->camera_->getDistortion()->getParameters();
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(DistortionJacobianFunctor,
-                                  dist_coeffs, 1e-3, 1e-1 , this->camera_, point_3d);
-
+                                  dist_coeffs, 1e-8, 6.5 , this->camera_, point_3d);
 }
 
 TYPED_TEST(TestCameras, EuclideanToOnAxisKeypoint) {
@@ -461,4 +460,6 @@ TEST(CameraComparison, TestEquality) {
   EXPECT_FALSE(*pinhole_A == *pinhole_C);  // Different distortion coeffs.
   EXPECT_FALSE(*pinhole_C == *pinhole_D);  // Different intrinsics and distortion coeffs.
 }
+
+ASLAM_UNITTEST_ENTRYPOINT
 

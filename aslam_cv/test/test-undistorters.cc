@@ -136,3 +136,4 @@ TEST(TestUndistortersUpm, TestMappedUndistorterUdfToPinhole) {
   }
 }
 
+ASLAM_UNITTEST_ENTRYPOINT

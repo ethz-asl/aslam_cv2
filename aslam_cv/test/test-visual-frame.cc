@@ -147,3 +147,5 @@ TEST(Frame, SetGetImage) {
   const cv::Mat& data_2 = frame.getRawImage();
   EXPECT_TRUE(gtest_catkin::ImagesEqual(data, data_2));
 }
+
+ASLAM_UNITTEST_ENTRYPOINT

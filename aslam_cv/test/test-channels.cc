@@ -36,9 +36,12 @@ TEST(Channel, SetRetrieveChannel) {
 aslam::channels::ChannelGroup channels;
 aslam::channels::add_TEST_Channel(&channels);
 Eigen::Matrix2Xd& data = aslam::channels::get_TEST_Data(channels);
+data.resize(Eigen::NoChange, 3);
 data.setRandom();
 Eigen::Matrix2Xd data2 = data;
 Eigen::Matrix2Xd& data3 = aslam::channels::get_TEST_Data(channels);
 EXPECT_TRUE(EIGEN_MATRIX_NEAR(data3, data2, 1e-8));
 }
+
+ASLAM_UNITTEST_ENTRYPOINT
 
