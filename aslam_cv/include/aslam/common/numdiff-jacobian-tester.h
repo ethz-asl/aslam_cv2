@@ -5,8 +5,6 @@
 #include <eigen-checks/gtest.h>
 #include <glog/logging.h>
 
-#include <aslam/common/eigen-helpers.h>
-
 namespace aslam {
 namespace common {
 

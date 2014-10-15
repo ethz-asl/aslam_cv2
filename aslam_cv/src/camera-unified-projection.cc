@@ -2,7 +2,6 @@
 
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/camera-pinhole.h>
-#include <aslam/common/eigen-helpers.h>
 #include <aslam/common/types.h>
 #include <aslam/common/undistort-helpers.h>
 #include <aslam/pipeline/undistorter-mapped.h>
@@ -29,7 +28,8 @@ namespace aslam {
 //}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera()
-    : Base(common::createVector5(0.0, 0.0, 0.0, 0.0, 0.0), 0, 0) {}
+    : Base((Eigen::Matrix<double, 5, 1>() << 0.0, 0.0, 0.0, 0.0, 0.0).finished(), 0, 0) {
+}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height,
@@ -50,18 +50,16 @@ UnifiedProjectionCamera::UnifiedProjectionCamera(double xi, double focallength_c
                                                  uint32_t image_height,
                                                  aslam::Distortion::UniquePtr& distortion)
     : UnifiedProjectionCamera(
-        common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
-                              imagecenter_rows),
-        image_width, image_height, distortion) {}
+        (Eigen::Matrix<double, 5, 1>() << xi, focallength_cols, focallength_rows, imagecenter_cols,
+            imagecenter_rows).finished(), image_width, image_height, distortion) {}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(double xi, double focallength_cols,
                                                  double focallength_rows, double imagecenter_cols,
                                                  double imagecenter_rows, uint32_t image_width,
                                                  uint32_t image_height)
     : UnifiedProjectionCamera(
-        common::createVector5(xi, focallength_cols, focallength_rows, imagecenter_cols,
-                              imagecenter_rows),
-        image_width, image_height) {}
+        (Eigen::Matrix<double, 5, 1>() << xi, focallength_cols, focallength_rows, imagecenter_cols,
+            imagecenter_rows).finished(), image_width, image_height) {}
 
 bool UnifiedProjectionCamera::operator==(const Camera& other) const {
   // Check that the camera models are the same.

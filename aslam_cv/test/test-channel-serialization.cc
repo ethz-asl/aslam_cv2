@@ -3,7 +3,6 @@
 #include <eigen-checks/gtest.h>
 #include <gtest/gtest.h>
 
-#include <aslam/common/eigen-helpers.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/opencv-predicates.h>
 #include <aslam/common/channel-definitions.h>
