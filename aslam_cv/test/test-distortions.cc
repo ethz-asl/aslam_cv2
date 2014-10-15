@@ -1,7 +1,8 @@
 #include <Eigen/Core>
+#include <eigen-checks/gtest.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <aslam/common/eigen-predicates.h>
+
 #include <aslam/common/memory.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/cameras/distortion-fisheye.h>
@@ -39,7 +40,7 @@ TYPED_TEST(TestDistortions, DistortAndUndistortUsingInternalParameters) {
   this->distortion_->distort(&keypoint2);
   this->distortion_->undistort(&keypoint2);
 
-  EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-12));
 }
 
 TYPED_TEST(TestDistortions, DistortAndUndistortUsingExternalParameters) {
@@ -53,7 +54,7 @@ TYPED_TEST(TestDistortions, DistortAndUndistortUsingExternalParameters) {
   this->distortion_->distortUsingExternalCoefficients(&dist_coeff, &keypoint2, nullptr);
   this->distortion_->undistortUsingExternalCoefficients(dist_coeff, &keypoint2);
 
-  EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-12));
 }
 
 TYPED_TEST(TestDistortions, DistortAndUndistortImageCenter) {
@@ -62,12 +63,12 @@ TYPED_TEST(TestDistortions, DistortAndUndistortImageCenter) {
   Eigen::Vector2d keypoint2 = keypoint;
   this->distortion_->undistort(&keypoint2);
   this->distortion_->distort(&keypoint2);
-  EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-12));
 
   keypoint2 = keypoint;
   this->distortion_->distort(&keypoint2);
   this->distortion_->undistort(&keypoint2);
-  EXPECT_NEAR_EIGEN(keypoint2, keypoint, 1e-12);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-12));
 }
 
 

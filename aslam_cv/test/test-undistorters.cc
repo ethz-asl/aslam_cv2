@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include <Eigen/Core>
+#include <eigen-checks/gtest.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -9,7 +10,6 @@
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/common/eigen-helpers.h>
-#include <aslam/common/eigen-predicates.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/pipeline/undistorter-mapped.h>
 #include <aslam/common/memory.h>
@@ -81,7 +81,7 @@ TYPED_TEST(TestUndistorters, TestMappedUndistorter) {
                                                         std::floor(keypoint_undistorted[1]));
 
     // As we only use full integer lookup in the map and do not interpolate we use a good tolerance.
-    EXPECT_NEAR_EIGEN(keypoint_distorted, keypoint_distorted_maps, 0.05);
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_distorted, keypoint_distorted_maps, 0.05));
   }
 }
 
@@ -132,7 +132,7 @@ TEST(TestUndistortersUpm, TestMappedUndistorterUdfToPinhole) {
                                                         std::floor(keypoint_undistorted[1]));
 
     // As we only use full integer lookup in the map and do not interpolate we use a good tolerance.
-    EXPECT_NEAR_EIGEN(keypoint_distorted, keypoint_distorted_maps, 0.05);
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_distorted, keypoint_distorted_maps, 0.05));
   }
 }
 
