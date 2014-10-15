@@ -1,5 +1,8 @@
 #include <opencv2/core/core.hpp>
 #include <Eigen/Core>
+#include <eigen-checks/gtest.h>
+#include <gtest/gtest.h>
+
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/eigen-helpers.h>
 #include <aslam/common/opencv-predicates.h>
@@ -90,11 +93,9 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeString) {
   ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
             this->value_a.value_.cols() *
             sizeof(typename TypeParam::Scalar), serialized_value.size());
-  EXPECT_FALSE(aslam::common::MatricesEqual(this->value_a.value_,
-                                            this->value_b.value_, 1e-4));
+  EXPECT_FALSE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, 1e-4));
   EXPECT_TRUE(this->value_b.deSerializeFromString(serialized_value));
-  EXPECT_TRUE(aslam::common::MatricesEqual(this->value_a.value_,
-                                           this->value_b.value_, 1e-4));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, 1e-4));
 }
 
 TYPED_TEST(ChannelSerializationTest, SerializeDeserializeBuffer) {
@@ -106,11 +107,9 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeBuffer) {
   ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
             this->value_a.value_.cols() *
             sizeof(typename TypeParam::Scalar), size);
-  EXPECT_FALSE(aslam::common::MatricesEqual(this->value_a.value_,
-                                            this->value_b.value_, 1e-4));
+  EXPECT_FALSE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, 1e-4));
   EXPECT_TRUE(this->value_b.deSerializeFromBuffer(buffer, size));
-  EXPECT_TRUE(aslam::common::MatricesEqual(this->value_a.value_,
-                                           this->value_b.value_, 1e-4));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, 1e-4));
 }
 
 TEST(ChannelSerialization, HeaderInfoSize) {
@@ -146,11 +145,9 @@ TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
 
   aslam::channels::VISUAL_KEYPOINT_MEASUREMENTS keypoints_b;
 
-  EXPECT_FALSE(aslam::common::MatricesEqual(keypoints_a.value_,
-                                            keypoints_b.value_, 1e-4));
+  EXPECT_FALSE(EIGEN_MATRIX_NEAR(keypoints_a.value_, keypoints_b.value_, 1e-4));
   EXPECT_TRUE(keypoints_b.deSerializeFromString(serialized_value));
-  EXPECT_TRUE(aslam::common::MatricesEqual(keypoints_a.value_,
-                                           keypoints_b.value_, 1e-4));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoints_a.value_, keypoints_b.value_, 1e-4));
 }
 
 TYPED_TEST(CvMatSerializationTest, SerializeDeserializeString) {
