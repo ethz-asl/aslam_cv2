@@ -9,7 +9,6 @@
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/distortion-radtan.h>
-#include <aslam/common/eigen-helpers.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/pipeline/undistorter-mapped.h>
 #include <aslam/common/memory.h>
