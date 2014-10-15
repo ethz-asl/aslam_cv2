@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+
+#include <aslam/common/entrypoint.h>
 #include <aslam/common/thread-pool.h>
 
 int increment(int a){
@@ -22,3 +24,5 @@ TEST(ThreadPoolTests, testBasic) {
   EXPECT_EQ(201, job4.get());
   EXPECT_EQ(101, job5.get());
 }
+
+ASLAM_UNITTEST_ENTRYPOINT

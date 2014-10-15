@@ -2,9 +2,8 @@
 #define ASLAM_CV_NUMDIFF_JACOBIAN_TESTER_H_
 
 #include <Eigen/Dense>
+#include <eigen-checks/gtest.h>
 #include <glog/logging.h>
-
-#include <aslam/common/eigen-helpers.h>
 
 namespace aslam {
 namespace common {
@@ -55,7 +54,7 @@ namespace common {
       typename FUNCTOR_TYPE::JacobianType Jsymbolic;                     \
       success = functor.getJacobian(X, &Jsymbolic);                      \
       EXPECT_TRUE(success) << "Getting analytical Jacobian failed!";     \
-      EXPECT_NEAR_EIGEN(Jnumeric, Jsymbolic, TOLERANCE);                 \
+      EXPECT_TRUE(EIGEN_MATRIX_NEAR(Jnumeric, Jsymbolic, TOLERANCE));    \
       VLOG(3) << "Jnumeric: " << Jnumeric << "\n";                       \
       VLOG(3) << "Jsymbolic: " << Jsymbolic << "\n";                     \
     } while (0)

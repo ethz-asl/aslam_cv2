@@ -1,4 +1,5 @@
 #include <Eigen/Core>
+#include <eigen-checks/gtest.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
@@ -9,8 +10,6 @@
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
-#include <aslam/common/eigen-helpers.h>
-#include <aslam/common/eigen-predicates.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
 #include <aslam/common/numdiff-jacobian-tester.h>
@@ -175,8 +174,7 @@ TYPED_TEST(TestCameras, JacobianWrtDistortion) {
   Eigen::VectorXd dist_coeffs = this->camera_->getDistortion()->getParameters();
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(DistortionJacobianFunctor,
-                                  dist_coeffs, 1e-3, 1e-1 , this->camera_, point_3d);
-
+                                  dist_coeffs, 1e-8, 6.5 , this->camera_, point_3d);
 }
 
 TYPED_TEST(TestCameras, EuclideanToOnAxisKeypoint) {
@@ -185,7 +183,7 @@ TYPED_TEST(TestCameras, EuclideanToOnAxisKeypoint) {
   this->camera_->project3(euclidean, &keypoint);
 
   Eigen::Vector2d image_center(this->camera_->cu(), this->camera_->cv());
-  EXPECT_NEAR_EIGEN(image_center, keypoint, 1e-15);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(image_center, keypoint, 1e-15));
 }
 
 TYPED_TEST(TestCameras, isVisible) {
@@ -220,6 +218,7 @@ TYPED_TEST(TestCameras, isProjectable) {
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(-10, -10, -1))); // Behind cam.
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(0, 0, -1)));     // Behind, center.
 }
+
 TYPED_TEST(TestCameras, CameraTest_isInvertible) {
   const int N = 100;
   const double depth = 10.0;
@@ -243,7 +242,7 @@ TYPED_TEST(TestCameras, CameraTest_isInvertible) {
     point.normalize();
     points2.col(n) = point * depth;
   }
-  ASSERT_TRUE(aslam::common::MatricesEqual(points1, points2, 1e-4));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points2, 1e-4));
 
   // Do the same with the vectorized functions.
   std::vector<aslam::ProjectionResult> result;
@@ -259,7 +258,7 @@ TYPED_TEST(TestCameras, CameraTest_isInvertible) {
     points3.col(n) *= depth;
   }
 
-  ASSERT_TRUE(aslam::common::MatricesEqual(points1, points3, 1e-4));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points3, 1e-4));
 }
 
 TYPED_TEST(TestCameras, TestClone) {
@@ -299,24 +298,24 @@ TEST(TestCameraPinhole, ManualProjectionWithoutDistortion) {
   aslam::ProjectionResult res;
   res = camera->project3(euclidean, &keypoint);
   EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
-  EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_manual, keypoint, 1e-15));
   keypoint.setZero();
 
   Eigen::Matrix<double, 2, 3> out_jacobian;
   res = camera->project3(euclidean, &keypoint, &out_jacobian);
   EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
-  EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_manual, keypoint, 1e-15));
   keypoint.setZero();
 
   res = camera->project3Functional(euclidean, nullptr, nullptr, &keypoint);
   EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
-  EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_manual, keypoint, 1e-15));
   keypoint.setZero();
 
   res = camera->project3Functional(euclidean, nullptr, nullptr, &keypoint,
                                    nullptr, nullptr, nullptr);
   EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
-  EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_manual, keypoint, 1e-15));
   keypoint.setZero();
 }
 
@@ -340,24 +339,24 @@ TEST(TestCameraUnifiedProjection, ManualProjectionWithoutDistortion) {
   aslam::ProjectionResult res;
   res = camera->project3(euclidean, &keypoint);
   EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
-  EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_manual, keypoint, 1e-15));
   keypoint.setZero();
 
   Eigen::Matrix<double, 2, 3> out_jacobian;
   res = camera->project3(euclidean, &keypoint, &out_jacobian);
   EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
-  EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_manual, keypoint, 1e-15));
   keypoint.setZero();
 
   res = camera->project3Functional(euclidean, nullptr, nullptr, &keypoint);
   EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
-  EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_manual, keypoint, 1e-15));
   keypoint.setZero();
 
   res = camera->project3Functional(euclidean, nullptr,
                                    nullptr, &keypoint, nullptr, nullptr, nullptr);
   EXPECT_TRUE(res.getDetailedStatus() == aslam::ProjectionResult::KEYPOINT_VISIBLE);
-  EXPECT_NEAR_EIGEN(keypoint_manual, keypoint, 1e-15);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_manual, keypoint, 1e-15));
   keypoint.setZero();
 }
 
@@ -460,4 +459,6 @@ TEST(CameraComparison, TestEquality) {
   EXPECT_FALSE(*pinhole_A == *pinhole_C);  // Different distortion coeffs.
   EXPECT_FALSE(*pinhole_C == *pinhole_D);  // Different intrinsics and distortion coeffs.
 }
+
+ASLAM_UNITTEST_ENTRYPOINT
 
