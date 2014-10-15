@@ -1,6 +1,8 @@
+#include <eigen-checks/gtest.h>
+#include <gtest/gtest.h>
+
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/entrypoint.h>
-#include <aslam/common/eigen-helpers.h>
 #include <aslam/common/opencv-predicates.h>
 #include <aslam/cameras/camera.h>
 #include <aslam/frames/visual-frame.h>
@@ -50,7 +52,7 @@ data.setRandom();
 frame.setDescriptors(data);
 const aslam::VisualFrame::DescriptorsT& data_2 =
     frame.getDescriptors();
-EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
+EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getDescriptorsMutable());
 for (int i = 0; i < data.cols(); ++i) {
   const unsigned char* data_ptr = frame.getDescriptor(i);
@@ -65,11 +67,12 @@ data.resize(Eigen::NoChange, 10);
 data.setRandom();
 frame.setKeypointMeasurements(data);
 const Eigen::Matrix2Xd& data_2 = frame.getKeypointMeasurements();
-EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
+EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getKeypointMeasurementsMutable());
 for (int i = 0; i < data.cols(); ++i) {
-  Eigen::Block<Eigen::Matrix2Xd, 2, 1> ref = frame.getKeypointMeasurement(i);
-  EXPECT_TRUE(aslam::common::MatricesEqual(data.block<2, 1>(0, i), ref, 1e-6));
+  const Eigen::Vector2d& ref = frame.getKeypointMeasurement(i);
+  const Eigen::Vector2d& should = data.block<2, 1>(0, i);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(should, ref, 1e-6));
 }
 }
 
@@ -80,7 +83,7 @@ data.resize(10);
 data.setRandom();
 frame.setKeypointMeasurementUncertainties(data);
 const Eigen::VectorXd& data_2 = frame.getKeypointMeasurementUncertainties();
-EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
+EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getKeypointMeasurementUncertaintiesMutable());
 for (int i = 0; i < data.cols(); ++i) {
   double ref = frame.getKeypointMeasurementUncertainty(i);
@@ -95,7 +98,7 @@ data.resize(10);
 data.setRandom();
 frame.setKeypointOrientations(data);
 const Eigen::VectorXd& data_2 = frame.getKeypointOrientations();
-EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
+EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getKeypointOrientationsMutable());
 for (int i = 0; i < data.cols(); ++i) {
   double ref = frame.getKeypointOrientation(i);
@@ -110,7 +113,7 @@ data.resize(10);
 data.setRandom();
 frame.setKeypointScales(data);
 const Eigen::VectorXd& data_2 = frame.getKeypointScales();
-EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
+EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getKeypointScalesMutable());
 for (int i = 0; i < data.cols(); ++i) {
   double ref = frame.getKeypointScale(i);
@@ -133,7 +136,7 @@ TEST(Frame, NamedChannel) {
 
   const Eigen::VectorXd& data_2 =
       frame.getChannelData<Eigen::VectorXd>(channel_name);
-  EXPECT_TRUE(aslam::common::MatricesEqual(data, data_2, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
 }
 
 TEST(Frame, SetGetImage) {
@@ -144,3 +147,5 @@ TEST(Frame, SetGetImage) {
   const cv::Mat& data_2 = frame.getRawImage();
   EXPECT_TRUE(gtest_catkin::ImagesEqual(data, data_2));
 }
+
+ASLAM_UNITTEST_ENTRYPOINT
