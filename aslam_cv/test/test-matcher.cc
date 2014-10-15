@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 
+#include <aslam/common/entrypoint.h>
 #include <aslam/matcher/matching-engine-greedy.h>
 #include <aslam/matcher/matching-problem.h>
 
@@ -109,3 +110,5 @@ TEST(TestMatcher, GreedyMatcher) {
   }
 
 }
+
+ASLAM_UNITTEST_ENTRYPOINT

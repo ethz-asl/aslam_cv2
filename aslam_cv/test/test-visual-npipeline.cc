@@ -5,6 +5,7 @@
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/ncamera.h>
+#include <aslam/common/entrypoint.h>
 #include <aslam/frames/visual-nframe.h>
 #include <aslam/pipeline/visual-pipeline-null.h>
 #include <aslam/pipeline/visual-pipeline.h>
@@ -177,3 +178,5 @@ TEST_F(VisualNPipelineTest, testTimestampDiff) {
   ASSERT_EQ(401, nframes->getFrame(0).getTimestamp());
   ASSERT_EQ(401, nframes->getFrame(1).getTimestamp());
 }
+
+ASLAM_UNITTEST_ENTRYPOINT

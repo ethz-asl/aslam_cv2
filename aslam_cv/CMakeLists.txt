@@ -4,6 +4,9 @@ project(aslam_cv)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
+#############
+# LIBRARIES #
+#############
 cs_add_library(${PROJECT_NAME} 
                                src/camera.cc
                                src/camera-pinhole.cc
@@ -36,20 +39,56 @@ if(APPLE)
 endif()
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
-catkin_add_gtest(${PROJECT_NAME}_tests 
-    test/entry-point.cc
+##########
+# GTESTS #
+##########
+catkin_add_gtest(test_cameras
     test/test-cameras.cc
-    test/test-channel-serialization.cc
-    test/test-channels.cc
-    test/test-distortions.cc  
-    test/test-matcher.cc
-    test/test-thread-pool.cc
-    test/test-undistorters.cc
-    test/test-visual-frame.cc
-    test/test-visual-npipeline.cc
-    )
-target_link_libraries(${PROJECT_NAME}_tests ${PROJECT_NAME})
+)
+target_link_libraries(test_cameras ${PROJECT_NAME}) 
 
+catkin_add_gtest(test_channel-serialization
+    test/test-channel-serialization.cc
+)
+target_link_libraries(test_channel-serialization ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_channels
+    test/test-channels.cc
+)
+target_link_libraries(test_channels ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_distortions
+    test/test-distortions.cc
+)
+target_link_libraries(test_distortions ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_matcher
+    test/test-matcher.cc
+)
+target_link_libraries(test_matcher ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_thread-pool
+    test/test-thread-pool.cc
+)
+target_link_libraries(test_thread-pool ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_undistorters
+    test/test-undistorters.cc
+)
+target_link_libraries(test_undistorters ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_visual-frame
+    test/test-visual-frame.cc
+)
+target_link_libraries(test_visual-frame ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_visual-npipeline
+    test/test-visual-npipeline.cc
+)
+target_link_libraries(test_visual-npipeline ${PROJECT_NAME}) 
+
+##########
+# EXPORT #
+##########
 cs_install()
 cs_export()
-

@@ -3,8 +3,8 @@
 #include <eigen-checks/gtest.h>
 #include <gtest/gtest.h>
 
-#include <aslam/common/entrypoint.h>
 #include <aslam/common/eigen-helpers.h>
+#include <aslam/common/entrypoint.h>
 #include <aslam/common/opencv-predicates.h>
 #include <aslam/common/channel-definitions.h>
 #include <aslam/common/channel-serialization.h>
@@ -184,3 +184,5 @@ TYPED_TEST(CvMatSerializationTest, SerializeDeserializeBuffer) {
                                           this->imagesB_[ch].value_, 1e-4));
   }
 }
+
+ASLAM_UNITTEST_ENTRYPOINT
