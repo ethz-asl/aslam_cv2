@@ -43,10 +43,12 @@ class QuatTransformationTemplate {
   QuatTransformationTemplate(const Position& A_t_A_B,
                              const typename Rotation::Implementation& q_A_B);
   
+  QuatTransformationTemplate(const TransformationMatrix& T);
+
   /// \brief a constructor based on the exponential map
   /// translational part in the first 3 dimensions, 
   /// rotational part in the last 3 dimensions
-  QuatTransformationTemplate(const Vector6& x);
+  QuatTransformationTemplate(const Vector6& x_t_r);
 
   virtual ~QuatTransformationTemplate();
 
