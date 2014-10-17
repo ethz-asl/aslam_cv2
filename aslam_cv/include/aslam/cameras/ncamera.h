@@ -65,6 +65,14 @@ class NCamera
   /// \brief get the pose of body frame with respect to the camera i
   Transformation& get_T_C_B_Mutable(size_t cameraIndex);
 
+  /// \brief get the pose of body frame with respect to the camera with a camera id
+  /// The method will assert if the camera is not in the rig!
+  const Transformation& get_T_C_B(const CameraId& camera_id) const;
+
+  /// \brief get the pose of body frame with respect to the camera with a camera id
+  /// The method will assert if the camera is not in the rig!
+  Transformation& get_T_C_B_Mutable(const CameraId& camera_id);
+
   /// \brief set the pose of body frame with respect to the camera i
   void set_T_C_B(size_t cameraIndex, const Transformation& T_Ci_B);
 
@@ -100,7 +108,7 @@ class NCamera
   
   /// \brief get the index of the camera with the id
   /// @returns -1 if the rig doesn't have a camera with this id
-  size_t getCameraIndex(const CameraId& id) const;
+  int getCameraIndex(const CameraId& id) const;
   
   /// \brief get the camera id.
   inline const aslam::NCameraId& getId() const { return id_; }
