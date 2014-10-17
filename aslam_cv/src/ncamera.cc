@@ -50,6 +50,20 @@ Transformation& NCamera::get_T_C_B_Mutable(size_t cameraIndex) {
   return T_C_B_[cameraIndex];
 }
 
+const Transformation& NCamera::get_T_C_B(const CameraId& camera_id) const {
+  CHECK(camera_id.isValid());
+  int camera_idx = getCameraIndex(camera_id);
+  CHECK_GE(camera_idx, 0);
+  return get_T_C_B(camera_idx);
+}
+
+Transformation& NCamera::get_T_C_B_Mutable(const CameraId& camera_id) {
+  CHECK(camera_id.isValid());
+  int camera_idx = getCameraIndex(camera_id);
+  CHECK_GE(camera_idx, 0);
+  return get_T_C_B_Mutable(camera_idx);
+}
+
 /// \brief set the pose of body frame with respect to the camera i
 void NCamera::set_T_C_B(size_t cameraIndex, const Transformation& T_Ci_B) {
   CHECK_LT(cameraIndex, T_C_B_.size());
@@ -116,7 +130,8 @@ bool NCamera::hasCameraWithId(const CameraId& id) const {
 
 /// \brief get the index of the camera with the id
 /// @returns -1 if the rig doesn't have a camera with this id
-size_t NCamera::getCameraIndex(const CameraId& id) const {
+int NCamera::getCameraIndex(const CameraId& id) const {
+  CHECK(id.isValid());
   std::unordered_map<CameraId, size_t>::const_iterator it = idToIndex_.find(id);
   if(it == idToIndex_.end()) {
     return -1;
@@ -139,4 +154,4 @@ bool NCamera::operator==(const NCamera& other) const {
   return same;
 }
 
-} // namespace aslam
+}  // namespace aslam
