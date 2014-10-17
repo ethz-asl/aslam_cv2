@@ -69,11 +69,11 @@ public:
   Transformation& get_T_C_B_Mutable(size_t camera_index);
 
   /// \brief get the pose of body frame with respect to the camera with a camera id
-  /// The method will assert if the camera is not in the rig!
+  /// The method will assert that the camera is not in the rig!
   const Transformation& get_T_C_B(const CameraId& camera_id) const;
 
   /// \brief get the pose of body frame with respect to the camera with a camera id
-  /// The method will assert if the camera is not in the rig!
+  /// The method will assert that the camera is not in the rig!
   Transformation& get_T_C_B_Mutable(const CameraId& camera_id);
 
   /// \brief set the pose of body frame with respect to the camera i
