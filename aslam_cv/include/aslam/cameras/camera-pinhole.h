@@ -185,8 +185,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   template<typename DistortionType>
   static PinholeCamera::Ptr createTestCamera() {
     aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
-    aslam::PinholeCamera::Ptr camera = PinholeCamera::Ptr(
-        new PinholeCamera(400, 400, 320, 240, 640, 480, distortion));
+    aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 400, 320, 240, 640, 480, distortion));
     aslam::CameraId id;
     id.randomize();
     camera->setId(id);
@@ -195,8 +194,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
 
   /// \brief Create a test camera object for unit testing. (without distortion)
   static PinholeCamera::Ptr createTestCamera() {
-    aslam::PinholeCamera::Ptr camera = PinholeCamera::Ptr(
-        new PinholeCamera(400, 400, 320, 240, 640, 480));
+    aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 400, 320, 240, 640, 480));
     aslam::CameraId id;
     id.randomize();
     camera->setId(id);
