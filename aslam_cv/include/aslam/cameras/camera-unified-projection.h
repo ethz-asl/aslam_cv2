@@ -186,7 +186,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   template<typename DistortionType>
   static UnifiedProjectionCamera::Ptr createTestCamera() {
     aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
-    aslam::UnifiedProjectionCamera::Ptr camera = UnifiedProjectionCamera::Ptr(
+    aslam::UnifiedProjectionCamera::Ptr camera(
         new UnifiedProjectionCamera(0.9, 400, 400, 320, 240, 640, 480, distortion));
     aslam::CameraId id;
     id.randomize();
@@ -196,7 +196,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
   /// \brief Create a test camera object for unit testing. (without distortion)
   static UnifiedProjectionCamera::Ptr createTestCamera() {
-    aslam::UnifiedProjectionCamera::Ptr camera = UnifiedProjectionCamera::Ptr(
+    aslam::UnifiedProjectionCamera::Ptr camera(
         new UnifiedProjectionCamera(0.9, 400, 400, 320, 240, 640, 480));
     aslam::CameraId id;
     id.randomize();
