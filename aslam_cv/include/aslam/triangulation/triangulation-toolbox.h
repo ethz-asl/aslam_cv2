@@ -6,7 +6,7 @@
 #include <Eigen/Dense>
 #include <Eigen/QR>
 #include <glog/logging.h>
-#include <multiagent-mapping-common/aligned-allocation.h>
+#include <multiagent-mapping-common/aligned_allocation.h>
 
 namespace aslam {
 // From Google Tango.
@@ -16,7 +16,7 @@ inline bool LinearTriangulateFromNViews(
     const aslam::Transformation& T_I_C,
     Eigen::Vector3d* G_point) {
   CHECK_NOTNULL(G_point);
-  CHECK_EQ(measurements.size(), poses.size());
+  CHECK_EQ(measurements.size(), T_G_I.size());
   if (measurements.size() < 2u) {
     return false;
   }
@@ -31,14 +31,14 @@ inline bool LinearTriangulateFromNViews(
   // Fill in A and b.
   for (size_t i = 0; i < measurements.size(); ++i) {
     Eigen::Vector3d v(measurements[i](0), measurements[i](1), 1.);
-    Eigen::Matrix3d R_G_I = poses[i].getRotation().getRotationMatrix();
-    Eigen::Vector3d p_G_I = poses[i].getPosition();
+    Eigen::Matrix3d R_G_I = T_G_I[i].getRotation().getRotationMatrix();
+    Eigen::Vector3d p_G_I = T_G_I[i].getPosition();
     A.block<3, 3>(3 * i, 0) = Eigen::Matrix3d::Identity();
     A.block<3, 1>(3 * i, 3 + i) = -R_G_I * I_R_C * v;
     b.segment<3>(3 * i) = p_G_I + R_G_I * T_I_C.getPosition();
   }
 
-  *point_in_global = A.colPivHouseholderQr().solve(b).head<3>();
+  *G_point = A.colPivHouseholderQr().solve(b).head<3>();
   return true;
 }
 }  // namespace aslam
