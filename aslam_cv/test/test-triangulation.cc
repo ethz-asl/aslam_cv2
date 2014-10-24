@@ -7,10 +7,9 @@
 #include <aslam/triangulation/triangulation-toolbox.h>
 #include <eigen-checks/gtest.h>
 
-// TODO(burrimi): Implement triangulation test.
 const double kDoubleTolerance = 1e-9;
 const Eigen::Vector3d kGPoint(0, 0, 5);
-const int n_observations = 20;
+const int kNumObservations = 20;
 
 namespace aslam {
 void FillObservations(
@@ -24,17 +23,18 @@ void FillObservations(
   Eigen::Vector3d position_start(-2,-2,-1);
   Eigen::Vector3d position_end(2,2,1);
 
-  // move along line from position_start to position_end
+  Eigen::Vector3d position_step((position_end - position_start) / (n_observations - 1));
+
+  // Move along line from position_start to position_end.
   for(int i = 0; i < n_observations; ++i) {
-    Eigen::Vector3d test_pos;
-    test_pos = position_start + i / (n_observations - 1) * (position_end - position_start);
-    aslam::Transformation T_G_I_current(test_pos,Eigen::Quaterniond::Identity());
+    Eigen::Vector3d test_pos(position_start + i * position_step);
+    aslam::Transformation T_G_I_current(test_pos, Eigen::Quaterniond::Identity());
     T_G_I->push_back(T_G_I_current);
 
     aslam::Transformation T_C_G = T_I_C.inverted() * T_G_I_current.inverted();
 
-    Eigen::Vector3d landmark_C = T_C_G.transform(kGPoint);
-    Eigen::Vector2d measurement = landmark_C.head<2>() / landmark_C[2];
+    Eigen::Vector3d C_landmark = T_C_G.transform(kGPoint);
+    Eigen::Vector2d measurement = C_landmark.head<2>() / C_landmark[2];
     measurements->push_back(measurement);
   }
 }
@@ -54,7 +54,7 @@ TEST_F(TriangulationTest, LinearTriangulateFromNViews) {
   aslam::Aligned<std::vector, aslam::Transformation>::type T_G_I;
   Eigen::Vector3d G_point;
 
-  aslam::FillObservations(n_observations, T_I_C_, &measurements, &T_G_I);
+  aslam::FillObservations(kNumObservations, T_I_C_, &measurements, &T_G_I);
   aslam::LinearTriangulateFromNViews(measurements, T_G_I, T_I_C_, &G_point);
 
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(kGPoint, G_point, kDoubleTolerance));
