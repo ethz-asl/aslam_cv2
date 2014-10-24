@@ -6,7 +6,7 @@
 #include <Eigen/Dense>
 #include <Eigen/QR>
 #include <glog/logging.h>
-#include <multiagent-mapping-common/aligned_allocation.h>
+#include <aslam/common/memory.h>
 
 namespace aslam {
 // From Google Tango.

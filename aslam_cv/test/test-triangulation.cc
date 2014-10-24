@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <aslam/common/entrypoint.h>
+#include <aslam/common/memory.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/triangulation/triangulation-toolbox.h>
 #include <eigen-checks/gtest.h>
@@ -49,8 +50,8 @@ class TriangulationTest : public testing::Test {
 };
 
 TEST_F(TriangulationTest, LinearTriangulateFromNViews) {
-  Aligned<std::vector, Eigen::Vector2d>::type measurements;
-  Aligned<std::vector, aslam::Transformation>::type T_G_I;
+  aslam::Aligned<std::vector, Eigen::Vector2d>::type measurements;
+  aslam::Aligned<std::vector, aslam::Transformation>::type T_G_I;
   Eigen::Vector3d G_point;
 
   aslam::FillObservations(n_observations, T_I_C_, &measurements, &T_G_I);
