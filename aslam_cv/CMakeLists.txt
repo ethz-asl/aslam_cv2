@@ -67,6 +67,11 @@ catkin_add_gtest(test_matcher
 )
 target_link_libraries(test_matcher ${PROJECT_NAME}) 
 
+catkin_add_gtest(test_triangulation
+    test/test-triangulation.cc
+)
+target_link_libraries(test_triangulation ${PROJECT_NAME}) 
+
 catkin_add_gtest(test_thread-pool
     test/test-thread-pool.cc
 )
