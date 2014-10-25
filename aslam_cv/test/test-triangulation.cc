@@ -9,14 +9,13 @@
 
 const double kDoubleTolerance = 1e-9;
 const Eigen::Vector3d kGPoint(0, 0, 5);
-const int kNumObservations = 20;
+const size_t kNumObservations = 20;
 
-namespace aslam {
-void FillObservations(
-    int n_observations,
+void fillObservations(
+    size_t n_observations,
     const aslam::Transformation& T_I_C,
-    Aligned<std::vector, Eigen::Vector2d>::type* measurements,
-    Aligned<std::vector, aslam::Transformation>::type* T_G_I) {
+    aslam::Aligned<std::vector, Eigen::Vector2d>::type* measurements,
+    aslam::Aligned<std::vector, aslam::Transformation>::type* T_G_I) {
   CHECK_NOTNULL(measurements);
   CHECK_NOTNULL(T_G_I);
 
@@ -26,7 +25,7 @@ void FillObservations(
   Eigen::Vector3d position_step((position_end - position_start) / (n_observations - 1));
 
   // Move along line from position_start to position_end.
-  for(int i = 0; i < n_observations; ++i) {
+  for(size_t i = 0; i < n_observations; ++i) {
     Eigen::Vector3d test_pos(position_start + i * position_step);
     aslam::Transformation T_G_I_current(test_pos, Eigen::Quaterniond::Identity());
     T_G_I->push_back(T_G_I_current);
@@ -38,7 +37,6 @@ void FillObservations(
     measurements->push_back(measurement);
   }
 }
-} // namespace aslam
 
 class TriangulationTest : public testing::Test {
  protected:
@@ -54,8 +52,8 @@ TEST_F(TriangulationTest, LinearTriangulateFromNViews) {
   aslam::Aligned<std::vector, aslam::Transformation>::type T_G_I;
   Eigen::Vector3d G_point;
 
-  aslam::FillObservations(kNumObservations, T_I_C_, &measurements, &T_G_I);
-  aslam::LinearTriangulateFromNViews(measurements, T_G_I, T_I_C_, &G_point);
+  fillObservations(kNumObservations, T_I_C_, &measurements, &T_G_I);
+  aslam::linearTriangulateFromNViews(measurements, T_G_I, T_I_C_, &G_point);
 
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(kGPoint, G_point, kDoubleTolerance));
 }
