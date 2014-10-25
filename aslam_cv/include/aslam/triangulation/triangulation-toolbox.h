@@ -11,15 +11,14 @@
 
 namespace aslam {
 
-/**
- * \brief Triangulate a 3d point from a set of n keypoint measurements on the normalized camera
- *        plane.
- * @param measurements Keypoint measurements on normalized camera plane.
- * @param T_B_I Transformation from body-frame to global-frame.
- * @param T_B_C Transformation from camera-frame to body-frame.
- * @param G_point Triangulated point in global frame.
- * @return Was the triangulation successful?
- */
+/// brief Triangulate a 3d point from a set of n keypoint measurements on the normalized camera
+///       plane.
+/// @param measurements Keypoint measurements on normalized camera plane.
+/// @param T_W_B Pose of the body frame of reference w.r.t. the global frame, expressed
+///              in the global frame.
+/// @param T_B_C Pose of the camera w.r.t. the body frame expressed in the body frame of reference.
+/// @param G_point Triangulated point in global frame.
+/// @return Was the triangulation successful?
 inline bool linearTriangulateFromNViews(
     const Aligned<std::vector, Eigen::Vector2d>::type& measurements,
     const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
