@@ -1,7 +1,7 @@
 aslam_cv2
 =========
 
-Refactored computer vision stuff for the ASL.
+Refactored computer vision algorithms for the ASL.
 
 Before adding to this library, please read the following pages:
 
