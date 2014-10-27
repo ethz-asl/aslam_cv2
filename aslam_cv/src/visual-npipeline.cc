@@ -11,7 +11,7 @@
 namespace aslam {
 
 VisualNPipeline::VisualNPipeline(
-    unsigned num_threads,
+    size_t num_threads,
     const std::vector<std::shared_ptr<VisualPipeline> >& pipelines,
     const std::shared_ptr<NCamera>& input_camera_system,
     const std::shared_ptr<NCamera>& output_camera_system, int64_t timestamp_tolerance_ns) :
@@ -29,9 +29,11 @@ VisualNPipeline::VisualNPipeline(
   for(size_t i = 0; i < pipelines.size(); ++i) {
     CHECK_NOTNULL(pipelines[i].get());
     // Check that the input cameras actually point to the same object.
-    CHECK(input_camera_system_->getCameraShared(i) == pipelines[i]->getInputCameraShared());
+    CHECK_EQ(input_camera_system_->getCameraShared(i).get(),
+             pipelines[i]->getInputCameraShared().get());
     // Check that the output cameras actually point to the same object.
-    CHECK(output_camera_system_->getCameraShared(i) == pipelines[i]->getOutputCameraShared());
+    CHECK_EQ(output_camera_system_->getCameraShared(i).get(),
+             pipelines[i]->getOutputCameraShared().get());
   }
   CHECK_GT(num_threads, 0u);
   thread_pool_.reset(new ThreadPool(num_threads));

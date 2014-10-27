@@ -33,6 +33,7 @@ void NCamera::initInternal() {
   id_to_index_.clear();
   for (size_t i = 0; i < cameras_.size(); ++i) {
     CHECK_NOTNULL(cameras_[i].get());
+    CHECK(cameras_[i]->getId().isValid());
     id_to_index_[cameras_[i]->getId()] = i;
   }
 }

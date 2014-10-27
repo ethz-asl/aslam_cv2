@@ -43,7 +43,7 @@ public:
   ///
   /// Because this processor may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  Camera::ConstPtr getInputCameraShared() const { return input_camera_; };
+  Camera::Ptr getInputCameraShared() const { return input_camera_; };
 
   /// \brief Get the output camera that corresponds to the VisualFrame
   ///        data that comes out.
@@ -57,7 +57,7 @@ public:
   ///
   /// Because this pipeline may do things like image undistortion or
   /// rectification, the input and output camera may not be the same.
-  Camera::ConstPtr getOutputCameraShared() const { return output_camera_; };
+  Camera::Ptr getOutputCameraShared() const { return output_camera_; };
 
 protected:
   /// \brief The intrinsics of the raw image.
