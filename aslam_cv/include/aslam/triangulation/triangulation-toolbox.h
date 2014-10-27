@@ -1,5 +1,5 @@
-#ifndef TRIANGULATION_TRIANGULATION_TOOLBOX_H_
-#define TRIANGULATION_TRIANGULATION_TOOLBOX_H_
+#ifndef TTRIANGULATION_TOOLBOX_H_
+#define TTRIANGULATION_TOOLBOX_H_
 
 #include <vector>
 
@@ -50,4 +50,4 @@ inline bool linearTriangulateFromNViews(
   return true;
 }
 }  // namespace aslam
-#endif  // TRIANGULATION_TRIANGULATION_TOOLBOX_H_
+#endif  // TRIANGULATION_TOOLBOX_H_
