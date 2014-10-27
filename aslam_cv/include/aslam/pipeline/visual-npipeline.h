@@ -58,7 +58,7 @@ class VisualNPipeline {
   /// \param[in] timestamp_tolerance_ns How close should two image timestamps be
   ///                                   for us to consider them part of the same
   ///                                   synchronized frame?
-  VisualNPipeline(unsigned num_threads,
+  VisualNPipeline(size_t num_threads,
                   const std::vector<std::shared_ptr<VisualPipeline>>& pipelines,
                   const std::shared_ptr<NCamera>& input_camera_system,
                   const std::shared_ptr<NCamera>& output_camera_system,
