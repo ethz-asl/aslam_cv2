@@ -1,6 +1,5 @@
-#ifndef TTRIANGULATION_TOOLBOX_H_
-#define TTRIANGULATION_TOOLBOX_H_
-
+#ifndef TRIANGULATION_H_
+#define TRIANGULATION_H_
 #include <vector>
 
 #include <aslam/common/memory.h>
@@ -50,4 +49,4 @@ inline bool linearTriangulateFromNViews(
   return true;
 }
 }  // namespace aslam
-#endif  // TRIANGULATION_TOOLBOX_H_
+#endif  // TRIANGULATION_H_
