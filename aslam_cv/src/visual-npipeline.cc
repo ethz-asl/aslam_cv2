@@ -69,15 +69,14 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getNext() {
 }
 
 void VisualNPipeline::waitForNewFrame() {
-  if(getNumFramesComplete() > 0)
+  if(getNumFramesComplete() > 0u)
     return;
-  {
-    std::unique_lock<std::mutex> lock(mutex_);
-    while (!new_frame) {
-      cv_new_frame.wait(lock);
-    }
-    new_frame = false;
+
+  std::unique_lock<std::mutex> lock(mutex_);
+  while (!new_frame) {
+    cv_new_frame.wait(lock);
   }
+  new_frame = false;
 }
 
 std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
