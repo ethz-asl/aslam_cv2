@@ -19,6 +19,7 @@ cs_add_library(${PROJECT_NAME}
                                src/feature-tracker-gyro.cc
                                src/feature-tracker.cc
                                src/ncamera.cc
+                               src/ncamera-factory.cc
                                src/statistics.cc
                                src/thread-pool.cc
                                src/undistorter.cc
@@ -61,6 +62,11 @@ catkin_add_gtest(test_distortions
     test/test-distortions.cc
 )
 target_link_libraries(test_distortions ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_ncamera-factory
+    test/test-ncamera-factory.cc
+)
+target_link_libraries(test_ncamera-factory ${PROJECT_NAME}) 
 
 catkin_add_gtest(test_matcher
     test/test-matcher.cc
