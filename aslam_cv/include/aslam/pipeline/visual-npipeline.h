@@ -1,15 +1,16 @@
 #ifndef VISUAL_NPIPELINE_H_
 #define VISUAL_NPIPELINE_H_
 
-#include <memory>
+#include <condition_variable>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <vector>
 
 #include <opencv2/core/core.hpp>
 
-#include <aslam/common/macros.h>
 #include <aslam/cameras/ncamera.h>
+#include <aslam/common/macros.h>
 #include <aslam/common/thread-pool.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/frames/visual-nframe.h>
@@ -93,6 +94,9 @@ class VisualNPipeline {
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
   std::shared_ptr<VisualNFrame> getNext();
 
+  /// \brief  Block until a new frame is available in the output queue.
+  void waitForNewFrame();
+
   /// \brief Get the latest available data and clear anything older.
   ///
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
@@ -129,6 +133,10 @@ class VisualNPipeline {
 
   /// \brief A mutex to protect the processing and completed queues.
   mutable std::mutex mutex_;
+
+  /// \brief Condition variable signaling a new VisualNFrame for processing.
+  std::condition_variable cv_new_frame;
+  bool new_frame;
 
   /// \brief The frames that are in progress.
   std::map<int64_t, std::shared_ptr<VisualNFrame>> processing_;
