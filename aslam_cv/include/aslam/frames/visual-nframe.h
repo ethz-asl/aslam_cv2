@@ -15,9 +15,11 @@ class VisualNFrame {
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+ protected:
   /// \brief Creates an empty visual multi frame.
   VisualNFrame();
-  
+
+ public:
   /// \brief Creates a visual n-frame from an id and camera system.
   ///
   ///        The individual frames are initialized to NULL.
