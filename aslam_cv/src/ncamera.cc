@@ -55,14 +55,16 @@ Transformation& NCamera::get_T_C_B_Mutable(size_t camera_index) {
 const Transformation& NCamera::get_T_C_B(const CameraId& camera_id) const {
   CHECK(camera_id.isValid());
   int camera_idx = getCameraIndex(camera_id);
-  CHECK_GE(camera_idx, 0);
+  CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
+                          << " not in NCamera container!";
   return get_T_C_B(camera_idx);
 }
 
 Transformation& NCamera::get_T_C_B_Mutable(const CameraId& camera_id) {
   CHECK(camera_id.isValid());
   int camera_idx = getCameraIndex(camera_id);
-  CHECK_GE(camera_idx, 0);
+  CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id 
+                          << " not in NCamera! container";
   return get_T_C_B_Mutable(camera_idx);
 }
 
@@ -98,8 +100,11 @@ Camera::ConstPtr NCamera::getCameraShared(size_t camera_index) const {
 }
 
 void NCamera::setCamera(size_t camera_index, Camera::Ptr camera) {
+  CHECK(camera);
   CHECK_LT(camera_index, cameras_.size());
+  id_to_index_.erase(cameras_[camera_index]->getId());
   cameras_[camera_index] = camera;
+  id_to_index_[camera->getId()] = camera_index;
 }
 
 size_t NCamera::numCameras() const {
