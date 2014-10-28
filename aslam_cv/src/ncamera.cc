@@ -5,11 +5,11 @@
 #include <sm/PropertyTree.hpp>
 
 #include <aslam/cameras/camera.h>
+#include <aslam/cameras/camera-pinhole.h>
+#include <aslam/cameras/ncamera.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/predicates.h>
 #include <aslam/common/unique-id.h>
-
-#include <aslam/cameras/ncamera.h>
 
 namespace aslam {
 
@@ -55,14 +55,16 @@ Transformation& NCamera::get_T_C_B_Mutable(size_t camera_index) {
 const Transformation& NCamera::get_T_C_B(const CameraId& camera_id) const {
   CHECK(camera_id.isValid());
   int camera_idx = getCameraIndex(camera_id);
-  CHECK_GE(camera_idx, 0);
+  CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
+                          << " not in NCamera container!";
   return get_T_C_B(camera_idx);
 }
 
 Transformation& NCamera::get_T_C_B_Mutable(const CameraId& camera_id) {
   CHECK(camera_id.isValid());
   int camera_idx = getCameraIndex(camera_id);
-  CHECK_GE(camera_idx, 0);
+  CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id 
+                          << " not in NCamera! container";
   return get_T_C_B_Mutable(camera_idx);
 }
 
@@ -98,8 +100,11 @@ Camera::ConstPtr NCamera::getCameraShared(size_t camera_index) const {
 }
 
 void NCamera::setCamera(size_t camera_index, Camera::Ptr camera) {
+  CHECK(camera);
   CHECK_LT(camera_index, cameras_.size());
+  id_to_index_.erase(cameras_[camera_index]->getId());
   cameras_[camera_index] = camera;
+  id_to_index_[camera->getId()] = camera_index;
 }
 
 size_t NCamera::numCameras() const {
@@ -128,6 +133,25 @@ int NCamera::getCameraIndex(const CameraId& id) const {
   } else {
     return it->second;
   }
+}
+
+NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
+  std::vector<aslam::Camera::Ptr> cameras;
+  aslam::Aligned<std::vector, aslam::Transformation>::type T_C_B_vector;
+
+  for(size_t camera_idx = 0; camera_idx < num_cameras; ++num_cameras) {
+    cameras.push_back(aslam::PinholeCamera::createTestCamera());
+
+    // Offset each camera 0.1 m in x direction.
+    aslam::Transformation T_C_B;
+    T_C_B.getPosition()(0) = 0.1 * num_cameras;
+    T_C_B_vector.push_back(T_C_B);
+  }
+
+  aslam::NCameraId rig_id;
+  rig_id.randomize();
+  std::string label("Test camera rig");
+  return aslam::NCamera::Ptr(new aslam::NCamera(rig_id, T_C_B_vector, cameras, label));
 }
 
 bool NCamera::operator==(const NCamera& other) const {

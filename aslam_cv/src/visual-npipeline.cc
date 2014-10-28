@@ -16,8 +16,9 @@ VisualNPipeline::VisualNPipeline(
     const std::shared_ptr<NCamera>& input_camera_system,
     const std::shared_ptr<NCamera>& output_camera_system, int64_t timestamp_tolerance_ns) :
       pipelines_(pipelines),
+      new_frame(false),
       input_camera_system_(input_camera_system), output_camera_system_(output_camera_system),
-      timestamp_tolerance_ns_(timestamp_tolerance_ns) {
+      timestamp_tolerance_ns_(timestamp_tolerance_ns)  {
   // Defensive programming ninjitsu.
   CHECK_NOTNULL(input_camera_system_.get());
   CHECK_NOTNULL(output_camera_system.get());
@@ -26,7 +27,7 @@ VisualNPipeline::VisualNPipeline(
   CHECK_EQ(input_camera_system_->numCameras(), pipelines.size());
   CHECK_GE(timestamp_tolerance_ns, 0);
 
-  for(size_t i = 0; i < pipelines.size(); ++i) {
+  for (size_t i = 0; i < pipelines.size(); ++i) {
     CHECK_NOTNULL(pipelines[i].get());
     // Check that the input cameras actually point to the same object.
     CHECK_EQ(input_camera_system_->getCameraShared(i).get(),
@@ -65,6 +66,17 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getNext() {
     completed_.erase(it);
   }
   return rval;
+}
+
+void VisualNPipeline::waitForNewFrame() {
+  if(getNumFramesComplete() > 0u)
+    return;
+
+  std::unique_lock<std::mutex> lock(mutex_);
+  while (!new_frame) {
+    cv_new_frame.wait(lock);
+  }
+  new_frame = false;
 }
 
 std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
@@ -161,6 +173,10 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
     if(all_received) {
       completed_.insert(*proc_it);
       processing_.erase(proc_it);
+
+      // Notify the blocking waiter method.
+      new_frame = true;
+      cv_new_frame.notify_all();
     }
   }
 }

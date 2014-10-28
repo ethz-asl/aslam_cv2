@@ -30,7 +30,6 @@ namespace aslam {
 class NCamera {
  public:
   ASLAM_POINTER_TYPEDEFS(NCamera);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(NCamera);
   enum {CLASS_SERIALIZATION_VERSION = 1};
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -58,6 +57,16 @@ public:
   /// \brief initialize from a property tree
   NCamera(const sm::PropertyTree& propertyTree);
   ~NCamera() = default;
+
+  /// Copy constructor for clone.
+  NCamera(const NCamera&) = default;
+  void operator=(const NCamera&) = delete;
+
+  /// Method to clone this instance (Make sure the Camera and NCamera ID's are
+  /// set to your requirement after cloning!)
+  NCamera* clone() const {
+    return new NCamera(static_cast<NCamera const&>(*this));
+  };
 
   /// \brief get the number of cameras
   size_t getNumCameras() const;
@@ -127,6 +136,9 @@ public:
 
   /// \brief set a label for the camera
   inline void setLabel(const std::string& label) {label_ = label;}
+
+  /// \brief Create a test NCamera object for unit testing.
+  static NCamera::Ptr createTestNCamera(size_t num_cameras);
 
 private:
   /// \brief internal consistency checks and initialization

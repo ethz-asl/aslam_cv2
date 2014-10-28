@@ -17,9 +17,11 @@ class VisualNFrame {
 
   typedef std::vector<VisualNFrame::Ptr> List;
 
+ protected:
   /// \brief Creates an empty visual multi frame.
   VisualNFrame();
-  
+
+ public:
   /// \brief Creates a visual n-frame from an id and camera system.
   ///
   ///        The individual frames are initialized to NULL.
