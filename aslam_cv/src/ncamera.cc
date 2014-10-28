@@ -132,17 +132,21 @@ int NCamera::getCameraIndex(const CameraId& id) const {
 
 NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
   std::vector<aslam::Camera::Ptr> cameras;
-  aslam::Aligned<std::vector, aslam::Transformation>::type T_C_B;
+  aslam::Aligned<std::vector, aslam::Transformation>::type T_C_B_vector;
 
   for(size_t camera_idx = 0; camera_idx < num_cameras; ++num_cameras) {
     cameras.push_back(aslam::PinholeCamera::createTestCamera());
-    T_C_B.push_back(aslam::Transformation());
+
+    // Offset each camera 0.1 m in x direction.
+    aslam::Transformation T_C_B;
+    T_C_B.getPosition()(0) = 0.1 * num_cameras;
+    T_C_B_vector.push_back(T_C_B);
   }
 
   aslam::NCameraId rig_id;
   rig_id.randomize();
   std::string label("Test camera rig");
-  return aslam::NCamera::Ptr(new aslam::NCamera(rig_id, T_C_B, cameras, label));
+  return aslam::NCamera::Ptr(new aslam::NCamera(rig_id, T_C_B_vector, cameras, label));
 }
 
 bool NCamera::operator==(const NCamera& other) const {
