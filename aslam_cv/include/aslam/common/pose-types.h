@@ -9,6 +9,7 @@ namespace aslam {
 
 typedef kindr::minimal::QuatTransformation Transformation;
 typedef kindr::minimal::RotationQuaternion Quaternion;
+typedef kindr::minimal::AngleAxis AngleAxis;
 typedef kindr::minimal::Position Position3D;
 
 // Types used in ceres error terms, where templating for Jet types
