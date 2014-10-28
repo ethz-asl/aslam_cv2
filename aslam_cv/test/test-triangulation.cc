@@ -4,7 +4,7 @@
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
 #include <aslam/common/pose-types.h>
-#include <aslam/triangulation/triangulation-toolbox.h>
+#include <aslam/triangulation/triangulation.h>
 #include <eigen-checks/gtest.h>
 
 const double kDoubleTolerance = 1e-9;
