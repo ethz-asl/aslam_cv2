@@ -137,6 +137,9 @@ public:
   /// \brief set a label for the camera
   inline void setLabel(const std::string& label) {label_ = label;}
 
+  /// \brief Create a test NCamera object for unit testing.
+  static NCamera::Ptr createTestNCamera(size_t num_cameras);
+
 private:
   /// \brief internal consistency checks and initialization
   void initInternal();
