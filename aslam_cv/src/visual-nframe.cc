@@ -8,22 +8,14 @@ VisualNFrame::VisualNFrame(const aslam::NFramesId& id,
                            std::shared_ptr<NCamera> ncameras)
 : id_(id), cameraRig_(ncameras) {
   CHECK_NOTNULL(cameraRig_.get());
-  size_t num_frames = ncameras->getNumCameras();
-  frames_.resize(num_frames);
-  for (size_t c = 0; c < num_frames; ++c) {
-    frames_[c] = std::make_shared<VisualFrame>();
-  }
+  frames_.resize(ncameras->getNumCameras());
 }
 
 VisualNFrame::VisualNFrame(std::shared_ptr<NCamera> ncameras)
 : cameraRig_(ncameras) {
   CHECK_NOTNULL(cameraRig_.get());
   id_.randomize();
-  size_t num_frames = ncameras->getNumCameras();
-  frames_.resize(num_frames);
-  for (size_t c = 0; c < num_frames; ++c) {
-    frames_[c] = std::make_shared<VisualFrame>();
-  }
+  frames_.resize(ncameras->getNumCameras());
 }
 
 VisualNFrame::~VisualNFrame() { }
