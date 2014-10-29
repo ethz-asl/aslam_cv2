@@ -15,7 +15,7 @@ class VisualNFrame {
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef std::vector<VisualNFrame::Ptr> PtrList;
+  typedef std::vector<VisualNFrame::Ptr> PtrVector;
 
  protected:
   /// \brief Creates an empty visual multi frame.
