@@ -43,6 +43,9 @@ class VisualNFrame {
   /// \brief Get the multiframe id.
   inline const aslam::NFramesId& getId() const { return id_; }
 
+  /// \brief Set the multiframe id.
+  inline void setId(const aslam::NFramesId& n_frames_id) { id_ = n_frames_id; }
+
   /// \brief Get the camera rig.
   const NCamera& getNCameras() const;
   
