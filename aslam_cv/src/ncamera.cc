@@ -139,12 +139,12 @@ NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
   std::vector<aslam::Camera::Ptr> cameras;
   aslam::Aligned<std::vector, aslam::Transformation>::type T_C_B_vector;
 
-  for(size_t camera_idx = 0; camera_idx < num_cameras; ++num_cameras) {
+  for(size_t camera_idx = 0; camera_idx < num_cameras; ++camera_idx) {
     cameras.push_back(aslam::PinholeCamera::createTestCamera());
 
     // Offset each camera 0.1 m in x direction.
     aslam::Transformation T_C_B;
-    T_C_B.getPosition()(0) = 0.1 * num_cameras;
+    T_C_B.getPosition()(0) = 0.1 * camera_idx;
     T_C_B_vector.push_back(T_C_B);
   }
 
