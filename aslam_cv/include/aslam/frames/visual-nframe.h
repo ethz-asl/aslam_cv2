@@ -22,6 +22,15 @@ class VisualNFrame {
   VisualNFrame();
 
  public:
+  /// \brief Creates a visual n-frame from an id and number of frames.
+  ///
+  ///        The individual frames are initialized to NULL.
+  ///        The camera system is initialized to NULL.
+  ///
+  /// \param[in] id          The unique id for this object.
+  /// \param[in] num_frames  The number of frames to be constructed.
+  VisualNFrame(const aslam::NFramesId& id, unsigned int num_frames);
+
   /// \brief Creates a visual n-frame from an id and camera system.
   ///
   ///        The individual frames are initialized to NULL.
@@ -52,6 +61,9 @@ class VisualNFrame {
   /// \brief Get the camera rig.
   NCamera::Ptr getNCamerasMutable();
   
+  /// \brief Set the camera rig.
+  void setNCameras(NCamera::Ptr ncameras);
+
   /// \brief Is the frame at this index null
   bool isFrameNull(size_t frameIndex) const;
 
