@@ -42,6 +42,8 @@ class Camera;
 /// the raw image coordinates of any keypoint.
 class VisualFrame  {
  public:
+  /// \brief The descriptor matrix stores descriptors in columns, i.e. the descriptor matrix
+  ///        has num_bytes_per_descriptor rows and num_descriptors columns.
   typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualFrame);
