@@ -24,6 +24,10 @@ class VisualNFrame {
  public:
   /// \brief Creates a visual n-frame from an id and number of frames.
   ///
+  /// This constructor should only be used in a specific situation when there
+  /// is no information about the camera system when constructing the object.
+  /// This may happen e.g. when deserializing data.
+  ///
   ///        The individual frames are initialized to NULL.
   ///        The camera system is initialized to NULL.
   ///
@@ -62,6 +66,11 @@ class VisualNFrame {
   NCamera::Ptr getNCamerasMutable();
   
   /// \brief Set the camera rig.
+  ///
+  /// This method fills in in multi-camera system information. It should be
+  /// used if we had no such knowledge at time of construction of this object.
+  /// This method will also assign cameras to the already existing visual
+  /// frames.
   void setNCameras(NCamera::Ptr ncameras);
 
   /// \brief Is the frame at this index null
