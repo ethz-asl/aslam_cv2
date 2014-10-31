@@ -47,6 +47,11 @@ void VisualNFrame::setNCameras(NCamera::Ptr ncameras) {
   // Also assign the camera to the existing non-NULL frames.
   for (unsigned int i = 0; i < frames_.size(); ++i) {
     if (frames_[i] != nullptr) {
+      CHECK(frames_[i]->getCameraGeometry() == nullptr) << "Visual frame "
+          << "with index " << i << " has been already assigned a camera "
+          << frames_[i]->getCameraGeometry()->getId()
+          << " which is not matching the new camera "
+          << cameraRig_->getCameraShared(i);
       frames_[i]->setCameraGeometry(cameraRig_->getCameraShared(i));
     }
   }
