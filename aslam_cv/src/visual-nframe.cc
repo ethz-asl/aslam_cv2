@@ -5,6 +5,12 @@ namespace aslam {
 VisualNFrame::VisualNFrame() { }
 
 VisualNFrame::VisualNFrame(const aslam::NFramesId& id,
+                           unsigned int num_frames)
+: id_(id) {
+  frames_.resize(num_frames);
+}
+
+VisualNFrame::VisualNFrame(const aslam::NFramesId& id,
                            std::shared_ptr<NCamera> ncameras)
 : id_(id), cameraRig_(ncameras) {
   CHECK_NOTNULL(cameraRig_.get());
@@ -29,6 +35,21 @@ const NCamera& VisualNFrame::getNCameras() const {
 /// \brief get the camera rig
 NCamera::Ptr VisualNFrame::getNCamerasMutable() {
   return cameraRig_;
+}
+
+/// \brief set the camera rig.
+void VisualNFrame::setNCameras(NCamera::Ptr ncameras) {
+  CHECK(ncameras != nullptr);
+  cameraRig_ = ncameras;
+  CHECK_EQ(frames_.size(), cameraRig_->numCameras()) << "Number of cameras "
+      << "in camera system does not match the current number of frames.";
+
+  // Also assign the camera to the existing non-NULL frames.
+  for (unsigned int i = 0; i < frames_.size(); ++i) {
+    if (frames_[i] != nullptr) {
+      frames_[i]->setCameraGeometry(cameraRig_->getCameraShared(i));
+    }
+  }
 }
 
 /// \brief get one frame
@@ -88,8 +109,9 @@ size_t VisualNFrame::getCameraIndex(const CameraId& id) const {
 
 void VisualNFrame::setFrame(size_t frameIndex, VisualFrame::Ptr frame) {
   CHECK_LT(frameIndex, frames_.size());
-  CHECK_NOTNULL(cameraRig_.get());
-  CHECK_EQ(&cameraRig_->getCamera(frameIndex), frame->getCameraGeometry().get());
+  if (cameraRig_ != nullptr) {
+    CHECK_EQ(&cameraRig_->getCamera(frameIndex), frame->getCameraGeometry().get());
+  }
   frames_[frameIndex] = frame;
 }
 
