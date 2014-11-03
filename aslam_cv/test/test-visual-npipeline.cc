@@ -79,14 +79,14 @@ TEST_F(VisualNPipelineTest, buildNFramesOutOfOrder) {
 
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
   ASSERT_TRUE(nframes.get() != NULL);
-  ASSERT_EQ(0, nframes->getFrame(0).getTimestamp());
-  ASSERT_EQ(1, nframes->getFrame(1).getTimestamp());
+  ASSERT_EQ(0, nframes->getFrame(0).getTimestampNanoseconds());
+  ASSERT_EQ(1, nframes->getFrame(1).getTimestampNanoseconds());
 
   nframes = pipeline_->getNext();
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
   ASSERT_TRUE(nframes.get() != NULL);
-  ASSERT_EQ(1000, nframes->getFrame(0).getTimestamp());
-  ASSERT_EQ(1001, nframes->getFrame(1).getTimestamp());
+  ASSERT_EQ(1000, nframes->getFrame(0).getTimestampNanoseconds());
+  ASSERT_EQ(1001, nframes->getFrame(1).getTimestampNanoseconds());
 }
 
 TEST_F(VisualNPipelineTest, testBuildAndClear) {
@@ -113,8 +113,8 @@ TEST_F(VisualNPipelineTest, testBuildAndClear) {
 
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
   ASSERT_TRUE(nframes.get() != NULL);
-  ASSERT_EQ(1000, nframes->getFrame(0).getTimestamp());
-  ASSERT_EQ(1001, nframes->getFrame(1).getTimestamp());
+  ASSERT_EQ(1000, nframes->getFrame(0).getTimestampNanoseconds());
+  ASSERT_EQ(1001, nframes->getFrame(1).getTimestampNanoseconds());
 }
 
 TEST_F(VisualNPipelineTest, testTimestampDiff) {
@@ -130,8 +130,8 @@ TEST_F(VisualNPipelineTest, testTimestampDiff) {
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
   std::shared_ptr<VisualNFrame> nframes = pipeline_->getLatestAndClear();
   ASSERT_TRUE(nframes.get() != NULL);
-  ASSERT_EQ(0, nframes->getFrame(0).getTimestamp());
-  ASSERT_EQ(100, nframes->getFrame(1).getTimestamp());
+  ASSERT_EQ(0, nframes->getFrame(0).getTimestampNanoseconds());
+  ASSERT_EQ(100, nframes->getFrame(1).getTimestampNanoseconds());
 
   // Build n frames out of order.
   pipeline_->processImage(0, getImageFromCamera(0), 0, 0);
@@ -163,8 +163,8 @@ TEST_F(VisualNPipelineTest, testTimestampDiff) {
   // This should clear the oldest unfinished frame from the processing queue
   nframes = pipeline_->getLatestAndClear();
   ASSERT_TRUE(nframes.get() != NULL);
-  ASSERT_EQ(101, nframes->getFrame(0).getTimestamp());
-  ASSERT_EQ(101, nframes->getFrame(1).getTimestamp());
+  ASSERT_EQ(101, nframes->getFrame(0).getTimestampNanoseconds());
+  ASSERT_EQ(101, nframes->getFrame(1).getTimestampNanoseconds());
   ASSERT_EQ(1u, pipeline_->getNumFramesProcessing());
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
 
@@ -175,8 +175,8 @@ TEST_F(VisualNPipelineTest, testTimestampDiff) {
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
   nframes = pipeline_->getLatestAndClear();
   ASSERT_TRUE(nframes.get() != NULL);
-  ASSERT_EQ(401, nframes->getFrame(0).getTimestamp());
-  ASSERT_EQ(401, nframes->getFrame(1).getTimestamp());
+  ASSERT_EQ(401, nframes->getFrame(0).getTimestampNanoseconds());
+  ASSERT_EQ(401, nframes->getFrame(1).getTimestampNanoseconds());
 }
 
 ASLAM_UNITTEST_ENTRYPOINT

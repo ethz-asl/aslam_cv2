@@ -29,7 +29,7 @@ std::shared_ptr<VisualFrame> VisualPipeline::processImage(
 
   // \TODO(PTF) Eventually we can put timestamp correction policies in here.
   std::shared_ptr<VisualFrame> frame(new VisualFrame);
-  frame->setTimestamp(systemStamp);
+  frame->setTimestampNanoseconds(systemStamp);
   frame->setSystemTimestamp(systemStamp);
   frame->setHardwareTimestamp(hardwareStamp);
   frame->setRawCameraGeometry(input_camera_);

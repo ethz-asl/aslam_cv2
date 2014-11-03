@@ -132,10 +132,10 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
       if(it != processing_.begin()) { --it; }
       // Now it points to the first element that is less than the value.
       // Check both this value, and the one >=.
-      int64_t min_time_diff = std::abs(it->first - frame->getTimestamp());
+      int64_t min_time_diff = std::abs(it->first - frame->getTimestampNanoseconds());
       proc_it = it;
       if(++it != processing_.end()) {
-        int64_t time_diff = std::abs(it->first - frame->getTimestamp());
+        int64_t time_diff = std::abs(it->first - frame->getTimestampNanoseconds());
         if(time_diff < min_time_diff) {
           proc_it = it;
           min_time_diff = time_diff;
@@ -151,7 +151,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
       std::shared_ptr<VisualNFrame> nframes(new VisualNFrame(output_camera_system_));
       bool replaced;
       std::tie(proc_it, replaced) = processing_.insert(
-          std::make_pair(frame->getTimestamp(), nframes)
+          std::make_pair(frame->getTimestampNanoseconds(), nframes)
       );
     }
     // Now proc_it points to the correct place in the processing_ list and
