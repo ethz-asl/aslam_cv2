@@ -7,8 +7,7 @@ namespace aslam {
 VisualFrame::VisualFrame()
     : stamp_(getInvalidTime()),
       hardwareStamp_(getInvalidTime()),
-      systemStamp_(getInvalidTime()),
-      num_bytes_descriptor_(0) {}
+      systemStamp_(getInvalidTime()) {}
 
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
