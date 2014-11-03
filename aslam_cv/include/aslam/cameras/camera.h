@@ -152,6 +152,12 @@ class Camera {
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
 
+  enum class CameraType {
+    kUndefined = -1,
+    kPinhole = 0,
+    kUnifiedProjection = 1
+  };
+
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
   /// @{
@@ -162,18 +168,23 @@ class Camera {
   Camera() = delete;
 
   /// \brief Camera base constructor with distortion.
-  /// @param[in] intrinsics Vector containing the intrinsic parameters.
-  /// @param[in] distortion unique_ptr to the distortion model
-  /// @param[in] image_width Image width in pixels.
+  /// @param[in] intrinsics   Vector containing the intrinsic parameters.
+  /// @param[in] distortion   unique_ptr to the distortion model
+  /// @param[in] image_width  Image width in pixels.
   /// @param[in] image_height Image height in pixels.
+  /// @param[in] camera_type  CameraType enum value with information which camera
+  ///                         model is used by the derived class.
   Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
-         uint32_t image_width, uint32_t image_height);
+         uint32_t image_width, uint32_t image_height, CameraType camera_type);
 
   /// \brief Camera base constructor without distortion.
-  /// @param[in] intrinsics Vector containing the intrinsic parameters.
-  /// @param[in] image_width Image width in pixels.
+  /// @param[in] intrinsics   Vector containing the intrinsic parameters.
+  /// @param[in] image_width  Image width in pixels.
   /// @param[in] image_height Image height in pixels.
-  Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height);
+  /// @param[in] camera_type  CameraType enum value with information which camera
+  ///                         model is used by the derived class.
+  Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
+         CameraType camera_type);
 
  public:
   virtual ~Camera() {};
@@ -237,6 +248,10 @@ class Camera {
 
   /// \brief The number of intrinsic parameters.
   virtual int getParameterSize() const  = 0;
+
+  /// \brief Returns type of the camera model.
+  /// @return CameraType value representing the camera model used by the derived class.
+  inline CameraType getType() const { return camera_type_; }
 
   /// @}
 
@@ -547,6 +562,9 @@ class Camera {
  protected:
   /// Parameter vector for the intrinsic parameters of the model.
   Eigen::VectorXd intrinsics_;
+
+  /// \brief Enum field to store the type of camera model.
+  CameraType camera_type_;
 
   /// \brief The distortion for this camera.
   ///        NOTE: Can be nullptr if no distortion model is set.

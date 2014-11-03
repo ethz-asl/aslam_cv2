@@ -22,6 +22,13 @@ class Distortion {
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
 
+  enum class DistortionType {
+    kUndefined = -1,
+    kEquidistant = 0,
+    kFisheye = 1,
+    kRadTan = 2
+  };
+
   // TODO(slynen) Enable commented out PropertyTree support
   //  Distortion(const sm::PropertyTree& property_tree);
 
@@ -33,8 +40,11 @@ class Distortion {
   Distortion() = delete;
 
   /// \brief Distortion base constructor.
-  /// @param[in] dist_coeffs Vector containing the distortion parameters.
-  Distortion(const Eigen::VectorXd& dist_coeffs);
+  /// @param[in] dist_coeffs     Vector containing the distortion parameters.
+  /// @param[in] distortion_type DistortionType enum value with information which distortion
+  ///                            model is used by the derived class.
+  Distortion(const Eigen::VectorXd& dist_coeffs,
+             DistortionType distortion_type);
 
  public:
   virtual ~Distortion() { };
@@ -165,12 +175,18 @@ class Distortion {
   /// text used by the calling function to distinguish cameras.
   virtual void printParameters(std::ostream& out, const std::string& text) const = 0;
 
+  /// \brief Returns type of the distortion model.
+  /// @return DistortionType value representing the distortion model used by the derived class.
+  inline DistortionType getType() const { return distortion_type_; }
+
+  /// @}
+
  protected:
   /// \brief Parameter vector for the distortion model.
   Eigen::VectorXd distortion_coefficients_;
 
-  /// @}
-
+  /// \brief Enum field to store the type of distortion model.
+  DistortionType distortion_type_;
 };
 }  // namespace aslam
 #endif  // ASLAM_CAMERAS_DISTORTION_H_

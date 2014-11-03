@@ -28,18 +28,18 @@ namespace aslam {
 //}
 
 PinholeCamera::PinholeCamera()
-    : Base(Eigen::Vector4d::Zero(), 0, 0) {}
+    : Base(Eigen::Vector4d::Zero(), 0, 0, Camera::CameraType::kUnifiedProjection) {}
 
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
                              uint32_t image_width, uint32_t image_height,
                              aslam::Distortion::UniquePtr& distortion)
-  : Base(intrinsics, distortion, image_width, image_height) {
+  : Base(intrinsics, distortion, image_width, image_height, Camera::CameraType::kPinhole) {
   CHECK(intrinsicsValid(intrinsics));
 }
 
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
                              uint32_t image_height)
-    : Base(intrinsics, image_width, image_height) {
+    : Base(intrinsics, image_width, image_height, Camera::CameraType::kPinhole) {
   CHECK(intrinsicsValid(intrinsics));
 }
 

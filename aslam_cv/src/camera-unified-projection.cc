@@ -28,19 +28,21 @@ namespace aslam {
 //}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera()
-    : Base((Eigen::Matrix<double, 5, 1>() << 0.0, 0.0, 0.0, 0.0, 0.0).finished(), 0, 0) {
+    : Base((Eigen::Matrix<double, 5, 1>() << 0.0, 0.0, 0.0, 0.0, 0.0).finished(), 0, 0,
+           Camera::CameraType::kUnifiedProjection) {
 }
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height,
                                                  aslam::Distortion::UniquePtr& distortion)
-    : Base(intrinsics, distortion, image_width, image_height) {
+    : Base(intrinsics, distortion, image_width, image_height,
+           Camera::CameraType::kUnifiedProjection) {
   CHECK(intrinsicsValid(intrinsics));
 }
 
 UnifiedProjectionCamera::UnifiedProjectionCamera(const Eigen::VectorXd& intrinsics,
                                                  uint32_t image_width, uint32_t image_height)
-    : Base(intrinsics, image_width, image_height) {
+    : Base(intrinsics, image_width, image_height, Camera::CameraType::kUnifiedProjection) {
   CHECK(intrinsicsValid(intrinsics));
 }
 
