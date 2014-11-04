@@ -84,6 +84,7 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
                                             descriptors.cols,
                                             descriptors.rows)
   );
+  CHECK_EQ(frame->getDescriptors().rows(), static_cast<size_t>(extractor_->descriptorSize()));
 
   Eigen::Matrix2Xd ikeypoints(2, keypoints.size());
   Eigen::VectorXd  scales(keypoints.size());
@@ -103,7 +104,6 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   frame->swapKeypointScores(&scores);
   frame->swapKeypointOrientations(&orientations);
   frame->swapKeypointScales(&scales);
-  frame->setDescriptorSizeBytes(extractor_->descriptorSize());
 
   // The keypoint uncertainty is set to a constant value.
   const double kKeypointUncertaintyPixelSigma = 0.8;
