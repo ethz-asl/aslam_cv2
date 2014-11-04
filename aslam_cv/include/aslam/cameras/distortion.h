@@ -23,10 +23,10 @@ class Distortion {
   enum { CLASS_SERIALIZATION_VERSION = 1 };
 
   enum class DistortionType {
-    kUndefined = -1,
-    kEquidistant = 0,
-    kFisheye = 1,
-    kRadTan = 2
+    kNoDistortion = 0,
+    kEquidistant = 1,
+    kFisheye = 2,
+    kRadTan = 3
   };
 
   // TODO(slynen) Enable commented out PropertyTree support

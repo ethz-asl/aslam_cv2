@@ -153,7 +153,6 @@ class Camera {
   enum { CLASS_SERIALIZATION_VERSION = 1 };
 
   enum class CameraType {
-    kUndefined = -1,
     kPinhole = 0,
     kUnifiedProjection = 1
   };
