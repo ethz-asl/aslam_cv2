@@ -32,7 +32,7 @@ inline constexpr int64_t getInvalidTime() {
 
 /// \brief Is the time valid? This uses a magic number
 inline bool isValidTime(int64_t time) {
-  return time == getInvalidTime();
+  return time != getInvalidTime();
 }
 
 }  // namespace aslam
