@@ -7,8 +7,7 @@ namespace aslam {
 VisualFrame::VisualFrame()
     : timestamp_nanoseconds_(getInvalidTime()),
       hardware_timestamp_(getInvalidTime()),
-      system_timestamp_nanoseconds_(getInvalidTime()),
-      num_bytes_descriptor_(0) {}
+      system_timestamp_nanoseconds_(getInvalidTime()) {}
 
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
@@ -368,4 +367,9 @@ void VisualFrame::toRawImageCoordinatesVectorized(const Eigen::Matrix2Xd& keypoi
     }
   }
 }
+
+size_t VisualFrame::getDescriptorSizeBytes() const {
+  return getDescriptors().rows() * sizeof(DescriptorsT::Scalar);
+}
+
 }  // namespace aslam
