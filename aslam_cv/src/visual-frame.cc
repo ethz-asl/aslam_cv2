@@ -367,4 +367,9 @@ void VisualFrame::toRawImageCoordinatesVectorized(const Eigen::Matrix2Xd& keypoi
     }
   }
 }
+
+size_t VisualFrame::getDescriptorSizeBytes() const {
+  return getDescriptors().rows() * sizeof(DescriptorsT::Scalar);
+}
+
 }  // namespace aslam
