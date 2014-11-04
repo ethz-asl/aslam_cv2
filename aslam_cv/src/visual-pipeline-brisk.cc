@@ -84,12 +84,16 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
                                             descriptors.cols,
                                             descriptors.rows)
   );
-  CHECK_EQ(frame->getDescriptors().rows(), static_cast<size_t>(extractor_->descriptorSize()));
+
+  // The keypoint uncertainty is set to a constant value.
+  const double kKeypointUncertaintyPixelSigma = 0.8;
 
   Eigen::Matrix2Xd ikeypoints(2, keypoints.size());
-  Eigen::VectorXd  scales(keypoints.size());
-  Eigen::VectorXd  orientations(keypoints.size());
-  Eigen::VectorXd  scores(keypoints.size());
+  Eigen::VectorXd scales(keypoints.size());
+  Eigen::VectorXd orientations(keypoints.size());
+  Eigen::VectorXd scores(keypoints.size());
+  Eigen::VectorXd uncertainties(keypoints.size());
+
   // \TODO(ptf) Who knows a good formula for uncertainty based on octave?
   //            See https://github.com/ethz-asl/aslam_cv2/issues/73
   for(size_t i = 0; i < keypoints.size(); ++i) {
@@ -99,17 +103,13 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
     scales[i]        = kp.size;
     orientations[i]  = kp.angle;
     scores[i]        = kp.response;
+    uncertainties[i] = kKeypointUncertaintyPixelSigma;
   }
   frame->swapKeypointMeasurements(&ikeypoints);
   frame->swapKeypointScores(&scores);
   frame->swapKeypointOrientations(&orientations);
   frame->swapKeypointScales(&scales);
-
-  // The keypoint uncertainty is set to a constant value.
-  const double kKeypointUncertaintyPixelSigma = 0.8;
-  Eigen::VectorXd keypoint_uncertainties(ikeypoints.cols());
-  keypoint_uncertainties.setConstant(kKeypointUncertaintyPixelSigma);
-  frame->swapKeypointMeasurementUncertainties(&keypoint_uncertainties);
+  frame->swapKeypointMeasurementUncertainties(&uncertainties);
 }
 
 }  // namespace aslam
