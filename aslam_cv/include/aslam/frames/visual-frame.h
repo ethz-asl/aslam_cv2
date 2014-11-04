@@ -310,7 +310,7 @@ class VisualFrame  {
   inline void setSystemTimestamp(int64_t stamp) { systemStamp_ = stamp; }
 
   /// \brief Set the size of the descriptor in bytes.
-  size_t getDescriptorSizeBytes() const { return getDescriptors().rows(); };
+  size_t getDescriptorSizeBytes() const;
 
   /// \brief print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
