@@ -104,6 +104,12 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
   frame->swapKeypointOrientations(&orientations);
   frame->swapKeypointScales(&scales);
   frame->setDescriptorSizeBytes(extractor_->descriptorSize());
+
+  // The keypoint uncertainty is set to a constant value.
+  const double kKeypointUncertaintyPixelSigma = 0.8;
+  Eigen::VectorXd keypoint_uncertainties(ikeypoints.cols());
+  keypoint_uncertainties.setConstant(kKeypointUncertaintyPixelSigma);
+  frame->swapKeypointMeasurementUncertainties(&keypoint_uncertainties);
 }
 
 }  // namespace aslam
