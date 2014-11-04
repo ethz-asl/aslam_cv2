@@ -1,6 +1,8 @@
 #ifndef ASLAM_CAMERAS_CAMERA_FACTORY_H_
 #define ASLAM_CAMERAS_CAMERA_FACTORY_H_
 
+#include <memory>
+
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
@@ -8,6 +10,7 @@
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
+#include <aslam/common/unique-id.h>
 
 namespace aslam {
 
