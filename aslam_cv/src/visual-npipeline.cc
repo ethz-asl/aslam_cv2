@@ -126,7 +126,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
       // Try to find an existing NFrame in the processing list.
       // Use the timestamp of the frame because there may be a timestamp
       // corrector used in the pipeline.
-      auto it = processing_.lower_bound(frame->getTimestamp());
+      auto it = processing_.lower_bound(frame->getTimestampNanoseconds());
       // Lower bound returns the first element that is not less than the value
       // (i.e. greater than or equal to the value).
       if(it != processing_.begin()) { --it; }
