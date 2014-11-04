@@ -127,7 +127,7 @@ double VisualFrame::getKeypointMeasurementUncertainty(size_t index) const {
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
   CHECK_LT(static_cast<int>(index), data.rows());
-  return data.coeff(0, index);
+  return data.coeff(index, 0);
 }
 double VisualFrame::getKeypointScale(size_t index) const {
   Eigen::VectorXd& data =
