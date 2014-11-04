@@ -313,10 +313,7 @@ class VisualFrame  {
     system_timestamp_nanoseconds_ = system_timestamp_nanoseconds; }
 
   /// \brief Set the size of the descriptor in bytes.
-  int32_t getDescriptorSizeBytes() const { return num_bytes_descriptor_; };
-
-  /// \brief Set the size of the descriptor in bytes.
-  void setDescriptorSizeBytes(size_t num_bytes) { num_bytes_descriptor_= num_bytes; };
+  size_t getDescriptorSizeBytes() const;
 
   /// \brief print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
@@ -327,8 +324,6 @@ class VisualFrame  {
   int64_t hardware_timestamp_;
   /// \brief host system timestamp in integer nanoseconds since epoch.
   int64_t system_timestamp_nanoseconds_;
-  /// \brief Descriptor size in bytes.
-  size_t num_bytes_descriptor_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
   Camera::ConstPtr camera_geometry_;
