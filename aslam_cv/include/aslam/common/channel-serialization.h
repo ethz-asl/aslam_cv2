@@ -160,8 +160,7 @@ bool serializeToString(const SCALAR& value, std::string* string) {
   CHECK_NOTNULL(string);
   std::stringstream string_stream;
   string_stream << value;
-  std::string values_as_string = string_stream.str();
-  string->swap(values_as_string);
+  string->swap(string_stream.str());
   return true;
 }
 
