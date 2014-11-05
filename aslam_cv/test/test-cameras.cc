@@ -4,8 +4,9 @@
 #include <gtest/gtest.h>
 
 #include <aslam/cameras/camera.h>
-#include <aslam/cameras/camera-unified-projection.h>
+#include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera-pinhole.h>
+#include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
