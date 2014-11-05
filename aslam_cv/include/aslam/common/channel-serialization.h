@@ -185,7 +185,7 @@ template<typename SCALAR>
 bool deSerializeFromBuffer(const char* const buffer, size_t size, SCALAR* value) {
   CHECK_NOTNULL(value);
   CHECK_EQ(size, sizeof(SCALAR));
-  memcpy(&value, buffer, size);
+  memcpy(value, buffer, size);
   return true;
 }
 
