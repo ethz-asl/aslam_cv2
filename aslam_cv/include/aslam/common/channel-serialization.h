@@ -160,7 +160,8 @@ bool serializeToString(const SCALAR& value, std::string* string) {
   CHECK_NOTNULL(string);
   std::stringstream string_stream;
   string_stream << value;
-  string->swap(string_stream.str());
+  std::string value_string = string_stream.str();
+  string->swap(value_string);
   return true;
 }
 
@@ -168,7 +169,7 @@ template<typename SCALAR>
 bool deSerializeFromString(const std::string& string, SCALAR* value) {
   CHECK_NOTNULL(value);
   CHECK(!string.empty());
-  (*value) = static_cast<SCALAR>(std::stoll(string));
+  (*value) = static_cast<SCALAR>(std::stod(string));
   return true;
 }
 
@@ -176,9 +177,9 @@ template<typename SCALAR>
 bool serializeToBuffer(const SCALAR& value, char** buffer, size_t* size) {
   CHECK_NOTNULL(buffer);
   CHECK_NOTNULL(size);
-  CHECK_EQ(sizeof(SCALAR),*size);
   *buffer = new char[*size];
-  memcpy(*buffer, &value, *size);
+  memcpy(*buffer, &value, sizeof(SCALAR));
+  *size = sizeof(SCALAR);
   return true;
 }
 template<typename SCALAR>
