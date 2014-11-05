@@ -292,22 +292,25 @@ class VisualFrame  {
   inline void setId(const aslam::FrameId& id) { id_ = id; }
 
   /// \brief get the timestamp.
-  inline int64_t getTimestamp() const { return stamp_; }
+  inline int64_t getTimestampNanoseconds() const { return timestamp_nanoseconds_; }
   
   /// \brief set the timestamp.
-  inline void setTimestamp(int64_t stamp){ stamp_ = stamp; }
+  inline void setTimestampNanoseconds(int64_t timestamp_nanoseconds){
+    timestamp_nanoseconds_ = timestamp_nanoseconds; }
   
   /// \brief get the hardware timestamp.
-  inline int64_t getHardwareTimestamp() const { return hardwareStamp_; }
+  inline int64_t getHardwareTimestamp() const { return hardware_timestamp_; }
 
   /// \brief set the hardware timestamp.
-  inline void setHardwareTimestamp(int64_t stamp) { hardwareStamp_ = stamp; }
+  inline void setHardwareTimestamp(int64_t hardware_timestamp) {
+    hardware_timestamp_ = hardware_timestamp; }
 
   /// \brief get the system (host computer) timestamp.
-  inline int64_t getSystemTimestamp() const { return systemStamp_; }
+  inline int64_t getSystemTimestampNanoseconds() const { return system_timestamp_nanoseconds_; }
 
   /// \brief set the system (host computer) timestamp.
-  inline void setSystemTimestamp(int64_t stamp) { systemStamp_ = stamp; }
+  inline void setSystemTimestamp(int64_t system_timestamp_nanoseconds) {
+    system_timestamp_nanoseconds_ = system_timestamp_nanoseconds; }
 
   /// \brief Set the size of the descriptor in bytes.
   size_t getDescriptorSizeBytes() const;
@@ -316,11 +319,11 @@ class VisualFrame  {
   void print(std::ostream& out, const std::string& label) const;
  private:
   /// \brief integer nanoseconds since epoch.
-  int64_t stamp_;
+  int64_t timestamp_nanoseconds_;
   /// hardware timestamp. The scale and offset will be different for every device.
-  int64_t hardwareStamp_;
+  int64_t hardware_timestamp_;
   /// \brief host system timestamp in integer nanoseconds since epoch.
-  int64_t systemStamp_;
+  int64_t system_timestamp_nanoseconds_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
   Camera::ConstPtr camera_geometry_;
