@@ -1,6 +1,8 @@
 #include <memory>
 
 #include <aslam/cameras/camera-unified-projection.h>
+
+#include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/types.h>
 #include <aslam/common/undistort-helpers.h>
