@@ -7,7 +7,7 @@
 
 namespace aslam {
 Distortion::Distortion(const Eigen::VectorXd& dist_coeffs,
-                       DistortionType distortion_type)
+                       Type distortion_type)
     : distortion_coefficients_(dist_coeffs),
       distortion_type_(distortion_type) {}
 

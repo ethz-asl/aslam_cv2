@@ -2,6 +2,7 @@
 #define ASLAM_CAMERAS_CAMERA_FACTORY_H_
 
 #include <memory>
+#include <type_traits>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
@@ -18,12 +19,12 @@ namespace aslam {
 
 /// \brief A factory function to create a derived class camera
 ///
-/// This function takes a vectors of intrinsics and distortion parameters
-/// and produces a camera.
+/// This function takes vectors of intrinsics and distortion parameters
+/// and creates a camera.
 /// \param[in] id Id of the camera.
 /// \param[in] intrinsics A vector of projection intrinsic parameters.
-/// \param[in] image_width The width of the image associated with this camera.
-/// \param[in] image_height The height of the image associated with this camera.
+/// \param[in] image_width Image width in pixels.
+/// \param[in] image_height Image height in pixels.
 /// \param[in] distortion_parameters The parameters of the distortion object.
 /// \param[in] camera_type The camera model.
 /// \param[in] distortion_type The distortion model.
@@ -31,40 +32,48 @@ namespace aslam {
 Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
                          uint32_t image_width, uint32_t image_height,
                          const Eigen::VectorXd& distortion_parameters,
-                         Camera::CameraType camera_type,
-                         Distortion::DistortionType distortion_type) {
+                         Camera::Type camera_type,
+                         Distortion::Type distortion_type) {
   CHECK(id.isValid());
 
   Distortion::UniquePtr distortion;
   switch(distortion_type) {
-    case Distortion::DistortionType::kNoDistortion:
+    case Distortion::Type::kNoDistortion:
       distortion = nullptr;
       break;
-    case Distortion::DistortionType::kEquidistant:
+    case Distortion::Type::kEquidistant:
       distortion.reset(new EquidistantDistortion(distortion_parameters));
       break;
-    case Distortion::DistortionType::kFisheye:
+    case Distortion::Type::kFisheye:
       distortion.reset(new FisheyeDistortion(distortion_parameters));
       break;
-    case Distortion::DistortionType::kRadTan:
+    case Distortion::Type::kRadTan:
       distortion.reset(new RadTanDistortion(distortion_parameters));
       break;
     default:
-      LOG(FATAL) << "Unknown distortion model.";
+      LOG(FATAL) << "Unknown distortion model: "
+        << static_cast<std::underlying_type<Distortion::Type>::type>(
+            distortion_type);
+  }
+  if (distortion != nullptr) {
+    CHECK(distortion->distortionParametersValid(distortion_parameters))
+        << "Invalid distortion parameters: "
+        << distortion_parameters.transpose();
   }
 
   Camera::Ptr camera;
   switch(camera_type) {
-    case Camera::CameraType::kPinhole:
+    case Camera::Type::kPinhole:
       camera.reset(new PinholeCamera(intrinsics, image_width, image_height,
                                      distortion));
       break;
-    case Camera::CameraType::kUnifiedProjection:
+    case Camera::Type::kUnifiedProjection:
       camera.reset(new UnifiedProjectionCamera(intrinsics, image_width,
                                                image_height, distortion));
       break;
     default:
-      LOG(FATAL) << "Unknown distortion model.";
+      LOG(FATAL) << "Unknown distortion model: "
+        << static_cast<std::underlying_type<Camera::Type>::type>(camera_type);
   }
 
   camera->setId(id);

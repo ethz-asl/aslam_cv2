@@ -3,7 +3,7 @@
 namespace aslam {
 
 FisheyeDistortion::FisheyeDistortion(const Eigen::VectorXd& dist_coeffs)
-: Base(dist_coeffs, Distortion::DistortionType::kFisheye) {
+: Base(dist_coeffs, Distortion::Type::kFisheye) {
   CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 

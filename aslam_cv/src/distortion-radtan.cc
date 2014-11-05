@@ -3,7 +3,7 @@
 namespace aslam {
 
 RadTanDistortion::RadTanDistortion(const Eigen::VectorXd& dist_coeffs)
-: Base(dist_coeffs, Distortion::DistortionType::kRadTan) {
+: Base(dist_coeffs, Distortion::Type::kRadTan) {
   CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 
