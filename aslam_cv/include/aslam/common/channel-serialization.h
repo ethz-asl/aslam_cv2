@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #include <glog/logging.h>
 #include <Eigen/Dense>
@@ -152,6 +154,43 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
 
 bool serializeToBuffer(const cv::Mat& matrix,
                        char** buffer, size_t* size);
+
+template<typename SCALAR>
+bool serializeToString(const SCALAR& value, std::string* string) {
+  CHECK_NOTNULL(string);
+  std::stringstream string_stream;
+  string_stream << value;
+  std::string values_as_string = string_stream.str();
+  string->swap(values_as_string);
+  return true;
+}
+
+template<typename SCALAR>
+bool deSerializeFromString(const std::string& string, SCALAR* value) {
+  CHECK_NOTNULL(value);
+  CHECK(!string.empty());
+  (*value) = static_cast<SCALAR>(std::stoll(string));
+  return true;
+}
+
+template<typename SCALAR>
+bool serializeToBuffer(const SCALAR& value, char** buffer, size_t* size) {
+  CHECK_NOTNULL(buffer);
+  CHECK_NOTNULL(size);
+  CHECK_EQ(sizeof(SCALAR),*size);
+
+  *buffer = new char[*size];
+  memcpy(*buffer, &value, *size);
+  return true;
+}
+template<typename SCALAR>
+bool deSerializeFromBuffer(const char* const buffer, size_t size, SCALAR* value) {
+  CHECK_NOTNULL(value);
+  CHECK_EQ(size, sizeof(SCALAR));
+  memcpy(&value, buffer, size);
+  return true;
+}
+
 }  // namespace internal
 }  // namespace aslam
 
