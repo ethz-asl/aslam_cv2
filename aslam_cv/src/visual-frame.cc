@@ -5,16 +5,16 @@
 
 namespace aslam {
 VisualFrame::VisualFrame()
-    : stamp_(getInvalidTime()),
-      hardwareStamp_(getInvalidTime()),
-      systemStamp_(getInvalidTime()) {}
+    : timestamp_nanoseconds_(getInvalidTime()),
+      hardware_timestamp_(getInvalidTime()),
+      system_timestamp_nanoseconds_(getInvalidTime()) {}
 
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
   // TODO(slynen): Better iterate over channels and compare data instead of pointers.
-  same &= stamp_ == other.stamp_;
-  same &= hardwareStamp_ == other.hardwareStamp_;
-  same &= systemStamp_ == other.systemStamp_;
+  same &= timestamp_nanoseconds_ == other.timestamp_nanoseconds_;
+  same &= hardware_timestamp_ == other.hardware_timestamp_;
+  same &= system_timestamp_nanoseconds_ == other.system_timestamp_nanoseconds_;
   same &= channels_ == other.channels_;
   same &= static_cast<bool>(camera_geometry_) ==
       static_cast<bool>(other.camera_geometry_);
@@ -319,9 +319,9 @@ void VisualFrame::print(std::ostream& out, const std::string& label) const {
     out << label << std::endl;
   }
   out << "VisualFrame(" << this->id_ << ")" << std::endl;
-  out << "  timestamp:          " << this->stamp_ << std::endl;
-  out << "  system timestamp:   " << this->systemStamp_ << std::endl;
-  out << "  hardware timestamp: " << this->hardwareStamp_ << std::endl;
+  out << "  timestamp:          " << this->timestamp_nanoseconds_ << std::endl;
+  out << "  system timestamp:   " << this->system_timestamp_nanoseconds_ << std::endl;
+  out << "  hardware timestamp: " << this->hardware_timestamp_ << std::endl;
   if(camera_geometry_) {
     camera_geometry_->printParameters(out, "  VisualFrame::camera");
   } else {
