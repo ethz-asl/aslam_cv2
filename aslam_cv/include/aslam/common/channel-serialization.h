@@ -177,7 +177,6 @@ bool serializeToBuffer(const SCALAR& value, char** buffer, size_t* size) {
   CHECK_NOTNULL(buffer);
   CHECK_NOTNULL(size);
   CHECK_EQ(sizeof(SCALAR),*size);
-
   *buffer = new char[*size];
   memcpy(*buffer, &value, *size);
   return true;
