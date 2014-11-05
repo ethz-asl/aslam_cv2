@@ -6,8 +6,10 @@
 //#include <sm/PropertyTree.hpp>
 
 namespace aslam {
-Distortion::Distortion(const Eigen::VectorXd& dist_coeffs)
-    : distortion_coefficients_(dist_coeffs) {}
+Distortion::Distortion(const Eigen::VectorXd& dist_coeffs,
+                       Type distortion_type)
+    : distortion_coefficients_(dist_coeffs),
+      distortion_type_(distortion_type) {}
 
 // TODO(slynen) Enable commented out PropertyTree support
 //Distortion::Distortion(const sm::PropertyTree& /*property_tree*/) { }
