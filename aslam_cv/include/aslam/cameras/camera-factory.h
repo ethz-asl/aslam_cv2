@@ -4,18 +4,53 @@
 #include <memory>
 #include <type_traits>
 
+#include <Eigen/Dense>
+
 #include <aslam/cameras/camera.h>
-#include <aslam/cameras/camera-pinhole.h>
-#include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/distortion.h>
-#include <aslam/cameras/distortion-equidistant.h>
-#include <aslam/cameras/distortion-fisheye.h>
-#include <aslam/cameras/distortion-radtan.h>
 #include <aslam/common/unique-id.h>
 
 namespace aslam {
 
-// TODO(dymczykm) Move here other factory functions from camera.h?
+/// \brief A factory function to create a derived class camera
+///
+/// This function takes vectors of intrinsics and distortion parameters
+/// and creates a camera.
+/// \param[in] intrinsics A vector of projection intrinsic parameters.
+/// \param[in] image_width Image width in pixels.
+/// \param[in] image_height Image height in pixels.
+/// \param[in] distortion_parameters The parameters of the distortion object.
+/// \returns A new camera based on the template types.
+template <typename CameraType, typename DistortionType>
+typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
+                                      uint32_t image_width, uint32_t image_height,
+                                      const Eigen::VectorXd& distortion_parameters) {
+  typename aslam::Distortion::UniquePtr distortion(new DistortionType(distortion_parameters));
+  typename CameraType::Ptr camera(
+      new CameraType(intrinsics, image_width, image_height, distortion));
+  aslam::CameraId id;
+  id.randomize();
+  camera->setId(id);
+  return camera;
+}
+
+/// \brief A factory function to create a derived class camera without distortion.
+///
+/// This function takes vectors of intrinsics and distortion parameters
+/// and creates a camera.
+/// \param[in] intrinsics A vector of projection intrinsic parameters.
+/// \param[in] image_width Image width in pixels.
+/// \param[in] image_height Image height in pixels.
+/// \returns A new camera based on the template types.
+template <typename CameraType>
+typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
+                                      uint32_t image_width, uint32_t image_height) {
+  typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height));
+  aslam::CameraId id;
+  id.randomize();
+  camera->setId(id);
+  return camera;
+}
 
 /// \brief A factory function to create a derived class camera
 ///
@@ -33,52 +68,7 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
                          uint32_t image_width, uint32_t image_height,
                          const Eigen::VectorXd& distortion_parameters,
                          Camera::Type camera_type,
-                         Distortion::Type distortion_type) {
-  CHECK(id.isValid());
-
-  Distortion::UniquePtr distortion;
-  switch(distortion_type) {
-    case Distortion::Type::kNoDistortion:
-      distortion = nullptr;
-      break;
-    case Distortion::Type::kEquidistant:
-      distortion.reset(new EquidistantDistortion(distortion_parameters));
-      break;
-    case Distortion::Type::kFisheye:
-      distortion.reset(new FisheyeDistortion(distortion_parameters));
-      break;
-    case Distortion::Type::kRadTan:
-      distortion.reset(new RadTanDistortion(distortion_parameters));
-      break;
-    default:
-      LOG(FATAL) << "Unknown distortion model: "
-        << static_cast<std::underlying_type<Distortion::Type>::type>(
-            distortion_type);
-  }
-  if (distortion != nullptr) {
-    CHECK(distortion->distortionParametersValid(distortion_parameters))
-        << "Invalid distortion parameters: "
-        << distortion_parameters.transpose();
-  }
-
-  Camera::Ptr camera;
-  switch(camera_type) {
-    case Camera::Type::kPinhole:
-      camera.reset(new PinholeCamera(intrinsics, image_width, image_height,
-                                     distortion));
-      break;
-    case Camera::Type::kUnifiedProjection:
-      camera.reset(new UnifiedProjectionCamera(intrinsics, image_width,
-                                               image_height, distortion));
-      break;
-    default:
-      LOG(FATAL) << "Unknown distortion model: "
-        << static_cast<std::underlying_type<Camera::Type>::type>(camera_type);
-  }
-
-  camera->setId(id);
-  return camera;
-}
+                         Distortion::Type distortion_type);
 
 }  // namespace aslam
 

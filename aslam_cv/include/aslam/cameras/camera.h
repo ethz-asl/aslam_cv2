@@ -25,46 +25,6 @@ namespace aslam {
 // Forward declarations
 class MappedUndistorter;
 
-/// \brief A factory function to create a derived class camera
-///
-/// This function takes vectors of intrinsics and distortion parameters
-/// and creates a camera.
-/// \param[in] intrinsics A vector of projection intrinsic parameters.
-/// \param[in] image_width Image width in pixels.
-/// \param[in] image_height Image height in pixels.
-/// \param[in] distortion_parameters The parameters of the distortion object.
-/// \returns A new camera based on the template types.
-template <typename CameraType, typename DistortionType>
-typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
-                                      uint32_t image_width, uint32_t image_height,
-                                      const Eigen::VectorXd& distortion_parameters) {
-  typename aslam::Distortion::UniquePtr distortion(new DistortionType(distortion_parameters));
-  typename CameraType::Ptr camera(
-      new CameraType(intrinsics, image_width, image_height, distortion));
-  aslam::CameraId id;
-  id.randomize();
-  camera->setId(id);
-  return camera;
-}
-
-/// \brief A factory function to create a derived class camera without distortion.
-///
-/// This function takes vectors of intrinsics and distortion parameters
-/// and creates a camera.
-/// \param[in] intrinsics A vector of projection intrinsic parameters.
-/// \param[in] image_width Image width in pixels.
-/// \param[in] image_height Image height in pixels.
-/// \returns A new camera based on the template types.
-template <typename CameraType>
-typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
-                                      uint32_t image_width, uint32_t image_height) {
-  typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height));
-  aslam::CameraId id;
-  id.randomize();
-  camera->setId(id);
-  return camera;
-}
-
 /// \struct ProjectionResult
 /// \brief This struct is returned by the camera projection methods and holds the result state
 ///        of the projection operation.
