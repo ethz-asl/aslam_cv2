@@ -22,7 +22,7 @@ class Distortion {
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
 
-  enum class DistortionType {
+  enum class Type {
     kNoDistortion = 0,
     kEquidistant = 1,
     kFisheye = 2,
@@ -44,7 +44,7 @@ class Distortion {
   /// @param[in] distortion_type DistortionType enum value with information which distortion
   ///                            model is used by the derived class.
   Distortion(const Eigen::VectorXd& dist_coeffs,
-             DistortionType distortion_type);
+             Type distortion_type);
 
  public:
   virtual ~Distortion() { };
@@ -177,7 +177,7 @@ class Distortion {
 
   /// \brief Returns type of the distortion model.
   /// @return DistortionType value representing the distortion model used by the derived class.
-  inline DistortionType getType() const { return distortion_type_; }
+  inline Type getType() const { return distortion_type_; }
 
   /// @}
 
@@ -186,7 +186,7 @@ class Distortion {
   Eigen::VectorXd distortion_coefficients_;
 
   /// \brief Enum field to store the type of distortion model.
-  DistortionType distortion_type_;
+  Type distortion_type_;
 };
 }  // namespace aslam
 #endif  // ASLAM_CAMERAS_DISTORTION_H_
