@@ -125,7 +125,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
   VLOG(4) << "Added " << candidates.size() << " to the list of candidates for new born tracks.";
 
   std::sort(candidates.begin(), candidates.end(),
-            [](const MatchCandidateScore& lhs, MatchCandidateScore& rhs) {
+            [](const MatchCandidateScore& lhs, const MatchCandidateScore& rhs) {
               return lhs.score_ < rhs.score_;
             });
 
