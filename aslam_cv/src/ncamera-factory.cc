@@ -72,7 +72,7 @@ namespace aslam {
     R_B_C0(0, 2) = 1.0;
     aslam::Quaternion q_B_C0(R_B_C0);
 
-    aslam::NCamera::TransformationVector rig_transformations;
+    aslam::TransformationVector rig_transformations;
     rig_transformations.emplace_back(q_B_C0.inverted(), -t_B_C0);
 
     std::string label = "Artificial Planar 1-Pinhole-Camera-Rig";
