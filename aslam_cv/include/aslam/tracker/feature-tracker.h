@@ -42,7 +42,7 @@ class FeatureTracker {
   /// @param[in] C_current_prev    Rotation matrix that defines the camera rotation between the
   ///                              current and the previous frame passed to the tracker. For e.g.
   ///                              this could be the output of the gyro/odometry integrators.
-  virtual void addFrame(VisualFrame::Ptr current_frame_ptr,
+  virtual void addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
                         const Eigen::Matrix3d& C_current_prev) = 0;
 
   /// \brief Add a new VisualFrame to the tracker and draw tracks to an image.
@@ -57,7 +57,7 @@ class FeatureTracker {
   ///                              current and the previous frame passed to the tracker. For e.g.
   ///                              this could be the output of the gyro/odometry integrators.
   /// @param[out] track_image      Tracks are drawn into this image.
-  void addFrameAndDrawTracks(VisualFrame::Ptr current_frame_ptr,
+  void addFrameAndDrawTracks(std::shared_ptr<VisualFrame> current_frame_ptr,
                              const Eigen::Matrix3d& C_current_prev,
                              cv::Mat* track_image) {
     addFrame(current_frame_ptr, C_current_prev);
@@ -68,7 +68,7 @@ class FeatureTracker {
   /// @param[in] current_frame_ptr Shared pointer to the frame to process. The frame needs to
   ///                              contain a TrackId channel.
   /// @param[out] track_image      Tracks are drawn into this image.
-  void drawTracks(VisualFrame::Ptr current_frame_ptr, cv::Mat* track_image);
+  void drawTracks(std::shared_ptr<VisualFrame> current_frame_ptr, cv::Mat* track_image);
 
   /// Return the used camera model.
   const aslam::Camera& getCamera() const { return *CHECK_NOTNULL(camera_.get()); };
