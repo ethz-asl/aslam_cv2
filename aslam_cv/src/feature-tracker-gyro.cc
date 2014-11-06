@@ -6,7 +6,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/common/memory.h>
-//#define  ENABLE_STATISTICS 1
+#define  ENABLE_STATISTICS 0
 #include <aslam/common/statistics/statistics.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/tracker/feature-tracker-gyro.h>
@@ -181,13 +181,26 @@ void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
 
   // Assign new Id's to all candidates that are not continued tracks.
   aslam::statistics::DebugStatsCollector stats_track_length("GyroTracker Track lengths");
+  aslam::VisualFrame::TrackIdsT* previous_track_ids = previous_frame.getTrackIdsMutable();
+  CHECK_NOTNULL(previous_track_ids);
+  int num_keypoints_in_previous_frame = previous_track_ids->rows();
   for (size_t i = 0; i < candidates_new_tracks.size(); ++i) {
-    int index_in_curr = candidates_new_tracks[i].second;
-    if (current_track_ids(index_in_curr) == -1) {
-      current_track_ids(index_in_curr) = ++current_track_id_;
-      current_track_lengths_[index_in_curr] = 1;
+    int index_current_frame = candidates_new_tracks[i].index_current_frame_;
+    if (current_track_ids(index_current_frame) == -1) {
+      int index_previous_frame = candidates_new_tracks[i].index_previous_frame_;
+      CHECK_LT(index_previous_frame, num_keypoints_in_previous_frame);
+      int previous_track_id = (*previous_track_ids)(index_previous_frame);
+      CHECK_EQ(previous_track_id, -1) << "Have a match that supposedly represents a new track "
+          "but the track id of the previous frame is not -1, so this would indicate a continued "
+          "track, and not a new track!";
+
+      int new_track_id = ++current_track_id_;
+      current_track_ids(index_current_frame) = new_track_id;
+      (*previous_track_ids)(index_previous_frame) = new_track_id;
+
+      current_track_lengths_[index_current_frame] = 2;
     }
-    stats_track_length.AddSample(current_track_lengths_[index_in_curr]);
+    stats_track_length.AddSample(current_track_lengths_[index_current_frame]);
   }
 
   // Save the output track-ids to the channel in the current frame.
