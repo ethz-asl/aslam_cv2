@@ -166,7 +166,7 @@ bool serializeToString(const Scalar& value, std::string* string) {
 template<typename Scalar>
 bool deSerializeFromString(const std::string& string,
                            Scalar* value,
-                           typename std::enable_if<std::is_integral<TYPE>::value>::type* = 0) {
+                           typename std::enable_if<std::is_integral<Scalar>::value>::type* = 0) {
   CHECK_NOTNULL(value);
   CHECK(!string.empty());
   (*value) = static_cast<Scalar>(std::stoll(string));
@@ -176,8 +176,8 @@ bool deSerializeFromString(const std::string& string,
 template<typename Scalar>
 bool deSerializeFromString(const std::string& string,
                            Scalar* value,
-                           typename std::enable_if<std::is_floating_point<TYPE>::value>::type* = 0)
-{
+                           typename std::enable_if<std::is_floating_point<Scalar>::value>::type*
+                             = 0) {
   CHECK_NOTNULL(value);
   CHECK(!string.empty());
   (*value) = static_cast<Scalar>(std::stod(string));
