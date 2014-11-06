@@ -6,7 +6,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/common/memory.h>
-#define  ENABLE_STATISTICS 1
+#define  ENABLE_STATISTICS 0
 #include <aslam/common/statistics/statistics.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/tracker/feature-tracker-gyro.h>
