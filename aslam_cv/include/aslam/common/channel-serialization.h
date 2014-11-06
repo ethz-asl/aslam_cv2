@@ -3,6 +3,9 @@
 
 #include <cstdint>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <type_traits>
 
 #include <glog/logging.h>
 #include <Eigen/Dense>
@@ -21,25 +24,25 @@ struct HeaderInformation {
   bool deSerializeFromBuffer(const char* const bufferIn, size_t offset);
 };
 
-template<typename SCALAR>
+template<typename Scalar>
 void makeHeaderInformation(int rows, int cols, int channels,
                            HeaderInformation* headerInformation) {
   CHECK_NOTNULL(headerInformation);
   headerInformation->rows = rows;
   headerInformation->cols = cols;
   headerInformation->channels = channels;
-  headerInformation->depth = cv::DataType<SCALAR>::depth;
+  headerInformation->depth = cv::DataType<Scalar>::depth;
 }
 
-template<typename SCALAR>
+template<typename Scalar>
 bool serializeToString(const char* const matrixData,
                        int rows, int cols, int channels, std::string* string) {
   CHECK_GE(rows, 0);
   CHECK_GE(cols, 0);
   CHECK_NOTNULL(string);
   HeaderInformation header;
-  makeHeaderInformation<SCALAR>(rows, cols, channels, &header);
-  size_t matrixSize = sizeof(SCALAR) * rows * cols * channels;
+  makeHeaderInformation<Scalar>(rows, cols, channels, &header);
+  size_t matrixSize = sizeof(Scalar) * rows * cols * channels;
   size_t totalSize = matrixSize + header.size();
 
   CHECK_GT(totalSize, 0u);
@@ -56,14 +59,14 @@ bool serializeToString(const char* const matrixData,
   return true;
 }
 
-template<typename SCALAR>
+template<typename Scalar>
 bool serializeToBuffer(const char* const matrixData, int rows, int cols,
                        int channels, char** buffer, size_t* totalSize) {
   CHECK_NOTNULL(totalSize);
   CHECK_NOTNULL(buffer);
   HeaderInformation header;
-  makeHeaderInformation<SCALAR>(rows, cols, channels, &header);
-  size_t matrixSize = sizeof(SCALAR) * rows * cols * channels;
+  makeHeaderInformation<Scalar>(rows, cols, channels, &header);
+  size_t matrixSize = sizeof(Scalar) * rows * cols * channels;
   *totalSize = matrixSize + header.size();
 
   *buffer = new char[*totalSize];
@@ -78,29 +81,29 @@ bool serializeToBuffer(const char* const matrixData, int rows, int cols,
   return true;
 }
 
-template<typename SCALAR, int ROWS, int COLS>
-bool serializeToBuffer(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
+template<typename Scalar, int ROWS, int COLS>
+bool serializeToBuffer(const Eigen::Matrix<Scalar, ROWS, COLS>& matrix,
                        char** buffer, size_t* size) {
   const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
   // Eigen matrices have only one channel
   constexpr int numChannels = 1;
-  return serializeToBuffer<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
+  return serializeToBuffer<Scalar>(matrixData, matrix.rows(), matrix.cols(),
                                    numChannels, buffer, size);
 }
 
-template<typename SCALAR, int ROWS, int COLS>
-bool serializeToString(const Eigen::Matrix<SCALAR, ROWS, COLS>& matrix,
+template<typename Scalar, int ROWS, int COLS>
+bool serializeToString(const Eigen::Matrix<Scalar, ROWS, COLS>& matrix,
                        std::string* string) {
   const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
   // Eigen matrices have only one channel
   constexpr int numChannels = 1;
-  return serializeToString<SCALAR>(matrixData, matrix.rows(), matrix.cols(),
+  return serializeToString<Scalar>(matrixData, matrix.rows(), matrix.cols(),
                                    numChannels, string);
 }
 
-template<typename SCALAR, int ROWS, int COLS>
+template<typename Scalar, int ROWS, int COLS>
 bool deSerializeFromBuffer(const char* const buffer, size_t size,
-                           Eigen::Matrix<SCALAR, ROWS, COLS>* matrix) {
+                           Eigen::Matrix<Scalar, ROWS, COLS>* matrix) {
   CHECK_NOTNULL(matrix);
   HeaderInformation header;
   CHECK_GE(size, header.size());
@@ -116,7 +119,7 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
   if (COLS != Eigen::Dynamic) {
     CHECK_EQ(header.cols, static_cast<uint32_t>(COLS));
   }
-  CHECK_EQ(header.depth, cv::DataType<SCALAR>::depth);
+  CHECK_EQ(header.depth, cv::DataType<Scalar>::depth);
   CHECK_EQ(1u, header.channels) << "Eigen matrices must have one channel.";
 
   if (ROWS == Eigen::Dynamic && COLS == Eigen::Dynamic) {
@@ -127,16 +130,16 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
     matrix->resize(Eigen::NoChange, header.cols);
   }
 
-  size_t matrix_size = sizeof(SCALAR) * matrix->rows() * matrix->cols();
+  size_t matrix_size = sizeof(Scalar) * matrix->rows() * matrix->cols();
   size_t total_size = matrix_size + header.size();
   CHECK_EQ(size, total_size);
   memcpy(matrix->data(), buffer + header.size(), matrix_size);
   return true;
 }
 
-template<typename SCALAR, int ROWS, int COLS>
+template<typename Scalar, int ROWS, int COLS>
 bool deSerializeFromString(const std::string& string,
-                           Eigen::Matrix<SCALAR, ROWS, COLS>* matrix) {
+                           Eigen::Matrix<Scalar, ROWS, COLS>* matrix) {
   CHECK_NOTNULL(matrix);
   return deSerializeFromBuffer(string.data(), string.size(), matrix);
 }
@@ -152,6 +155,53 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
 
 bool serializeToBuffer(const cv::Mat& matrix,
                        char** buffer, size_t* size);
+
+template<typename Scalar>
+bool serializeToString(const Scalar& value, std::string* string) {
+  CHECK_NOTNULL(string);
+  std::string value_string = std::to_string(value);
+  string->swap(value_string);
+  return true;
+}
+
+template<typename Scalar>
+bool deSerializeFromString(const std::string& string,
+                           Scalar* value,
+                           typename std::enable_if<std::is_integral<Scalar>::value>::type* = 0) {
+  CHECK_NOTNULL(value);
+  CHECK(!string.empty());
+  (*value) = static_cast<Scalar>(std::stoll(string));
+  return true;
+}
+
+template<typename Scalar>
+bool deSerializeFromString(const std::string& string,
+                           Scalar* value,
+                           typename std::enable_if<std::is_floating_point<Scalar>::value>::type*
+                             = 0) {
+  CHECK_NOTNULL(value);
+  CHECK(!string.empty());
+  (*value) = static_cast<Scalar>(std::stod(string));
+  return true;
+}
+
+template<typename Scalar>
+bool serializeToBuffer(const Scalar& value, char** buffer, size_t* size) {
+  CHECK_NOTNULL(buffer);
+  CHECK_NOTNULL(size);
+  *size = sizeof(Scalar);
+  *buffer = new char[*size];
+  memcpy(*buffer, &value, *size);
+  return true;
+}
+template<typename Scalar>
+bool deSerializeFromBuffer(const char* const buffer, size_t size, Scalar* value) {
+  CHECK_NOTNULL(value);
+  CHECK_EQ(size, sizeof(Scalar));
+  memcpy(value, buffer, size);
+  return true;
+}
+
 }  // namespace internal
 }  // namespace aslam
 
