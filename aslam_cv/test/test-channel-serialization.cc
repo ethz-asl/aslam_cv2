@@ -47,8 +47,7 @@ class CvMatSerializationTest : public ::testing::Test {
 template <typename SCALAR>
 class SimpleTypeTestHarness  {
  public:
-  SimpleTypeTestHarness(SCALAR value) : value_(value)
-   {
+  SimpleTypeTestHarness(SCALAR value) : value_(value) {
     channelA_.value_ = value;
    }
 
@@ -218,7 +217,7 @@ TYPED_TEST(CvMatSerializationTest, SerializeDeserializeBuffer) {
 TEST(SimpleSerializationTest, SerializeDeserializeSimpleTypes) {
   SimpleTypeTestHarness<int>(45678).test();
   SimpleTypeTestHarness<size_t>(10546548).test();
-  SimpleTypeTestHarness<double>(0.457*1e12).test();
+  SimpleTypeTestHarness<double>(0.457 * 1e12).test();
   SimpleTypeTestHarness<float> float_test(456.54578);
   SimpleTypeTestHarness<long> long_test(-9415);
   SimpleTypeTestHarness<long long> long_long_test(65465461321487);
