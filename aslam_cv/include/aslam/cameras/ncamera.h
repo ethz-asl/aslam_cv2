@@ -7,7 +7,6 @@
 #include <vector>
 
 #include <aslam/common/macros.h>
-#include <aslam/common/memory.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/unique-id.h>
 
@@ -32,8 +31,6 @@ class NCamera {
   ASLAM_POINTER_TYPEDEFS(NCamera);
   enum {CLASS_SERIALIZATION_VERSION = 1};
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-  typedef Aligned<std::vector, Transformation>::type TransformationVector;
 
 protected:
   /// \brief default constructor builds an empty camera rig

@@ -44,6 +44,36 @@ class CvMatSerializationTest : public ::testing::Test {
   aslam::channels::Channel<cv::Mat> imagesB_[num_channels];
 };
 
+template <typename SCALAR>
+class SimpleTypeTestHarness  {
+ public:
+  SimpleTypeTestHarness(SCALAR value) : value_(value) {
+    channelA_.value_ = value;
+   }
+
+  void test() {
+    char* buffer;
+    size_t size = 0;
+    channelA_.serializeToBuffer(&buffer, &size);
+    SCALAR check = *(reinterpret_cast<SCALAR*>(buffer));
+    ASSERT_EQ(size, sizeof(SCALAR));
+    ASSERT_EQ(check, value_);
+    std::string serialized_string;
+    channelA_.serializeToString(&serialized_string);
+    check = static_cast<SCALAR>(std::stod(serialized_string));
+    ASSERT_EQ(check, value_);
+    channelB_.deSerializeFromBuffer(buffer, sizeof(SCALAR));
+    ASSERT_EQ(channelB_.value_, value_);
+    channelB_.value_ = 0;
+    channelB_.deSerializeFromString(serialized_string);
+    ASSERT_EQ(channelB_.value_, value_);
+  }
+
+  aslam::channels::Channel<SCALAR> channelA_;
+  aslam::channels::Channel<SCALAR> channelB_;
+  SCALAR value_;
+};
+
 typedef ::testing::Types< int32_t, uint8_t,  int8_t, uint16_t, int16_t,
     float, double> TypeTests;
 TYPED_TEST_CASE(CvMatSerializationTest, TypeTests);
@@ -182,6 +212,15 @@ TYPED_TEST(CvMatSerializationTest, SerializeDeserializeBuffer) {
     EXPECT_TRUE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
                                           this->imagesB_[ch].value_, 1e-4));
   }
+}
+
+TEST(SimpleSerializationTest, SerializeDeserializeSimpleTypes) {
+  SimpleTypeTestHarness<int>(45678).test();
+  SimpleTypeTestHarness<size_t>(10546548).test();
+  SimpleTypeTestHarness<double>(0.457 * 1e12).test();
+  SimpleTypeTestHarness<float> float_test(456.54578);
+  SimpleTypeTestHarness<long> long_test(-9415);
+  SimpleTypeTestHarness<long long> long_long_test(65465461321487);
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
