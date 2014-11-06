@@ -66,7 +66,7 @@ class GyroTracker : public FeatureTracker {
   void matchFeatures(const Eigen::Matrix3d& C_current_prev,
                      const VisualFrame& current_frame,
                      const VisualFrame& previous_frame,
-                     std::vector<std::pair<int, int> >* matches_prev_current) const;
+                     FeatureMatches* matches_prev_current) const;
 
   /// The frame processed in the last update.
   std::shared_ptr<const aslam::VisualFrame> previous_frame_ptr_;
