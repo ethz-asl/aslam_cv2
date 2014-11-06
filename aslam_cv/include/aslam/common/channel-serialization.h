@@ -159,7 +159,8 @@ bool serializeToBuffer(const cv::Mat& matrix,
 template<typename Scalar>
 bool serializeToString(const Scalar& value, std::string* string) {
   CHECK_NOTNULL(string);
-  string->swap(std::to_string(value));
+  std::string value_string = std::to_string(value);
+  string->swap(value_string);
   return true;
 }
 
