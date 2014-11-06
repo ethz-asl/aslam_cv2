@@ -38,16 +38,14 @@ class FeatureTracker {
     int index_previous_frame_;
     int index_current_frame_;
   };
-  typedef std::vector<FeatureMatch> FeatureMatches;
 
   struct MatchCandidateScore {
-    MatchCandidateScore(int index, int score)
+    MatchCandidateScore(int index, double score)
     : match_index_(index),
       score_(score) {}
     int match_index_;
     double score_;
   };
-  typedef std::vector<MatchCandidateScore> MatchCandidateScores;
 
   /// \brief Add a new VisualFrame to the tracker.
   ///        The frame needs to contain KeypointMeasurements and Descriptors channel. Usually
