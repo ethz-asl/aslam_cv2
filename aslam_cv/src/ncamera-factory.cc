@@ -47,7 +47,7 @@ namespace aslam {
     R_B_C3(1, 2) = -1.0;
     aslam::Quaternion q_B_C3(R_B_C3);
 
-    aslam::NCamera::TransformationVector rig_transformations;
+    aslam::TransformationVector rig_transformations;
     rig_transformations.emplace_back(q_B_C0.inverted(), -t_B_C0);
     rig_transformations.emplace_back(q_B_C1.inverted(), -t_B_C1);
     rig_transformations.emplace_back(q_B_C2.inverted(), -t_B_C2);
