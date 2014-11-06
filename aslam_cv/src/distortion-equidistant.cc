@@ -3,7 +3,7 @@
 namespace aslam {
 
 EquidistantDistortion::EquidistantDistortion(const Eigen::VectorXd& dist_coeffs)
-: Base(dist_coeffs) {
+: Base(dist_coeffs, Distortion::Type::kEquidistant) {
   CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 

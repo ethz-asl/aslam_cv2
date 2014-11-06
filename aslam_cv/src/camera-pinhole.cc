@@ -2,6 +2,8 @@
 #include <utility>
 
 #include <aslam/cameras/camera-pinhole.h>
+
+#include <aslam/cameras/camera-factory.h>
 #include <aslam/common/types.h>
 #include <aslam/common/undistort-helpers.h>
 #include <aslam/pipeline/undistorter-mapped.h>
@@ -28,18 +30,18 @@ namespace aslam {
 //}
 
 PinholeCamera::PinholeCamera()
-    : Base(Eigen::Vector4d::Zero(), 0, 0) {}
+    : Base(Eigen::Vector4d::Zero(), 0, 0, Camera::Type::kPinhole) {}
 
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics,
                              uint32_t image_width, uint32_t image_height,
                              aslam::Distortion::UniquePtr& distortion)
-  : Base(intrinsics, distortion, image_width, image_height) {
+  : Base(intrinsics, distortion, image_width, image_height, Camera::Type::kPinhole) {
   CHECK(intrinsicsValid(intrinsics));
 }
 
 PinholeCamera::PinholeCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width,
                              uint32_t image_height)
-    : Base(intrinsics, image_width, image_height) {
+    : Base(intrinsics, image_width, image_height, Camera::Type::kPinhole) {
   CHECK(intrinsicsValid(intrinsics));
 }
 

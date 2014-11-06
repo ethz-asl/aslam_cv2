@@ -9,6 +9,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 cs_add_library(${PROJECT_NAME} 
                                src/camera.cc
+                               src/camera-factory.cc
                                src/camera-pinhole.cc
                                src/camera-unified-projection.cc
                                src/channel-serialization.cc
