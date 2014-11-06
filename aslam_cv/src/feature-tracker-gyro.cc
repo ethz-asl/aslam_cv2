@@ -6,7 +6,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/common/memory.h>
-//#define  ENABLE_STATISTICS 1
+#define  ENABLE_STATISTICS 1
 #include <aslam/common/statistics/statistics.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/tracker/feature-tracker-gyro.h>
@@ -17,7 +17,7 @@ GyroTracker::GyroTracker(const std::shared_ptr<const aslam::Camera>& input_camer
     : FeatureTracker(input_camera),
       previous_frame_ptr_(nullptr) {}
 
-void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
+void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
                            const Eigen::Matrix3d& C_current_prev) {
   CHECK_NOTNULL(current_frame_ptr.get());
   CHECK(current_frame_ptr->hasKeypointMeasurements());
@@ -29,8 +29,7 @@ void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
       current_frame_ptr->getKeypointMeasurements().cols() == 0) {
     // Initialize all keypoints as untracked.
     const size_t num_keypoints = current_frame_ptr->getKeypointMeasurements().cols();
-    Eigen::VectorXi track_ids(num_keypoints);
-    track_ids.fill(-1);
+    Eigen::VectorXi track_ids = Eigen::VectorXi::Constant(num_keypoints, -1);
     current_frame_ptr->swapTrackIds(&track_ids);
     previous_track_lengths_.resize(num_keypoints, 0);
     previous_frame_ptr_ = current_frame_ptr;
@@ -53,6 +52,7 @@ void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
   // Match the keypoints in the current frame to the previous one.
   std::vector<std::pair<int, int> > matches_prev_current;
   matchFeatures(C_current_prev, current_frame, previous_frame, &matches_prev_current);
+  VLOG(2) << "Matched " << matches_prev_current.size() << " keypoints.";
 
   aslam::statistics::DebugStatsCollector stats_num_matches("GyroTracker num. keypoint matches");
   stats_num_matches.AddSample(matches_prev_current.size());
@@ -80,8 +80,7 @@ void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
       };
 
   const size_t current_num_pts = current_frame.getKeypointMeasurements().cols();
-  Eigen::VectorXi current_track_ids(current_num_pts);
-  current_track_ids.fill(-1); // Initialize as untracked.
+  Eigen::VectorXi current_track_ids = Eigen::VectorXi::Constant(current_num_pts, -1);
   current_track_lengths_.clear();
   current_track_lengths_.resize(current_num_pts, 0);
 
@@ -105,7 +104,7 @@ void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
     }
   }
 
-  LOG(WARNING) << "Got " << candidates_new_tracks.size() << " continued tracks";
+  VLOG(4) << "Got " << candidates_new_tracks.size() << " continued tracks";
 
   std::vector<std::pair<int, float> > candidates;
   candidates.reserve(matches_prev_current.size());
@@ -197,11 +196,8 @@ void GyroTracker::addFrame(std::shared_ptr<VisualFrame> current_frame_ptr,
   previous_track_lengths_.swap(current_track_lengths_);
   previous_frame_ptr_ = current_frame_ptr;
 
-  // Print some statistics now and then.
-  static int count = 0;
-  if (count++ % 30 == 0) {
-    LOG(WARNING) << statistics::Statistics::Print();
-  }
+  // Print some statistics every now and then.
+  VLOG_EVERY_N(5, 30) << statistics::Statistics::Print();
 }
 
 void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
