@@ -57,11 +57,10 @@ void BriskVisualPipeline::initializeBrisk(size_t octaves,
                                                        scale_invariant_));
 }
 
-void BriskVisualPipeline::processFrameImpl(const cv::Mat& image,
-                                           VisualFrame* frame) const {
+void BriskVisualPipeline::processFrameImpl(const cv::Mat& image, VisualFrame* frame) const {
   CHECK_NOTNULL(frame);
   // Now we use the image from the frame. It might be undistorted.
-  std::vector <cv::KeyPoint> keypoints;
+  std::vector<cv::KeyPoint> keypoints;
   detector_->detect(image, keypoints);
 
   cv::Mat descriptors;
