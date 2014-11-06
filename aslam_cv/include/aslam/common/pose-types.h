@@ -1,6 +1,10 @@
 #ifndef ASLAM_COMMON_POSE_TYPES_H_
 #define ASLAM_COMMON_POSE_TYPES_H_
 
+#include <vector>
+
+#include <aslam/common/memory.h>
+
 #include <kindr/minimal/position.h>
 #include <kindr/minimal/quat-transformation.h>
 #include <kindr/minimal/rotation-quaternion.h>
@@ -8,6 +12,7 @@
 namespace aslam {
 
 typedef kindr::minimal::QuatTransformation Transformation;
+typedef Aligned<std::vector, Transformation>::type TransformationVector;
 typedef kindr::minimal::RotationQuaternion Quaternion;
 typedef kindr::minimal::AngleAxis AngleAxis;
 typedef kindr::minimal::Position Position3D;
