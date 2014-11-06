@@ -50,7 +50,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
   CHECK_EQ(current_frame.getKeypointMeasurements().cols(), current_frame.getDescriptors().cols());
 
   // Match the keypoints in the current frame to the previous one.
-  FeatureMatches matches_prev_current;
+  std::vector<FeatureMatch> matches_prev_current;
   matchFeatures(C_current_prev, current_frame, previous_frame, &matches_prev_current);
   VLOG(2) << "Matched " << matches_prev_current.size() << " keypoints.";
 
@@ -59,7 +59,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   // Prepare buckets.
   std::vector<std::vector<int> > buckets;
-  FeatureMatches candidates_new_tracks;
+  std::vector<FeatureMatch> candidates_new_tracks;
   candidates_new_tracks.reserve(matches_prev_current.size());
   buckets.resize(kNumberOfTrackingBuckets * kNumberOfTrackingBuckets);
 
@@ -109,7 +109,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   VLOG(4) << "Got " << candidates_new_tracks.size() << " continued tracks";
 
-  MatchCandidateScores candidates;
+  std::vector<MatchCandidateScore> candidates;
   candidates.reserve(matches_prev_current.size());
   for (size_t i = 0; i < matches_prev_current.size(); ++i) {
     int index_in_curr = matches_prev_current[i].index_current_frame_;
@@ -217,7 +217,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
                                 const VisualFrame& current_frame,
                                 const VisualFrame& previous_frame,
-                                FeatureMatches* matches_prev_current) const {
+                                std::vector<FeatureMatch>* matches_prev_current) const {
   CHECK_NOTNULL(matches_prev_current);
   matches_prev_current->clear();
 
