@@ -26,7 +26,7 @@ class FeatureTracker {
   FeatureTracker();
 
  protected:
-  FeatureTracker(const std::shared_ptr<const aslam::Camera>& input_camera);
+  FeatureTracker(const aslam::Camera::ConstPtr& input_camera);
 
  public:
   virtual ~FeatureTracker() {};
