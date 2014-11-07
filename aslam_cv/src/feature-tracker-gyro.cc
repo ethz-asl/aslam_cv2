@@ -38,7 +38,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   // Convenience access references
   VisualFrame& current_frame = *current_frame_ptr;
-  const VisualFrame& previous_frame = *CHECK_NOTNULL(previous_frame_ptr_.get());
+  VisualFrame& previous_frame = *CHECK_NOTNULL(previous_frame_ptr_.get());
 
   // Make sure the frames are in order time-wise
   // TODO(schneith): Maybe also enforce that deltaT < tolerance?
