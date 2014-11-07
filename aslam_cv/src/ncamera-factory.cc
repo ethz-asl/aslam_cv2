@@ -64,7 +64,7 @@ namespace aslam {
     cameras.push_back(aslam::PinholeCamera::createTestCamera());
     aslam::NCameraId rig_id;
     rig_id.randomize();
-    // This defines an artificial camera system similar to the one on the V-Charge or JanETH car.
+    // This defines an artificial one camera facing forward system.
     aslam::Position3D t_B_C0(2.0, 0.0, 0.0);
     Eigen::Matrix3d R_B_C0 = Eigen::Matrix3d::Zero();
     R_B_C0(1, 0) = -1.0;
