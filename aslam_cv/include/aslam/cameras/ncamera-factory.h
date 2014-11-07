@@ -9,7 +9,7 @@ namespace aslam {
   ///        each direction.
   ///        This is similar to the V-Charge or JanETH camera system.
   aslam::NCamera::Ptr createPlanar4CameraRig();
-
+  aslam::NCamera::Ptr createSingleCameraRig();
 }  // namespace aslam
 
 #endif // ASLAM_NCAMERA_FACTORY_H_

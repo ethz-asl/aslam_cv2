@@ -3,10 +3,11 @@
 #include <string>
 #include <vector>
 
-#include <aslam/common/pose-types.h>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
+#include <aslam/common/pose-types.h>
+#include <aslam/common/memory.h>
 
 namespace aslam {
 
@@ -55,7 +56,28 @@ namespace aslam {
 
     std::string label = "Artificial Planar 4-Pinhole-Camera-Rig";
 
-    return std::make_shared<aslam::NCamera>(rig_id, rig_transformations, cameras, label);
+    return aslam::aligned_shared<aslam::NCamera>(rig_id, rig_transformations, cameras, label);
+  }
+
+  aslam::NCamera::Ptr createSingleCameraRig() {
+    std::vector<aslam::Camera::Ptr> cameras;
+    cameras.push_back(aslam::PinholeCamera::createTestCamera());
+    aslam::NCameraId rig_id;
+    rig_id.randomize();
+    // This defines an artificial camera system similar to the one on the V-Charge or JanETH car.
+    aslam::Position3D t_B_C0(2.0, 0.0, 0.0);
+    Eigen::Matrix3d R_B_C0 = Eigen::Matrix3d::Zero();
+    R_B_C0(1, 0) = -1.0;
+    R_B_C0(2, 1) = -1.0;
+    R_B_C0(0, 2) = 1.0;
+    aslam::Quaternion q_B_C0(R_B_C0);
+
+    aslam::TransformationVector rig_transformations;
+    rig_transformations.emplace_back(q_B_C0.inverted(), -t_B_C0);
+
+    std::string label = "Artificial Planar 1-Pinhole-Camera-Rig";
+
+    return aslam::aligned_shared<aslam::NCamera>(rig_id, rig_transformations, cameras, label);
   }
 
 }  // namespace aslam

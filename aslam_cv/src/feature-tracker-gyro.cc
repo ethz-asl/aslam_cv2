@@ -50,7 +50,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
   CHECK_EQ(current_frame.getKeypointMeasurements().cols(), current_frame.getDescriptors().cols());
 
   // Match the keypoints in the current frame to the previous one.
-  std::vector<std::pair<int, int> > matches_prev_current;
+  std::vector<FeatureMatch> matches_prev_current;
   matchFeatures(C_current_prev, current_frame, previous_frame, &matches_prev_current);
   VLOG(2) << "Matched " << matches_prev_current.size() << " keypoints.";
 
@@ -59,7 +59,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   // Prepare buckets.
   std::vector<std::vector<int> > buckets;
-  std::vector<std::pair<int, int> > candidates_new_tracks;
+  std::vector<FeatureMatch> candidates_new_tracks;
   candidates_new_tracks.reserve(matches_prev_current.size());
   buckets.resize(kNumberOfTrackingBuckets * kNumberOfTrackingBuckets);
 
@@ -79,25 +79,28 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
         return bin_index;
       };
 
-  const size_t current_num_pts = current_frame.getKeypointMeasurements().cols();
-  Eigen::VectorXi current_track_ids = Eigen::VectorXi::Constant(current_num_pts, -1);
+  const size_t current_num_keypoints = current_frame.getKeypointMeasurements().cols();
+  Eigen::VectorXi current_track_ids = Eigen::VectorXi::Constant(current_num_keypoints, -1);
   current_track_lengths_.clear();
-  current_track_lengths_.resize(current_num_pts, 0);
+  current_track_lengths_.resize(current_num_keypoints, 0);
 
   for (size_t i = 0; i < matches_prev_current.size(); ++i) {
-    CHECK_LT(matches_prev_current[i].first, static_cast<int>(previous_frame.getTrackIds().rows()));
-    CHECK_LT(matches_prev_current[i].second, static_cast<int>(current_track_ids.size()));
-    current_track_ids(matches_prev_current[i].second) = previous_frame.getTrackId(
-        matches_prev_current[i].first);
-    current_track_lengths_[matches_prev_current[i].second] =
-        previous_track_lengths_[matches_prev_current[i].first] + 1;
+    CHECK_LT(matches_prev_current[i].index_previous_frame_,
+             static_cast<int>(previous_frame.getTrackIds().rows()));
+    CHECK_LT(matches_prev_current[i].index_current_frame_,
+             static_cast<int>(current_track_ids.size()));
+    int track_id_in_previous_frame =
+        previous_frame.getTrackId(matches_prev_current[i].index_previous_frame_);
+    current_track_ids(matches_prev_current[i].index_current_frame_) = track_id_in_previous_frame;
+    current_track_lengths_[matches_prev_current[i].index_current_frame_] =
+        previous_track_lengths_[matches_prev_current[i].index_previous_frame_] + 1;
 
     // Check if this is a continued track.
-    if (current_track_ids(matches_prev_current[i].second) >= 0) {
+    if (track_id_in_previous_frame >= 0) {
       // Put the current keypoint into the bucket.
-      CHECK_LT(matches_prev_current[i].second, current_num_pts);
+      CHECK_LT(matches_prev_current[i].index_current_frame_, current_num_keypoints);
       const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint = current_frame.getKeypointMeasurement(
-          matches_prev_current[i].second);
+          matches_prev_current[i].index_current_frame_);
       int bin_index = compute_bin_index(keypoint);
       buckets[bin_index].push_back(0);
       candidates_new_tracks.push_back(matches_prev_current[i]);
@@ -106,10 +109,10 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   VLOG(4) << "Got " << candidates_new_tracks.size() << " continued tracks";
 
-  std::vector<std::pair<int, float> > candidates;
+  std::vector<MatchCandidateScore> candidates;
   candidates.reserve(matches_prev_current.size());
   for (size_t i = 0; i < matches_prev_current.size(); ++i) {
-    int index_in_curr = matches_prev_current[i].second;
+    int index_in_curr = matches_prev_current[i].index_current_frame_;
     const double& keypoint_score = current_frame.getKeypointScore(index_in_curr);
     aslam::statistics::DebugStatsCollector stats_laplacian_score("GyroTracker keypoint score");
     stats_laplacian_score.AddSample(keypoint_score);
@@ -119,17 +122,21 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
     }
   }
 
+  VLOG(4) << "Added " << candidates.size() << " to the list of candidates for new born tracks.";
+
   std::sort(candidates.begin(), candidates.end(),
-            [](const std::pair<int, float> & lhs, const std::pair<int, float> & rhs) {
-              return lhs.second < rhs.second;
+            [](const MatchCandidateScore& lhs, const MatchCandidateScore& rhs) {
+              return lhs.score_ < rhs.score_;
             });
 
   // Unconditionally push the first very strong points.
+  int num_very_strong_candidates_pushed = 0;
   int candidate_idx = 0;
-  for (; candidate_idx < std::min<int>(kNumberOfKeyPointsUseUnconditional, candidates.size());
-      ++candidate_idx) {
-    int match_idx = candidates[candidate_idx].first;
-    int index_in_curr = matches_prev_current[match_idx].second;
+  int num_very_strong_candidates_to_push =
+      std::min<int>(kNumberOfKeyPointsUseUnconditional, candidates.size());
+  for (; candidate_idx < num_very_strong_candidates_to_push; ++candidate_idx) {
+    int match_idx = candidates[candidate_idx].match_index_;
+    int index_in_curr = matches_prev_current[match_idx].index_current_frame_;
     const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint = current_frame.getKeypointMeasurement(
         index_in_curr);
     const double& keypoint_score = current_frame.getKeypointScore(index_in_curr);
@@ -143,18 +150,22 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
     int bin_index = compute_bin_index(keypoint);
     buckets[bin_index].push_back(0);
     candidates_new_tracks.push_back(matches_prev_current[match_idx]);
+    ++num_very_strong_candidates_pushed;
     aslam::statistics::DebugStatsCollector stats_unconditionally(
         "GyroTracker Unconditionally accepted");
     stats_unconditionally.AddSample(keypoint_score);
   }
 
-  int bucket_too_full = 0;
+  VLOG(4) << "Added " << num_very_strong_candidates_pushed << " very strong candidates.";
+
+  int bucket_full = 0;  // todo(schneith): this seems unused. remove?
+  int num_strong_candidates_pushed = 0;
   // Now push as many strong points as there is space in the buckets.
   int num_pts_per_bucket = kNumberOfKeyPointsUseStrong / buckets.size();
-  for (; candidate_idx < std::min<int>(kNumberOfKeyPointsUseStrong, candidates.size());
-      ++candidate_idx) {
-    int match_idx = candidates[candidate_idx].first;
-    int index_in_curr = matches_prev_current[match_idx].second;
+  int num_strong_candiates_to_push = std::min<int>(kNumberOfKeyPointsUseStrong, candidates.size());
+  for (; candidate_idx < num_strong_candiates_to_push; ++candidate_idx) {
+    int match_idx = candidates[candidate_idx].match_index_;
+    int index_in_curr = matches_prev_current[match_idx].index_current_frame_;
     const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint = current_frame.getKeypointMeasurement(
         index_in_curr);
     const double& keypoint_score = current_frame.getKeypointScore(index_in_curr);
@@ -169,19 +180,22 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
     if (static_cast<int>(buckets[bin_index].size()) < num_pts_per_bucket) {
       buckets[bin_index].push_back(0);
       candidates_new_tracks.push_back(matches_prev_current[match_idx]);
+      ++num_strong_candidates_pushed;
       aslam::statistics::DebugStatsCollector stats_strong_acc("GyroTracker Strong accepted");
       stats_strong_acc.AddSample(keypoint_score);
     } else {
-      ++bucket_too_full;
-      aslam::statistics::DebugStatsCollector stats_bucket_too_full("GyroTracker Bucket too full");
+      ++bucket_full;
+      aslam::statistics::DebugStatsCollector stats_bucket_too_full("GyroTracker Bucket full");
       stats_bucket_too_full.AddSample(keypoint_score);
     }
   }
 
+  VLOG(4) << "Added " << num_strong_candidates_pushed << " strong candidates.";
+
   // Assign new Id's to all candidates that are not continued tracks.
   aslam::statistics::DebugStatsCollector stats_track_length("GyroTracker Track lengths");
   for (size_t i = 0; i < candidates_new_tracks.size(); ++i) {
-    int index_in_curr = candidates_new_tracks[i].second;
+    int index_in_curr = candidates_new_tracks[i].index_current_frame_;
     if (current_track_ids(index_in_curr) == -1) {
       current_track_ids(index_in_curr) = ++current_track_id_;
       current_track_lengths_[index_in_curr] = 1;
@@ -203,7 +217,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
                                 const VisualFrame& current_frame,
                                 const VisualFrame& previous_frame,
-                                std::vector<std::pair<int, int> >* matches_prev_current) const {
+                                std::vector<FeatureMatch>* matches_prev_current) const {
   CHECK_NOTNULL(matches_prev_current);
   matches_prev_current->clear();
 
