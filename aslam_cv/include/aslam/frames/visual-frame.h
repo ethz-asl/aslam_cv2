@@ -46,7 +46,6 @@ class VisualFrame  {
   ///        has num_bytes_per_descriptor rows and num_descriptors columns.
   typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
   typedef Eigen::VectorXd KeypointScoresT;
-  typedef Eigen::VectorXi TrackIdsT;
 
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualFrame);
@@ -111,7 +110,7 @@ class VisualFrame  {
   const DescriptorsT& getDescriptors() const;
 
   /// \brief The track ids stored in this frame.
-  const TrackIdsT& getTrackIds() const;
+  const Eigen::VectorXi& getTrackIds() const;
 
   /// \brief The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
@@ -140,7 +139,7 @@ class VisualFrame  {
   DescriptorsT* getDescriptorsMutable();
 
   /// \brief A pointer to the track ids, can be used to swap in new data.
-  TrackIdsT* getTrackIdsMutable();
+  Eigen::VectorXi* getTrackIdsMutable();
 
   /// \brief A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
@@ -197,7 +196,7 @@ class VisualFrame  {
   void setDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
 
   /// \brief Replace (copy) the internal track ids by the passed ones.
-  void setTrackIds(const TrackIdsT& track_ids);
+  void setTrackIds(const Eigen::VectorXi& track_ids);
 
   /// \brief Replace (copy) the internal raw image by the passed ones.
   ///        This is a shallow copy by default. Please clone the image if it
