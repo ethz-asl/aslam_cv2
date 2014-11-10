@@ -5,7 +5,6 @@
 
 namespace aslam {
 
-// TODO(tcies) duplicate with map api unique id... what to do?
 #define ASLAM_UNIQUE_ID(IdType) \
 class IdType : public sm::HashId { \
  public: \
