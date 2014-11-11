@@ -100,11 +100,13 @@ class FeatureTracker {
   /// Track type for drawing.
   struct Track {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Track() : track_id(-1), length(0) {};
+    Track() : track_id(-1), length(0),
+              starting_point(Eigen::Vector2d::Zero()),
+              end_point(Eigen::Vector2d::Zero()) {};
     int track_id;
+    int length;
     Eigen::Vector2d starting_point;
     Eigen::Vector2d end_point;
-    int length;
   };
 
   /// The track ids drawn in the last update.
