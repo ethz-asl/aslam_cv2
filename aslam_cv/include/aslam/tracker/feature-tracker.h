@@ -95,6 +95,20 @@ class FeatureTracker {
 
   /// Track id provider
   unsigned int current_track_id_;
+
+ private:
+  /// Track type for drawing.
+  struct Track {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    Track() : track_id(-1), length(0) {};
+    int track_id;
+    Eigen::Vector2d starting_point;
+    Eigen::Vector2d end_point;
+    int length;
+  };
+
+  /// The track ids drawn in the last update.
+  std::map<int, Track> previous_drawn_tracks_;
 };
 
 } // namespace aslam
