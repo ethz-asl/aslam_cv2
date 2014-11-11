@@ -23,21 +23,10 @@ FeatureTracker::FeatureTracker(const aslam::Camera::ConstPtr& input_camera)
 
 void FeatureTracker::drawTracks(VisualFrame::Ptr current_frame_ptr,
                                 cv::Mat* track_image) {
-
-  CHECK_NOTNULL(current_frame_ptr.get());
+  CHECK(current_frame_ptr);
   CHECK_NOTNULL(track_image);
 
-  struct Track {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Track() : track_id(-1), length(0) {};
-    int track_id;
-    Eigen::Vector2d starting_point;
-    Eigen::Vector2d end_point;
-    int length;
-  };
-
-  static std::map<int, Track> previous_tracks;
-  const VisualFrame& current_frame = *current_frame_ptr;
+  VisualFrame& current_frame = *current_frame_ptr;
 
   // Create the image
   const cv::Mat& raw_image = current_frame.getRawImage();
@@ -56,15 +45,17 @@ void FeatureTracker::drawTracks(VisualFrame::Ptr current_frame_ptr,
 
       Track track;
       track.track_id = track_id;
-      track.end_point = current_frame.getKeypointMeasurement(i);
+      current_frame.toRawImageCoordinates(current_frame.getKeypointMeasurement(i),
+                                          &track.end_point);
 
-      if (previous_tracks.count(track_id) > 0) {
+      if (previous_drawn_tracks_.count(track_id) > 0) {
         // Continued track.
-        track.starting_point = previous_tracks[track_id].starting_point;
-        track.length = previous_tracks[track_id].length + 1;
+        track.starting_point = previous_drawn_tracks_[track_id].starting_point;
+        track.length = previous_drawn_tracks_[track_id].length + 1;
       } else {
         // New track.
         track.starting_point = track.end_point;
+        track.length = 1;
       }
       current_tracks.insert(std::pair<int, Track>(track_id, track));
     }
@@ -77,9 +68,9 @@ void FeatureTracker::drawTracks(VisualFrame::Ptr current_frame_ptr,
     cv::line(*track_image, cv::Point(track.starting_point[0], track.starting_point[1]),
         cv::Point(track.end_point[0], track.end_point[1]),
         CV_RGB(110, 255, 110));
-    cv::putText(*track_image, std::to_string(track.track_id),
+    cv::putText(*track_image, std::to_string(track.track_id) + " / " + std::to_string(track.length),
         cv::Point(track.end_point[0], track.end_point[1]),
-        cv::FONT_HERSHEY_SIMPLEX, 0.3, cv::Scalar(255, 255, 255));
+        cv::FONT_HERSHEY_SIMPLEX, 0.3, cv::Scalar(0, 0, 255));
   };
 
   for (auto current_track : current_tracks) {
@@ -87,7 +78,7 @@ void FeatureTracker::drawTracks(VisualFrame::Ptr current_frame_ptr,
   }
 
   // Swap the current and previous
-  previous_tracks.swap(current_tracks);
+  previous_drawn_tracks_.swap(current_tracks);
 }
 
 }  // namespace aslam
