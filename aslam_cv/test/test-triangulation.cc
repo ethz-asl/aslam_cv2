@@ -89,7 +89,7 @@ TEST(LinearTriangulateFromNViews, RandomPoses) {
 }
 
 TEST(LinearTriangulateFromNViews, TwoParallelRays) {
-  constexpr size_t kNumCameraPoses = 2;
+  constexpr size_t kNumCameraPoses = 3;
   aslam::TransformationVector T_W_C(kNumCameraPoses);
   aslam::Aligned<std::vector, Eigen::Vector3d>::type Ck_landmark(kNumCameraPoses);
   aslam::Aligned<std::vector, Eigen::Vector2d>::type keypoint_measurements(kNumCameraPoses);

@@ -48,8 +48,8 @@ inline bool linearTriangulateFromNViews(
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr = A.colPivHouseholderQr();
   static constexpr double kRankLossTolerance = 0.001;
   qr.setThreshold(kRankLossTolerance);
-  const size_t rank = qr.rank() - 3;
-  if (rank < 2) {
+  const size_t rank = qr.rank();
+  if ((rank - measurements.size()) < 3) {
     return false;
   }
 
