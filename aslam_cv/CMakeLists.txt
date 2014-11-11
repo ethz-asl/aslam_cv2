@@ -94,6 +94,11 @@ catkin_add_gtest(test_visual-frame
 )
 target_link_libraries(test_visual-frame ${PROJECT_NAME}) 
 
+catkin_add_gtest(test_visual-nframe
+    test/test-visual-nframe.cc
+)
+target_link_libraries(test_visual-nframe ${PROJECT_NAME}) 
+
 catkin_add_gtest(test_visual-npipeline
     test/test-visual-npipeline.cc
 )
