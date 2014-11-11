@@ -58,7 +58,7 @@ TEST_F(TriangulationTest, LinearTriangulateFromNViews) {
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(kGPoint, W_point, kDoubleTolerance));
 }
 
-TEST(GeometricVisionRotatedTwoViewParamTest, LinearTriangulateFromNViewsRandomPoses) {
+TEST(LinearTriangulateFromNViews, RandomPoses) {
   constexpr size_t kNumCameraPoses = 5;
 
   // Create a landmark.
@@ -70,13 +70,12 @@ TEST(GeometricVisionRotatedTwoViewParamTest, LinearTriangulateFromNViewsRandomPo
   constexpr double kRandomRotationAngleRad = 20 / 180.0 * M_PI;
 
   aslam::TransformationVector T_W_C(kNumCameraPoses);
-  aslam::Aligned<std::vector, Eigen::Vector3d>::type Ck_landmark(kNumCameraPoses);
   aslam::Aligned<std::vector, Eigen::Vector2d>::type keypoint_measurements(kNumCameraPoses);
 
   for (size_t pose_idx = 0; pose_idx < kNumCameraPoses; ++pose_idx) {
     T_W_C[pose_idx].setRandom(kRandomTranslationNorm, kRandomRotationAngleRad);
-    Ck_landmark[pose_idx] = T_W_C[pose_idx].inverted().transform(W_landmark);
-    keypoint_measurements[pose_idx] = Ck_landmark[pose_idx].head<2>() / Ck_landmark[pose_idx][2];
+    const Eigen::Vector3d Ck_landmark = T_W_C[pose_idx].inverted().transform(W_landmark);
+    keypoint_measurements[pose_idx] = Ck_landmark.head<2>() / Ck_landmark[2];
   }
 
   // Triangulate.
@@ -85,6 +84,93 @@ TEST(GeometricVisionRotatedTwoViewParamTest, LinearTriangulateFromNViewsRandomPo
                                                     aslam::Transformation(),
                                                     &W_landmark_triangulated);
 
+  EXPECT_TRUE(success);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(W_landmark, W_landmark_triangulated, 1e-10));
+}
+
+TEST(LinearTriangulateFromNViews, TwoParallelRays) {
+  constexpr size_t kNumCameraPoses = 3;
+  aslam::TransformationVector T_W_C(kNumCameraPoses);
+  aslam::Aligned<std::vector, Eigen::Vector3d>::type Ck_landmark(kNumCameraPoses);
+  aslam::Aligned<std::vector, Eigen::Vector2d>::type keypoint_measurements(kNumCameraPoses);
+
+  // Create a landmark.
+  const double depth = 5.0;
+  Eigen::Vector3d W_landmark(1.0, 1.0, depth);
+
+  for (size_t pose_idx = 0; pose_idx < kNumCameraPoses; ++pose_idx) {
+    T_W_C[pose_idx].setIdentity();
+    const Eigen::Vector3d Ck_landmark = T_W_C[pose_idx].inverted().transform(W_landmark);
+    keypoint_measurements[pose_idx] = Ck_landmark.head<2>() / Ck_landmark[2];
+  }
+
+  // Triangulate.
+  Eigen::Vector3d W_landmark_triangulated;
+  W_landmark_triangulated.setZero();
+  bool success = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
+                                                    aslam::Transformation(),
+                                                    &W_landmark_triangulated);
+  EXPECT_FALSE(success);
+}
+
+TEST(LinearTriangulateFromNViews, TwoNearParallelRays) {
+  constexpr size_t kNumCameraPoses = 2;
+  aslam::TransformationVector T_W_C(kNumCameraPoses);
+  aslam::Aligned<std::vector, Eigen::Vector3d>::type Ck_landmark(kNumCameraPoses);
+  aslam::Aligned<std::vector, Eigen::Vector2d>::type keypoint_measurements(kNumCameraPoses);
+
+  // Create a landmark.
+  const double depth = 5.0;
+  Eigen::Vector3d W_landmark(1.0, 1.0, depth);
+
+  // Create near parallel rays.
+  aslam::Transformation noise;
+  const double disparity_angle_rad = 0.1 / 180.0 * M_PI;
+  const double camrea_shift = std::atan(disparity_angle_rad) * depth;
+  noise.setRandom(camrea_shift, 0.0);
+  T_W_C[1] = T_W_C[1] * noise;
+
+  for (size_t pose_idx = 0; pose_idx < kNumCameraPoses; ++pose_idx) {
+    const Eigen::Vector3d Ck_landmark = T_W_C[pose_idx].inverted().transform(W_landmark);
+    keypoint_measurements[pose_idx] = Ck_landmark.head<2>() / Ck_landmark[2];
+  }
+
+  // Triangulate.
+  Eigen::Vector3d W_landmark_triangulated;
+  W_landmark_triangulated.setZero();
+  bool success = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
+                                                    aslam::Transformation(),
+                                                    &W_landmark_triangulated);
+  EXPECT_FALSE(success);
+}
+
+TEST(LinearTriangulateFromNViews, CombinedParallelAndGoodRays) {
+  constexpr size_t kNumCameraPoses = 3;
+  aslam::TransformationVector T_W_C(kNumCameraPoses);
+  aslam::Aligned<std::vector, Eigen::Vector3d>::type Ck_landmark(kNumCameraPoses);
+  aslam::Aligned<std::vector, Eigen::Vector2d>::type keypoint_measurements(kNumCameraPoses);
+  T_W_C[2].setRandom(0.5, 0.2);
+
+  // Create near parallel rays.
+  aslam::Transformation noise;
+  noise.setRandom(0.01, 0.1);
+  T_W_C[1] = T_W_C[1] * noise;
+
+  // Create a landmark.
+  const double depth = 5.0;
+  Eigen::Vector3d W_landmark(1.0, 1.0, depth);
+
+  for (size_t pose_idx = 0; pose_idx < kNumCameraPoses; ++pose_idx) {
+    const Eigen::Vector3d Ck_landmark = T_W_C[pose_idx].inverted().transform(W_landmark);
+    keypoint_measurements[pose_idx] = Ck_landmark.head<2>() / Ck_landmark[2];
+  }
+
+  // Triangulate.
+  Eigen::Vector3d W_landmark_triangulated;
+  W_landmark_triangulated.setZero();
+  bool success = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
+                                                    aslam::Transformation(),
+                                                    &W_landmark_triangulated);
   EXPECT_TRUE(success);
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(W_landmark, W_landmark_triangulated, 1e-10));
 }
