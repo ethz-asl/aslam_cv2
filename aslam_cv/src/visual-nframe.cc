@@ -44,6 +44,7 @@ void VisualNFrame::setNCameras(NCamera::Ptr ncameras) {
   CHECK_EQ(frames_.size(), cameraRig_->numCameras()) << "Number of cameras "
       << "in camera system does not match the current number of frames.";
 
+
   // Also assign the camera to the existing non-NULL frames.
   for (unsigned int i = 0; i < frames_.size(); ++i) {
     if (frames_[i] != nullptr) {
@@ -60,9 +61,9 @@ void VisualNFrame::setNCameras(NCamera::Ptr ncameras) {
           << " which is not matching the new camera "
           << cameraRig_->getCameraShared(i);
       frames_[i]->setCameraGeometry(cameraRig_->getCameraShared(i));
+      CHECK_EQ(frames_[i]->getCameraGeometry().get(),
+               cameraRig_->getCameraShared(i).get());
     }
-    CHECK_EQ(frames_[i]->getCameraGeometry().get(),
-             cameraRig_->getCameraShared(i).get());
   }
 }
 
