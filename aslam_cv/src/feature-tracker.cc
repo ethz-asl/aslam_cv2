@@ -23,7 +23,6 @@ FeatureTracker::FeatureTracker(const aslam::Camera::ConstPtr& input_camera)
 
 void FeatureTracker::drawTracks(VisualFrame::Ptr current_frame_ptr,
                                 cv::Mat* track_image) {
-
   CHECK(current_frame_ptr);
   CHECK_NOTNULL(track_image);
 
