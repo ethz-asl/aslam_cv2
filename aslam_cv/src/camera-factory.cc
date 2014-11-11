@@ -52,7 +52,7 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
                                                image_height, distortion));
       break;
     default:
-      LOG(FATAL) << "Unknown distortion model: "
+      LOG(FATAL) << "Unknown camera model: "
         << static_cast<std::underlying_type<Camera::Type>::type>(camera_type);
   }
 
