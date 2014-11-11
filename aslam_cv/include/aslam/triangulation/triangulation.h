@@ -33,19 +33,27 @@ inline bool linearTriangulateFromNViews(
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(rows, cols);
   Eigen::VectorXd b = Eigen::VectorXd::Zero(rows);
 
-  const Eigen::Matrix3d I_R_C = T_B_C.getRotationMatrix();
+  const Eigen::Matrix3d R_B_C = T_B_C.getRotationMatrix();
 
   // Fill in A and b.
   for (size_t i = 0; i < measurements.size(); ++i) {
     Eigen::Vector3d v(measurements[i](0), measurements[i](1), 1.);
-    Eigen::Matrix3d R_G_I = T_G_B[i].getRotationMatrix();
-    Eigen::Vector3d p_G_I = T_G_B[i].getPosition();
+    Eigen::Matrix3d R_G_B = T_G_B[i].getRotationMatrix();
+    const Eigen::Vector3d& G_p_B = T_G_B[i].getPosition();
     A.block<3, 3>(3 * i, 0) = Eigen::Matrix3d::Identity();
-    A.block<3, 1>(3 * i, 3 + i) = -R_G_I * I_R_C * v;
-    b.segment<3>(3 * i) = p_G_I + R_G_I * T_B_C.getPosition();
+    A.block<3, 1>(3 * i, 3 + i) = -R_G_B * R_B_C * v;
+    b.segment<3>(3 * i) = G_p_B + R_G_B * T_B_C.getPosition();
   }
 
-  *G_point = A.colPivHouseholderQr().solve(b).head<3>();
+  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr = A.colPivHouseholderQr();
+  static constexpr double kRankLossTolerance = 0.001;
+  qr.setThreshold(kRankLossTolerance);
+  const size_t rank = qr.rank();
+  if ((rank - measurements.size()) < 3) {
+    return false;
+  }
+
+  *G_point = qr.solve(b).head<3>();
   return true;
 }
 }  // namespace aslam
