@@ -105,6 +105,8 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
 
   /// \brief Compute the 3d bearing vector in euclidean coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
+  ///        The result might be in normalized image plane for some camera implementations but not
+  ///        for the general case.
   /// @param[in]  keypoint     Keypoint in image coordinates.
   /// @param[out] out_point_3d Bearing vector in euclidean coordinates
   virtual bool backProject3(const Eigen::Vector2d& keypoint,
