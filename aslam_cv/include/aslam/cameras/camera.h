@@ -254,8 +254,10 @@ class Camera {
 
   /// \brief Compute the 3d bearing vector in euclidean coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
+  ///        The result might be in normalized image plane for some camera implementations but not
+  ///        for the general case.
   /// @param[in]  keypoint     Keypoint in image coordinates.
-  /// @param[out] out_point_3d Bearing vector in euclidean coordinates (with z=1 -> non-normalized).
+  /// @param[out] out_point_3d Bearing vector in euclidean coordinates
   /// @return Was the projection successful?
   virtual bool backProject3(const Eigen::Vector2d& keypoint,
                             Eigen::Vector3d* out_point_3d) const = 0;
