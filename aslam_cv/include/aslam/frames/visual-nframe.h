@@ -112,6 +112,9 @@ class VisualNFrame {
   /// @returns -1 if the rig doesn't have a camera with this id
   size_t getCameraIndex(const CameraId& id) const;
 
+  /// \brief Get the min timestamp in nanoseconds over all frames.
+  int64_t getMinTimestampNanoseconds() const;
+
   /// \brief Binary equality.
   bool operator==(const VisualNFrame& other) const;
 

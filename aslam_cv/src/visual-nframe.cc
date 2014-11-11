@@ -134,6 +134,16 @@ bool VisualNFrame::isFrameNull(size_t frameIndex) const {
   return static_cast<bool>(frames_[frameIndex]);
 }
 
+int64_t VisualNFrame::getMinTimestampNanoseconds() const {
+  int64_t min_timestamp_nanoseconds = std::numeric_limits<int64_t>::max();
+  for (size_t camera_idx = 0; camera_idx < getNumCameras(); ++camera_idx) {
+    const int64_t timestamp_frame_nanoseconds = getFrame(camera_idx).getTimestampNanoseconds();
+    if (timestamp_frame_nanoseconds < min_timestamp_nanoseconds)
+      min_timestamp_nanoseconds = timestamp_frame_nanoseconds;
+  }
+  return min_timestamp_nanoseconds;
+}
+
 /// \brief binary equality
 bool VisualNFrame::operator==(const VisualNFrame& other) const {
   bool same = true;
