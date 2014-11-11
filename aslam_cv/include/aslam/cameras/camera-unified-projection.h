@@ -111,8 +111,10 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
   /// \brief Compute the 3d bearing vector in euclidean coordinates given a keypoint in
   ///        image coordinates. Uses the projection (& distortion) models.
+  ///        The result might be in normalized image plane for some camera implementations but not
+  ///        for the general case.
   /// @param[in]  keypoint     Keypoint in image coordinates.
-  /// @param[out] out_point_3d Bearing vector in euclidean coordinates (with z=1 -> non-normalized).
+  /// @param[out] out_point_3d Bearing vector in euclidean coordinates
   virtual bool backProject3(const Eigen::Vector2d& keypoint, Eigen::Vector3d* out_point_3d) const;
 
   /// \brief Checks the success of a projection operation and returns the result in a
