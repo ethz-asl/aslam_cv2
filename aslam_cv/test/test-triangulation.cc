@@ -119,14 +119,16 @@ TEST(LinearTriangulateFromNViews, TwoNearParallelRays) {
   aslam::Aligned<std::vector, Eigen::Vector3d>::type Ck_landmark(kNumCameraPoses);
   aslam::Aligned<std::vector, Eigen::Vector2d>::type keypoint_measurements(kNumCameraPoses);
 
-  // Create near parallel rays.
-  aslam::Transformation noise;
-  noise.setRandom(0.01, 0.1);
-  T_W_C[1] = T_W_C[1] * noise;
-
   // Create a landmark.
   const double depth = 5.0;
   Eigen::Vector3d W_landmark(1.0, 1.0, depth);
+
+  // Create near parallel rays.
+  aslam::Transformation noise;
+  const double disparity_angle_rad = 0.1 / 180.0 * M_PI;
+  const double camrea_shift = std::atan(disparity_angle_rad) * depth;
+  noise.setRandom(camrea_shift, 0.0);
+  T_W_C[1] = T_W_C[1] * noise;
 
   for (size_t pose_idx = 0; pose_idx < kNumCameraPoses; ++pose_idx) {
     const Eigen::Vector3d Ck_landmark = T_W_C[pose_idx].inverted().transform(W_landmark);
