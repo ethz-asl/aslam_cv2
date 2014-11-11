@@ -60,9 +60,9 @@ void VisualNFrame::setNCameras(NCamera::Ptr ncameras) {
           << " which is not matching the new camera "
           << cameraRig_->getCameraShared(i);
       frames_[i]->setCameraGeometry(cameraRig_->getCameraShared(i));
+      CHECK_EQ(frames_[i]->getCameraGeometry().get(),
+               cameraRig_->getCameraShared(i).get());
     }
-    CHECK_EQ(frames_[i]->getCameraGeometry().get(),
-             cameraRig_->getCameraShared(i).get());
   }
 }
 
