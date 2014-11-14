@@ -210,6 +210,4 @@ bool NCamera::operator==(const NCamera& other) const {
   return same;
 }
 
-
-
 }  // namespace aslam
