@@ -372,4 +372,18 @@ size_t VisualFrame::getDescriptorSizeBytes() const {
   return getDescriptors().rows() * sizeof(DescriptorsT::Scalar);
 }
 
+VisualFrame::Ptr createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camera,
+                                            int64_t timestamp_nanoseconds) {
+  aslam::VisualFrame::Ptr frame(new aslam::VisualFrame);
+  frame->setCameraGeometry(camera);
+  frame->setTimestampNanoseconds(timestamp_nanoseconds);
+  Eigen::Matrix2Xd keypoint_measurements = Eigen::Matrix2Xd::Zero(2, 0);
+  frame->swapKeypointMeasurements(&keypoint_measurements);
+  Eigen::VectorXd keypoint_uncertainties = Eigen::VectorXd::Zero(0);
+  frame->swapKeypointMeasurementUncertainties(&keypoint_uncertainties);
+  aslam::VisualFrame::DescriptorsT descriptors = aslam::VisualFrame::DescriptorsT::Zero(48, 0);
+  frame->swapDescriptors(&descriptors);
+  return frame;
+}
+
 }  // namespace aslam

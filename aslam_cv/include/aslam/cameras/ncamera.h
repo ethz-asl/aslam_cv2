@@ -137,6 +137,12 @@ public:
   /// \brief Create a test NCamera object for unit testing.
   static NCamera::Ptr createTestNCamera(size_t num_cameras);
 
+  /// \brief Creates an artificial 4-camera rig in a plane with a camera pointing in
+  /// each direction.
+  /// This is similar to the V-Charge or JanETH camera system.
+  static aslam::NCamera::Ptr createVChargeTestNCamera();
+
+
 private:
   /// \brief internal consistency checks and initialization
   void initInternal();
