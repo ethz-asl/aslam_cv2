@@ -188,9 +188,9 @@ void VisualNPipeline::waitForAllWorkToComplete() const {
   thread_pool_->waitForEmptyQueue();
 }
 
-VisualNPipeline::Ptr createTestVisualNPipeline(size_t num_cameras,
-                                               size_t num_threads,
-                                               int64_t timestamp_tolerance_ns) {
+VisualNPipeline::Ptr VisualNPipeline::createTestVisualNPipeline(size_t num_cameras,
+                                                                size_t num_threads,
+                                                                int64_t timestamp_tolerance_ns) {
   NCamera::Ptr ncamera = NCamera::createTestNCamera(num_cameras);
   CHECK_EQ(ncamera->numCameras(), num_cameras);
   const bool kCopyImages = false;
