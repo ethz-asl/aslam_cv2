@@ -7,10 +7,9 @@
 #include <aslam/frames/visual-frame.h>
 #include <aslam/frames/visual-nframe.h>
 #include <aslam/cameras/camera-pinhole.h>
-#include <aslam/cameras/ncamera-factory.h>
 
 TEST(NFrame, MinTimestamp) {
-  aslam::NCamera::Ptr ncamera = aslam::createPlanar4CameraRig();
+  aslam::NCamera::Ptr ncamera = aslam::NCamera::createSurroundViewTestNCamera();
   aslam::VisualFrame::Ptr frame_0(new aslam::VisualFrame);
   frame_0->setCameraGeometry(ncamera->getCameraShared(0));
   frame_0->setTimestampNanoseconds(123);

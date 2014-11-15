@@ -119,6 +119,18 @@ class VisualNPipeline {
   /// \brief Blocks until all waiting frames are processed.
   void waitForAllWorkToComplete() const;
 
+  /// \brief  Create a test visual npipeline.
+  ///
+  /// @param[in]  num_cameras   The number of cameras in the pipeline (determines the number of
+  ///                           frames).
+  /// @param[in]  num_threads   The number of threads used in the pipeline for processing the data.
+  /// @param[in]  timestamp_tolerance_ns  Timestamp tolerance for frames to be considered
+  ///                                     belonging together. [ns]
+  /// @return  Pointer to the visual npipeline.
+  static VisualNPipeline::Ptr createTestVisualNPipeline(size_t num_cameras,
+                                                        size_t num_threads,
+                                                        int64_t timestamp_tolerance_ns);
+
  private:
   /// \brief A local function to be passed to the thread pool.
   ///

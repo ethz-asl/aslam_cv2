@@ -2,9 +2,11 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncamera.h>
+#include <aslam/common/memory.h>
 #include <aslam/common/thread-pool.h>
 #include <aslam/frames/visual-nframe.h>
 #include <aslam/pipeline/visual-pipeline.h>
+#include <aslam/pipeline/visual-pipeline-null.h>
 #include <glog/logging.h>
 #include <opencv2/core/core.hpp>
 
@@ -184,5 +186,25 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
 
 void VisualNPipeline::waitForAllWorkToComplete() const {
   thread_pool_->waitForEmptyQueue();
+}
+
+VisualNPipeline::Ptr createTestVisualNPipeline(size_t num_cameras,
+                                               size_t num_threads,
+                                               int64_t timestamp_tolerance_ns) {
+  NCamera::Ptr ncamera = NCamera::createTestNCamera(num_cameras);
+  CHECK_EQ(ncamera->numCameras(), num_cameras);
+  const bool kCopyImages = false;
+  std::vector<VisualPipeline::Ptr> null_pipelines;
+  for (size_t frame_idx = 0; frame_idx < num_cameras; ++frame_idx) {
+    CHECK(ncamera->getCameraShared(frame_idx));
+    null_pipelines.push_back(
+       aslam::aligned_shared<NullVisualPipeline>(ncamera->getCameraShared(frame_idx), kCopyImages));
+  }
+  VisualNPipeline::Ptr npipeline = aslam::aligned_shared<VisualNPipeline>(num_threads,
+                                                                          null_pipelines,
+                                                                          ncamera,
+                                                                          ncamera,
+                                                                          timestamp_tolerance_ns);
+  return npipeline;
 }
 }  // namespace aslam

@@ -118,6 +118,13 @@ class VisualNFrame {
   /// \brief Binary equality.
   bool operator==(const VisualNFrame& other) const;
 
+  /// \brief Creates an empty visual nframe with the given ncamera system.
+  /// @param[in] ncamera                NCamera.
+  /// @param[in] timestamp_nanoseconds  Timestamp of the individual frames in the nframe. [ns]
+  /// @return Pointer to the created VisualNFrame.
+  static VisualNFrame::Ptr createEmptyTestVisualNFrame(const NCamera::Ptr& ncamera,
+                                                       int64_t timestamp_nanoseconds);
+
  private:
   /// \brief The unique frame id.
   NFramesId id_;
