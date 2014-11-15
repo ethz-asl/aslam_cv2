@@ -385,5 +385,4 @@ VisualFrame::Ptr createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camer
   frame->swapDescriptors(&descriptors);
   return frame;
 }
-
 }  // namespace aslam

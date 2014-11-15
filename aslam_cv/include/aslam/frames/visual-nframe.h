@@ -119,10 +119,9 @@ class VisualNFrame {
   bool operator==(const VisualNFrame& other) const;
 
   /// \brief Creates an empty visual nframe with the given ncamera system.
-  ///
-  /// @param[in] ncamera                ncamera, determining the number of empty frames.
-  /// @param[in] timestamp_nanoseconds  Timestamp in [nanoseconds] of the frames.
-  /// @param[return]  A pointer to the visual nframe.
+  /// @param[in] ncamera                NCamera.
+  /// @param[in] timestamp_nanoseconds  Timestamp of the individual frames in the nframe. [ns]
+  /// @return Pointer to the created VisualNFrame.
   static VisualNFrame::Ptr createEmptyTestVisualNFrame(const NCamera::Ptr& ncamera,
                                                        int64_t timestamp_nanoseconds);
 

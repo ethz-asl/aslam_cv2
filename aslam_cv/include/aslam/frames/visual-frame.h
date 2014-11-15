@@ -320,12 +320,11 @@ class VisualFrame  {
   /// \brief print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
 
-  /// \brief Creates an empty frame. The following channels are added withiout any data attached:
+  /// \brief Creates an empty frame. The following channels are added without any data attached:
   ///        {KeypointMeasurements, KeypointMeasurementUncertainties, Descriptors}
-  ///
   /// @param[in]  camera                  Camera which will be assigned to the frame.
-  /// @param[in]  timestamp_nanoseconds   Timestamp in [nanoseconds] of the frame.
-  /// @param[return]  returns a shared pointer to an empty frame.
+  /// @param[in]  timestamp_nanoseconds   Timestamp of the frame. [ns]
+  /// @return Pointer to the created frame.
   static VisualFrame::Ptr createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camera,
                                                      int64_t timestamp_nanoseconds);
  private:
