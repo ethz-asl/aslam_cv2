@@ -154,7 +154,7 @@ NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
   return aslam::NCamera::Ptr(new aslam::NCamera(rig_id, T_C_B_vector, cameras, label));
 }
 
-NCamera::Ptr NCamera::createVChargeTestNCamera() {
+NCamera::Ptr NCamera::createSurroundViewTestNCamera() {
   std::vector<aslam::Camera::Ptr> cameras;
   cameras.push_back(aslam::PinholeCamera::createTestCamera());
   cameras.push_back(aslam::PinholeCamera::createTestCamera());

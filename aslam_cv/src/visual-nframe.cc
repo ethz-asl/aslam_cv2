@@ -161,12 +161,11 @@ bool VisualNFrame::operator==(const VisualNFrame& other) const {
 
 VisualNFrame::Ptr VisualNFrame::createEmptyTestVisualNFrame(const NCamera::Ptr& ncamera,
                                                             int64_t timestamp_nanoseconds) {
-  CHECK_NOTNULL(ncamera.get());
+  CHECK(ncamera);
   const size_t kNumFrames = ncamera->getNumCameras();
   aslam::NFramesId id;
   id.randomize();
-  aslam::VisualNFrame::Ptr nframe = aslam::aligned_shared<aslam::VisualNFrame>(id, kNumFrames);
-  nframe->setNCameras(ncamera);
+  aslam::VisualNFrame::Ptr nframe = aslam::aligned_shared<aslam::VisualNFrame>(id, ncamera);
   for (size_t frame_idx = 0; frame_idx < kNumFrames; ++frame_idx) {
     aslam::VisualFrame::Ptr frame =
         VisualFrame::createEmptyTestFrame(ncamera->getCameraShared(frame_idx),
@@ -175,6 +174,5 @@ VisualNFrame::Ptr VisualNFrame::createEmptyTestVisualNFrame(const NCamera::Ptr& 
   }
  return nframe;
 }
-
 
 } // namespace aslam
