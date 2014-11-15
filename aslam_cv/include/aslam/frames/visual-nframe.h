@@ -10,7 +10,7 @@
 #include <Eigen/Dense>
 
 namespace aslam {
-
+class Camera;
 class NCamera;
 class VisualFrame;
 
@@ -70,7 +70,7 @@ class VisualNFrame {
   const NCamera& getNCamera() const;
   
   /// \brief Get the camera rig.
-  NCamera::Ptr getNCameraShared();
+  std::shared_ptr<NCamera> getNCameraShared();
 
   /// \brief Get the camera rig.
   std::shared_ptr<const NCamera> getNCameraShared() const;
