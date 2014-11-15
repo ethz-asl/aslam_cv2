@@ -43,7 +43,7 @@ public:
   /// at T_C_B[i] corresponds to the camera at cameras[i].
   ///
   /// @param id unique id for this camera rig
-  /// @param T_C_B a list of transformations that take poinst from B to Ci
+  /// @param T_C_B a list of transformations that take points from B to Ci
   /// @param cameras a list cameras
   /// @param label a human-readable name for this camera rig
   NCamera(const NCameraId& id,
@@ -136,6 +136,10 @@ public:
 
   /// \brief Create a test NCamera object for unit testing.
   static NCamera::Ptr createTestNCamera(size_t num_cameras);
+
+  /// \brief Creates an artificial 4-camera rig in a plane with a camera pointing in
+  /// each direction. (similar to the V-Charge or JanETH camera system)
+  static aslam::NCamera::Ptr createSurroundViewTestNCamera();
 
 private:
   /// \brief internal consistency checks and initialization
