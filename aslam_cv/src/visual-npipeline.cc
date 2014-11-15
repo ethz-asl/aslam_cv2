@@ -112,6 +112,7 @@ size_t VisualNPipeline::getNumFramesProcessing() const {
 
 void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
                            int64_t system_stamp, int64_t hardware_stamp) {
+  CHECK_LE(camera_index, pipelines_.size());
   std::shared_ptr<VisualFrame> frame;
   frame = pipelines_[camera_index]->processImage(image, system_stamp, hardware_stamp);
 
