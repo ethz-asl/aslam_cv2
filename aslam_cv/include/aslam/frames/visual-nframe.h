@@ -63,10 +63,10 @@ class VisualNFrame {
   const NCamera& getNCamera() const;
   
   /// \brief Get the camera rig.
-  NCamera::Ptr getNCamerasShared();
+  NCamera::Ptr getNCameraShared();
 
   /// \brief Get the camera rig.
-  std::shared_ptr<const NCamera> getNCamerasShared() const;
+  std::shared_ptr<const NCamera> getNCameraShared() const;
   
   /// \brief Set the camera rig.
   ///

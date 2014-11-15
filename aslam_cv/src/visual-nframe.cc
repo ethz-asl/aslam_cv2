@@ -33,11 +33,11 @@ const NCamera& VisualNFrame::getNCamera() const {
 }
 
 /// \brief get the camera rig
-NCamera::Ptr VisualNFrame::getNCamerasShared() {
+NCamera::Ptr VisualNFrame::getNCameraShared() {
   return cameraRig_;
 }
 
-NCamera::ConstPtr VisualNFrame::getNCamerasShared() const {
+NCamera::ConstPtr VisualNFrame::getNCameraShared() const {
   return cameraRig_;
 }
 
