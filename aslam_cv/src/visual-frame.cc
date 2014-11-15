@@ -372,8 +372,8 @@ size_t VisualFrame::getDescriptorSizeBytes() const {
   return getDescriptors().rows() * sizeof(DescriptorsT::Scalar);
 }
 
-VisualFrame::Ptr createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camera,
-                                            int64_t timestamp_nanoseconds) {
+VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camera,
+                                                         int64_t timestamp_nanoseconds) {
   aslam::VisualFrame::Ptr frame(new aslam::VisualFrame);
   frame->setCameraGeometry(camera);
   frame->setTimestampNanoseconds(timestamp_nanoseconds);

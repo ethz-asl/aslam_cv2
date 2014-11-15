@@ -2,9 +2,11 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncamera.h>
+#include <aslam/common/memory.h>
 #include <aslam/common/thread-pool.h>
 #include <aslam/frames/visual-nframe.h>
 #include <aslam/pipeline/visual-pipeline.h>
+#include <aslam/pipeline/visual-pipeline-null.h>
 #include <glog/logging.h>
 #include <opencv2/core/core.hpp>
 
@@ -193,7 +195,7 @@ VisualNPipeline::Ptr createTestVisualNPipeline(size_t num_cameras,
   const bool kCopyImages = false;
   std::vector<VisualPipeline::Ptr> null_pipelines;
   for (size_t frame_idx = 0; frame_idx < num_cameras; ++frame_idx) {
-    CHECK_NOTNULL(ncamera->getCameraShared(frame_idx).get());
+    CHECK(ncamera->getCameraShared(frame_idx));
     null_pipelines.push_back(
        aslam::aligned_shared<NullVisualPipeline>(ncamera->getCameraShared(frame_idx), kCopyImages));
   }

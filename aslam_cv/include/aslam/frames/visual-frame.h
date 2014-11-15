@@ -12,7 +12,6 @@
 #include <aslam/common/unique-id.h>
 #include <Eigen/Dense>
 
-
 namespace aslam {
 class Camera;
 
