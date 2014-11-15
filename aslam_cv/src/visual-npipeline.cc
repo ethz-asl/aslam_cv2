@@ -159,7 +159,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
     }
     // Now proc_it points to the correct place in the processing_ list and
     // the NFrame has been created if necessary.
-    VisualFrame::Ptr existing_frame = proc_it->second->getFrameMutable(camera_index);
+    VisualFrame::Ptr existing_frame = proc_it->second->getFrameShared(camera_index);
     if(existing_frame) {
       LOG(WARNING) << "Overwriting a frame at index " << camera_index << ":\n"
           << *existing_frame << "\nwith a new frame: "

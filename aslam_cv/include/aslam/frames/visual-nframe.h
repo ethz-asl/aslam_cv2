@@ -77,10 +77,13 @@ class VisualNFrame {
   bool isFrameNull(size_t frameIndex) const;
 
   /// \brief Get one frame.
-  const VisualFrame& getFrame(size_t frameIndex) const;
+  const VisualFrame& getFrame(size_t frame_index) const;
 
   /// \brief Get one frame, mutable.
-  VisualFrame::Ptr getFrameMutable(size_t frameIndex);
+  VisualFrame::Ptr getFrameShared(size_t frame_index);
+
+  /// \brief Get one frame.
+  VisualFrame::ConstPtr getFrameShared(size_t frame_index) const;
 
   /// \brief Set the frame at the index.
   ///

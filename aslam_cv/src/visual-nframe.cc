@@ -74,9 +74,15 @@ const VisualFrame& VisualNFrame::getFrame(size_t frameIndex) const {
 }
 
 /// \brief get one frame
-VisualFrame::Ptr VisualNFrame::getFrameMutable(size_t frameIndex) {
-  CHECK_LT(frameIndex, frames_.size());
-  return frames_[frameIndex];  
+VisualFrame::Ptr VisualNFrame::getFrameShared(size_t frame_index) {
+  CHECK_LT(frame_index, frames_.size());
+  return frames_[frame_index];
+}
+
+/// \brief get one frame
+VisualFrame::ConstPtr VisualNFrame::getFrameShared(size_t frame_index) const {
+  CHECK_LT(frame_index, frames_.size());
+  return frames_[frame_index];
 }
 
 /// \brief the number of frames
