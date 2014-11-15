@@ -67,11 +67,14 @@ class VisualNFrame {
   inline void setId(const aslam::NFramesId& n_frames_id) { id_ = n_frames_id; }
 
   /// \brief Get the camera rig.
-  const NCamera& getNCameras() const;
+  const NCamera& getNCamera() const;
+  
+  /// \brief Get the camera rig.
+  NCamera::Ptr getNCameraShared();
 
   /// \brief Get the camera rig.
-  std::shared_ptr<NCamera> getNCamerasMutable();
-
+  std::shared_ptr<const NCamera> getNCameraShared() const;
+  
   /// \brief Set the camera rig.
   ///
   /// This method fills in in multi-camera system information. It should be
@@ -122,7 +125,7 @@ class VisualNFrame {
   /// @returns -1 if the rig doesn't have a camera with this id
   size_t getCameraIndex(const CameraId& id) const;
 
-  /// \brief Get the min timestamp in nanoseconds over all frames.
+  /// \brief Get the min. timestamp over all frames in nanoseconds.
   int64_t getMinTimestampNanoseconds() const;
 
   /// \brief Binary equality.
