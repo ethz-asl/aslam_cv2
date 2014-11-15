@@ -33,12 +33,16 @@ VisualNFrame::VisualNFrame(std::shared_ptr<NCamera> ncamera)
   frames_.resize(ncamera->getNumCameras());
 }
 
-const NCamera& VisualNFrame::getNCameras() const {
+const NCamera& VisualNFrame::getNCamera() const {
   CHECK_NOTNULL(camera_rig_.get());
   return *camera_rig_;
 }
 
-NCamera::Ptr VisualNFrame::getNCamerasMutable() {
+NCamera::Ptr VisualNFrame::getNCameraShared() {
+  return camera_rig_;
+}
+
+NCamera::ConstPtr VisualNFrame::getNCameraShared() const {
   return camera_rig_;
 }
 
