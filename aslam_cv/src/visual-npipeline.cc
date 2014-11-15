@@ -170,7 +170,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
     // Check if all images have been received.
     bool all_received = true;
     for(size_t i = 0; i < proc_it->second->getNumFrames(); ++i) {
-      all_received &= proc_it->second->isFrameNull(i);
+      all_received &= proc_it->second->isFrameSet(i);
     }
 
     if(all_received) {

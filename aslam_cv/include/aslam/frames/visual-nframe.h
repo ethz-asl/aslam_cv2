@@ -83,8 +83,8 @@ class VisualNFrame {
   /// frames.
   void setNCameras(std::shared_ptr<NCamera> ncameras);
 
-  /// \brief Is the frame at this index null
-  bool isFrameNull(size_t frame_index) const;
+  /// \brief Is a frame set for this index.
+  bool isFrameSet(size_t frame_index) const;
 
   /// \brief Get one frame.
   const VisualFrame& getFrame(size_t frame_index) const;
