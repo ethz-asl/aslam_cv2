@@ -168,8 +168,8 @@ VisualNFrame::Ptr VisualNFrame::createEmptyTestVisualNFrame(const NCamera::Ptr& 
   aslam::VisualNFrame::Ptr nframe = aslam::aligned_shared<aslam::VisualNFrame>(id, ncamera);
   for (size_t frame_idx = 0; frame_idx < kNumFrames; ++frame_idx) {
     aslam::VisualFrame::Ptr frame =
-        VisualFrame::createEmptyTestFrame(ncamera->getCameraShared(frame_idx),
-                                          timestamp_nanoseconds);
+        VisualFrame::createEmptyTestVisualFrame(ncamera->getCameraShared(frame_idx),
+                                                timestamp_nanoseconds);
     nframe->setFrame(frame_idx, frame);
   }
  return nframe;
