@@ -132,7 +132,7 @@ void VisualNFrame::setFrame(size_t frame_index, VisualFrame::Ptr frame) {
   frames_[frame_index] = frame;
 }
 
-bool VisualNFrame::isFrameNull(size_t frame_index) const {
+bool VisualNFrame::isFrameSet(size_t frame_index) const {
   CHECK_LT(frame_index, frames_.size());
   return static_cast<bool>(frames_[frame_index]);
 }
