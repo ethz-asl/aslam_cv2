@@ -1,12 +1,11 @@
 #include <eigen-checks/gtest.h>
 #include <gtest/gtest.h>
 
+#include <aslam/cameras/ncamera.h>
 #include <aslam/common/entrypoint.h>
-#include <aslam/common/memory.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/frames/visual-nframe.h>
-#include <aslam/cameras/camera-pinhole.h>
 
 TEST(NFrame, MinTimestamp) {
   aslam::NCamera::Ptr ncamera = aslam::NCamera::createSurroundViewTestNCamera();
