@@ -27,13 +27,17 @@ VisualNFrame::VisualNFrame(std::shared_ptr<NCamera> ncameras)
 VisualNFrame::~VisualNFrame() { }
 
 /// \brief get the camera rig
-const NCamera& VisualNFrame::getNCameras() const {
+const NCamera& VisualNFrame::getNCamera() const {
   CHECK_NOTNULL(cameraRig_.get());
   return *cameraRig_;
 }
 
 /// \brief get the camera rig
-NCamera::Ptr VisualNFrame::getNCamerasMutable() {
+NCamera::Ptr VisualNFrame::getNCamerasShared() {
+  return cameraRig_;
+}
+
+NCamera::ConstPtr VisualNFrame::getNCamerasShared() const {
   return cameraRig_;
 }
 
