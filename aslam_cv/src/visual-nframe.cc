@@ -33,15 +33,11 @@ VisualNFrame::VisualNFrame(std::shared_ptr<NCamera> ncamera)
   frames_.resize(ncamera->getNumCameras());
 }
 
-VisualNFrame::~VisualNFrame() { }
-
-/// \brief get the camera rig
 const NCamera& VisualNFrame::getNCamera() const {
   CHECK_NOTNULL(camera_rig_.get());
   return *camera_rig_;
 }
 
-/// \brief get the camera rig
 NCamera::Ptr VisualNFrame::getNCameraShared() {
   return camera_rig_;
 }
