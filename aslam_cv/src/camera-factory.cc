@@ -6,6 +6,7 @@
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
+#include <aslam/common/yaml-serialization-eigen.h>
 
 namespace aslam {
 

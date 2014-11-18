@@ -256,7 +256,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
       return kNumOfParams;
   }
 
-  /// Function to check wheter the given intrinic parameters are valid for this model.
+  /// Function to check whether the given intrinic parameters are valid for this model.
   virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
 
   /// \brief Print the internal parameters of the camera in a human-readable form

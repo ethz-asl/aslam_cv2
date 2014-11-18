@@ -12,6 +12,7 @@ cs_add_library(${PROJECT_NAME}
                                src/camera-factory.cc
                                src/camera-pinhole.cc
                                src/camera-unified-projection.cc
+                               src/camera-yaml-serialization.cc
                                src/channel-serialization.cc
                                src/distortion.cc
                                src/distortion-equidistant.cc
@@ -97,6 +98,11 @@ catkin_add_gtest(test_visual-npipeline
     test/test-visual-npipeline.cc
 )
 target_link_libraries(test_visual-npipeline ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_eigen-yaml-serialization
+    test/test-eigen-yaml-serialization.cc
+)
+target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME}) 
 
 ##########
 # EXPORT #
