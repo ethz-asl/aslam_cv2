@@ -2,11 +2,13 @@
 #include <eigen-checks/gtest.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <typeinfo>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
+#include <aslam/cameras/camera-yaml-serialization.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
@@ -14,6 +16,7 @@
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
 #include <aslam/common/numdiff-jacobian-tester.h>
+#include <aslam/common/yaml-serialization.h>
 
 ///////////////////////////////////////////////
 // Types to test
@@ -459,6 +462,115 @@ TEST(CameraComparison, TestEquality) {
   EXPECT_FALSE(*pinhole_A == *pinhole_B);  // Different intrinsics.
   EXPECT_FALSE(*pinhole_A == *pinhole_C);  // Different distortion coeffs.
   EXPECT_FALSE(*pinhole_C == *pinhole_D);  // Different intrinsics and distortion coeffs.
+}
+
+TEST(TestCameraFactory, testEmptyYaml) {
+  YAML::Node node = YAML::Load("{}");
+  aslam::Camera::Ptr camera;
+  camera = node.as<aslam::Camera::Ptr>();
+  EXPECT_EQ(camera, nullptr);
+}
+
+TEST(TestCameraFactory, testNoDistortionYaml) {
+  YAML::Node node = YAML::Load("{type: pinhole, intrinsics: {rows: 4, cols: 1, data: [100,110,320,240]}, image_height: 480, image_width: 640}");
+  aslam::Camera::Ptr camera;
+  camera = node.as<aslam::Camera::Ptr>();
+  EXPECT_TRUE(camera.get() != nullptr);
+  EXPECT_EQ(typeid(*camera.get()), typeid(aslam::PinholeCamera));
+  aslam::PinholeCamera::Ptr pincam = std::dynamic_pointer_cast<aslam::PinholeCamera>(camera);
+  EXPECT_EQ(100, pincam->fu());
+  EXPECT_EQ(110, pincam->fv());
+  EXPECT_EQ(320, pincam->cu());
+  EXPECT_EQ(240, pincam->cv());
+  EXPECT_EQ(480u, pincam->imageHeight());
+  EXPECT_EQ(640u, pincam->imageWidth());
+  EXPECT_FALSE(pincam->getId().isValid());
+  EXPECT_EQ(0u, pincam->getLineDelayNanoSeconds());
+  EXPECT_EQ(pincam->getDistortion(), nullptr);
+}
+
+TEST(TestCameraFactory, testBadIntrinsics1) {
+  // Data size doesn't match the rows/cols
+  YAML::Node node = YAML::Load("{type: pinhole, intrinsics: {rows: 4, cols: 1, data: [100,110,320]}, image_height: 480, image_width: 640}");
+  aslam::Camera::Ptr camera;
+  camera = node.as<aslam::Camera::Ptr>();
+  EXPECT_EQ(camera, nullptr);
+}
+
+TEST(TestCameraFactory, testBadIntrinsics2) {
+  // Intrinsics size doesn't match the required size.
+  YAML::Node node = YAML::Load("{type: pinhole, intrinsics: {rows: 3, cols: 1, data: [100,110,320]}, image_height: 480, image_width: 640}");
+  aslam::Camera::Ptr camera;
+  camera = node.as<aslam::Camera::Ptr>();
+  EXPECT_EQ(camera, nullptr);
+}
+
+
+
+///////////////////////////////////////////////
+// Types to test
+///////////////////////////////////////////////
+using testing::Types;
+
+
+template<typename Type1, typename Type2>
+struct TypePair {
+  typedef Type1 Camera;
+  typedef Type2 Distortion;
+};
+typedef Types<TypePair<aslam::PinholeCamera, aslam::RadTanDistortion>,
+              TypePair<aslam::UnifiedProjectionCamera, aslam::RadTanDistortion>,
+              TypePair<aslam::PinholeCamera, aslam::EquidistantDistortion>,
+              TypePair<aslam::UnifiedProjectionCamera, aslam::EquidistantDistortion>,
+              TypePair<aslam::PinholeCamera, aslam::FisheyeDistortion>,
+              TypePair<aslam::UnifiedProjectionCamera, aslam::FisheyeDistortion>> CameraPlusDistortion;
+
+///////////////////////////////////////////////
+// Test fixture
+///////////////////////////////////////////////
+template <class _CameraType>
+class TestYamlNoDistortion : public testing::Test {
+ public:
+  typedef _CameraType CameraType;
+
+  protected:
+  TestYamlNoDistortion() : camera_(CameraType::createTestCamera() ) {};
+    virtual ~TestYamlNoDistortion() {};
+    typename aslam::Camera::Ptr camera_;
+};
+
+template <class CameraDistortion>
+class TestYaml : public testing::Test {
+ public:
+  typedef typename CameraDistortion::Camera CameraType;
+  typedef typename CameraDistortion::Distortion DistortionType;
+
+  protected:
+  TestYaml() : camera_(CameraType::template createTestCamera<DistortionType>()) {};
+    virtual ~TestYaml() {};
+    typename aslam::Camera::Ptr camera_;
+};
+
+TYPED_TEST_CASE(TestYamlNoDistortion, Implementations);
+
+TYPED_TEST_CASE(TestYaml, CameraPlusDistortion);
+
+TYPED_TEST(TestYamlNoDistortion, TestSaveAndLoad){
+  ASSERT_NE(this->camera_, nullptr);
+  YAML::Save(this->camera_, "test.yaml");
+  aslam::Camera::Ptr camera;
+  YAML::Load("test.yaml", &camera);
+  ASSERT_NE(camera, nullptr);
+  EXPECT_TRUE(*camera.get() == *this->camera_.get());
+}
+
+TYPED_TEST(TestYaml, TestSaveAndLoad){
+  ASSERT_NE(this->camera_, nullptr);
+  YAML::Save(this->camera_, "test.yaml");
+  aslam::Camera::Ptr camera;
+  YAML::Load("test.yaml", &camera);
+  ASSERT_NE(camera, nullptr);
+  EXPECT_TRUE(*camera.get() == *this->camera_.get());
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
