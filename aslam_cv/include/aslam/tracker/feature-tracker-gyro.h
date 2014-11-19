@@ -69,7 +69,7 @@ class GyroTracker : public FeatureTracker {
                      std::vector<FeatureMatch>* matches_prev_current) const;
 
   /// The frame processed in the last update.
-  std::shared_ptr<aslam::VisualFrame> previous_frame_ptr_;
+  std::shared_ptr<const aslam::VisualFrame> previous_frame_ptr_;
 
   /// Track length corresponding to the feature vector in the current frame.
   std::vector<int> current_track_lengths_;
