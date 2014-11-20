@@ -77,14 +77,13 @@ class FeatureTracker {
                              const Eigen::Matrix3d& C_current_prev,
                              cv::Mat* track_image) {
     addFrame(current_frame_ptr, C_current_prev);
-    drawTracks(current_frame_ptr, track_image);
+    drawTracks(*current_frame_ptr.get(), track_image);
   }
 
   /// \brief Draw feature tracks to an image.
-  /// @param[in] current_frame_ptr Shared pointer to the frame to process. The frame needs to
-  ///                              contain a TrackId channel.
-  /// @param[out] track_image      Tracks are drawn into this image.
-  void drawTracks(std::shared_ptr<VisualFrame> current_frame_ptr, cv::Mat* track_image);
+  /// @param[in] current_frame  The frame to process. The frame needs to contain a TrackId channel.
+  /// @param[out] track_image   Tracks are drawn into this image.
+  void drawTracks(const VisualFrame& current_frame, cv::Mat* track_image);
 
   /// Return the used camera model.
   const aslam::Camera& getCamera() const { return *CHECK_NOTNULL(camera_.get()); };
