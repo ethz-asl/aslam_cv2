@@ -21,12 +21,8 @@ FeatureTracker::FeatureTracker(const aslam::Camera::ConstPtr& input_camera)
   CHECK(camera_);
 }
 
-void FeatureTracker::drawTracks(VisualFrame::Ptr current_frame_ptr,
-                                cv::Mat* track_image) {
-  CHECK(current_frame_ptr);
+void FeatureTracker::drawTracks(const VisualFrame& current_frame, cv::Mat* track_image) {
   CHECK_NOTNULL(track_image);
-
-  VisualFrame& current_frame = *current_frame_ptr;
 
   // Create the image
   const cv::Mat& raw_image = current_frame.getRawImage();

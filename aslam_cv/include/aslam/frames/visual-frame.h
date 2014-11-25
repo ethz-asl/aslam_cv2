@@ -262,6 +262,13 @@ class VisualFrame  {
   /// \brief Set the camera geometry.
   void setRawCameraGeometry(const Camera::ConstPtr& camera);
 
+  /// \brief Return keypoint measurement pointed to by index in raw image coordinates.
+  /// \param[in] keypoint_idx              Index of the keypoint.
+  /// \param[out] keypoint_raw_coordinates The keypoint in raw image coordinates.
+  /// \return Was the projection successful?
+  aslam::ProjectionResult getKeypointInRawImageCoordinates(size_t keypoint_idx,
+      Eigen::Vector2d* keypoint_raw_coordinates) const;
+
   /// \brief Convert keypoint coordinates to raw image coordinates.
   ///
   /// \param[in] keypoint               The keypoint coordinates with respect to
@@ -271,7 +278,7 @@ class VisualFrame  {
   ///                                   camera calibration available from
   ///                                   getRawCameraGeometry().
   aslam::ProjectionResult toRawImageCoordinates(const Eigen::Vector2d& keypoint,
-                                                Eigen::Vector2d* out_image_coordinates);
+                                                Eigen::Vector2d* out_image_coordinates) const;
 
   /// \brief Convert keypoint coordinates to raw image coordinates.
   ///
@@ -284,7 +291,7 @@ class VisualFrame  {
   /// \param[out] results               One result for each keypoint.
   void toRawImageCoordinatesVectorized(const Eigen::Matrix2Xd& keypoints,
                                        Eigen::Matrix2Xd* out_image_coordinates,
-                                       std::vector<aslam::ProjectionResult>* results);
+                                       std::vector<aslam::ProjectionResult>* results) const;
 
   /// \brief get the frame id.
   inline const aslam::FrameId& getId() const { return id_; }
