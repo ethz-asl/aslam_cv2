@@ -5,9 +5,9 @@
 
 namespace aslam {
 VisualFrame::VisualFrame()
-    : timestamp_nanoseconds_(getInvalidTime()),
-      hardware_timestamp_(getInvalidTime()),
-      system_timestamp_nanoseconds_(getInvalidTime()) {}
+    : timestamp_nanoseconds_(time::getInvalidTime()),
+      hardware_timestamp_(time::getInvalidTime()),
+      system_timestamp_nanoseconds_(time::getInvalidTime()) {}
 
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
