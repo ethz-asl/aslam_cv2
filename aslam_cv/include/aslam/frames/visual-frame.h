@@ -93,6 +93,11 @@ class VisualFrame  {
   /// \brief The keypoint measurements stored in a frame.
   const Eigen::Matrix2Xd& getKeypointMeasurements() const;
 
+  /// \brief Get the number of keypoints measurements stored in this frame.
+  inline int getNumKeypointMeasurements() const {
+    return getKeypointMeasurements().cols();
+  }
+
   /// \brief The keypoint measurement uncertainties stored in a frame.
   const Eigen::VectorXd& getKeypointMeasurementUncertainties() const;
 
