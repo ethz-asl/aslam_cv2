@@ -8,7 +8,7 @@ TEST(TestTime, TestCompileTimeConverters) {
   EXPECT_EQ(10e9, aslam::time::seconds(10));
   EXPECT_EQ(10e6, aslam::time::milliseconds(10));
   EXPECT_EQ(10e3, aslam::time::microseconds(10));
-  EXPECT_EQ(10u, aslam::time::nanoseconds(10));
+  EXPECT_EQ(10, aslam::time::nanoseconds(10));
 }
 
 TEST(TestTime, TestToTimestampConverters) {
