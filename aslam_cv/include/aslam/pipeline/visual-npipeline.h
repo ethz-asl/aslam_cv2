@@ -147,8 +147,8 @@ class VisualNPipeline {
   mutable std::mutex mutex_;
 
   /// \brief Condition variable signaling a new VisualNFrame for processing.
-  std::condition_variable cv_new_frame;
-  bool new_frame;
+  std::condition_variable cv_new_frame_;
+  bool new_frame_;
 
   /// \brief The frames that are in progress.
   std::map<int64_t, std::shared_ptr<VisualNFrame>> processing_;

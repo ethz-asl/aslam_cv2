@@ -78,6 +78,11 @@ catkin_add_gtest(test_thread-pool
 )
 target_link_libraries(test_thread-pool ${PROJECT_NAME}) 
 
+catkin_add_gtest(test_time
+    test/test-time.cc
+)
+target_link_libraries(test_time ${PROJECT_NAME}) 
+
 catkin_add_gtest(test_undistorters
     test/test-undistorters.cc
 )
