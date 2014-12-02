@@ -32,13 +32,13 @@ constexpr auto milliseconds = internal::convertToNanosecondsCompileTime<internal
 constexpr auto microseconds = internal::convertToNanosecondsCompileTime<internal::micro>;
 constexpr auto nanoseconds = internal::convertToNanosecondsCompileTime<internal::nano>;
 
-
 /// Convert a timestamp (in nanoseconds) to other time units at runtime.
 /// Example: double milliseconds = aslam::time::to_milliseconds(int64_t timestamp_nanoseconds);
 #define FUNC_ALIAS __attribute__((unused)) static auto
 FUNC_ALIAS to_seconds = internal::convertFromNanoseconds<internal::sec>;
 FUNC_ALIAS to_milliseconds = internal::convertFromNanoseconds<internal::milli>;
 FUNC_ALIAS to_microseconds = internal::convertFromNanoseconds<internal::micro>;
+
 /// Convert other time units to a timestamp (in nanoseconds) at runtime.
 /// Example: int64_t timestamp_nanoseconds = aslam::time::from_seconds(double seconds);
 FUNC_ALIAS from_seconds = internal::convertToNanoseconds<internal::sec>;
