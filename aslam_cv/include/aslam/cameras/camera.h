@@ -168,7 +168,8 @@ class Camera {
   id_(other.id_),
   image_width_(other.image_width_),
   image_height_(other.image_height_),
-  intrinsics_(other.intrinsics_) {
+  intrinsics_(other.intrinsics_),
+  camera_type_(other.camera_type_) {
     // Clone distortion if model is set.
     if (other.distortion_)
       distortion_.reset(other.distortion_->clone());
