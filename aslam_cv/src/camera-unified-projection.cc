@@ -286,7 +286,6 @@ Eigen::Vector2d UnifiedProjectionCamera::createRandomKeypoint() const {
   int max_tries = 10;
   while ( !(isLiftable(u) && isKeypointVisible(u)) ) {
     u.setRandom();
-    u = u - Eigen::Vector2d(0.5, 0.5);
     u /= u.norm();
     u *= ((double) rand() / (double) RAND_MAX) * one_over_xixi_m_1;
 

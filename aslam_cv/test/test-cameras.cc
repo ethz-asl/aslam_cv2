@@ -65,7 +65,7 @@ struct Point3dFunctor : public aslam::common::NumDiffFunctor<2, 3> {
 
 TYPED_TEST(TestCameras, JacobianWrtPoint3d) {
   for (int i=0; i<10; i++) {
-    Eigen::Vector3d x = this->camera_->createRandomVisiblePoint(1);
+    Eigen::Vector3d x = this->camera_->createRandomVisiblePoint(10);
     TEST_JACOBIAN_FINITE_DIFFERENCE(Point3dFunctor, x, 1e-6, 1e-5, this->camera_);
   }
 }
@@ -120,7 +120,7 @@ TYPED_TEST(TestCameras, JacobianWrtIntrinsics) {
   Eigen::VectorXd intrinsics = this->camera_->getParameters();
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(IntrinsicJacobianFunctor<TypeParam::parameterCount()>,
-                                  intrinsics, 1e-3, 1e-2, this->camera_, point_3d);
+                                  intrinsics, 1e-12, 1e-2, this->camera_, point_3d);
 }
 
 /// Wrapper that brings the distortion function to the form needed by the differentiator.
@@ -274,6 +274,56 @@ TYPED_TEST(TestCameras, TestClone) {
   EXPECT_TRUE(this->camera_->getDistortion() != cam1->getDistortion());
   // Check that the copy is the same as the original.
   EXPECT_TRUE(*(this->camera_->getDistortion()) == *cam1->getDistortion());
+}
+
+
+
+TYPED_TEST(TestCameras, invalidMaskTest) {
+  // Empty mask
+  cv::Mat mask;
+  EXPECT_DEATH(this->camera_->setMask(mask), "^");
+
+  // Wrong type
+  mask = cv::Mat::zeros(cv::Size2i(this->camera_->imageWidth(), this->camera_->imageHeight()), CV_8UC2);
+  EXPECT_DEATH(this->camera_->setMask(mask), "^");
+
+  // Wrong size
+  mask = cv::Mat::zeros(cv::Size2i(this->camera_->imageWidth() - 1, this->camera_->imageHeight()), CV_8UC1);
+  EXPECT_DEATH(this->camera_->setMask(mask), "^");
+}
+
+TYPED_TEST(TestCameras, validMaskTest) {
+  cv::Mat mask = cv::Mat::ones(cv::Size2i(this->camera_->imageWidth(), this->camera_->imageHeight()), CV_8UC1);
+  mask.at<uint8_t>(20, 10) = 0;
+
+  std::cout << "Image size: " << this->camera_->imageWidth() << ", " << this->camera_->imageHeight() << std::endl;
+
+  EXPECT_FALSE(this->camera_->hasMask());
+  this->camera_->setMask(mask);
+  EXPECT_TRUE(this->camera_->hasMask());
+
+  typedef Eigen::Vector2d Vec2;
+  EXPECT_TRUE(this->camera_->isMasked(Vec2(-1.,-1.)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(0.,0.)));
+  EXPECT_TRUE(this->camera_->isMasked(Vec2(this->camera_->imageWidth(),
+                                           this->camera_->imageHeight())));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(this->camera_->imageWidth() - 1.1,
+                                            this->camera_->imageHeight() - 1.1)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(0.0,
+                                            this->camera_->imageHeight() - 1.1)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(this->camera_->imageWidth() - 1.1,
+                                            0.0)));
+
+  // Check the valid/invalid.
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(2.0, 2.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(9.0, 19.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(10.0, 19.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(10.0, 21.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(11.0, 21.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(9.0, 21.0)));
+  EXPECT_TRUE(this->camera_->isMasked(Vec2(10.0, 20.0)));
+  EXPECT_TRUE(this->camera_->isMasked(Vec2(10.5, 20.5)));
+
 }
 
 ///////////////////////////////////////////////
