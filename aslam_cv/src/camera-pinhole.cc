@@ -142,19 +142,29 @@ const ProjectionResult PinholeCamera::project3Functional(
 
   // Distort the point and get the Jacobian wrt. keypoint.
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
-  if (distortion_ && out_jacobian_point) {
-    // Distortion active and we want the Jacobian.
-    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                  out_keypoint,
-                                                  &J_distortion);
-  } else if (distortion_) {
-    // Distortion active but Jacobian NOT wanted.
-    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                  out_keypoint,
-                                                  nullptr);
+  if(distortion_) {
+    if(out_jacobian_distortion) {
+      // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
+      distortion_->distortParameterJacobian(distortion_coefficients_external,
+                                            *out_keypoint,
+                                            out_jacobian_distortion);
+      out_jacobian_distortion->row(0) *= fu;
+      out_jacobian_distortion->row(1) *= fv;
+    }
+
+    if(out_jacobian_point) {
+      // Distortion active and we want the Jacobian.
+      distortion_->distortUsingExternalCoefficients(distortion_coefficients,
+                                                    out_keypoint,
+                                                    &J_distortion);
+    } else {
+      // Distortion active but Jacobian NOT wanted.
+      distortion_->distortUsingExternalCoefficients(distortion_coefficients,
+                                                    out_keypoint,
+                                                    nullptr);
+    }
   }
 
-  // Calculate the Jacobian w.r.t to the 3d point, if requested.
   if(out_jacobian_point) {
     // Jacobian including distortion
     const double rz2 = rz * rz;
@@ -186,16 +196,6 @@ const ProjectionResult PinholeCamera::project3Functional(
                                   dvf_dfu, dvf_dfv, dvf_dcu, dvf_dcv;
   }
 
-  // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
-  if(distortion_ && out_jacobian_distortion) {
-    distortion_->distortParameterJacobian(distortion_coefficients_external,
-                                          *out_keypoint,
-                                          out_jacobian_distortion);
-
-    (*out_jacobian_distortion).row(0) *= fu;
-    (*out_jacobian_distortion).row(1) *= fv;
-  }
-
   // Normalized image plane to camera plane.
   (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
   (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
@@ -206,8 +206,13 @@ const ProjectionResult PinholeCamera::project3Functional(
 Eigen::Vector2d PinholeCamera::createRandomKeypoint() const {
   Eigen::Vector2d out;
   out.setRandom();
-  out(0) = std::abs(out(0)) * imageWidth();
-  out(1) = std::abs(out(1)) * imageHeight();
+  // Unit tests often fail when the point is near the border. Keep the point
+  // away from the border.
+  double border = std::min(imageWidth(), imageHeight()) * 0.1;
+
+  out(0) = border + std::abs(out(0)) * (imageWidth() - border * 2.0);
+  out(1) = border + std::abs(out(1)) * (imageHeight() - border * 2.0);
+
   return out;
 }
 

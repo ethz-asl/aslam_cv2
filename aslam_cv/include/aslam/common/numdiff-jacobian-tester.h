@@ -9,7 +9,7 @@ namespace aslam {
 namespace common {
 
 // Enable/disable debug outputs.
-#define NUMDIFF_DEBUG_OUTPUT false
+#define NUMDIFF_DEBUG_OUTPUT true
 
 /// \def TEST_JACOBIAN_FINITE_DIFFERENCE(FUNCTOR_TYPE, X, STEP, TOLERANCE, ...)
 ///  Test macro and numerical differentiator to unit test Jacobian implementations.
