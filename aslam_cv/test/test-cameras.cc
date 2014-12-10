@@ -138,7 +138,7 @@ TYPED_TEST(TestCameras, JacobianWrtIntrinsics) {
   Eigen::VectorXd intrinsics = this->camera_->getParameters();
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(IntrinsicJacobianFunctor<TypeParam::CameraType::parameterCount()>,
-                                  intrinsics, 1e-8, 1e-2, this->camera_, point_3d);
+                                  intrinsics, 1e-8, 1e-6, this->camera_, point_3d);
 }
 
 /// Wrapper that brings the distortion function to the form needed by the differentiator.
