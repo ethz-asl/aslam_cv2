@@ -191,7 +191,7 @@ void Camera::clearMask() {
   mask_ = cv::Mat();
 }
 
-bool Camera::hasMask() {
+bool Camera::hasMask() const {
   return !mask_.empty();
 }
 
