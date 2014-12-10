@@ -46,7 +46,8 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   // Check that the required data is available in the frame
   CHECK(current_frame.hasDescriptors());
-  CHECK_EQ(current_frame.getDescriptors().rows(), current_frame.getDescriptorSizeBytes());
+  CHECK_EQ(static_cast<size_t>(current_frame.getDescriptors().rows()),
+           current_frame.getDescriptorSizeBytes());
   CHECK_EQ(current_frame.getNumKeypointMeasurements(), current_frame.getDescriptors().cols());
 
   // Match the keypoints in the current frame to the previous one.
@@ -98,7 +99,8 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
     // Check if this is a continued track.
     if (track_id_in_previous_frame >= 0) {
       // Put the current keypoint into the bucket.
-      CHECK_LT(matches_prev_current[i].index_current_frame_, current_num_keypoints);
+      CHECK_LT(static_cast<size_t>(matches_prev_current[i].index_current_frame_),
+               current_num_keypoints);
       const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint = current_frame.getKeypointMeasurement(
           matches_prev_current[i].index_current_frame_);
       int bin_index = compute_bin_index(keypoint);
@@ -253,7 +255,7 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
     }
     corner_row_LUT.push_back(v);
   }
-  CHECK_EQ(static_cast<int>(corner_row_LUT.size()), image_height);
+  CHECK_EQ(corner_row_LUT.size(), image_height);
 
   // Undistort and predict previous keypoints.
   const int prev_num_pts =  previous_frame.getNumKeypointMeasurements();
@@ -280,7 +282,7 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
 
   // Distance function.
   const unsigned int descriptorSizeBytes = current_frame.getDescriptorSizeBytes();
-  CHECK_LE(descriptorSizeBytes * 8, 384);
+  CHECK_LE(384u, descriptorSizeBytes * 8);
   auto hammingDistance =
       [descriptorSizeBytes](const unsigned char* x, const unsigned char* y)->unsigned int {
         unsigned int distance = 0;
@@ -331,10 +333,10 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
     CHECK_GE(idxnearest[1], 0);
     CHECK_GE(idxnear[0], 0);
     CHECK_GE(idxnear[1], 0);
-    CHECK_LT(idxnearest[0], image_height);
-    CHECK_LT(idxnearest[1], image_height);
-    CHECK_LT(idxnear[0], image_height);
-    CHECK_LT(idxnear[1], image_height);
+    CHECK_LT(idxnearest[0], static_cast<int>(image_height));
+    CHECK_LT(idxnearest[1], static_cast<int>(image_height));
+    CHECK_LT(idxnear[0], static_cast<int>(image_height));
+    CHECK_LT(idxnear[1], static_cast<int>(image_height));
 
     int nearest_top = std::min<int>(idxnearest[0], corner_row_LUT.size() - 1);
     int nearest_bottom = std::min<int>(idxnearest[1] + 1, corner_row_LUT.size() - 1);

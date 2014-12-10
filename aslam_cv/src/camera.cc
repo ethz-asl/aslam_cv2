@@ -180,6 +180,25 @@ void Camera::backProject3Vectorized(const Eigen::Matrix2Xd& keypoints,
   }
 }
 
+void Camera::setMask(const cv::Mat& mask) {
+  CHECK_EQ(image_height_, static_cast<size_t>(mask.rows));
+  CHECK_EQ(image_width_, static_cast<size_t>(mask.cols));
+  CHECK_EQ(mask.type(), CV_8UC1);
+  mask_ = mask;
+}
+
+void Camera::clearMask() {
+  mask_ = cv::Mat();
+}
+
+bool Camera::hasMask() const {
+  return !mask_.empty();
+}
+
+const cv::Mat& Camera::getMask() const {
+  return mask_;
+}
+
 ProjectionResult::Status ProjectionResult::KEYPOINT_VISIBLE =
     ProjectionResult::Status::KEYPOINT_VISIBLE;
 ProjectionResult::Status ProjectionResult::KEYPOINT_OUTSIDE_IMAGE_BOX =
