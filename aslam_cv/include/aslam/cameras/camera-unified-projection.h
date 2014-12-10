@@ -18,10 +18,10 @@ class MappedUndistorter;
 ///  Intrinsic parameters ordering: xi, fu, fv, cu, cv
 ///
 ///  Reference: (1) C. Geyer and K. Daniilidis. A unifying theory for central panoramic systems
-///                 and practical implications. In ECCV, pages 445���461, 2000.
+///                 and practical implications. In ECCV, pages 445--461, 2000.
 ///                 (http://www.frc.ri.cmu.edu/users/cgeyer/papers/geyer_eccv00.pdf)
 ///             (2) Joao P. Barreto and Helder Araujo. Issues on the geometry of central
-///                 catadioptric image formation. In CVPR, volume 2, pages 422���427, 2001.
+///                 catadioptric image formation. In CVPR, volume 2, pages 422--427, 2001.
 ///                 (http://home.isr.uc.pt/~jpbar/Publication_Source/cvpr2001.pdf)
 class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectionCamera> {
   enum { kNumOfParams = 5 };

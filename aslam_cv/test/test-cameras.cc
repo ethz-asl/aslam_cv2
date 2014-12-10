@@ -233,7 +233,7 @@ TYPED_TEST(TestCameras, isVisible) {
 
 TYPED_TEST(TestCameras, isProjectable) {
   EXPECT_TRUE(this->camera_->isProjectable3(Eigen::Vector3d(0, 0, 1)));       // Center.
-  EXPECT_TRUE(this->camera_->isProjectable3(Eigen::Vector3d(5, -5, 30)));     // In front of cam.
+  EXPECT_TRUE(this->camera_->isProjectable3(Eigen::Vector3d(5, -5, 30)));     // In front of cam and visible.
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(5000, -5, 1)));  // In front of cam, outside range.
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(-10, -10, -10))); // Behind cam.
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(0, 0, -1)));     // Behind, center.
@@ -299,15 +299,15 @@ TYPED_TEST(TestCameras, TestClone) {
 
 
 TYPED_TEST(TestCameras, invalidMaskTest) {
-  // Empty mask
+  // Die on empty mask.
   cv::Mat mask;
   EXPECT_DEATH(this->camera_->setMask(mask), "^");
 
-  // Wrong type
+  // Die on wrong type.
   mask = cv::Mat::zeros(cv::Size2i(this->camera_->imageWidth(), this->camera_->imageHeight()), CV_8UC2);
   EXPECT_DEATH(this->camera_->setMask(mask), "^");
 
-  // Wrong size
+  // Die on wrong size.
   mask = cv::Mat::zeros(cv::Size2i(this->camera_->imageWidth() - 1, this->camera_->imageHeight()), CV_8UC1);
   EXPECT_DEATH(this->camera_->setMask(mask), "^");
 }
@@ -341,7 +341,6 @@ TYPED_TEST(TestCameras, validMaskTest) {
   EXPECT_FALSE(this->camera_->isMasked(Vec2(9.0, 21.0)));
   EXPECT_TRUE(this->camera_->isMasked(Vec2(10.0, 20.0)));
   EXPECT_TRUE(this->camera_->isMasked(Vec2(10.5, 20.5)));
-
 }
 
 ///////////////////////////////////////////////

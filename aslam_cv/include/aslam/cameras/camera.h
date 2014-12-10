@@ -503,10 +503,10 @@ class Camera {
   void clearMask();
 
   /// Does the camera have a mask?
-  bool hasMask();
+  bool hasMask() const;
 
   /// Check if the keypoint is masked.
-  inline bool isMasked(const Eigen::Vector2d& keypoint) {
+  inline bool isMasked(const Eigen::Vector2d& keypoint) const {
     return keypoint[0] < 0.0 || keypoint[0] >= static_cast<double>(image_width_) ||
         keypoint[1] < 0.0 || keypoint[1] >= static_cast<double>(image_height_) ||
         (!mask_.empty() && mask_.at<uint8_t>(static_cast<int>(keypoint[1]),

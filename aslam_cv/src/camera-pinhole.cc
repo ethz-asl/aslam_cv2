@@ -144,8 +144,9 @@ const ProjectionResult PinholeCamera::project3Functional(
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
   if(distortion_) {
     if(out_jacobian_distortion) {
-      // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
-      distortion_->distortParameterJacobian(distortion_coefficients_external,
+      // Calculate the Jacobian w.r.t to the distortion parameters,
+      // if requested (and distortion set).
+      distortion_->distortParameterJacobian(distortion_coefficients,
                                             *out_keypoint,
                                             out_jacobian_distortion);
       out_jacobian_distortion->row(0) *= fu;

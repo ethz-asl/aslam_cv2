@@ -163,9 +163,10 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
 
   if(distortion_) {
-    // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
+    // Calculate the Jacobian w.r.t to the distortion parameters,
+    // if requested (and distortion set).
     if(out_jacobian_distortion) {
-      distortion_->distortParameterJacobian(distortion_coefficients_external,
+      distortion_->distortParameterJacobian(distortion_coefficients,
                                             *out_keypoint,
                                             out_jacobian_distortion);
       (*out_jacobian_distortion).row(0) *= fu;
