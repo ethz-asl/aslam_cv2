@@ -13,11 +13,10 @@ namespace aslam {
 /// \class FisheyeDistortion
 /// \brief An implementation of the fisheye distortion model for pinhole cameras.
 class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion> {
- private:
+ public:
   /** \brief Number of parameters used for this distortion model. */
   enum { kNumOfParams = 1 };
 
- public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   ASLAM_POINTER_TYPEDEFS(FisheyeDistortion);
 

@@ -161,16 +161,29 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
 
   // Distort the point and get the Jacobian wrt. keypoint.
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
-  if (distortion_ && out_jacobian_point) {
-    // Distortion active and we want the Jacobian.
-    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                  out_keypoint,
-                                                  &J_distortion);
-  } else if (distortion_) {
-    // Distortion active but Jacobian NOT wanted.
-    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                  out_keypoint,
-                                                  nullptr);
+
+  if(distortion_) {
+    // Calculate the Jacobian w.r.t to the distortion parameters,
+    // if requested (and distortion set).
+    if(out_jacobian_distortion) {
+      distortion_->distortParameterJacobian(distortion_coefficients,
+                                            *out_keypoint,
+                                            out_jacobian_distortion);
+      (*out_jacobian_distortion).row(0) *= fu;
+      (*out_jacobian_distortion).row(1) *= fv;
+    }
+
+    if (out_jacobian_point || out_jacobian_intrinsics) {
+      // Distortion active and we want the Jacobian.
+      distortion_->distortUsingExternalCoefficients(distortion_coefficients,
+                                                    out_keypoint,
+                                                    &J_distortion);
+    } else {
+      // Distortion active but Jacobian NOT wanted.
+      distortion_->distortUsingExternalCoefficients(distortion_coefficients,
+                                                    out_keypoint,
+                                                    nullptr);
+    }
   }
 
   // Calculate the Jacobian w.r.t to the 3d point, if requested.
@@ -202,8 +215,8 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
     out_jacobian_intrinsics->setZero();
 
     Eigen::Vector2d Jxi;
-    Jxi[0] = -(*out_keypoint)[0] * d * rz;
-    Jxi[1] = -(*out_keypoint)[1] * d * rz;
+    Jxi[0] = -x * rz * d * rz;
+    Jxi[1] = -y * rz * d * rz;
     J_distortion.row(0) *= fu;
     J_distortion.row(1) *= fv;
     (*out_jacobian_intrinsics).col(0) = J_distortion * Jxi;
@@ -212,15 +225,6 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
     (*out_jacobian_intrinsics)(0, 3) = 1;
     (*out_jacobian_intrinsics)(1, 2) = (*out_keypoint)[1];
     (*out_jacobian_intrinsics)(1, 4) = 1;
-  }
-
-  // Calculate the Jacobian w.r.t to the distortion parameters, if requested (and distortion set)
-  if(distortion_ && out_jacobian_distortion) {
-    distortion_->distortParameterJacobian(distortion_coefficients_external,
-                                          *out_keypoint,
-                                          out_jacobian_distortion);
-    (*out_jacobian_distortion).row(0) *= fu;
-    (*out_jacobian_distortion).row(1) *= fv;
   }
 
   // Normalized image plane to camera plane.
@@ -283,12 +287,11 @@ Eigen::Vector2d UnifiedProjectionCamera::createRandomKeypoint() const {
   Eigen::Vector2d u(ru + 1, rv + 1);
   double one_over_xixi_m_1 = 1.0 / (xi() * xi() - 1);
 
-  int max_tries = 10;
+  int max_tries = 20;
   while ( !(isLiftable(u) && isKeypointVisible(u)) ) {
     u.setRandom();
-    u = u - Eigen::Vector2d(0.5, 0.5);
-    u /= u.norm();
-    u *= ((double) rand() / (double) RAND_MAX) * one_over_xixi_m_1;
+    // 0.8 is a magic number to keep the points away from the border.
+    u *= ((double) rand() / (double) RAND_MAX) * one_over_xixi_m_1 * 0.8;
 
     // Now we run the point through distortion and projection.
     // Apply distortion
@@ -298,12 +301,11 @@ Eigen::Vector2d UnifiedProjectionCamera::createRandomKeypoint() const {
     u[0] = fu() * u[0] + cu();
     u[1] = fv() * u[1] + cv();
 
-    // Protect against inifinte loops.
-    if(--max_tries<1)
-    {
+    // Protect against infinite loops.
+    if(--max_tries < 1) {
       u << cu(), cv();  //image center
-      VLOG(2) << "UnifiedProjectionCamera::createRandomKeypoint "
-              << "failed to produce a random keypoint!";
+      LOG(ERROR) << "UnifiedProjectionCamera::createRandomKeypoint "
+          << "failed to produce a random keypoint!";
       break;
     }
   }
@@ -313,7 +315,6 @@ Eigen::Vector2d UnifiedProjectionCamera::createRandomKeypoint() const {
 Eigen::Vector3d UnifiedProjectionCamera::createRandomVisiblePoint(double depth) const {
   CHECK_GT(depth, 0.0) << "Depth needs to be positive!";
 
-
   Eigen::Vector2d y = createRandomKeypoint();
 
   Eigen::Vector3d point_3d;
@@ -322,7 +323,11 @@ Eigen::Vector3d UnifiedProjectionCamera::createRandomVisiblePoint(double depth) 
   point_3d /= point_3d.norm();
 
   // Muck with the depth. This doesn't change the pointing direction.
-  return point_3d * depth;
+  point_3d *= depth;
+
+  Eigen::Vector2d yhat;
+  CHECK(project3(point_3d, &yhat));
+  return point_3d;
 }
 
 std::unique_ptr<MappedUndistorter> UnifiedProjectionCamera::createMappedUndistorter(

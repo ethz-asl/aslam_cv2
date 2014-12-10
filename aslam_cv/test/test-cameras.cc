@@ -18,20 +18,31 @@
 ///////////////////////////////////////////////
 // Types to test
 ///////////////////////////////////////////////
+template<typename Camera, typename Distortion>
+struct CameraDistortion {
+  typedef Camera CameraType;
+  typedef Distortion DistortionType;
+};
+
 using testing::Types;
-typedef Types<aslam::PinholeCamera,
-              aslam::UnifiedProjectionCamera> Implementations;
+typedef Types<CameraDistortion<aslam::PinholeCamera,aslam::FisheyeDistortion>,
+    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::FisheyeDistortion>,
+    CameraDistortion<aslam::PinholeCamera,aslam::EquidistantDistortion>,
+    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::EquidistantDistortion>,
+    CameraDistortion<aslam::PinholeCamera,aslam::RadTanDistortion>,
+    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::RadTanDistortion>>
+    Implementations;
 
 ///////////////////////////////////////////////
 // Test fixture
 ///////////////////////////////////////////////
-template <class _CameraType>
+template <class CameraDistortion>
 class TestCameras : public testing::Test {
  public:
-  typedef _CameraType CameraType;
-
+  typedef typename CameraDistortion::CameraType CameraType;
+  typedef typename CameraDistortion::DistortionType DistortionType;
   protected:
-    TestCameras() : camera_(CameraType::template createTestCamera<aslam::RadTanDistortion>() ) {};
+    TestCameras() : camera_(CameraType::template createTestCamera<DistortionType>() ) {};
     virtual ~TestCameras() {};
     typename CameraType::Ptr camera_;
 };
@@ -58,14 +69,21 @@ struct Point3dFunctor : public aslam::common::NumDiffFunctor<2, 3> {
                                                               &out_keypoint, Jout, nullptr,
                                                               nullptr);
     fvec = out_keypoint;
-    return static_cast<bool>(res);
+    bool success = static_cast<bool>(res);
+
+    if(!success) {
+      LOG(ERROR) << "Point: " << x.transpose() << " does not project: " << res
+          << ", keypoint: " << out_keypoint.transpose();
+    }
+
+    return success;
   };
   aslam::Camera::ConstPtr camera_;
 };
 
 TYPED_TEST(TestCameras, JacobianWrtPoint3d) {
   for (int i=0; i<10; i++) {
-    Eigen::Vector3d x = this->camera_->createRandomVisiblePoint(1);
+    Eigen::Vector3d x = this->camera_->createRandomVisiblePoint(10);
     TEST_JACOBIAN_FINITE_DIFFERENCE(Point3dFunctor, x, 1e-6, 1e-5, this->camera_);
   }
 }
@@ -119,29 +137,31 @@ TYPED_TEST(TestCameras, JacobianWrtIntrinsics) {
   // Using the test intrinsic parameters.
   Eigen::VectorXd intrinsics = this->camera_->getParameters();
 
-  TEST_JACOBIAN_FINITE_DIFFERENCE(IntrinsicJacobianFunctor<TypeParam::parameterCount()>,
-                                  intrinsics, 1e-3, 1e-2, this->camera_, point_3d);
+  TEST_JACOBIAN_FINITE_DIFFERENCE(IntrinsicJacobianFunctor<TypeParam::CameraType::parameterCount()>,
+                                  intrinsics, 1e-8, 1e-6, this->camera_, point_3d);
 }
 
 /// Wrapper that brings the distortion function to the form needed by the differentiator.
-struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, 4> {
+template<int numParams>
+struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, numParams> {
   DistortionJacobianFunctor(aslam::Camera::ConstPtr camera, const Eigen::Vector3d& point_3d)
       : camera_(camera),
         point_3d_(point_3d) {
     CHECK(camera);
   };
+  typedef aslam::common::NumDiffFunctor<2, numParams> Functor;
 
   virtual ~DistortionJacobianFunctor() {};
 
   virtual bool functional(
-      const typename NumDiffFunctor::InputType& x,
-      typename NumDiffFunctor::ValueType& fvec,
-      typename NumDiffFunctor::JacobianType* Jout) const {
+      const typename Functor::InputType& x,
+      typename Functor::ValueType& fvec,
+      typename Functor::JacobianType* Jout) const {
 
     CHECK(camera_->getDistortion()) << "Distortion model not set";
     Eigen::VectorXd dist_coeffs = camera_->getDistortion()->getParameters();
 
-    typename NumDiffFunctor::ValueType out_keypoint;
+    typename Functor::ValueType out_keypoint;
 
     // Convert to dynamic sized matrix types.
     Eigen::Matrix<double, 2, Eigen::Dynamic> JoutDynamic;
@@ -149,7 +169,6 @@ struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, 4> {
 
     aslam::ProjectionResult res;
     if (!Jout) {
-
       res = camera_->project3Functional(point_3d_, nullptr, &dist_coeff_dynamic,
                                         &out_keypoint);
     } else {
@@ -174,8 +193,8 @@ TYPED_TEST(TestCameras, JacobianWrtDistortion) {
   CHECK(this->camera_->getDistortion());
   Eigen::VectorXd dist_coeffs = this->camera_->getDistortion()->getParameters();
 
-  TEST_JACOBIAN_FINITE_DIFFERENCE(DistortionJacobianFunctor,
-                                  dist_coeffs, 1e-8, 6.5 , this->camera_, point_3d);
+  TEST_JACOBIAN_FINITE_DIFFERENCE(DistortionJacobianFunctor<TypeParam::DistortionType::kNumOfParams>,
+                                  dist_coeffs, 1e-8, 1e-4 , this->camera_, point_3d);
 }
 
 TYPED_TEST(TestCameras, EuclideanToOnAxisKeypoint) {
@@ -214,9 +233,9 @@ TYPED_TEST(TestCameras, isVisible) {
 
 TYPED_TEST(TestCameras, isProjectable) {
   EXPECT_TRUE(this->camera_->isProjectable3(Eigen::Vector3d(0, 0, 1)));       // Center.
-  EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(5, -5, 1)));     // In front of cam.
+  EXPECT_TRUE(this->camera_->isProjectable3(Eigen::Vector3d(5, -5, 30)));     // In front of cam and visible.
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(5000, -5, 1)));  // In front of cam, outside range.
-  EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(-10, -10, -1))); // Behind cam.
+  EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(-10, -10, -10))); // Behind cam.
   EXPECT_FALSE(this->camera_->isProjectable3(Eigen::Vector3d(0, 0, -1)));     // Behind, center.
 }
 
@@ -243,7 +262,8 @@ TYPED_TEST(TestCameras, CameraTest_isInvertible) {
     point.normalize();
     points2.col(n) = point * depth;
   }
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points2, 1e-4));
+  // The distortion models are not invertible so we have to be generous here.
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points2, 1e-2));
 
   // Do the same with the vectorized functions.
   std::vector<aslam::ProjectionResult> result;
@@ -258,8 +278,8 @@ TYPED_TEST(TestCameras, CameraTest_isInvertible) {
     points3.col(n).normalize();
     points3.col(n) *= depth;
   }
-
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points3, 1e-4));
+  // The distortion models are not invertible so we have to be generous here.
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points3, 1e-2));
 }
 
 TYPED_TEST(TestCameras, TestClone) {
@@ -274,6 +294,53 @@ TYPED_TEST(TestCameras, TestClone) {
   EXPECT_TRUE(this->camera_->getDistortion() != cam1->getDistortion());
   // Check that the copy is the same as the original.
   EXPECT_TRUE(*(this->camera_->getDistortion()) == *cam1->getDistortion());
+}
+
+
+
+TYPED_TEST(TestCameras, invalidMaskTest) {
+  // Die on empty mask.
+  cv::Mat mask;
+  EXPECT_DEATH(this->camera_->setMask(mask), "^");
+
+  // Die on wrong type.
+  mask = cv::Mat::zeros(cv::Size2i(this->camera_->imageWidth(), this->camera_->imageHeight()), CV_8UC2);
+  EXPECT_DEATH(this->camera_->setMask(mask), "^");
+
+  // Die on wrong size.
+  mask = cv::Mat::zeros(cv::Size2i(this->camera_->imageWidth() - 1, this->camera_->imageHeight()), CV_8UC1);
+  EXPECT_DEATH(this->camera_->setMask(mask), "^");
+}
+
+TYPED_TEST(TestCameras, validMaskTest) {
+  cv::Mat mask = cv::Mat::ones(cv::Size2i(this->camera_->imageWidth(), this->camera_->imageHeight()), CV_8UC1);
+  mask.at<uint8_t>(20, 10) = 0;
+
+  EXPECT_FALSE(this->camera_->hasMask());
+  this->camera_->setMask(mask);
+  EXPECT_TRUE(this->camera_->hasMask());
+
+  typedef Eigen::Vector2d Vec2;
+  EXPECT_TRUE(this->camera_->isMasked(Vec2(-1.,-1.)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(0.,0.)));
+  EXPECT_TRUE(this->camera_->isMasked(Vec2(this->camera_->imageWidth(),
+                                           this->camera_->imageHeight())));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(this->camera_->imageWidth() - 1.1,
+                                            this->camera_->imageHeight() - 1.1)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(0.0,
+                                            this->camera_->imageHeight() - 1.1)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(this->camera_->imageWidth() - 1.1,
+                                            0.0)));
+
+  // Check the valid/invalid.
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(2.0, 2.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(9.0, 19.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(10.0, 19.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(10.0, 21.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(11.0, 21.0)));
+  EXPECT_FALSE(this->camera_->isMasked(Vec2(9.0, 21.0)));
+  EXPECT_TRUE(this->camera_->isMasked(Vec2(10.0, 20.0)));
+  EXPECT_TRUE(this->camera_->isMasked(Vec2(10.5, 20.5)));
 }
 
 ///////////////////////////////////////////////

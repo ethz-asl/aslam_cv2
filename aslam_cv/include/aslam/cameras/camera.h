@@ -483,8 +483,35 @@ class Camera {
     intrinsics_ = params;
   }
 
-  /// Function to check wheter the given intrinic parameters are valid for this model.
+  /// Function to check whether the given intrinsic parameters are valid for this model.
   virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) = 0;
+
+  /// @}
+
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to access the mask.
+  /// @{
+
+  /// Set the mask. Masks must be the same size as the image and they follow the same
+  /// convention as OpenCV: 0 == masked, nonzero == valid.
+  void setMask(const cv::Mat& mask);
+
+  /// Get the mask.
+  const cv::Mat& getMask() const;
+
+  /// Clear the mask.
+  void clearMask();
+
+  /// Does the camera have a mask?
+  bool hasMask() const;
+
+  /// Check if the keypoint is masked.
+  inline bool isMasked(const Eigen::Vector2d& keypoint) const {
+    return keypoint[0] < 0.0 || keypoint[0] >= static_cast<double>(image_width_) ||
+        keypoint[1] < 0.0 || keypoint[1] >= static_cast<double>(image_height_) ||
+        (!mask_.empty() && mask_.at<uint8_t>(static_cast<int>(keypoint[1]),
+                                             static_cast<int>(keypoint[0])) == 0);
+  }
 
   /// @}
 
@@ -516,10 +543,12 @@ class Camera {
   std::string label_;
   /// The id of this camera.
   aslam::CameraId id_;
-  /// The width of the image
+  /// The width of the image.
   const uint32_t image_width_;
-  /// The height of the image
+  /// The height of the image.
   const uint32_t image_height_;
+  /// The image mask.
+  cv::Mat_<uint8_t> mask_;
 
  protected:
   /// Parameter vector for the intrinsic parameters of the model.
