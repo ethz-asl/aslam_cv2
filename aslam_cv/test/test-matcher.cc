@@ -1,19 +1,18 @@
-#include <aslam/common/entrypoint.h>
-
 #include <math.h>
 #include <vector>
 #include <algorithm>
 
 #include <aslam/common/entrypoint.h>
+#include <aslam/matcher/match.h>
 #include <aslam/matcher/matching-engine-greedy.h>
 #include <aslam/matcher/matching-problem.h>
 
-class SimpleMatchProblem : public aslam::MatchingProblem<float> {
+class SimpleMatchProblem : public aslam::MatchingProblem {
 
-  std::vector<float> apples_;
-  std::vector<float> bananas_;
+  std::vector<double> apples_;
+  std::vector<double> bananas_;
 
-  MatchesT matches_;
+  aslam::Matches matches_;
 
  public:
   SimpleMatchProblem() {
@@ -28,7 +27,7 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
     return bananas_.size();
   }
 
-  virtual float computeScore(int a, int b) {
+  virtual double computeScore(int a, int b) {
     CHECK_LT(size_t(a), apples_.size());
     CHECK_LT(size_t(b), bananas_.size());
     return -fabs(apples_[a] - bananas_[b]);
@@ -36,10 +35,6 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
 
   virtual bool doSetup() {
     return true;
-  }
-
-  virtual void setBestMatches(const MatchesT &bestMatches) {
-    matches_ = bestMatches;
   }
 
   template<typename iter>
@@ -52,9 +47,7 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
     bananas_.clear();
     bananas_.insert(bananas_.end(), first, last);
   }
-  const MatchesT &getMatches() const {
-    return matches_;
-  }
+
   void sortMatches() {
     std::sort(matches_.begin(),matches_.end());
   }
@@ -62,10 +55,8 @@ class SimpleMatchProblem : public aslam::MatchingProblem<float> {
 
 class TestMatch : public testing::Test {
  public:
-  TestMatch() {
-  }
-  virtual ~TestMatch() {
-  }
+  TestMatch() {}
+  virtual ~TestMatch() {}
 
 };
 
@@ -73,13 +64,15 @@ TEST(TestMatcher, EmptyMatch) {
   SimpleMatchProblem mp;
   aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
-  me.match(&mp);
-  EXPECT_TRUE(mp.getMatches().empty());
+  aslam::Matches matches;
+  me.match(&mp, &matches);
+  EXPECT_TRUE(matches.empty());
 
+  matches.clear();
   std::vector<float> bananas { 1.1, 2.2, 3.3 };
   mp.setBananas(bananas.begin(), bananas.end());
-  me.match(&mp);
-  EXPECT_TRUE(mp.getMatches().empty());
+  me.match(&mp, &matches);
+  EXPECT_TRUE(matches.empty());
 }
 
 TEST(TestMatcher, GreedyMatcher) {
@@ -94,19 +87,21 @@ TEST(TestMatcher, GreedyMatcher) {
   mp.setApples(apples.begin(), apples.end());
   EXPECT_EQ(5u, mp.numApples());
 
-  me.match(&mp);
-  EXPECT_TRUE(mp.getMatches().empty());
+  aslam::Matches matches;
+  me.match(&mp, &matches);
+  EXPECT_TRUE(matches.empty());
 
   mp.setBananas(bananas.begin(), bananas.end());
   EXPECT_EQ(6, mp.numBananas());
 
-  me.match(&mp);
-  EXPECT_EQ(5u, mp.getMatches().size());
+  matches.clear();
+  me.match(&mp, &matches);
+  EXPECT_EQ(5u, matches.size());
 
   mp.sortMatches();
 
-  for (auto &match : mp.getMatches()) {
-    EXPECT_EQ(match.getIndexA(), ind_a_of_b[match.getIndexB()]);
+  for (auto &match : matches) {
+    EXPECT_EQ(match.index_apple, ind_a_of_b[match.index_banana]);
   }
 
 }
