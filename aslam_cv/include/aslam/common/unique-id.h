@@ -1,15 +1,19 @@
 #ifndef ASLAM_COMMON_UNIQUE_ID_H_
 #define ASLAM_COMMON_UNIQUE_ID_H_
 
+#include <unordered_set>
+#include <vector>
+
 #include <sm/hash_id.hpp>
 
 namespace aslam {
-
-#define ASLAM_UNIQUE_ID(IdType) \
-class IdType : public sm::HashId { \
- public: \
-  IdType() = default; \
-}
+#define ASLAM_UNIQUE_ID(IdType)                   \
+  class IdType : public sm::HashId {              \
+   public:                                        \
+    IdType() = default;                           \
+  };                                              \
+  typedef std::vector<IdType> IdType##List;       \
+  typedef std::unordered_set<IdType> IdType##Set;
 
 ASLAM_UNIQUE_ID(FrameId);
 ASLAM_UNIQUE_ID(NFramesId);
