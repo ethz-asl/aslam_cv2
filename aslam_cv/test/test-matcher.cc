@@ -101,7 +101,7 @@ TEST(TestMatcher, GreedyMatcher) {
   mp.sortMatches();
 
   for (auto &match : matches) {
-    EXPECT_EQ(match.index_apple, ind_a_of_b[match.index_banana]);
+    EXPECT_EQ(match.getIndexApple(), ind_a_of_b[match.getIndexBanana()]);
   }
 
 }

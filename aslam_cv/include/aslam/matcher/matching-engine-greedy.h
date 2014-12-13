@@ -59,7 +59,7 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
   std::vector<unsigned char> assignedA(numA, false);
   auto match_out = matches->begin();
   for (auto match_in = matches->begin(); match_in != matches->end(); ++match_in) {
-    int a = match_in->index_apple;
+    int a = match_in->getIndexApple();
     if (!assignedA[a]) {
       assignedA[a] = true;
       *match_out++ = *match_in;
