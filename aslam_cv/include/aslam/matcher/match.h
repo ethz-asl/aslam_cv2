@@ -11,20 +11,20 @@ namespace aslam {
 struct Match {
   /// \brief Initialize to an invalid match.
   Match()
-      : index_apple(-1), index_banana(-1), score(0.0) {}
+      : correspondence {-1, -1}, score(0.0) {}
 
   /// \brief Initialize with correspondences and a score.
-  Match(int _index_apple, int _index_banana, double _score)
-      : index_apple(_index_apple), index_banana(_index_banana), score(_score) {}
+  Match(int index_apple, int index_banana, double _score)
+      : correspondence {index_apple, index_banana}, score(_score) {}
 
   /// \brief Get the index into list A.
   int getIndexApple() const {
-    return index_apple;
+    return correspondence[0];
   }
 
   /// \brief Get the index into list B.
   int getIndexBanana() const {
-    return index_banana;
+    return correspondence[1];
   }
 
   /// \brief Get the score given to the match.
@@ -40,13 +40,12 @@ struct Match {
   }
 
   bool operator==(const Match& other) const {
-    return (this->index_apple == other.index_apple) &&
-        (this->index_banana == other.index_banana) &&
-        (this->score == other.score);
+    return (this->correspondence[0] == other.correspondence[0]) &&
+           (this->correspondence[1] == other.correspondence[1]) &&
+           (this->score == other.score);
   }
 
-  int index_apple;
-  int index_banana;
+  int correspondence[2];
   double score;
 };
 
