@@ -16,6 +16,8 @@
 
 namespace aslam {
 
+/// \brief Matching engine to simply return all candidate matches from the given matching problem.
+///        This explicitely does not deal with bananas matching to multiple apples and vice versa.
 template<typename MatchingProblem>
 class MatchingEngineNonExclusive : public MatchingEngine<MatchingProblem> {
  public:
@@ -34,20 +36,24 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
   CHECK_NOTNULL(matches);
   matches->clear();
 
-  bool status = problem->doSetup();
-  size_t num_bananas = problem->numBananas();
+  if (problem->doSetup()) {
+    size_t num_bananas = problem->numBananas();
 
-  for (size_t banana_index = 0; banana_index < num_bananas; ++banana_index) {
-    typename MatchingProblem::Candidates candidates;
-    problem->getAppleCandidatesForBanana(banana_index, &candidates);
-    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-      matches->emplace_back(it->index_apple, banana_index, it->score);
+    for (size_t banana_index = 0; banana_index < num_bananas; ++banana_index) {
+      typename MatchingProblem::Candidates candidates;
+      problem->getAppleCandidatesForBanana(banana_index, &candidates);
+      for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+        matches->emplace_back(it->index_apple, banana_index, it->score);
+      }
     }
+    LOG(INFO) << "Matched " << matches->size() << " keypoints.";
+    return true;
+  } else {
+    LOG(ERROR) << "Setting up the maching problem (.doSetup()) failed.";
+    return false;
   }
-  LOG(INFO) << "Matched " << matches->size() << " keypoints.";
+}
 
-  return status;
-}
-}
+}  // namespace aslam
 
 #endif //ASLAM_CV_MATCHINGENGINE_NON_EXCLUSIVE_H_
