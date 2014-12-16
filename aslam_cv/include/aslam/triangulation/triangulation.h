@@ -69,7 +69,7 @@ inline bool linearTriangulateFromNViews(
 ///        frame of reference. Should be m long.
 /// @param G_point Triangulated point in global frame.
 /// @return Was the triangulation successful?
-inline bool linearTriangulateFromNViewsNCam(
+inline bool linearTriangulateFromNViewsMultiCam(
     const Aligned<std::vector, Eigen::Vector2d>::type& measurements,
     const std::vector<int>& measurement_camera_indices,
     const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
