@@ -19,6 +19,7 @@ cs_add_library(${PROJECT_NAME}
                                src/distortion-radtan.cc
                                src/feature-tracker-gyro.cc
                                src/feature-tracker.cc
+                               src/matching-problem-frame-to-frame.cc
                                src/ncamera.cc
                                src/statistics.cc
                                src/thread-pool.cc

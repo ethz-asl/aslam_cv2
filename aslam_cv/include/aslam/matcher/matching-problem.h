@@ -9,6 +9,8 @@
 #include <vector>
 
 #include <aslam/common/macros.h>
+#include <glog/logging.h>
+
 #include "match.h"
 namespace aslam {
 
@@ -25,6 +27,7 @@ namespace aslam {
 /// The match is not necessarily symmetric. For example, Apples can
 /// represent a reference and Bananas queries.
 ///
+template<bool IsCandidateScoreFinal>
 class MatchingProblem {
 public:
   struct Candidate {
@@ -73,10 +76,16 @@ public:
   /// \brief compute the match score between items referenced by a and b.
   /// Note: this can be called multiple times from different threads.
   /// Warning: these are scores and *not* distances, higher values are better
-  virtual double computeScore(int a, int b) = 0;
+  virtual double computeScore(int a, int b) {
+    LOG(FATAL) << "Not implemented! If this function is called, it means that the candidate score "
+        "is defined as not final in the matching problem derived class. In this case, this virtual "
+        "function (computeScore(a, b) has to be implemented in the derived class.";
+        return 0.0; }
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
+
+  const bool kIsCandiateScoreFinal = IsCandidateScoreFinal;
 };
 }
 #endif //ASLAM_CV_MATCHING_PROBLEM_H_
