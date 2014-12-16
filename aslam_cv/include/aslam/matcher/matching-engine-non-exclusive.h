@@ -16,8 +16,8 @@
 
 namespace aslam {
 
-/// \brief Matching engine to simply return all candidate matches from the given matching problem.
-///        This explicitely does not deal with bananas matching to multiple apples and vice versa.
+/// \brief Matching engine to simply return the best apple for each banana.
+///        This explicitly does not deal with bananas matching to multiple apples and vice versa.
 template<typename MatchingProblem>
 class MatchingEngineNonExclusive : public MatchingEngine<MatchingProblem> {
  public:
@@ -36,20 +36,35 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
   CHECK_NOTNULL(matches);
   matches->clear();
 
+  const bool kRefineScore = !(problem->kIsCandiateScoreFinal);
+
   if (problem->doSetup()) {
     size_t num_bananas = problem->numBananas();
 
-    for (size_t banana_index = 0; banana_index < num_bananas; ++banana_index) {
+    for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
       typename MatchingProblem::Candidates candidates;
-      problem->getAppleCandidatesForBanana(banana_index, &candidates);
+      problem->getAppleCandidatesForBanana(index_banana, &candidates);
+      double best_score = 0.0;
+      auto best_candidate = candidates.end();
       for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-        matches->emplace_back(it->index_apple, banana_index, it->score);
+        double score = it->score;
+
+        // Only refine the score if it is not declared final (depends on problem).
+        if (kRefineScore) score = problem->computeScore(it->index_apple, index_banana);
+
+        if (score> best_score) {
+          best_candidate = it;
+          best_score = it->score;
+        }
+      }
+      if (best_candidate != candidates.end()) {
+        matches->emplace_back(best_candidate->index_apple, index_banana, best_score);
       }
     }
     LOG(INFO) << "Matched " << matches->size() << " keypoints.";
     return true;
   } else {
-    LOG(ERROR) << "Setting up the maching problem (.doSetup()) failed.";
+    LOG(ERROR) << "Setting up the matching problem (.doSetup()) failed.";
     return false;
   }
 }

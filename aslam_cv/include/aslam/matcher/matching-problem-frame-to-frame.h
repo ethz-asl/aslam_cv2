@@ -8,9 +8,13 @@
 
 #include <Eigen/Core>
 #include <map>
+#include <memory>
 #include <vector>
 
-#include "aslam/common/macros.h"
+#include <aslam/common/macros.h>
+#include <aslam/common/pose-types.h>
+#include <aslam/descriptors/feature-descriptor-ref.h>
+
 #include "aslam/matcher/matching-problem.h"
 #include "match.h"
 
@@ -19,16 +23,16 @@ class VisualFrame;
 
 /// \class MatchingProblem
 ///
-/// \brief defines the specifics of a matching problem
+/// \brief Defines the specifics of a matching problem.
 ///
 /// The problem is assumed to have two visual frames (apple_frame and banana_frame) filled with
-/// keypoints and descriptors and a rotation matrix taking vectors from the banana frame into the
-/// apple frame. The problem matches banana features against apple features.
+/// keypoints and binary descriptors and a rotation matrix taking vectors from the banana frame into
+/// the apple frame. The problem matches banana features against apple features.
 ///
 /// Coordinate Frames:
 ///   A:  apple frame
 ///   B:  banana frame
-class MatchingProblemFrameToFrame : public MatchingProblem {
+class MatchingProblemFrameToFrame : public MatchingProblem<true> {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemFrameToFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemFrameToFrame);
@@ -36,11 +40,11 @@ public:
 
   MatchingProblemFrameToFrame() = delete;
 
-  /// \brief Constructor for a a frame-to-frame matching problem.
+  /// \brief Constructor for a frame-to-frame matching problem.
   ///
-  /// @param[in]  apple_frame                                 shared ptr to the apple frame.
-  /// @param[in]  banana_frame                                shared ptr to the banana frame.
-  /// @param[in]  C_A_B                                       Rotation matrix taking vectors from
+  /// @param[in]  apple_frame                                 Shared ptr to the apple frame.
+  /// @param[in]  banana_frame                                Shared ptr to the banana frame.
+  /// @param[in]  q_A_B                                       Quaternion taking vectors from
   ///                                                         the banana frame into the
   ///                                                         apple frame.
   /// @param[in]  image_space_distance_threshold_pixels       Max image space distance threshold for
@@ -49,7 +53,7 @@ public:
   ///                                                         to become candidates.
   MatchingProblemFrameToFrame(const std::shared_ptr<VisualFrame>& apple_frame,
                               const std::shared_ptr<VisualFrame>& banana_frame,
-                              const Eigen::Matrix3d& C_A_B,
+                              const aslam::Quaternion& q_A_B,
                               double image_space_distance_threshold_pixels,
                               int hamming_distance_threshold);
   virtual ~MatchingProblemFrameToFrame() {};
@@ -75,11 +79,28 @@ public:
 
   /// \brief compute the match score between items referenced by a and b.
   /// Note: this can be called multiple times from different threads.
-  /// Warning: these are scores and *not* distances, higher values are better
+  /// Warning: these are scores and *not* distances, higher values are better.
   virtual double computeScore(int a, int b);
 
-  inline double computeMatchScore(double image_space_distance, int hamming_distance) {
+  inline double computeMatchScore(int hamming_distance) {
     return static_cast<double>(384 - hamming_distance) / 384.0;
+  }
+
+  inline int computeHammingDistance(int banana_index, int apple_index) {
+    CHECK_LT(apple_index, apple_descriptors_.size()) << "No descriptor for this apple.";
+    CHECK_LT(banana_index, banana_descriptors_.size()) << "No descriptor for this banana.";
+    CHECK_LT(apple_index, valid_apples_.size()) << "No valid flag for this apple.";
+    CHECK_LT(banana_index, valid_bananas_.size()) << "No valid flag for this apple.";
+    CHECK(valid_apples_[apple_index]) << "The given apple is not valid.";
+    CHECK(valid_bananas_[banana_index]) << "The given banana is not valid.";
+
+    const common::FeatureDescriptorConstRef& apple_descriptor = apple_descriptors_[apple_index];
+    const common::FeatureDescriptorConstRef& banana_descriptor = banana_descriptors_[banana_index];
+
+    CHECK_NOTNULL(apple_descriptor.data());
+    CHECK_NOTNULL(banana_descriptor.data());
+
+    return common::GetNumBitsDifferent(banana_descriptor, apple_descriptor);
   }
 
   /// \brief Gets called at the beginning of the matching problem.
@@ -87,37 +108,31 @@ public:
   /// apple frame.
   virtual bool doSetup();
 
-  /// Called at the end of the matching process to set the output. 
-  virtual void setBestMatches(const Matches& bestMatches);
-
 private:
   /// \brief The apple frame.
   std::shared_ptr<VisualFrame> apple_frame_;
   /// \brief The banana frame.
   std::shared_ptr<VisualFrame> banana_frame_;
   /// \brief Rotation matrix taking vectors from the banana frame into the apple frame.
-  Eigen::Matrix3d C_A_B_;
+  aslam::Quaternion q_A_B_;
   /// \breif Map mapping y coordinates in the image plane onto keypoint indices of apple keypoints.
   std::multimap<size_t, size_t> y_coordinate_to_apple_keypoint_index_map_;
 
+  std::vector<bool> valid_apples_;
+  std::vector<bool> valid_bananas_;
+
   /// \brief The apple keypoints expressed in the apple frame.
-  Eigen::Matrix2Xd A_keypoints_apple_;
+  Eigen::Matrix2Xd* A_keypoints_apple_;
 
-  struct ProjectedKeypoint {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    ProjectedKeypoint() : keypoint(0.0, 0.0), valid(false) {}
-    virtual ~ProjectedKeypoint() {};
-
-    Eigen::Vector2d keypoint;
-    bool valid;
-  };
-  /// \brief The bana keypoints projected into the apple frame, expressed in the apple frame.
-  aslam::Aligned<std::vector, ProjectedKeypoint>::type A_projected_keypoints_banana_;
+  /// \brief The banana keypoints projected into the apple frame, expressed in the apple frame.
+  aslam::Aligned<std::vector, Eigen::Vector2d>::type A_projected_keypoints_banana_;
 
   /// \brief The apple descriptors.
-  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> apple_descriptors_;
+  std::vector<common::FeatureDescriptorConstRef> apple_descriptors_;
+  //;
   /// \breif The banana descriptors.
-  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> banana_descriptors_;
+  std::vector<common::FeatureDescriptorConstRef> banana_descriptors_;
+  //const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>* banana_descriptors_;
 
   /// \brief Descriptor size in bytes.
   size_t descriptor_size_byes_;
@@ -127,7 +142,7 @@ private:
 
   /// \brief Pairs with image space distance >= image_space_distance_threshold_pixels_ are
   ///        excluded from matches.
-  double image_space_distance_threshold_pixels_;
+  double squared_image_space_distance_threshold_pixels_squared_;
 
   /// \brief Pairs with descriptor distance >= hamming_distance_threshold_ are
   ///        excluded from matches.
