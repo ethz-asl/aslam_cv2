@@ -25,23 +25,17 @@ namespace aslam {
 /// The match is not necessarily symmetric. For example, Apples can
 /// represent a reference and Bananas queries.
 ///
-template <typename SCORE>
 class MatchingProblem {
 public:
-  typedef SCORE ScoreT;
-    
-  typedef Match<ScoreT> MatchT;
-
   struct Candidate {
-    int index;
-    ScoreT score; /// a preliminary score that can be used for
+    int index_apple;
+    double score; /// a preliminary score that can be used for
                    /// sorting, rough thresholding; but actual match
                    /// score will get recomputed.
-    Candidate(int _index, const ScoreT& _score) : index(_index), score(_score) {}
+    Candidate(int _index_apple, const double& _score) : index_apple(_index_apple), score(_score) {}
   };
 
-  typedef std::vector<MatchT> MatchesT;
-  typedef std::vector<Candidate> CandidatesT;
+  typedef std::vector<Candidate> Candidates;
 
   ASLAM_POINTER_TYPEDEFS(MatchingProblem);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblem);
@@ -65,7 +59,7 @@ public:
   ///
   /// \param[in] b The index of b queried for candidates.
   /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
-  virtual void getAppleCandidatesOfBanana(int /*b*/, CandidatesT *candidates) {
+  virtual void getAppleCandidatesForBanana(int /*b*/, Candidates *candidates) {
     CHECK_NOTNULL(candidates);
     candidates->clear();
     candidates->reserve(numApples());
@@ -79,14 +73,10 @@ public:
   /// \brief compute the match score between items referenced by a and b.
   /// Note: this can be called multiple times from different threads.
   /// Warning: these are scores and *not* distances, higher values are better
-  virtual ScoreT computeScore(int a, int b) = 0;
+  virtual double computeScore(int a, int b) = 0;
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
-
-  /// Called at the end of the matching process to set the output. 
-  virtual void setBestMatches(const MatchesT &bestMatches) = 0;
-
 };
 }
 #endif //ASLAM_CV_MATCHING_PROBLEM_H_
