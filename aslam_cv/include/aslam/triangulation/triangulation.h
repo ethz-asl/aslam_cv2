@@ -98,9 +98,8 @@ inline bool linearTriangulateFromNViewsMultiCam(
     const Eigen::Vector3d& t_B_C = T_B_C[cam_index].getPosition();
 
     A.block<3, 3>(3 * i, 0) = Eigen::Matrix3d::Identity();
-    A.block<3, 1>(3 * i, 3 + i) = -1.0 *
-        T_G_B[i].getRotation().toImplementation() *
-        T_B_C[cam_index].getRotation().toImplementation() * v;
+    A.block<3, 1>(3 * i, 3 + i) = -1.0 * T_G_B[i].getRotation().rotate(
+        T_B_C[cam_index].getRotation().rotate(v));
     b.segment<3>(3 * i) = T_G_B[i] * t_B_C;
   }
 
