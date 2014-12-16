@@ -77,7 +77,8 @@ TEST_F(TriangulationTest, linearTriangulateFromNViewsMultiCam) {
     fillObservations(kNumObservations, T_B_C[i], &cam_measurements, &cam_T_W_B);
 
     // Append to the end of the vectors.
-    measurements.insert(measurements.end(), cam_measurements.begin(), cam_measurements.end());
+    measurements.insert(measurements.end(), cam_measurements.begin(),
+                        cam_measurements.end());
     T_W_B.insert(T_W_B.end(), cam_T_W_B.begin(), cam_T_W_B.end());
 
     // Fill in the correct size of camera indices also.
@@ -89,7 +90,6 @@ TEST_F(TriangulationTest, linearTriangulateFromNViewsMultiCam) {
 
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(kGPoint, W_point, kDoubleTolerance));
 }
-
 
 TEST(LinearTriangulateFromNViews, RandomPoses) {
   constexpr size_t kNumCameraPoses = 5;
