@@ -5,6 +5,11 @@
 
 namespace aslam {
 
+enum CandidateScore {
+  Approximate,
+  Final
+};
+
 /// \brief A struct to encapsulate a match between two lists and associated
 ///        matching score. There are two lists, A and B and the matches are
 ///        indices into these lists.

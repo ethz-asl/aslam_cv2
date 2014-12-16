@@ -36,7 +36,7 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
   CHECK_NOTNULL(matches);
   matches->clear();
 
-  const bool kRefineScore = !(problem->kIsCandiateScoreFinal);
+  const bool kRefineScore = (problem->kCandidateSoreType == CandidateScore::Approximate);
 
   if (problem->doSetup()) {
     size_t num_bananas = problem->numBananas();
