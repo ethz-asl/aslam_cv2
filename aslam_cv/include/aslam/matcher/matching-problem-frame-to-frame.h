@@ -77,11 +77,6 @@ public:
   ///                         element of Bananas.
   virtual void getAppleCandidatesForBanana(int banana_index, Candidates* candidates);
 
-  /// \brief compute the match score between items referenced by a and b.
-  /// Note: this can be called multiple times from different threads.
-  /// Warning: these are scores and *not* distances, higher values are better.
-  virtual double computeScore(int a, int b);
-
   inline double computeMatchScore(int hamming_distance) {
     return static_cast<double>(384 - hamming_distance) / 384.0;
   }
@@ -118,7 +113,9 @@ private:
   /// \breif Map mapping y coordinates in the image plane onto keypoint indices of apple keypoints.
   std::multimap<size_t, size_t> y_coordinate_to_apple_keypoint_index_map_;
 
+  /// \brief Index marking apples as valid or invalid.
   std::vector<bool> valid_apples_;
+  /// \brief Index marking bananas as valid or invalid.
   std::vector<bool> valid_bananas_;
 
   /// \brief The apple keypoints expressed in the apple frame.
@@ -129,10 +126,9 @@ private:
 
   /// \brief The apple descriptors.
   std::vector<common::FeatureDescriptorConstRef> apple_descriptors_;
-  //;
-  /// \breif The banana descriptors.
+
+  /// \brief The banana descriptors.
   std::vector<common::FeatureDescriptorConstRef> banana_descriptors_;
-  //const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>* banana_descriptors_;
 
   /// \brief Descriptor size in bytes.
   size_t descriptor_size_byes_;
