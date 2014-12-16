@@ -27,7 +27,7 @@ namespace aslam {
 /// The match is not necessarily symmetric. For example, Apples can
 /// represent a reference and Bananas queries.
 ///
-template<bool IsCandidateScoreFinal>
+template<CandidateScore CandiateScoreType>
 class MatchingProblem {
 public:
   struct Candidate {
@@ -85,7 +85,7 @@ public:
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
 
-  const bool kIsCandiateScoreFinal = IsCandidateScoreFinal;
+  const CandidateScore kCandidateSoreType = CandiateScoreType;
 };
 }
 #endif //ASLAM_CV_MATCHING_PROBLEM_H_
