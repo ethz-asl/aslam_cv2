@@ -7,7 +7,7 @@
 #include <aslam/matcher/matching-engine-greedy.h>
 #include <aslam/matcher/matching-problem.h>
 
-class SimpleMatchProblem : public aslam::MatchingProblem<false> {
+class SimpleMatchProblem : public aslam::MatchingProblem<aslam::CandidateScore::Approximate> {
 
   std::vector<double> apples_;
   std::vector<double> bananas_;
