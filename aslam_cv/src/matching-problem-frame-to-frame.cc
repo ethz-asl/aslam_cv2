@@ -236,11 +236,6 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
   }
 }
 
-double MatchingProblemFrameToFrame::computeScore(int apple_index, int banana_index) {
-  int hamming_distance = computeHammingDistance(apple_index, banana_index);
-  return computeMatchScore(hamming_distance);
-}
-
 size_t MatchingProblemFrameToFrame::numApples() const {
   CHECK(apple_frame_);
   return static_cast<size_t>(apple_frame_->getNumKeypointMeasurements());
