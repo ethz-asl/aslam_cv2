@@ -80,6 +80,7 @@ inline bool linearTriangulateFromNViewsMultiCam(
     Eigen::Vector3d* G_point) {
   CHECK_NOTNULL(G_point);
   CHECK_EQ(measurements_normalized.size(), T_G_B.size());
+  CHECK_EQ(measurements_normalized.size(), measurement_camera_indices.size());
   if (measurements_normalized.size() < 2u) {
     return false;
   }
