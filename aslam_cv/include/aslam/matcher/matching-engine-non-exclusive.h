@@ -46,7 +46,7 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
 
       auto best_candidate = candidates.begin();
 
-      for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+      for (const auto it = candidates.begin(); it != candidates.end(); ++it) {
         if (it->score > best_candidate->score) best_candidate = it;
       }
 
