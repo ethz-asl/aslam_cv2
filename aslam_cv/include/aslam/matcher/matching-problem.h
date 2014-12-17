@@ -9,6 +9,8 @@
 #include <vector>
 
 #include <aslam/common/macros.h>
+#include <glog/logging.h>
+
 #include "match.h"
 namespace aslam {
 
@@ -59,21 +61,7 @@ public:
   ///
   /// \param[in] b The index of b queried for candidates.
   /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
-  virtual void getAppleCandidatesForBanana(int /*b*/, Candidates *candidates) {
-    CHECK_NOTNULL(candidates);
-    candidates->clear();
-    candidates->reserve(numApples());
-
-    // just returns all apples with no score
-    for (unsigned int i = 0; i < numApples(); ++i) {
-      candidates->emplace_back(i, 0);
-    }
-  };
-
-  /// \brief compute the match score between items referenced by a and b.
-  /// Note: this can be called multiple times from different threads.
-  /// Warning: these are scores and *not* distances, higher values are better
-  virtual double computeScore(int a, int b) = 0;
+  virtual void getAppleCandidatesForBanana(int /*b*/, Candidates *candidates) = 0;
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
