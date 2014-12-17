@@ -27,12 +27,6 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
     return bananas_.size();
   }
 
-  virtual double computeScore(int a, int b) {
-    CHECK_LT(size_t(a), apples_.size());
-    CHECK_LT(size_t(b), bananas_.size());
-    return -fabs(apples_[a] - bananas_[b]);
-  }
-
   virtual bool doSetup() {
     return true;
   }
@@ -51,6 +45,18 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
   void sortMatches() {
     std::sort(matches_.begin(),matches_.end());
   }
+
+  virtual void getAppleCandidatesForBanana(int b, Candidates* candidates) {
+     CHECK_NOTNULL(candidates);
+     candidates->clear();
+     candidates->reserve(numApples());
+
+     // just returns all apples with no score
+     for (unsigned int i = 0; i < numApples(); ++i) {
+       double score = -fabs(apples_[i] - bananas_[b]);
+       candidates->emplace_back(i, score);
+     }
+   };
 };
 
 class TestMatch : public testing::Test {
