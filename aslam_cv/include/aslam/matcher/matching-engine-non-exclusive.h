@@ -45,7 +45,6 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
       problem->getAppleCandidatesForBanana(index_banana, &candidates);
 
       auto best_candidate = candidates.begin();
-
       for (const auto it = candidates.begin(); it != candidates.end(); ++it) {
         if (it->score > best_candidate->score) best_candidate = it;
       }
@@ -63,5 +62,4 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
 }
 
 }  // namespace aslam
-
 #endif //ASLAM_CV_MATCHINGENGINE_NON_EXCLUSIVE_H_
