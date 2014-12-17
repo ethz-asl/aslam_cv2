@@ -179,7 +179,7 @@ TEST_F(MatcherTest, TestImageSpaceBorderOut) {
 
   EXPECT_TRUE(matches.empty());
 }
-/*
+
 TEST_F(MatcherTest, TestImageSpaceBorderIn) {
   Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Constant(2, 1, 20.0);
   Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Constant(2, 1, 20.0);
@@ -285,8 +285,12 @@ TEST_F(MatcherTest, TestComplex) {
 
   aslam::Matches ground_truth_matches;
   // The ground truth matches: keypoint 0 and 1 are within image_space distance!
+  // The non-exclusive matcher matches banana 0 to apple 0 because they both have zero bits
+  // different, whereas banana 0 and apple 1 have 1 bit different.
+  // However, banana 1 is also matched to apple 0 because again banana 1 and apple 0 have zero
+  // bits different whereas banana 1 and apple 1 have 1 bit different.
   ground_truth_matches.emplace_back(0, 0, 1.0);
-  ground_truth_matches.emplace_back(1, 1, 1.0);
+  ground_truth_matches.emplace_back(0, 1, 1.0);
   ground_truth_matches.emplace_back(2, 2, 1.0);
   ground_truth_matches.emplace_back(3, 3, 1.0);
   ground_truth_matches.emplace_back(4, 4, 1.0);
@@ -294,9 +298,8 @@ TEST_F(MatcherTest, TestComplex) {
   size_t num_matches = matches.size();
   EXPECT_EQ(ground_truth_matches.size(), num_matches);
   for (size_t i = 0; i < num_matches; ++i) {
-    std::cout << "matches " << i << " matches " << matches[i].correspondence[0] << " with " << matches[i].correspondence[1] << ""
     EXPECT_EQ(matches[i], ground_truth_matches[i]);
   }
 }
-*/
+
 ASLAM_UNITTEST_ENTRYPOINT
