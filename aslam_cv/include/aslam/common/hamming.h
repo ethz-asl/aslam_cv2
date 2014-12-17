@@ -95,10 +95,9 @@ class  Hamming {
   // not.
   typedef int ResultType;
 
-  // This will count the bits in a ^ b.
-  ResultType operator()(const unsigned char* a,
-                        const unsigned char* b,
-                        const int size) const {
+  static ResultType evaluate(const unsigned char* a,
+                                    const unsigned char* b,
+                                    const int size) {
 #ifdef __ARM_NEON__
     return NEONPopcntofXORed(reinterpret_cast<const uint8x16_t*>(a),
                              reinterpret_cast<const uint8x16_t*>(b),
@@ -108,6 +107,13 @@ class  Hamming {
                               reinterpret_cast<const __m128i*>(b),
                               size / 16);
 #endif  // __ARM_NEON__
+  }
+
+  // This will count the bits in a ^ b.
+  inline ResultType operator()(const unsigned char* a,
+                        const unsigned char* b,
+                        const int size) const {
+    return evaluate(a, b, size);
   }
 };
 }  // namespace common
