@@ -7,7 +7,7 @@
 #include <aslam/matcher/matching-engine-greedy.h>
 #include <aslam/matcher/matching-problem.h>
 
-class SimpleMatchProblem : public aslam::MatchingProblem<aslam::CandidateScore::Approximate> {
+class SimpleMatchProblem : public aslam::MatchingProblem {
 
   std::vector<double> apples_;
   std::vector<double> bananas_;
@@ -25,12 +25,6 @@ class SimpleMatchProblem : public aslam::MatchingProblem<aslam::CandidateScore::
   }
   virtual size_t numBananas() const {
     return bananas_.size();
-  }
-
-  virtual double computeScore(int a, int b) {
-    CHECK_LT(size_t(a), apples_.size());
-    CHECK_LT(size_t(b), bananas_.size());
-    return -fabs(apples_[a] - bananas_[b]);
   }
 
   virtual bool doSetup() {
@@ -51,6 +45,18 @@ class SimpleMatchProblem : public aslam::MatchingProblem<aslam::CandidateScore::
   void sortMatches() {
     std::sort(matches_.begin(),matches_.end());
   }
+
+  virtual void getAppleCandidatesForBanana(int b, Candidates* candidates) {
+     CHECK_NOTNULL(candidates);
+     candidates->clear();
+     candidates->reserve(numApples());
+
+     // just returns all apples with no score
+     for (unsigned int i = 0; i < numApples(); ++i) {
+       double score = -fabs(apples_[i] - bananas_[b]);
+       candidates->emplace_back(i, score);
+     }
+   };
 };
 
 class TestMatch : public testing::Test {

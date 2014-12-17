@@ -46,10 +46,7 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
   for (unsigned int b = 0; b < numB; ++b) {
     // compute the score for each candidate and put in queue
     for (unsigned int c = 0; c < candidates[b].size(); ++c) {
-      int a = candidates[b][c].index_apple;
-
-      double score = problem->computeScore(a, b);
-      matches->emplace_back(a, b, score);
+      matches->emplace_back(candidates[b][c].index_apple, b, candidates[b][c].score);
     }
   }
   // reverse sort with reverse iterators

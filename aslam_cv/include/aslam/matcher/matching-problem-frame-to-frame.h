@@ -32,7 +32,7 @@ class VisualFrame;
 /// Coordinate Frames:
 ///   A:  apple frame
 ///   B:  banana frame
-class MatchingProblemFrameToFrame : public MatchingProblem<CandidateScore::Final> {
+class MatchingProblemFrameToFrame : public MatchingProblem {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemFrameToFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemFrameToFrame);
