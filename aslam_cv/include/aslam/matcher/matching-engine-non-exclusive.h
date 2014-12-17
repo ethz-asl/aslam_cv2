@@ -44,21 +44,19 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
     for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
       typename MatchingProblem::Candidates candidates;
       problem->getAppleCandidatesForBanana(index_banana, &candidates);
-      double best_score = 0.0;
-      auto best_candidate = candidates.end();
+      auto best_candidate = candidates.begin();
       for (auto it = candidates.begin(); it != candidates.end(); ++it) {
         double score = it->score;
 
         // Only refine the score if it is not declared final (depends on problem).
         if (kRefineScore) score = problem->computeScore(it->index_apple, index_banana);
 
-        if (score> best_score) {
+        if (score > best_candidate->score) {
           best_candidate = it;
-          best_score = it->score;
         }
       }
       if (best_candidate != candidates.end()) {
-        matches->emplace_back(best_candidate->index_apple, index_banana, best_score);
+        matches->emplace_back(best_candidate->index_apple, index_banana, best_candidate->score);
       }
     }
     LOG(INFO) << "Matched " << matches->size() << " keypoints.";
