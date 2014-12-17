@@ -36,30 +36,25 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
   CHECK_NOTNULL(matches);
   matches->clear();
 
-  const bool kRefineScore = (problem->kCandidateSoreType == CandidateScore::Approximate);
-
   if (problem->doSetup()) {
     size_t num_bananas = problem->numBananas();
 
     for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
       typename MatchingProblem::Candidates candidates;
+
       problem->getAppleCandidatesForBanana(index_banana, &candidates);
+
       auto best_candidate = candidates.begin();
+
       for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-        double score = it->score;
-
-        // Only refine the score if it is not declared final (depends on problem).
-        if (kRefineScore) score = problem->computeScore(it->index_apple, index_banana);
-
-        if (score > best_candidate->score) {
-          best_candidate = it;
-        }
+        if (it->score > best_candidate->score) best_candidate = it;
       }
+
       if (best_candidate != candidates.end()) {
         matches->emplace_back(best_candidate->index_apple, index_banana, best_candidate->score);
       }
     }
-    LOG(INFO) << "Matched " << matches->size() << " keypoints.";
+    VLOG(10) << "Matched " << matches->size() << " keypoints.";
     return true;
   } else {
     LOG(ERROR) << "Setting up the matching problem (.doSetup()) failed.";

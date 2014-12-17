@@ -27,7 +27,6 @@ namespace aslam {
 /// The match is not necessarily symmetric. For example, Apples can
 /// represent a reference and Bananas queries.
 ///
-template<CandidateScore CandiateScoreType>
 class MatchingProblem {
 public:
   struct Candidate {
@@ -62,30 +61,10 @@ public:
   ///
   /// \param[in] b The index of b queried for candidates.
   /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
-  virtual void getAppleCandidatesForBanana(int /*b*/, Candidates *candidates) {
-    CHECK_NOTNULL(candidates);
-    candidates->clear();
-    candidates->reserve(numApples());
-
-    // just returns all apples with no score
-    for (unsigned int i = 0; i < numApples(); ++i) {
-      candidates->emplace_back(i, 0);
-    }
-  };
-
-  /// \brief compute the match score between items referenced by a and b.
-  /// Note: this can be called multiple times from different threads.
-  /// Warning: these are scores and *not* distances, higher values are better
-  virtual double computeScore(int a, int b) {
-    LOG(FATAL) << "Not implemented! If this function is called, it means that the candidate score "
-        "is defined as not final in the matching problem derived class. In this case, this virtual "
-        "function (computeScore(a, b) has to be implemented in the derived class.";
-        return 0.0; }
+  virtual void getAppleCandidatesForBanana(int /*b*/, Candidates *candidates) = 0;
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
-
-  const CandidateScore kCandidateSoreType = CandiateScoreType;
 };
 }
 #endif //ASLAM_CV_MATCHING_PROBLEM_H_
