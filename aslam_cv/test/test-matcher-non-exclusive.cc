@@ -36,7 +36,7 @@ class MatcherTest : public testing::Test {
 
   aslam::PinholeCamera::Ptr camera_;
 };
-
+/*
 TEST_F(MatcherTest, EmptyMatch) {
   aslam::MatchingEngineNonExclusive<aslam::MatchingProblemFrameToFrame> matching_engine;
 
@@ -301,5 +301,5 @@ TEST_F(MatcherTest, TestComplex) {
     EXPECT_EQ(matches[i], ground_truth_matches[i]);
   }
 }
-
+*/
 ASLAM_UNITTEST_ENTRYPOINT
