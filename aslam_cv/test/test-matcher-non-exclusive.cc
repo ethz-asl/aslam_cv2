@@ -73,7 +73,6 @@ TEST_F(MatcherTest, MatchIdentity) {
   aslam::Quaternion q_A_B;
   q_A_B.setIdentity();
 
-
   aslam::MatchingProblemFrameToFrame::Ptr matching_problem =
       aslam::aligned_shared<aslam::MatchingProblemFrameToFrame>(apple_frame_,
                                                    banana_frame_,
@@ -81,10 +80,11 @@ TEST_F(MatcherTest, MatchIdentity) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-  /*
+
   aslam::Matches matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
+  /*
   ASSERT_EQ(1, matches.size());
 
   aslam::Match match = matches[0];
