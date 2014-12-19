@@ -50,7 +50,8 @@ private:
       CHECK_LT(next_best_apple_for_this_banana, temporary_matches_.size());
 
       // Write access to the next candidate.
-      typename MatchingProblem::Candidate& temporary_candidate = temporary_matches_[next_best_apple_for_this_banana];
+      typename MatchingProblem::Candidate& temporary_candidate =
+          temporary_matches_[next_best_apple_for_this_banana];
 
       if (temporary_candidate.index_apple < 0) {
         // Apple is still available. Assign the current candidate to this apple.
@@ -71,17 +72,20 @@ private:
   ///        a list of apples sorted wrt. the matching score (note: it's sorted bottom-up, so
   ///        .begin() points to the worst apple match for this banana. use .rbegin() instead to get
   ///        best candidate.)
-  typename aslam::Aligned<std::vector, typename MatchingProblem::SortedCandidates>::type candidates_;
+  typename aslam::Aligned<std::vector, typename MatchingProblem::SortedCandidates>::type
+    candidates_;
 
   /// \brief The temporary matches assigned to each apple. (i.e. temporary_matches_[apple_index]
   ///        returns the current match for this apple. May change during the assignment procedure.
-  typename aslam::Aligned<std::vector, typename MatchingProblem::Candidate>::type temporary_matches_; // matches apples to candiates
+  typename aslam::Aligned<std::vector, typename MatchingProblem::Candidate>::type
+    temporary_matches_;
 
   /// \brief Iterators to the next best apple candidate for each banana.
   ///        (i.e. iterator_to_next_best_apple_[banana_index] points to the next best candidate
   ///        for the given banana. Points to candiates_[banana_index].end() if no next best
   ///        candidate available.
-  typename aslam::Aligned<std::vector, typename MatchingProblem::SortedCandidates::reverse_iterator>::type iterator_to_next_best_apple_;
+  typename aslam::Aligned<std::vector,
+  typename MatchingProblem::SortedCandidates::reverse_iterator>::type iterator_to_next_best_apple_;
 };
 
 template<typename MatchingProblem>
