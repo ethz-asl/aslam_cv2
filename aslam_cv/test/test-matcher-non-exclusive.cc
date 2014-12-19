@@ -36,7 +36,7 @@ class MatcherTest : public testing::Test {
 
   aslam::PinholeCamera::Ptr camera_;
 };
-/*
+
 TEST_F(MatcherTest, EmptyMatch) {
   aslam::MatchingEngineNonExclusive<aslam::MatchingProblemFrameToFrame> matching_engine;
 
@@ -54,7 +54,7 @@ TEST_F(MatcherTest, EmptyMatch) {
 
   EXPECT_TRUE(matches.empty());
 }
-*/
+
 TEST_F(MatcherTest, MatchIdentity) {
   Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
   Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
