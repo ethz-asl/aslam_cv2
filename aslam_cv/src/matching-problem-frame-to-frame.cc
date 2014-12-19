@@ -189,8 +189,12 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
 
     const Eigen::Vector2d& A_keypoint_banana = A_projected_keypoints_banana_[banana_index];
 
+    std::cout << " is valid." << std::endl;
+
     // Get the y coordinate of the projected banana keypoint in the apple frame.
     int projected_banana_keypoint_y_coordinate = static_cast<int>(std::round(A_keypoint_banana(1)));
+
+    std::cout << "banana " << 1 << " is valid." << std::endl;
 
     // Compute the lower and upper bound of the vertical search window, making it respect the
     // image dimension of the apple frame.
@@ -199,11 +203,15 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
     if (y_lower_int > 0) y_lower = static_cast<size_t>(y_lower_int);
     CHECK_LT(y_lower, image_height_apple_frame_);
 
+    std::cout << "banana " << 2 << " is valid." << std::endl;
+
     int y_upper_int = projected_banana_keypoint_y_coordinate + vertical_band_halfwidth_pixels_;
     size_t y_upper = image_height_apple_frame_;
     if (y_upper_int < static_cast<int>(image_height_apple_frame_)) y_upper = y_upper_int;
     CHECK_GE(y_upper, 0);
     CHECK_GT(y_upper, y_lower);
+
+    std::cout << "banana " << banana_index << " is valid." << std::endl;
 
     auto it_lower = y_coordinate_to_apple_keypoint_index_map_.lower_bound(y_lower);
     if (it_lower == y_coordinate_to_apple_keypoint_index_map_.end()) {
@@ -211,12 +219,16 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
       return;
     }
 
+    std::cout << "banana " << banana_index << " is valid." << std::endl;
+
     auto it_upper = y_coordinate_to_apple_keypoint_index_map_.lower_bound(y_upper);
     if (it_upper != y_coordinate_to_apple_keypoint_index_map_.end()) {
       // Pointing to a valid keypoint -> need to increment this because this needs to go one
       // beyond the border (i.e. == end() in normal for loop over a vector).
       ++it_upper;
     }
+
+    std::cout << "banana " << banana_index << " is valid." << std::endl;
 
     for (auto it = it_lower; it != it_upper; ++it) {
       // Go over all the apple keyponts and compute image space distance to the projected banana
