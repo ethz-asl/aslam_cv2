@@ -1,0 +1,137 @@
+#ifndef ASLAM_CV_MATCHINGENGINE_EXCLUSIVE_H_
+#define ASLAM_CV_MATCHINGENGINE_EXCLUSIVE_H_
+
+#include <glog/logging.h>
+#include <vector>
+
+#include <aslam/common/macros.h>
+#include <aslam/common/memory.h>
+#include <aslam/matcher/match.h>
+
+#include "aslam/matcher/matching-engine.h"
+
+/// \addtogroup Matching
+/// @{
+///
+/// @}
+
+namespace aslam {
+
+/// \brief Matches apples with bananas, such that the resulting matches are exclusive, i.e.
+///        every banana matches to at most one apple and vice versa. Not every banana might find
+///        a matching apple and vice versa. The assignment procedure is greedy and recursive.
+///        Iterating over all bananas, starting at banana 0, the best apple is assigned,
+///        replacing a previous assignment to this apple iff the current match score is higher.
+///        The banana from the replaced matched is then recursively reassigned to the next best
+///        apple (if there is any).
+template<typename MatchingProblem>
+class MatchingEngineExclusive : public MatchingEngine<MatchingProblem> {
+ public:
+  friend class PriorityMatchingTest;
+
+  ASLAM_POINTER_TYPEDEFS(MatchingEngineExclusive);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngineExclusive);
+
+  MatchingEngineExclusive() {};
+  virtual ~MatchingEngineExclusive() {};
+
+  virtual bool match(MatchingProblem* problem, typename aslam::Matches* matches);
+
+private:
+  /// \brief Recursively assigns the next best apple to the given banana.
+  inline void assignBest(int index_banana) {
+    CHECK_GE(index_banana, 0);
+
+    // Iterate through the next best apple candidates to find the next best fit (if any).
+    for (; iterator_to_next_best_apple_[index_banana] != candidates_[index_banana].rend();
+        ++(iterator_to_next_best_apple_[index_banana])) {
+      const size_t kNextBestAppleForThisBanana =
+          iterator_to_next_best_apple_[index_banana]->index_apple;
+      CHECK_LT(kNextBestAppleForThisBanana, temporary_matches_.size());
+
+      // Write access to the next candidate.
+      typename MatchingProblem::Candidate& temporary_candidate = temporary_matches_[kNextBestAppleForThisBanana];
+
+      if (temporary_candidate.index_apple < 0) {
+        // Apple is still available. Assign the current candidate to this apple.
+        temporary_candidate = *iterator_to_next_best_apple_[index_banana];
+        break;
+      } else if (temporary_candidate < *iterator_to_next_best_apple_[index_banana]) {
+        // Apple is already assigned, but this one is better.
+        const int kLonelyBanana = temporary_candidate.index_banana;
+        temporary_candidate = *iterator_to_next_best_apple_[index_banana];
+        // Recursively look for an alternative for the lonely banana.
+        assignBest(kLonelyBanana);
+        break;
+      }
+    }
+  }
+
+  /// \brief List of sorted candidates for a given banana. (i.e. candidates_[banana_index] refers to
+  ///        a list of apples sorted wrt. the matching score (note: it's sorted bottom-up, so
+  ///        .begin() points to the worst apple match for this banana. use .rbegin() instead to get
+  ///        best candidate.)
+  typename aslam::Aligned<std::vector, typename MatchingProblem::SortedCandidates>::type candidates_;
+
+  /// \brief The temporary matches assigned to each apple. (i.e. temporary_matches_[apple_index]
+  ///        returns the current match for this apple. May change during the assignment procedure.
+  typename aslam::Aligned<std::vector, typename MatchingProblem::Candidate>::type temporary_matches_; // matches apples to candiates
+
+  /// \brief Iterators to the next best apple candidate for each banana.
+  ///        (i.e. iterator_to_next_best_apple_[banana_index] points to the next best candidate
+  ///        for the given banana. Points to candiates_[banana_index].end() if no next best
+  ///        candidate available.
+  typename aslam::Aligned<std::vector, typename MatchingProblem::SortedCandidates::reverse_iterator>::type iterator_to_next_best_apple_;
+};
+
+template<typename MatchingProblem>
+bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
+                                                     aslam::Matches* matches) {
+  CHECK_NOTNULL(problem);
+  CHECK_NOTNULL(matches);
+  matches->clear();
+
+  if (problem->doSetup()) {
+    size_t num_bananas = problem->numBananas();
+    size_t num_apples = problem->numApples();
+
+    temporary_matches_.clear();
+    temporary_matches_.resize(num_apples);
+
+    candidates_.clear();
+    candidates_.resize(num_bananas);
+
+    iterator_to_next_best_apple_.resize(num_bananas);
+
+    // Collect all apple candidates for every banana.
+    for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
+      problem->getAppleCandidatesForBanana(index_banana, &(candidates_[index_banana]));
+      iterator_to_next_best_apple_[index_banana] = candidates_[index_banana].rbegin();
+    }
+
+    // Find the best apple for every banana.
+    for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
+      assignBest(index_banana);
+    }
+
+    // Assign the exclusive matches to the match vector.
+    for (auto it = temporary_matches_.begin(); it != temporary_matches_.end(); ++it) {
+      if (it->index_apple >= 0) {
+        CHECK_LT(it->index_apple, num_apples);
+        CHECK_GE(it->index_banana, 0);
+        CHECK_LT(it->index_banana, num_bananas);
+
+        matches->emplace_back(it->index_apple, it->index_banana, it->score);
+      }
+    }
+
+    VLOG(10) << "Matched " << matches->size() << " keypoints.";
+    return true;
+  } else {
+    LOG(ERROR) << "Setting up the matching problem (.doSetup()) failed.";
+    return false;
+  }
+}
+
+}  // namespace aslam
+#endif //ASLAM_CV_MATCHINGENGINE_EXCLUSIVE_H_
