@@ -63,10 +63,6 @@ struct Match {
 
 typedef std::vector<Match> Matches;
 
-inline void makeExclusive(Matches* matches) {
-
-}
-
 }  // namespace aslam
 
 #endif // ASLAM_MATCH_H_
