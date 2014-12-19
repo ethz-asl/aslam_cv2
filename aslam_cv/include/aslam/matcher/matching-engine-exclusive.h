@@ -45,12 +45,12 @@ private:
     // Iterate through the next best apple candidates to find the next best fit (if any).
     for (; iterator_to_next_best_apple_[index_banana] != candidates_[index_banana].rend();
         ++(iterator_to_next_best_apple_[index_banana])) {
-      const size_t kNextBestAppleForThisBanana =
+      const size_t next_best_apple_for_this_banana =
           iterator_to_next_best_apple_[index_banana]->index_apple;
-      CHECK_LT(kNextBestAppleForThisBanana, temporary_matches_.size());
+      CHECK_LT(next_best_apple_for_this_banana, temporary_matches_.size());
 
       // Write access to the next candidate.
-      typename MatchingProblem::Candidate& temporary_candidate = temporary_matches_[kNextBestAppleForThisBanana];
+      typename MatchingProblem::Candidate& temporary_candidate = temporary_matches_[next_best_apple_for_this_banana];
 
       if (temporary_candidate.index_apple < 0) {
         // Apple is still available. Assign the current candidate to this apple.
@@ -58,10 +58,10 @@ private:
         break;
       } else if (temporary_candidate < *iterator_to_next_best_apple_[index_banana]) {
         // Apple is already assigned, but this one is better.
-        const int kLonelyBanana = temporary_candidate.index_banana;
+        const int lonely_banana = temporary_candidate.index_banana;
         temporary_candidate = *iterator_to_next_best_apple_[index_banana];
         // Recursively look for an alternative for the lonely banana.
-        assignBest(kLonelyBanana);
+        assignBest(lonely_banana);
         break;
       }
     }
