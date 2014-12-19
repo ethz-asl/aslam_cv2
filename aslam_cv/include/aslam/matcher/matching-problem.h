@@ -34,6 +34,9 @@ public:
     int index_apple;
     int index_banana;
     double score;
+    /// \brief The priority field allows categorizing candidates. Certain matching engines might
+    ///        treat candidates differently according to their priority.
+    ///        The priority outrules the score in the candidate comparison.
     int priority;
 
     Candidate() : index_apple(-1), index_banana(-1), score(0.0), priority(-1) {}
