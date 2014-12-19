@@ -44,6 +44,7 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
       typename MatchingProblem::SortedCandidates candidates;
 
       problem->getAppleCandidatesForBanana(index_banana, &candidates);
+      std::cout << "got apples for banana " << index_banana << std::endl;
 
       if (candidates.size() > 0) {
         auto best_candidate = candidates.rbegin();
