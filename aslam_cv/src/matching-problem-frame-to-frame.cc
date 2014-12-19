@@ -185,6 +185,8 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
   CHECK_GT(image_height_apple_frame_, 0) << "The image height of the apple frame is zero.";
 
   if (valid_bananas_[banana_index]) {
+    std::cout << "banana " << banana_index << " is valid." << std::endl;
+
     const Eigen::Vector2d& A_keypoint_banana = A_projected_keypoints_banana_[banana_index];
 
     // Get the y coordinate of the projected banana keypoint in the apple frame.
