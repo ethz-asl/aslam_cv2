@@ -41,12 +41,12 @@ public:
       index_apple(_index_apple), index_banana(_index_banana), score(_score), priority(_priority) {}
 
     bool operator<(const Candidate& other) const {
-      if (this->priority < other.priority) return true;
-      return this->score < other.score;
+      return (this->priority < other.priority) ||
+          ((this->priority == other.priority) && (this->score < other.score));
     }
     bool operator>(const Candidate& other) const {
-      if (this->priority > other.priority) return true;
-      return this->score > other.score;
+      return (this->priority > other.priority) ||
+          ((this->priority == other.priority) && (this->score > other.score));
     }
 
     bool operator==(const Candidate& other) const {
