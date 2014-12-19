@@ -54,7 +54,7 @@ TEST_F(MatcherTest, EmptyMatch) {
 
   EXPECT_TRUE(matches.empty());
 }
-
+*/
 TEST_F(MatcherTest, MatchIdentity) {
   Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
   Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
@@ -88,7 +88,7 @@ TEST_F(MatcherTest, MatchIdentity) {
   EXPECT_EQ(0, match.getIndexBanana());
   EXPECT_DOUBLE_EQ(1.0, match.score);
 }
-
+/*
 TEST_F(MatcherTest, MatchRotation) {
   size_t image_height = camera_->imageHeight();
   size_t image_width = camera_->imageWidth();
