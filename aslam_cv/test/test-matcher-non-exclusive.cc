@@ -84,17 +84,14 @@ TEST_F(MatcherTest, MatchIdentity) {
   aslam::Matches matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
-  /*
   ASSERT_EQ(1, matches.size());
 
   aslam::Match match = matches[0];
   EXPECT_EQ(0, match.getIndexApple());
   EXPECT_EQ(0, match.getIndexBanana());
   EXPECT_DOUBLE_EQ(1.0, match.score);
-  */
 }
 
-/*
 TEST_F(MatcherTest, MatchRotation) {
   size_t image_height = camera_->imageHeight();
   size_t image_width = camera_->imageWidth();
@@ -307,5 +304,5 @@ TEST_F(MatcherTest, TestComplex) {
     EXPECT_EQ(matches[i], ground_truth_matches[i]);
   }
 }
-*/
+
 ASLAM_UNITTEST_ENTRYPOINT
