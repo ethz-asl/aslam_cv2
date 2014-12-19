@@ -39,7 +39,7 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
   if (problem->doSetup()) {
     std::cout << "Setup complete." << std::endl;
     size_t num_bananas = problem->numBananas();
-    std::cout << "Setup num_bananas: " << num_bananas << << std::endl;
+    std::cout << "Setup num_bananas: " << num_bananas << std::endl;
 
     for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
       typename MatchingProblem::SortedCandidates candidates;
