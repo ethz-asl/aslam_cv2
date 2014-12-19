@@ -38,15 +38,12 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
   matches->clear();
 
   if (problem->doSetup()) {
-    std::cout << "Setup complete." << std::endl;
     size_t num_bananas = problem->numBananas();
-    std::cout << "Setup num_bananas: " << num_bananas << std::endl;
 
     for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
       typename MatchingProblem::SortedCandidates candidates;
 
       problem->getAppleCandidatesForBanana(index_banana, &candidates);
-      std::cout << "got apples for banana " << index_banana << std::endl;
 
       if (candidates.size() > 0) {
         auto best_candidate = candidates.rbegin();
