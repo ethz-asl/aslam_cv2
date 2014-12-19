@@ -27,6 +27,18 @@ struct Match {
     return correspondence[1];
   }
 
+  void setIndexApple(int index_apple) {
+    correspondence[0] = index_apple;
+  }
+
+  void setIndexBanana(int index_banana) {
+      correspondence[1] = index_banana;
+  }
+
+  void setScore(double _score) {
+    score = _score;
+  }
+
   /// \brief Get the score given to the match.
   double getScore() const {
     return score;
@@ -50,6 +62,10 @@ struct Match {
 };
 
 typedef std::vector<Match> Matches;
+
+inline void makeExclusive(Matches* matches) {
+
+}
 
 }  // namespace aslam
 

@@ -75,7 +75,7 @@ public:
   /// \param[in] b            The index of b queried for candidates.
   /// \param[out] candidates  Candidates from the Apples-list that could potentially match this
   ///                         element of Bananas.
-  virtual void getAppleCandidatesForBanana(int banana_index, Candidates* candidates);
+  virtual void getAppleCandidatesForBanana(int banana_index, SortedCandidates* candidates);
 
   inline double computeMatchScore(int hamming_distance) {
     return static_cast<double>(384 - hamming_distance) / 384.0;
@@ -120,6 +120,9 @@ private:
 
   /// \brief The apple keypoints expressed in the apple frame.
   Eigen::Matrix2Xd* A_keypoints_apple_;
+
+  ///
+  Eigen::VectorXi* apple_track_ids_;
 
   /// \brief The banana keypoints projected into the apple frame, expressed in the apple frame.
   aslam::Aligned<std::vector, Eigen::Vector2d>::type A_projected_keypoints_banana_;

@@ -40,16 +40,12 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
     size_t num_bananas = problem->numBananas();
 
     for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
-      typename MatchingProblem::Candidates candidates;
+      typename MatchingProblem::SortedCandidates candidates;
 
       problem->getAppleCandidatesForBanana(index_banana, &candidates);
 
-      auto best_candidate = candidates.begin();
-      for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-        if (it->score > best_candidate->score) best_candidate = it;
-      }
-
-      if (best_candidate != candidates.end()) {
+      if (candidates.size() > 0) {
+        auto best_candidate = candidates.rbegin();
         matches->emplace_back(best_candidate->index_apple, index_banana, best_candidate->score);
       }
     }

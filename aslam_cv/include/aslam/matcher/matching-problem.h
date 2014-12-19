@@ -6,6 +6,7 @@
 ///
 /// @}
 
+#include <set>
 #include <vector>
 
 #include <aslam/common/macros.h>
@@ -31,13 +32,32 @@ class MatchingProblem {
 public:
   struct Candidate {
     int index_apple;
-    double score; /// a preliminary score that can be used for
-                   /// sorting, rough thresholding; but actual match
-                   /// score will get recomputed.
-    Candidate(int _index_apple, const double& _score) : index_apple(_index_apple), score(_score) {}
+    int index_banana;
+    double score;
+    int priority;
+
+    Candidate() : index_apple(-1), index_banana(-1), score(0.0), priority(-1) {}
+    Candidate(int _index_apple, int _index_banana, double _score, int _priority) :
+      index_apple(_index_apple), index_banana(_index_banana), score(_score), priority(_priority) {}
+
+    bool operator<(const Candidate& other) const {
+      if (this->priority < other.priority) return true;
+      return this->score < other.score;
+    }
+    bool operator>(const Candidate& other) const {
+      if (this->priority > other.priority) return true;
+      return this->score > other.score;
+    }
+
+    bool operator==(const Candidate& other) const {
+      return (this->index_apple == other.index_apple) &&
+             (this->score == other.score) &&
+             (this->priority == other.priority);
+    }
   };
 
   typedef std::vector<Candidate> Candidates;
+  typedef std::set<Candidate> SortedCandidates;
 
   ASLAM_POINTER_TYPEDEFS(MatchingProblem);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblem);
@@ -61,7 +81,7 @@ public:
   ///
   /// \param[in] b The index of b queried for candidates.
   /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
-  virtual void getAppleCandidatesForBanana(int /*b*/, Candidates *candidates) = 0;
+  virtual void getAppleCandidatesForBanana(int /*b*/, SortedCandidates* candidates) = 0;
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
