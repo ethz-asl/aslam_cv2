@@ -68,6 +68,8 @@ bool MatchingProblemFrameToFrame::doSetup() {
 
   if (apple_frame_->hasTrackIds()) {
     apple_track_ids_ = apple_frame_->getTrackIdsMutable();
+  } else {
+    apple_track_ids_ = nullptr;
   }
 
   // This creates a descriptor wrapper for the given descriptor and allows computing the hamming
@@ -246,10 +248,10 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
         if (hamming_distance < hamming_distance_threshold_) {
           CHECK_GE(hamming_distance, 0);
           int priority = 0;
-          //if (apple_track_ids_ != nullptr) {
-          //  CHECK_LT(apple_index, apple_track_ids_->cols());
-          //  if ((*apple_track_ids_)(apple_index) >= 0) priority = 1;
-          //}
+          if (apple_track_ids_ != nullptr) {
+            CHECK_LT(apple_index, apple_track_ids_->cols());
+            //if ((*apple_track_ids_)(apple_index) >= 0) priority = 1;
+          }
           candidates->emplace(apple_index, banana_index, computeMatchScore(hamming_distance), priority);
         }
       }
