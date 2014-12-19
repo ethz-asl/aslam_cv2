@@ -66,6 +66,10 @@ bool MatchingProblemFrameToFrame::doSetup() {
   apple_descriptors_.reserve(num_apple_descriptors);
   banana_descriptors_.reserve(num_banana_descriptors);
 
+  if (apple_frame_->hasTrackIds()) {
+    apple_track_ids_ = apple_frame_->getTrackIdsMutable();
+  }
+
   // This creates a descriptor wrapper for the given descriptor and allows computing the hamming
   // distance between two descriptors. todo(mbuerki): Think of ways to generalize this for
   // different descriptor types (surf, sift, ...).
@@ -158,7 +162,7 @@ bool MatchingProblemFrameToFrame::doSetup() {
 }
 
 void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
-                                                              Candidates* candidates) {
+                                                              SortedCandidates* candidates) {
   // Get list of apple keypoint indices within some defined distance around the projected banana
   // keypoint and within some defined descriptor distance.
   CHECK(apple_frame_) << "The apple frame is NULL.";
@@ -227,7 +231,11 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
 
         if (hamming_distance < hamming_distance_threshold_) {
           CHECK_GE(hamming_distance, 0);
-          candidates->emplace_back(apple_index, computeMatchScore(hamming_distance));
+          int priority = 0;
+          if (apple_track_ids_ != nullptr) {
+            if ((*apple_track_ids_)(apple_index) >= 0) priority = 1;
+          }
+          candidates->emplace(apple_index, banana_index, computeMatchScore(hamming_distance), priority);
         }
       }
     }
