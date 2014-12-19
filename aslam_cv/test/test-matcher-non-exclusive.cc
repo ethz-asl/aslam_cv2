@@ -54,7 +54,7 @@ TEST_F(MatcherTest, EmptyMatch) {
 
   EXPECT_TRUE(matches.empty());
 }
-/*
+
 TEST_F(MatcherTest, MatchIdentity) {
   Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
   Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
@@ -83,12 +83,14 @@ TEST_F(MatcherTest, MatchIdentity) {
   matching_engine_.match(matching_problem.get(), &matches);
 
   ASSERT_EQ(1, matches.size());
+  /*
   aslam::Match match = matches[0];
   EXPECT_EQ(0, match.getIndexApple());
   EXPECT_EQ(0, match.getIndexBanana());
   EXPECT_DOUBLE_EQ(1.0, match.score);
+  */
 }
-*/
+
 /*
 TEST_F(MatcherTest, MatchRotation) {
   size_t image_height = camera_->imageHeight();
