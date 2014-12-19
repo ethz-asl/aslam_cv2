@@ -69,10 +69,11 @@ TEST_F(MatcherTest, MatchIdentity) {
 
   banana_frame_->setKeypointMeasurements(banana_keypoints);
   banana_frame_->setDescriptors(banana_descriptors);
-  /*
+
   aslam::Quaternion q_A_B;
   q_A_B.setIdentity();
 
+  /*
   aslam::MatchingProblemFrameToFrame::Ptr matching_problem =
       aslam::aligned_shared<aslam::MatchingProblemFrameToFrame>(apple_frame_,
                                                    banana_frame_,
