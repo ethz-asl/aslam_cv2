@@ -43,7 +43,7 @@ private:
     CHECK_GE(index_banana, 0);
 
     // Iterate through the next best apple candidates to find the next best fit (if any).
-    for (; iterator_to_next_best_apple_[index_banana] != candidates_[index_banana].rend();
+    for (; iterator_to_next_best_apple_[index_banana] != candidates_[index_banana].end();
         ++(iterator_to_next_best_apple_[index_banana])) {
       const size_t next_best_apple_for_this_banana =
           iterator_to_next_best_apple_[index_banana]->index_apple;
@@ -72,8 +72,7 @@ private:
   ///        a list of apples sorted wrt. the matching score (note: it's sorted bottom-up, so
   ///        .begin() points to the worst apple match for this banana. use .rbegin() instead to get
   ///        best candidate.)
-  typename aslam::Aligned<std::vector, typename MatchingProblem::SortedCandidates>::type
-    candidates_;
+  typename aslam::Aligned<std::vector, typename MatchingProblem::Candidates>::type candidates_;
 
   /// \brief The temporary matches assigned to each apple. (i.e. temporary_matches_[apple_index]
   ///        returns the current match for this apple. May change during the assignment procedure.
@@ -85,7 +84,7 @@ private:
   ///        for the given banana. Points to candiates_[banana_index].end() if no next best
   ///        candidate available.
   typename aslam::Aligned<std::vector,
-  typename MatchingProblem::SortedCandidates::reverse_iterator>::type iterator_to_next_best_apple_;
+  typename MatchingProblem::Candidates::iterator>::type iterator_to_next_best_apple_;
 };
 
 template<typename MatchingProblem>
@@ -110,7 +109,12 @@ bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
     // Collect all apple candidates for every banana.
     for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
       problem->getAppleCandidatesForBanana(index_banana, &(candidates_[index_banana]));
-      iterator_to_next_best_apple_[index_banana] = candidates_[index_banana].rbegin();
+
+      // Sorts the candidates in descending order.
+      std::sort(candidates_[index_banana].begin(), candidates_[index_banana].end(),
+                std::greater<typename MatchingProblem::Candidate>());
+
+      iterator_to_next_best_apple_[index_banana] = candidates_[index_banana].begin();
     }
 
     // Find the best apple for every banana.

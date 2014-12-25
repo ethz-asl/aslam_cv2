@@ -75,7 +75,7 @@ public:
   /// \param[in] b            The index of b queried for candidates.
   /// \param[out] candidates  Candidates from the Apples-list that could potentially match this
   ///                         element of Bananas.
-  virtual void getAppleCandidatesForBanana(int banana_index, SortedCandidates* candidates);
+  virtual void getAppleCandidatesForBanana(int banana_index, Candidates* candidates);
 
   inline double computeMatchScore(int hamming_distance) {
     return static_cast<double>(384 - hamming_distance) / 384.0;

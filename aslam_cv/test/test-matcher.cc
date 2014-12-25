@@ -49,14 +49,14 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
     std::sort(matches_.begin(),matches_.end());
   }
 
-  virtual void getAppleCandidatesForBanana(int b, SortedCandidates* candidates) {
+  virtual void getAppleCandidatesForBanana(int b, Candidates* candidates) {
      CHECK_NOTNULL(candidates);
      candidates->clear();
 
      // just returns all apples with no score
      for (unsigned int index_apple = 0; index_apple < numApples(); ++index_apple) {
        double score = -fabs(apples_[index_apple] - bananas_[b]);
-       candidates->emplace(index_apple, b, score, 0);
+       candidates->emplace_back(index_apple, b, score, 0);
      }
    };
 };
@@ -113,22 +113,28 @@ class PriorityMatchingTest : public ::testing::Test {
     matching_engine_.iterator_to_next_best_apple_.resize(4);
     matching_engine_.temporary_matches_.resize(4);
 
-    matching_engine_.candidates_[0].emplace(0, 0, 0.0, 0);
-    matching_engine_.iterator_to_next_best_apple_[0] = matching_engine_.candidates_[0].rbegin();
+    matching_engine_.candidates_[0].emplace_back(0, 0, 0.0, 0);
+    matching_engine_.iterator_to_next_best_apple_[0] = matching_engine_.candidates_[0].begin();
 
-    matching_engine_.candidates_[1].emplace(0, 1, 1.0, 0);
-    matching_engine_.candidates_[1].emplace(1, 1, 2.0, 1);
-    matching_engine_.candidates_[1].emplace(2, 1, 3.0, 0);
-    matching_engine_.iterator_to_next_best_apple_[1] = matching_engine_.candidates_[1].rbegin();
+    matching_engine_.candidates_[1].emplace_back(0, 1, 1.0, 0);
+    matching_engine_.candidates_[1].emplace_back(1, 1, 2.0, 1);
+    matching_engine_.candidates_[1].emplace_back(2, 1, 3.0, 0);
+    std::sort(matching_engine_.candidates_[1].begin(), matching_engine_.candidates_[1].end(),
+              std::greater<aslam::MatchingProblem::Candidate>());
+    matching_engine_.iterator_to_next_best_apple_[1] = matching_engine_.candidates_[1].begin();
 
-    matching_engine_.candidates_[2].emplace(1, 2, 4.0, 1);
-    matching_engine_.candidates_[2].emplace(2, 2, 5.0, 0);
-    matching_engine_.iterator_to_next_best_apple_[2] = matching_engine_.candidates_[2].rbegin();
+    matching_engine_.candidates_[2].emplace_back(1, 2, 4.0, 1);
+    matching_engine_.candidates_[2].emplace_back(2, 2, 5.0, 0);
+    std::sort(matching_engine_.candidates_[2].begin(), matching_engine_.candidates_[2].end(),
+              std::greater<aslam::MatchingProblem::Candidate>());
+    matching_engine_.iterator_to_next_best_apple_[2] = matching_engine_.candidates_[2].begin();
 
-    matching_engine_.candidates_[3].emplace(1, 3, 6.0, 1);
-    matching_engine_.candidates_[3].emplace(2, 3, 7.0, 0);
-    matching_engine_.candidates_[3].emplace(3, 3, 0.5, 1);
-    matching_engine_.iterator_to_next_best_apple_[3] = matching_engine_.candidates_[3].rbegin();
+    matching_engine_.candidates_[3].emplace_back(1, 3, 6.0, 1);
+    matching_engine_.candidates_[3].emplace_back(2, 3, 7.0, 0);
+    matching_engine_.candidates_[3].emplace_back(3, 3, 0.5, 1);
+    std::sort(matching_engine_.candidates_[3].begin(), matching_engine_.candidates_[3].end(),
+              std::greater<aslam::MatchingProblem::Candidate>());
+    matching_engine_.iterator_to_next_best_apple_[3] = matching_engine_.candidates_[3].begin();
 
     for (size_t i = 0; i < 4; ++i) {
       matching_engine_.assignBest(i);
