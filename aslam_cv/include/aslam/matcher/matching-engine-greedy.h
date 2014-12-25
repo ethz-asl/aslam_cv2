@@ -35,7 +35,7 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
   size_t numA = problem->numApples();
   size_t numB = problem->numBananas();
 
-  std::vector<typename MatchingProblem::SortedCandidates> candidates(numB);
+  std::vector<typename MatchingProblem::Candidates> candidates(numB);
 
   int totalNumCandidates = 0;
   for (unsigned int b = 0; b < numB; ++b) {

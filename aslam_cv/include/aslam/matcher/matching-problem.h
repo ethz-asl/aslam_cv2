@@ -60,7 +60,6 @@ public:
   };
 
   typedef std::vector<Candidate> Candidates;
-  typedef std::set<Candidate> SortedCandidates;
 
   ASLAM_POINTER_TYPEDEFS(MatchingProblem);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblem);
@@ -84,7 +83,7 @@ public:
   ///
   /// \param[in] b The index of b queried for candidates.
   /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
-  virtual void getAppleCandidatesForBanana(int /*b*/, SortedCandidates* candidates) = 0;
+  virtual void getAppleCandidatesForBanana(int /*b*/, Candidates* candidates) = 0;
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
