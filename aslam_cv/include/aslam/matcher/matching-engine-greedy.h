@@ -46,15 +46,15 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
   matches->reserve(totalNumCandidates);
   for (unsigned int b = 0; b < numB; ++b) {
     // compute the score for each candidate and put in queue
-    for (auto it = candidates[b].begin(); it != candidates[b].end(); ++it) {
-      matches->emplace_back(it->index_apple, b, it->score);
+    for (const typename MatchingProblem::Candidate& candidate_for_b : candidates[b]) {
+      matches->emplace_back(candidate_for_b.index_apple, b, candidate_for_b.score);
     }
   }
   // reverse sort with reverse iterators
   std::sort(matches->rbegin(), matches->rend());
 
   // compress in place best unique match
-  std::vector<bool> assignedA(numA, false);
+  std::vector<unsigned char> assignedA(numA, false);
 
   auto match_out = matches->begin();
   for (auto match_in = matches->begin(); match_in != matches->end(); ++match_in) {

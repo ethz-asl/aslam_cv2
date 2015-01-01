@@ -22,8 +22,6 @@ class MatcherTest : public testing::Test {
 
     image_space_distance_threshold_ = 25.0;
     hamming_distance_threshold_ = 60;
-
-
   }
 
   double image_space_distance_threshold_;
