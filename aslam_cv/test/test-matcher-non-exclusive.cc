@@ -78,7 +78,6 @@ TEST_F(MatcherTest, MatchIdentity) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-
   aslam::Matches matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
