@@ -36,6 +36,7 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
   size_t numB = problem->numBananas();
 
   std::vector<typename MatchingProblem::Candidates> candidates(numB);
+
   int totalNumCandidates = 0;
   for (unsigned int b = 0; b < numB; ++b) {
     problem->getAppleCandidatesForBanana(b, &candidates[b]);
@@ -45,8 +46,8 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
   matches->reserve(totalNumCandidates);
   for (unsigned int b = 0; b < numB; ++b) {
     // compute the score for each candidate and put in queue
-    for (unsigned int c = 0; c < candidates[b].size(); ++c) {
-      matches->emplace_back(candidates[b][c].index_apple, b, candidates[b][c].score);
+    for (const typename MatchingProblem::Candidate& candidate_for_b : candidates[b]) {
+      matches->emplace_back(candidate_for_b.index_apple, b, candidate_for_b.score);
     }
   }
   // reverse sort with reverse iterators
@@ -54,9 +55,11 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
 
   // compress in place best unique match
   std::vector<unsigned char> assignedA(numA, false);
+
   auto match_out = matches->begin();
   for (auto match_in = matches->begin(); match_in != matches->end(); ++match_in) {
     int a = match_in->getIndexApple();
+
     if (!assignedA[a]) {
       assignedA[a] = true;
       *match_out++ = *match_in;
