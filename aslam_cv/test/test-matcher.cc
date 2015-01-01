@@ -1,5 +1,3 @@
-#include <aslam/common/entrypoint.h>
-
 #include <math.h>
 #include <vector>
 #include <algorithm>
@@ -63,104 +61,92 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
 
 namespace aslam {
 
-class PriorityMatchingTest : public ::testing::Test {
- public:
-  virtual void SetUp() {
+TEST(PriorityMatchingTest, TestAssignBest) {
+  ////////////////////
+  ////// SCENARIO
+  ////////////////////
+  // bananas       apples, priority
+  //    0               0, 0
+  //    1               1, 1
+  //    2               2, 0
+  //    3               3, 1
+  //
+  // candidates:
+  //    (b, a), score
+  //    ------
+  //    (0, 0), 0.0
+  //    (1, 0), 1.0
+  //    (1, 1), 2.0
+  //    (1, 2), 3.0
+  //    (2, 1), 4.0
+  //    (2, 2), 5.0
+  //    (3, 1), 6.0
+  //    (3, 2), 7.0
+  //    (3, 3), 0.5
 
+  // The following behaviour is expected:
+  // 1. banana 0 is assigned to apple 0 (only candidate)
+  // 2. banana 1 is assigned to apple 1 (priority of apple 1 outrules score of apple 2)
+  // 3. banana 2 is assigned to apple 1 (again, priority outrules score of apple 2)
+  // 4. banana 1 is reassigned to apple 2 (next best after apple 1 for banana 1)
+  // 5. banana 3 is assigned to apple 1 (score outrules apple 3 with same priority as apple 1)
+  // 6. banana 2 is reassigned to apple 2 (next best)
+  // 7. banana 1 is reassigned to apple 0 (next best)
+  // 8. banana 0 loses its assignment apple 0 (not reassigned again since no other candidates)
+
+  // This leads to the following solution:
+  // (a, b)
+  // ------
+  // (0, 1)
+  // (1, 3)
+  // (2, 2)
+  aslam::MatchingEngineExclusive<SimpleMatchProblem> matching_engine;
+
+  matching_engine.candidates_.resize(4);
+  matching_engine.iterator_to_next_best_apple_.resize(4);
+  matching_engine.temporary_matches_.resize(4);
+
+  matching_engine.candidates_[0].emplace_back(0, 0, 0.0, 0);
+  matching_engine.iterator_to_next_best_apple_[0] = matching_engine.candidates_[0].begin();
+
+  matching_engine.candidates_[1].emplace_back(0, 1, 1.0, 0);
+  matching_engine.candidates_[1].emplace_back(1, 1, 2.0, 1);
+  matching_engine.candidates_[1].emplace_back(2, 1, 3.0, 0);
+  std::sort(matching_engine.candidates_[1].begin(), matching_engine.candidates_[1].end(),
+            std::greater<aslam::MatchingProblem::Candidate>());
+  matching_engine.iterator_to_next_best_apple_[1] = matching_engine.candidates_[1].begin();
+
+  matching_engine.candidates_[2].emplace_back(1, 2, 4.0, 1);
+  matching_engine.candidates_[2].emplace_back(2, 2, 5.0, 0);
+  std::sort(matching_engine.candidates_[2].begin(), matching_engine.candidates_[2].end(),
+            std::greater<aslam::MatchingProblem::Candidate>());
+  matching_engine.iterator_to_next_best_apple_[2] = matching_engine.candidates_[2].begin();
+
+  matching_engine.candidates_[3].emplace_back(1, 3, 6.0, 1);
+  matching_engine.candidates_[3].emplace_back(2, 3, 7.0, 0);
+  matching_engine.candidates_[3].emplace_back(3, 3, 0.5, 1);
+  std::sort(matching_engine.candidates_[3].begin(), matching_engine.candidates_[3].end(),
+            std::greater<aslam::MatchingProblem::Candidate>());
+  matching_engine.iterator_to_next_best_apple_[3] = matching_engine.candidates_[3].begin();
+
+  for (size_t i = 0; i < 4; ++i) {
+    matching_engine.assignBest(i);
   }
 
-  void testAssignBest() {
-    ////////////////////
-    ////// SCENARIO
-    ////////////////////
-    // bananas       apples, priority
-    //    0               0, 0
-    //    1               1, 1
-    //    2               2, 0
-    //    3               3, 1
-    //
-    // candidates:
-    //    (b, a), score
-    //    ------
-    //    (0, 0), 0.0
-    //    (1, 0), 1.0
-    //    (1, 1), 2.0
-    //    (1, 2), 3.0
-    //    (2, 1), 4.0
-    //    (2, 2), 5.0
-    //    (3, 1), 6.0
-    //    (3, 2), 7.0
-    //    (3, 3), 0.5
+  EXPECT_EQ(matching_engine.temporary_matches_[0].index_apple, 0);
+  EXPECT_EQ(matching_engine.temporary_matches_[0].index_banana, 1);
 
-    // The following behaviour is expected:
-    // 1. banana 0 is assigned to apple 0 (only candidate)
-    // 2. banana 1 is assigned to apple 1 (priority of apple 1 outrules score of apple 2)
-    // 3. banana 2 is assigned to apple 1 (again, priority outrules score of apple 2)
-    // 4. banana 1 is reassigned to apple 2 (next best after apple 1 for banana 1)
-    // 5. banana 3 is assigned to apple 1 (score outrules apple 3 with same priority as apple 1)
-    // 6. banana 2 is reassigned to apple 2 (next best)
-    // 7. banana 1 is reassigned to apple 0 (next best)
-    // 8. banana 0 loses its assignment apple 0 (not reassigned again since no other candidates)
+  EXPECT_EQ(matching_engine.temporary_matches_[1].index_apple, 1);
+  EXPECT_EQ(matching_engine.temporary_matches_[1].index_banana, 3);
 
-    // This leads to the following solution:
-    // (a, b)
-    // ------
-    // (0, 1)
-    // (1, 3)
-    // (2, 2)
+  EXPECT_EQ(matching_engine.temporary_matches_[2].index_apple, 2);
+  EXPECT_EQ(matching_engine.temporary_matches_[2].index_banana, 2);
 
-    matching_engine_.candidates_.resize(4);
-    matching_engine_.iterator_to_next_best_apple_.resize(4);
-    matching_engine_.temporary_matches_.resize(4);
-
-    matching_engine_.candidates_[0].emplace_back(0, 0, 0.0, 0);
-    matching_engine_.iterator_to_next_best_apple_[0] = matching_engine_.candidates_[0].begin();
-
-    matching_engine_.candidates_[1].emplace_back(0, 1, 1.0, 0);
-    matching_engine_.candidates_[1].emplace_back(1, 1, 2.0, 1);
-    matching_engine_.candidates_[1].emplace_back(2, 1, 3.0, 0);
-    std::sort(matching_engine_.candidates_[1].begin(), matching_engine_.candidates_[1].end(),
-              std::greater<aslam::MatchingProblem::Candidate>());
-    matching_engine_.iterator_to_next_best_apple_[1] = matching_engine_.candidates_[1].begin();
-
-    matching_engine_.candidates_[2].emplace_back(1, 2, 4.0, 1);
-    matching_engine_.candidates_[2].emplace_back(2, 2, 5.0, 0);
-    std::sort(matching_engine_.candidates_[2].begin(), matching_engine_.candidates_[2].end(),
-              std::greater<aslam::MatchingProblem::Candidate>());
-    matching_engine_.iterator_to_next_best_apple_[2] = matching_engine_.candidates_[2].begin();
-
-    matching_engine_.candidates_[3].emplace_back(1, 3, 6.0, 1);
-    matching_engine_.candidates_[3].emplace_back(2, 3, 7.0, 0);
-    matching_engine_.candidates_[3].emplace_back(3, 3, 0.5, 1);
-    std::sort(matching_engine_.candidates_[3].begin(), matching_engine_.candidates_[3].end(),
-              std::greater<aslam::MatchingProblem::Candidate>());
-    matching_engine_.iterator_to_next_best_apple_[3] = matching_engine_.candidates_[3].begin();
-
-    for (size_t i = 0; i < 4; ++i) {
-      matching_engine_.assignBest(i);
-    }
-
-    EXPECT_EQ(matching_engine_.temporary_matches_[0].index_apple, 0);
-    EXPECT_EQ(matching_engine_.temporary_matches_[0].index_banana, 1);
-
-    EXPECT_EQ(matching_engine_.temporary_matches_[1].index_apple, 1);
-    EXPECT_EQ(matching_engine_.temporary_matches_[1].index_banana, 3);
-
-    EXPECT_EQ(matching_engine_.temporary_matches_[2].index_apple, 2);
-    EXPECT_EQ(matching_engine_.temporary_matches_[2].index_banana, 2);
-
-    EXPECT_EQ(matching_engine_.temporary_matches_[3].index_apple, -1);
-    EXPECT_EQ(matching_engine_.temporary_matches_[3].index_banana, -1);
-  }
-
-  aslam::MatchingEngineExclusive<SimpleMatchProblem> matching_engine_;
-};
-
-TEST_F(PriorityMatchingTest, TestAssignBest) {
-  testAssignBest();
+  EXPECT_EQ(matching_engine.temporary_matches_[3].index_apple, -1);
+  EXPECT_EQ(matching_engine.temporary_matches_[3].index_banana, -1);
 }
 
-}
+}  // namespace aslam
 
 TEST(TestMatcherExclusive, EmptyMatch) {
   SimpleMatchProblem mp;

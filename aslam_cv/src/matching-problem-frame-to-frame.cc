@@ -152,7 +152,7 @@ bool MatchingProblemFrameToFrame::doSetup() {
       ProjectionResult projection_result =
           iCam->project3(A_ray_banana, &A_keypoint_banana);
 
-      // If the banana keypoint projects into the image plane of the apple frame, we cappect it.
+      // If the banana keypoint projects into the image plane of the apple frame, we accept it.
       if (projection_result.isKeypointVisible()) {
         A_projected_keypoints_banana_[banana_idx] = A_keypoint_banana;
       } else {

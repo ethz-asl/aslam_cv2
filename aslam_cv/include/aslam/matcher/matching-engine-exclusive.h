@@ -1,8 +1,9 @@
 #ifndef ASLAM_CV_MATCHINGENGINE_EXCLUSIVE_H_
 #define ASLAM_CV_MATCHINGENGINE_EXCLUSIVE_H_
+#include <vector>
 
 #include <glog/logging.h>
-#include <vector>
+#include <gtest/gtest_prod.h>
 
 #include <aslam/common/macros.h>
 #include <aslam/common/memory.h>
@@ -27,7 +28,7 @@ namespace aslam {
 template<typename MatchingProblem>
 class MatchingEngineExclusive : public MatchingEngine<MatchingProblem> {
  public:
-  friend class PriorityMatchingTest;
+  FRIEND_TEST(PriorityMatchingTest, TestAssignBest);
 
   ASLAM_POINTER_TYPEDEFS(MatchingEngineExclusive);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngineExclusive);
@@ -84,7 +85,7 @@ private:
   ///        for the given banana. Points to candiates_[banana_index].end() if no next best
   ///        candidate available.
   typename aslam::Aligned<std::vector,
-  typename MatchingProblem::Candidates::iterator>::type iterator_to_next_best_apple_;
+    typename MatchingProblem::Candidates::iterator>::type iterator_to_next_best_apple_;
 };
 
 template<typename MatchingProblem>
@@ -123,13 +124,13 @@ bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
     }
 
     // Assign the exclusive matches to the match vector.
-    for (auto it = temporary_matches_.begin(); it != temporary_matches_.end(); ++it) {
-      if (it->index_apple >= 0) {
-        CHECK_LT(it->index_apple, num_apples);
-        CHECK_GE(it->index_banana, 0);
-        CHECK_LT(it->index_banana, num_bananas);
+    for (const typename MatchingProblem::Candidate& candidate : temporary_matches_)  {
+      if (candidate.index_apple >= 0) {
+        CHECK_LT(candidate.index_apple, num_apples);
+        CHECK_GE(candidate.index_banana, 0);
+        CHECK_LT(candidate.index_banana, num_bananas);
 
-        matches->emplace_back(it->index_apple, it->index_banana, it->score);
+        matches->emplace_back(candidate.index_apple, candidate.index_banana, candidate.score);
       }
     }
 
