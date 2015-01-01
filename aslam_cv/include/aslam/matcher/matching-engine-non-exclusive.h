@@ -2,6 +2,7 @@
 #define ASLAM_CV_MATCHINGENGINE_NON_EXCLUSIVE_H_
 
 #include <glog/logging.h>
+#include <set>
 #include <vector>
 
 #include <aslam/common/macros.h>
@@ -46,7 +47,7 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
 
       auto best_candidate = candidates.begin();
       for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-        if (it->score > best_candidate->score) best_candidate = it;
+        if ((*it) > (*best_candidate)) best_candidate = it;
       }
 
       if (best_candidate != candidates.end()) {

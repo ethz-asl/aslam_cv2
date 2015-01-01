@@ -22,8 +22,6 @@ class MatcherTest : public testing::Test {
 
     image_space_distance_threshold_ = 25.0;
     hamming_distance_threshold_ = 60;
-
-
   }
 
   double image_space_distance_threshold_;
@@ -79,10 +77,12 @@ TEST_F(MatcherTest, MatchIdentity) {
                                                    q_A_B,
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
+
   aslam::Matches matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
   ASSERT_EQ(1, matches.size());
+
   aslam::Match match = matches[0];
   EXPECT_EQ(0, match.getIndexApple());
   EXPECT_EQ(0, match.getIndexBanana());

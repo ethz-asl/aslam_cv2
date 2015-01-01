@@ -121,6 +121,9 @@ private:
   /// \brief The apple keypoints expressed in the apple frame.
   Eigen::Matrix2Xd* A_keypoints_apple_;
 
+  /// \brief Pointer to the track ids of the apple frame. Null, if none available.
+  Eigen::VectorXi* apple_track_ids_;
+
   /// \brief The banana keypoints projected into the apple frame, expressed in the apple frame.
   aslam::Aligned<std::vector, Eigen::Vector2d>::type A_projected_keypoints_banana_;
 

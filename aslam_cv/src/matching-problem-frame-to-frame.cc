@@ -18,7 +18,8 @@ MatchingProblemFrameToFrame::MatchingProblemFrameToFrame(
     squared_image_space_distance_threshold_pixels_squared_(image_space_distance_threshold *
                                                            image_space_distance_threshold),
     hamming_distance_threshold_(hamming_distance_threshold),
-    A_keypoints_apple_(nullptr) {
+    A_keypoints_apple_(nullptr),
+    apple_track_ids_(nullptr) {
   CHECK(apple_frame) << "The given apple frame is NULL.";
   CHECK(banana_frame) << "The given banana frame is NULL.";
 
@@ -65,6 +66,12 @@ bool MatchingProblemFrameToFrame::doSetup() {
   banana_descriptors_.clear();
   apple_descriptors_.reserve(num_apple_descriptors);
   banana_descriptors_.reserve(num_banana_descriptors);
+
+  if (apple_frame_->hasTrackIds()) {
+    apple_track_ids_ = apple_frame_->getTrackIdsMutable();
+  } else {
+    apple_track_ids_ = nullptr;
+  }
 
   // This creates a descriptor wrapper for the given descriptor and allows computing the hamming
   // distance between two descriptors. todo(mbuerki): Think of ways to generalize this for
@@ -141,11 +148,12 @@ bool MatchingProblemFrameToFrame::doSetup() {
     if (valid_bananas_[banana_idx]) {
       Eigen::Vector2d A_keypoint_banana;
       Eigen::Vector3d A_ray_banana = A_rays_banana.col(banana_idx);
+
       ProjectionResult projection_result =
           iCam->project3(A_ray_banana, &A_keypoint_banana);
 
-      // As long as the projected keypoint is not outside the image box, we accept it.
-      if (projection_result.getDetailedStatus() != projection_result.KEYPOINT_OUTSIDE_IMAGE_BOX) {
+      // If the banana keypoint projects into the image plane of the apple frame, we accept it.
+      if (projection_result.isKeypointVisible()) {
         A_projected_keypoints_banana_[banana_idx] = A_keypoint_banana;
       } else {
         valid_bananas_[banana_idx] = false;
@@ -227,7 +235,15 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
 
         if (hamming_distance < hamming_distance_threshold_) {
           CHECK_GE(hamming_distance, 0);
-          candidates->emplace_back(apple_index, computeMatchScore(hamming_distance));
+          int priority = 0;
+          if (apple_track_ids_ != nullptr) {
+            CHECK_LT(apple_index, apple_track_ids_->rows());
+            if ((*apple_track_ids_)(apple_index) >= 0) priority = 1;
+          }
+          candidates->emplace_back(apple_index,
+                                   banana_index,
+                                   computeMatchScore(hamming_distance),
+                                   priority);
         }
       }
     }
