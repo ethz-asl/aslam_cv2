@@ -10,6 +10,65 @@
 
 namespace aslam {
 
+/// \brief This struct is returned by the triangulator and holds the result state
+///        of the triangulation operation.
+struct TriangulationResult {
+  /// Possible projection state.
+  enum class Status {
+    /// The triangulation was successful.
+    SUCCESSFUL,
+    /// There were too few (< 2) landmark observations.
+    TOO_FEW_MEASUREMENTS,
+    /// The landmark is not fully observable (rank deficiency).
+    UNOBSERVABLE,
+    /// Default value after construction.
+    UNINITIALIZED
+  };
+  // Make the enum values accessible from the outside without the additional indirection.
+  static Status SUCCESSFUL;
+  static Status TOO_FEW_MEASUREMENTS;
+  static Status UNOBSERVABLE;
+  static Status UNINITIALIZED;
+
+  constexpr TriangulationResult() : status_(Status::UNINITIALIZED) {};
+  constexpr TriangulationResult(Status status) : status_(status) {};
+
+  /// \brief The triangulation result can be typecasted to bool and is true if the triangulation
+  ///        is successful.
+  explicit operator bool() const { return wasTriangulationSuccessful(); };
+
+  /// \brief Compare objects.
+  bool operator==(const TriangulationResult& other) const { return status_ == other.status_; };
+
+  /// \brief Compare triangulation status.
+  bool operator==(const TriangulationResult::Status& other) const { return status_ == other; };
+
+  /// \brief Convenience function to print the state using streams.
+  friend std::ostream& operator<< (std::ostream& out, const TriangulationResult& state)
+  {
+    std::string enum_str;
+    switch (state.status_){
+      case Status::SUCCESSFUL:                enum_str = "SUCCESSFUL"; break;
+      case Status::TOO_FEW_MEASUREMENTS:      enum_str = "TOO_FEW_MEASUREMENTS"; break;
+      case Status::UNOBSERVABLE:              enum_str = "UNOBSERVABLE"; break;
+      default:
+        case Status::UNINITIALIZED:             enum_str = "UNINITIALIZED"; break;
+    }
+    out << "ProjectionResult: " << enum_str << std::endl;
+    return out;
+  }
+
+  /// \brief Check whether the triangulation was successful.
+  bool wasTriangulationSuccessful() const { return (status_ == Status::SUCCESSFUL); };
+
+  /// \brief Returns the exact state of the triangulation operation.
+  Status getDetailedStatus() const { return status_; };
+
+ private:
+  /// Stores the projection state.
+  Status status_;
+};
+
 /// brief Triangulate a 3d point from a set of n keypoint measurements on the
 ///       normalized camera plane.
 /// @param measurements_normalized Keypoint measurements on normalized camera
@@ -20,14 +79,14 @@ namespace aslam {
 ///       frame of reference.
 /// @param G_point Triangulated point in global frame.
 /// @return Was the triangulation successful?
-inline bool linearTriangulateFromNViews(
+inline TriangulationResult linearTriangulateFromNViews(
     const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
     const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
     const aslam::Transformation& T_B_C, Eigen::Vector3d* G_point) {
   CHECK_NOTNULL(G_point);
   CHECK_EQ(measurements_normalized.size(), T_G_B.size());
   if (measurements_normalized.size() < 2u) {
-    return false;
+    return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
   }
 
   const size_t rows = 3 * measurements_normalized.size();
@@ -53,11 +112,11 @@ inline bool linearTriangulateFromNViews(
   qr.setThreshold(kRankLossTolerance);
   const size_t rank = qr.rank();
   if ((rank - measurements_normalized.size()) < 3) {
-    return false;
+    return TriangulationResult(TriangulationResult::UNOBSERVABLE);
   }
 
   *G_point = qr.solve(b).head<3>();
-  return true;
+  return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
 /// brief Triangulate a 3d point from a set of n keypoint measurements in

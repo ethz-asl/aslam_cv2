@@ -23,6 +23,7 @@ cs_add_library(${PROJECT_NAME}
                                src/ncamera.cc
                                src/statistics.cc
                                src/thread-pool.cc
+                               src/triangulation.cc
                                src/undistorter.cc
                                src/undistorter-mapped.cc
                                src/visual-frame.cc
