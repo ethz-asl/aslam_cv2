@@ -1,5 +1,5 @@
-#ifndef ASLAM_MATCH_HELPERS_H_
-#define ASLAM_MATCH_HELPERS_H_
+#ifndef ASLAM_TRACK_MANAGER_H_
+#define ASLAM_TRACK_MANAGER_H_
 
 namespace aslam {
   class VisualFrame;
@@ -132,4 +132,4 @@ namespace aslam {
   };
 }
 
-#endif  // ASLAM_MATCH_HELPERS_H_
+#endif  // ASLAM_TRACK_MANAGER_H_
