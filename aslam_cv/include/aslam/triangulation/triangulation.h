@@ -16,13 +16,13 @@ struct TriangulationResult {
   /// Possible triangulation state.
   enum class Status {
     /// The triangulation was successful.
-    SUCCESSFUL,
+    kSuccessful,
     /// There were too few landmark observations.
-    TOO_FEW_MEASUREMENTS,
+    kTooFewMeasurments,
     /// The landmark is not fully observable (rank deficiency).
-    UNOBSERVABLE,
+    kUnobservable,
     /// Default value after construction.
-    UNINITIALIZED
+    kUninitialized
   };
   // Make the enum values accessible from the outside without the additional
   // indirection.
@@ -31,7 +31,7 @@ struct TriangulationResult {
   static Status UNOBSERVABLE;
   static Status UNINITIALIZED;
 
-  constexpr TriangulationResult() : status_(Status::UNINITIALIZED) {};
+  constexpr TriangulationResult() : status_(Status::kUninitialized) {};
   constexpr TriangulationResult(Status status) : status_(status) {};
 
   /// \brief The triangulation result can be typecasted to bool and is true if
@@ -43,11 +43,11 @@ struct TriangulationResult {
                                    const TriangulationResult& state)  {
     std::string enum_str;
     switch (state.status_){
-      case Status::SUCCESSFUL:                enum_str = "SUCCESSFUL"; break;
-      case Status::TOO_FEW_MEASUREMENTS:      enum_str = "TOO_FEW_MEASUREMENTS"; break;
-      case Status::UNOBSERVABLE:              enum_str = "UNOBSERVABLE"; break;
+      case Status::kSuccessful:                enum_str = "SUCCESSFUL"; break;
+      case Status::kTooFewMeasurments:      enum_str = "TOO_FEW_MEASUREMENTS"; break;
+      case Status::kUnobservable:              enum_str = "UNOBSERVABLE"; break;
       default:
-        case Status::UNINITIALIZED:             enum_str = "UNINITIALIZED"; break;
+        case Status::kUninitialized:             enum_str = "UNINITIALIZED"; break;
     }
     out << "ProjectionResult: " << enum_str << std::endl;
     return out;
@@ -55,7 +55,7 @@ struct TriangulationResult {
 
   /// \brief Check whether the triangulation was successful.
   bool wasTriangulationSuccessful() const {
-    return (status_ == Status::SUCCESSFUL); };
+    return (status_ == Status::kSuccessful); };
 
   /// \brief Returns the exact state of the triangulation operation.
   Status status() const { return status_; };
