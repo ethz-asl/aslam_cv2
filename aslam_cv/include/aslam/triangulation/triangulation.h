@@ -65,7 +65,7 @@ struct TriangulationResult {
   Status getDetailedStatus() const { return status_; };
 
  private:
-  /// Stores the projection state.
+  /// Stores the triangulation state.
   Status status_;
 };
 
