@@ -17,14 +17,15 @@ struct TriangulationResult {
   enum class Status {
     /// The triangulation was successful.
     SUCCESSFUL,
-    /// There were too few (< 2) landmark observations.
+    /// There were too few landmark observations.
     TOO_FEW_MEASUREMENTS,
     /// The landmark is not fully observable (rank deficiency).
     UNOBSERVABLE,
     /// Default value after construction.
     UNINITIALIZED
   };
-  // Make the enum values accessible from the outside without the additional indirection.
+  // Make the enum values accessible from the outside without the additional
+  // indirection.
   static Status SUCCESSFUL;
   static Status TOO_FEW_MEASUREMENTS;
   static Status UNOBSERVABLE;
@@ -33,19 +34,13 @@ struct TriangulationResult {
   constexpr TriangulationResult() : status_(Status::UNINITIALIZED) {};
   constexpr TriangulationResult(Status status) : status_(status) {};
 
-  /// \brief The triangulation result can be typecasted to bool and is true if the triangulation
-  ///        is successful.
+  /// \brief The triangulation result can be typecasted to bool and is true if
+  ///        the triangulation was successful.
   explicit operator bool() const { return wasTriangulationSuccessful(); };
 
-  /// \brief Compare objects.
-  bool operator==(const TriangulationResult& other) const { return status_ == other.status_; };
-
-  /// \brief Compare triangulation status.
-  bool operator==(const TriangulationResult::Status& other) const { return status_ == other; };
-
   /// \brief Convenience function to print the state using streams.
-  friend std::ostream& operator<< (std::ostream& out, const TriangulationResult& state)
-  {
+  friend std::ostream& operator<< (std::ostream& out,
+                                   const TriangulationResult& state)  {
     std::string enum_str;
     switch (state.status_){
       case Status::SUCCESSFUL:                enum_str = "SUCCESSFUL"; break;
@@ -59,10 +54,11 @@ struct TriangulationResult {
   }
 
   /// \brief Check whether the triangulation was successful.
-  bool wasTriangulationSuccessful() const { return (status_ == Status::SUCCESSFUL); };
+  bool wasTriangulationSuccessful() const {
+    return (status_ == Status::SUCCESSFUL); };
 
   /// \brief Returns the exact state of the triangulation operation.
-  Status getDetailedStatus() const { return status_; };
+  Status status() const { return status_; };
 
  private:
   /// Stores the triangulation state.
