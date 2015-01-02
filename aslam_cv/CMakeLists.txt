@@ -23,6 +23,7 @@ cs_add_library(${PROJECT_NAME}
                                src/ncamera.cc
                                src/statistics.cc
                                src/thread-pool.cc
+                               src/triangulation.cc
                                src/undistorter.cc
                                src/undistorter-mapped.cc
                                src/visual-frame.cc
@@ -72,7 +73,7 @@ target_link_libraries(test_matcher ${PROJECT_NAME})
 catkin_add_gtest(test_matcher_non_exclusive
     test/test-matcher-non-exclusive.cc
 )
-target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME}) 
+target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
 
 catkin_add_gtest(test_triangulation
     test/test-triangulation.cc
