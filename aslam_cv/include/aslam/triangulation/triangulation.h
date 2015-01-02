@@ -13,7 +13,7 @@ namespace aslam {
 /// \brief This struct is returned by the triangulator and holds the result state
 ///        of the triangulation operation.
 struct TriangulationResult {
-  /// Possible projection state.
+  /// Possible triangulation state.
   enum class Status {
     /// The triangulation was successful.
     SUCCESSFUL,
