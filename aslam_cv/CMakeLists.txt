@@ -82,7 +82,7 @@ catkin_add_gtest(test_track_manager
 target_link_libraries(test_track_manager ${PROJECT_NAME})
 
 catkin_add_gtest(test_triangulation
-   test/test-triangulation.cc
+    test/test-triangulation.cc
 )
 target_link_libraries(test_triangulation ${PROJECT_NAME}) 
 
