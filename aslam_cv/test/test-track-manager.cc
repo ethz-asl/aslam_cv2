@@ -42,7 +42,7 @@ TEST(TrackManagerTests, TestApplyMatcher) {
   matches.emplace_back(4, 4, 0.5);
 
   aslam::SimpleTrackManager track_manager(3);
-  track_manager.applyMatchesToFrames(apple_frame, banana_frame, matches);
+  track_manager.applyMatchesToFrames(matches, apple_frame.get(), banana_frame.get());
 
   // Expected output:
   /// banana frame: 3, 2, 0, 1, 4
@@ -82,7 +82,7 @@ TEST(TrackManagerTests, TestApplyMatchesEmpty) {
   aslam::Matches matches;
 
   aslam::SimpleTrackManager track_manager(3);
-  track_manager.applyMatchesToFrames(apple_frame, banana_frame, matches);
+  track_manager.applyMatchesToFrames(matches, apple_frame.get(), banana_frame.get());
 
   // Expected output:
   Eigen::VectorXi expected_banana_tracks = Eigen::VectorXi::Constant(5, -1);
@@ -182,10 +182,13 @@ TEST(TrackManagerTests, TestApplyMatchesUniformly) {
   size_t num_buckets = kNumBucketsRoot * kNumBucketsRoot;
 
   aslam::UniformTrackManager track_manager(kNumBucketsRoot,
-                                           kBucketCapacity,
+                                           kBucketCapacity *
+                                           kNumBucketsRoot * kNumBucketsRoot,
                                            kNumStrongToPush,
                                            kScoreTresholdUnconditional);
-  track_manager.applyMatchesToFrames(apple_frame, banana_frame, matches);
+  track_manager.applyMatchesToFrames(matches,
+                                     apple_frame.get(),
+                                     banana_frame.get());
 
   // Expected output: We expect the last five keypoints in each bucket to
   // contain a valid track id.
@@ -252,11 +255,14 @@ TEST(TrackManagerTests, TestApplyMatchesUniformEmpty) {
   const size_t kNumBucketsRoot = 2u;
   const double kScoreTresholdUnconditional = 0.8;
   aslam::UniformTrackManager track_manager(kNumBucketsRoot,
-                                           kBucketCapacity,
+                                           kBucketCapacity *
+                                           kNumBucketsRoot * kNumBucketsRoot,
                                            kNumStrongToPush,
                                            kScoreTresholdUnconditional);
 
-  track_manager.applyMatchesToFrames(apple_frame, banana_frame, matches);
+  track_manager.applyMatchesToFrames(matches,
+                                     apple_frame.get(),
+                                     banana_frame.get());
 
   // Expected output:
   Eigen::VectorXi expected_banana_tracks = Eigen::VectorXi::Constant(5, -1);
