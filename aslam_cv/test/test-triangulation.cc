@@ -113,11 +113,13 @@ TEST(LinearTriangulateFromNViews, RandomPoses) {
 
   // Triangulate.
   Eigen::Vector3d W_landmark_triangulated;
-  bool success = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
-                                                    aslam::Transformation(),
-                                                    &W_landmark_triangulated);
+  aslam::TriangulationResult triangulation_result = aslam::linearTriangulateFromNViews(
+                                                      keypoint_measurements,
+                                                      T_W_C,
+                                                      aslam::Transformation(),
+                                                      &W_landmark_triangulated);
 
-  EXPECT_TRUE(success);
+  EXPECT_TRUE(triangulation_result.wasTriangulationSuccessful());
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(W_landmark, W_landmark_triangulated, 1e-10));
 }
 
@@ -140,10 +142,10 @@ TEST(LinearTriangulateFromNViews, TwoParallelRays) {
   // Triangulate.
   Eigen::Vector3d W_landmark_triangulated;
   W_landmark_triangulated.setZero();
-  bool success = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
+  aslam::TriangulationResult triangulation_result = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
                                                     aslam::Transformation(),
                                                     &W_landmark_triangulated);
-  EXPECT_FALSE(success);
+  EXPECT_FALSE(triangulation_result.wasTriangulationSuccessful());
 }
 
 TEST(LinearTriangulateFromNViews, TwoNearParallelRays) {
@@ -171,10 +173,10 @@ TEST(LinearTriangulateFromNViews, TwoNearParallelRays) {
   // Triangulate.
   Eigen::Vector3d W_landmark_triangulated;
   W_landmark_triangulated.setZero();
-  bool success = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
+  aslam::TriangulationResult triangulation_result = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
                                                     aslam::Transformation(),
                                                     &W_landmark_triangulated);
-  EXPECT_FALSE(success);
+  EXPECT_FALSE(triangulation_result.wasTriangulationSuccessful());
 }
 
 TEST(LinearTriangulateFromNViews, CombinedParallelAndGoodRays) {
@@ -201,10 +203,10 @@ TEST(LinearTriangulateFromNViews, CombinedParallelAndGoodRays) {
   // Triangulate.
   Eigen::Vector3d W_landmark_triangulated;
   W_landmark_triangulated.setZero();
-  bool success = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
+  aslam::TriangulationResult triangulation_result = aslam::linearTriangulateFromNViews(keypoint_measurements, T_W_C,
                                                     aslam::Transformation(),
                                                     &W_landmark_triangulated);
-  EXPECT_TRUE(success);
+  EXPECT_TRUE(triangulation_result.wasTriangulationSuccessful());
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(W_landmark, W_landmark_triangulated, 1e-10));
 }
 
