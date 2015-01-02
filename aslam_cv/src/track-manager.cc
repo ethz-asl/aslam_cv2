@@ -58,13 +58,11 @@ namespace aslam {
             CHECK_LT(track_id_apple, 0) << "Both the apple and the banana track "
                 "id are >= 0 but they are not equal!";
 
-            // Copy the banana track id to the apple frame.
             apple_track_ids(index_apple) = track_id_banana;
           } else {
             CHECK_LT(track_id_banana, 0) << "Both the apple and the banana "
                 "track id are >= 0 but they are not equal!";
 
-            // Copy the banana track id to the apple frame.
             banana_track_ids(index_banana) = track_id_apple;
           }
         }
@@ -145,13 +143,11 @@ namespace aslam {
             CHECK_LT(track_id_apple, 0) << "Both the apple and the banana track"
                 " id are >= 0 but they are not equal!";
 
-            // Copy the banana track id to the apple frame.
             apple_track_ids(index_apple) = track_id_banana;
           } else {
             CHECK_LT(track_id_banana, 0) << "Both the apple and the banana "
                 "track id are >= 0 but they are not equal!";
 
-            // Copy the banana track id to the apple frame.
             banana_track_ids(index_banana) = track_id_apple;
           }
         }
