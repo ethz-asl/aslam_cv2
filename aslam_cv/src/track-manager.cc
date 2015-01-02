@@ -12,23 +12,22 @@ namespace aslam {
     track_id_provider_ = start_track_id;
   }
 
-  void SimpleTrackManager::applyMatchesToFrames(
-                              const VisualFrame::Ptr& apple_frame,
-                              const VisualFrame::Ptr& banana_frame,
-                              const Matches& matches) {
-    CHECK(apple_frame);
-    CHECK(banana_frame);
+  void SimpleTrackManager::applyMatchesToFrames(const Matches& matches,
+                                                VisualFrame* apple_frame,
+                                                VisualFrame* banana_frame) {
+    CHECK_NOTNULL(apple_frame);
+    CHECK_NOTNULL(banana_frame);
 
-    Eigen::VectorXi* apple_track_ids = apple_frame->getTrackIdsMutable();
-    CHECK_NOTNULL(apple_track_ids);
-    size_t num_apple_track_ids = apple_track_ids->rows();
+    Eigen::VectorXi& apple_track_ids =
+        *CHECK_NOTNULL(apple_frame->getTrackIdsMutable());
+    size_t num_apple_track_ids = apple_track_ids.rows();
 
-    Eigen::VectorXi* banana_track_ids = banana_frame->getTrackIdsMutable();
-    CHECK_NOTNULL(banana_track_ids);
-    size_t num_banana_track_ids = banana_track_ids->rows();
+    Eigen::VectorXi& banana_track_ids =
+        *CHECK_NOTNULL(banana_frame->getTrackIdsMutable());
+    size_t num_banana_track_ids = banana_track_ids.rows();
 
     std::unordered_set<int> consumed_apples;
-    std::unordered_set<int> consumed_bananaas;
+    std::unordered_set<int> consumed_bananas;
 
     for (const Match& match : matches) {
       int index_apple = match.getIndexApple();
@@ -37,22 +36,19 @@ namespace aslam {
       int index_banana = match.getIndexBanana();
       CHECK_LT(index_banana, num_banana_track_ids);
 
-      auto ret_apple = consumed_apples.insert(index_apple);
-      CHECK(ret_apple.second) << "The given matches don't seem to be exclusive."
-          " Trying to assign apple " << index_apple << " more than once!";
-      auto ret_banana = consumed_bananaas.insert(index_banana);
-      CHECK(ret_banana.second) << "The given matches don't seem to be "
-          "exclusive. Trying to assign banana " << index_banana << " more than "
-              "once!";
+      addToSetsAndCheckExclusiveness(index_apple,
+                                     index_banana,
+                                     &consumed_apples,
+                                     &consumed_bananas);
 
-      int track_id_apple = (*apple_track_ids)(index_apple);
-      int track_id_banana= (*banana_track_ids)(index_banana);
+      int track_id_apple = apple_track_ids(index_apple);
+      int track_id_banana= banana_track_ids(index_banana);
 
       if ((track_id_apple) < 0 && (track_id_banana < 0)) {
         // Both track ids are < 0. Start a new track.
         int new_track_id = track_id_provider_++;
-        (*apple_track_ids)(index_apple) = new_track_id;
-        (*banana_track_ids)(index_banana) = new_track_id;
+        apple_track_ids(index_apple) = new_track_id;
+        banana_track_ids(index_banana) = new_track_id;
       } else {
         // Either one of the track ids is >= 0.
         if (track_id_apple != track_id_banana) {
@@ -63,43 +59,42 @@ namespace aslam {
                 "id are >= 0 but they are not equal!";
 
             // Copy the banana track id to the apple frame.
-            (*apple_track_ids)(index_apple) = track_id_banana;
+            apple_track_ids(index_apple) = track_id_banana;
           } else {
             CHECK_LT(track_id_banana, 0) << "Both the apple and the banana "
                 "track id are >= 0 but they are not equal!";
 
             // Copy the banana track id to the apple frame.
-            (*banana_track_ids)(index_banana) = track_id_apple;
+            banana_track_ids(index_banana) = track_id_apple;
           }
         }
       }
     }
   }
 
-  void UniformTrackManager::applyMatchesToFrames(
-                                       const VisualFrame::Ptr& apple_frame,
-                                       const VisualFrame::Ptr& banana_frame,
-                                       const Matches& matches) {
-    CHECK(apple_frame);
-    CHECK(banana_frame);
+  void UniformTrackManager::applyMatchesToFrames(const Matches& matches,
+                                                 VisualFrame* apple_frame,
+                                                 VisualFrame* banana_frame) {
+    CHECK_NOTNULL(apple_frame);
+    CHECK_NOTNULL(banana_frame);
 
-    Eigen::VectorXi* apple_track_ids = apple_frame->getTrackIdsMutable();
-    CHECK_NOTNULL(apple_track_ids);
-    size_t num_apple_track_ids = apple_track_ids->rows();
+    Eigen::VectorXi& apple_track_ids =
+        *CHECK_NOTNULL(apple_frame->getTrackIdsMutable());
+    size_t num_apple_track_ids = apple_track_ids.rows();
 
-    Eigen::VectorXi* banana_track_ids = banana_frame->getTrackIdsMutable();
-    CHECK_NOTNULL(banana_track_ids);
-    size_t num_banana_track_ids = banana_track_ids->rows();
+    Eigen::VectorXi& banana_track_ids =
+            *CHECK_NOTNULL(banana_frame->getTrackIdsMutable());
+    size_t num_banana_track_ids = banana_track_ids.rows();
 
     std::unordered_set<int> consumed_apples;
-    std::unordered_set<int> consumed_bananaas;
+    std::unordered_set<int> consumed_bananas;
 
     const aslam::Camera::ConstPtr& camera = apple_frame->getCameraGeometry();
 
     // Prepare buckets.
     std::vector<int> buckets;
     buckets.resize(number_of_tracking_buckets_root_ *
-                   number_of_tracking_buckets_root_);
+                   number_of_tracking_buckets_root_, 0);
 
     double bucket_width_x = static_cast<double>(camera->imageWidth()) /
         static_cast<double>(number_of_tracking_buckets_root_);
@@ -108,7 +103,7 @@ namespace aslam {
 
     std::function<size_t(const Eigen::Vector2d&)> compute_bin_index =
         [buckets, bucket_width_x, bucket_width_y, this]
-         (const Eigen::Vector2d &kp) -> int {
+         (const Eigen::Vector2d& kp) -> int {
           double bin_x = kp[0] / bucket_width_x;
           double bin_y = kp[1] / bucket_width_y;
 
@@ -130,16 +125,13 @@ namespace aslam {
       int index_banana = match.getIndexBanana();
       CHECK_LT(index_banana, num_banana_track_ids);
 
-      auto ret_apple = consumed_apples.insert(index_apple);
-      CHECK(ret_apple.second) << "The given matches don't seem to be exclusive."
-          " Trying to assign apple " << index_apple << " more than once!";
-      auto ret_banana = consumed_bananaas.insert(index_banana);
-      CHECK(ret_banana.second) << "The given matches don't seem to be "
-          "exclusive. Trying to assign banana " << index_banana << " more than "
-              "once!";
+      addToSetsAndCheckExclusiveness(index_apple,
+                                     index_banana,
+                                     &consumed_apples,
+                                     &consumed_bananas);
 
-      int track_id_apple = (*apple_track_ids)(index_apple);
-      int track_id_banana= (*banana_track_ids)(index_banana);
+      int track_id_apple = apple_track_ids(index_apple);
+      int track_id_banana= banana_track_ids(index_banana);
 
       if ((track_id_apple) < 0 && (track_id_banana < 0)) {
         // Both track ids are < 0. Candidate for a new track.
@@ -154,13 +146,13 @@ namespace aslam {
                 " id are >= 0 but they are not equal!";
 
             // Copy the banana track id to the apple frame.
-            (*apple_track_ids)(index_apple) = track_id_banana;
+            apple_track_ids(index_apple) = track_id_banana;
           } else {
             CHECK_LT(track_id_banana, 0) << "Both the apple and the banana "
                 "track id are >= 0 but they are not equal!";
 
             // Copy the banana track id to the apple frame.
-            (*banana_track_ids)(index_banana) = track_id_apple;
+            banana_track_ids(index_banana) = track_id_apple;
           }
         }
       }
@@ -170,7 +162,7 @@ namespace aslam {
     auto iterator_matches_fo_new_tracks = candidates_for_new_tracks.begin();
     for (; (iterator_matches_fo_new_tracks != candidates_for_new_tracks.end())
         &&  (num_very_strong_candidates_pushed <
-            number_of_very_strong_new_tracks_to_push_);
+            number_of_very_strong_new_tracks_to_force_push_);
               ++iterator_matches_fo_new_tracks,
               ++num_very_strong_candidates_pushed) {
       // The matches are sorted. If we get below the unconditional threshold,
@@ -192,8 +184,8 @@ namespace aslam {
 
       // Write back the applied match.
       int new_track_id = track_id_provider_++;
-      (*apple_track_ids)(index_apple) = new_track_id;
-      (*banana_track_ids)(index_banana) = new_track_id;
+      apple_track_ids(index_apple) = new_track_id;
+      banana_track_ids(index_banana) = new_track_id;
     }
 
     // Fill the buckets with the renmaining candidates.
@@ -215,30 +207,9 @@ namespace aslam {
 
         // Write back the applied match.
         int new_track_id = track_id_provider_++;
-        (*apple_track_ids)(index_apple) = new_track_id;
-        (*banana_track_ids)(index_banana) = new_track_id;
+        apple_track_ids(index_apple) = new_track_id;
+        banana_track_ids(index_banana) = new_track_id;
       }
     }
-  }
-
-  void UniformTrackManager::setNumberOfStrongNewTracksToPush(
-      size_t number_of_strong_new_tracks_to_push) {
-    number_of_very_strong_new_tracks_to_push_ =
-        number_of_strong_new_tracks_to_push;
-  }
-
-  void UniformTrackManager::setNumberOfTrackingBucketsRoot(
-      size_t number_of_tracking_buckets_root) {
-    number_of_tracking_buckets_root_ = number_of_tracking_buckets_root;
-  }
-
-  void UniformTrackManager::setBucketCapacity(size_t bucket_capacity) {
-    bucket_capacity_ = bucket_capacity;
-  }
-
-  void UniformTrackManager::setKeypointScoreThresholdUnconditional(
-      double match_score_very_strong_new_tracks_threshold) {
-    match_score_very_strong_new_tracks_threshold_ =
-        match_score_very_strong_new_tracks_threshold;
   }
 }
