@@ -390,6 +390,9 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   frame->swapKeypointMeasurementUncertainties(&keypoint_uncertainties);
   aslam::VisualFrame::DescriptorsT descriptors = aslam::VisualFrame::DescriptorsT::Zero(48, 0);
   frame->swapDescriptors(&descriptors);
+  aslam::FrameId id;
+  id.randomize();
+  frame->setId(id);
   return frame;
 }
 }  // namespace aslam
