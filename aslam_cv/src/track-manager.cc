@@ -198,7 +198,7 @@ namespace aslam {
           apple_frame->getKeypointMeasurement(index_apple);
       int bin_index = compute_bin_index(keypoint);
 
-      if (buckets[bin_index] < bucket_capacity_) {
+      if (buckets[bin_index] < static_cast<int>(bucket_capacity_)) {
         ++buckets[bin_index];
 
         // Write back the applied match.
