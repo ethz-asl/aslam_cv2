@@ -64,7 +64,6 @@ namespace aslam {
   ///        new tracks will be generated in this particular bucket but it does
   ///        not reduce the number of weak new tracks accepted in other (not yet
   ///        full) buckets.
-
   class UniformTrackManager : public TrackManager {
    public:
     UniformTrackManager(size_t num_buckets_root,
@@ -85,14 +84,15 @@ namespace aslam {
                            size_t max_number_of_weak_new_tracks,
                            size_t num_strong_new_tracks_to_push,
                            double match_score_very_strong_new_tracks_threshold)
-    : number_of_tracking_buckets_root_(num_buckets_root),
+    : TrackManager(start_track_id),
+      number_of_tracking_buckets_root_(num_buckets_root),
       bucket_capacity_(std::floor(
-                static_cast<double>(max_number_of_weak_new_tracks) /
-                static_cast<double>(num_buckets_root * num_buckets_root))),
+                       static_cast<double>(max_number_of_weak_new_tracks) /
+                       static_cast<double>(num_buckets_root * num_buckets_root))),
       number_of_very_strong_new_tracks_to_force_push_(num_strong_new_tracks_to_push),
       match_score_very_strong_new_tracks_threshold_(
-          match_score_very_strong_new_tracks_threshold),
-      TrackManager(start_track_id) {};
+          match_score_very_strong_new_tracks_threshold) {};
+
     virtual ~UniformTrackManager() {};
 
     /// \brief Writes track ids into the given frames for the given matches.

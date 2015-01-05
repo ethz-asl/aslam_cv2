@@ -15,11 +15,11 @@ MatchingProblemFrameToFrame::MatchingProblemFrameToFrame(
   : apple_frame_(apple_frame),
     banana_frame_(banana_frame),
     q_A_B_(q_A_B),
+    A_keypoints_apple_(nullptr),
+    apple_track_ids_(nullptr),
     squared_image_space_distance_threshold_pixels_squared_(image_space_distance_threshold *
                                                            image_space_distance_threshold),
-    hamming_distance_threshold_(hamming_distance_threshold),
-    A_keypoints_apple_(nullptr),
-    apple_track_ids_(nullptr) {
+    hamming_distance_threshold_(hamming_distance_threshold) {
   CHECK(apple_frame) << "The given apple frame is NULL.";
   CHECK(banana_frame) << "The given banana frame is NULL.";
 
