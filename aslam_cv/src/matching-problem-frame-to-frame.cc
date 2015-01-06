@@ -22,6 +22,8 @@ MatchingProblemFrameToFrame::MatchingProblemFrameToFrame(
     hamming_distance_threshold_(hamming_distance_threshold) {
   CHECK(apple_frame) << "The given apple frame is NULL.";
   CHECK(banana_frame) << "The given banana frame is NULL.";
+  CHECK_GE(hamming_distance_threshold, 0) << "Descriptor distance needs to be positive.";
+  CHECK_GE(image_space_distance_threshold, 0.0) << "Image space distance needs to be positive.";
 
   descriptor_size_byes_ = apple_frame->getDescriptorSizeBytes();
   CHECK_EQ(descriptor_size_byes_, banana_frame->getDescriptorSizeBytes()) << "Apple and banana "
