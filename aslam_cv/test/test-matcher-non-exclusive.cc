@@ -1,9 +1,9 @@
 #include <algorithm>
-//#include <eigen-checks/gtest.h>
+#include <cmath>
+#include <vector>
+
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <math.h>
-#include <vector>
 
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/entrypoint.h>
@@ -97,10 +97,7 @@ TEST_F(MatcherTest, MatchRotation) {
   apple_keypoints(0,0) =  static_cast<double>(image_width) / 2.0;
   apple_keypoints(1,0) =  static_cast<double>(image_height) / 2.0;
   Eigen::Vector3d apple_ray;
-
   camera_->backProject3(apple_keypoints.col(0), &apple_ray);
-
-  //EXPECT_TRUE(EIGEN_MATRIX_NEAR(apple_ray, Eigen::Vector3d(0.0, 0.0, 1.0), 1e-12));
 
   Eigen::Vector3d axis_angle(0.0, 0.3, 0.0);
   aslam::Quaternion q_apple_banana(axis_angle);
@@ -109,8 +106,6 @@ TEST_F(MatcherTest, MatchRotation) {
   Eigen::Matrix3d C_banana_apple = C_apple_banana.transpose();
 
   Eigen::Vector3d banana_ray = C_banana_apple * apple_ray;
-
-  Eigen::Vector3d apple_ray_banana = C_apple_banana * banana_ray;
 
   Eigen::Vector2d banana_keypoint;
   camera_->project3(banana_ray, &banana_keypoint);
@@ -147,9 +142,6 @@ TEST_F(MatcherTest, MatchRotation) {
 }
 
 TEST_F(MatcherTest, TestImageSpaceBorderOut) {
-  size_t image_height = camera_->imageHeight();
-  size_t image_width = camera_->imageWidth();
-
   Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Constant(2, 1, 20.0);
   Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Constant(2, 1, 20.0);
   banana_keypoints(0, 0) = 20.0 + image_space_distance_threshold_;
@@ -168,12 +160,10 @@ TEST_F(MatcherTest, TestImageSpaceBorderOut) {
   aslam::Quaternion q_A_B;
   q_A_B.setIdentity();
 
-  aslam::MatchingProblemFrameToFrame::Ptr matching_problem =
-      aslam::aligned_shared<aslam::MatchingProblemFrameToFrame>(apple_frame_,
-                                                   banana_frame_,
-                                                   q_A_B,
-                                                   image_space_distance_threshold_,
-                                                   hamming_distance_threshold_);
+  aslam::MatchingProblemFrameToFrame::Ptr matching_problem = aslam::aligned_shared<
+      aslam::MatchingProblemFrameToFrame>(apple_frame_, banana_frame_, q_A_B,
+                                          image_space_distance_threshold_,
+                                          hamming_distance_threshold_);
   aslam::Matches matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
