@@ -1,6 +1,6 @@
 #include <algorithm>
+#include <cmath>
 #include <vector>
-#include <math.h>
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
