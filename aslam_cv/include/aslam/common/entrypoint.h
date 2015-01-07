@@ -10,6 +10,7 @@
   ::testing::InitGoogleTest(&argc, argv);\
   google::InitGoogleLogging(argv[0]);\
   google::ParseCommandLineFlags(&argc, &argv, false);\
+  google::InstallFailureSignalHandler();\
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";\
   return RUN_ALL_TESTS();\
 }
