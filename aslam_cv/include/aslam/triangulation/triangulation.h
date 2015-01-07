@@ -115,6 +115,46 @@ inline TriangulationResult linearTriangulateFromNViews(
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
+inline TriangulationResult linearTriangulateFromNViews(
+    const Eigen::Matrix3Xd& t_G_bv,
+    const Eigen::Matrix3Xd& p_G_C,
+    Eigen::Vector3d* p_G_P) {
+  CHECK_NOTNULL(p_G_P);
+
+  const int N = t_G_bv.cols();
+  if (N < 2) {
+    return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
+  }
+
+  // 1.) Formulate the geometrical problem
+  // p_G_P + alpha[i] * t_G_bv[i] = p_G_C[i]      (+ alpha intended)
+  // as linear system Ax = b, where
+  // x = [p_G_P; alpha[0]; alpha[1]; ... ] and b = [p_G_C[0]; p_G_C[1]; ...]
+  //
+  // 2.) Apply the approximation AtAx = Atb
+  // AtA happens to be composed of mostly more convenient blocks than A:
+  // - Top left = N * Eigen::Matrix3d::Identity()
+  // - Top right and bottom left = t_G_bv
+  // - Bottom right = t_G_bv.colwise().squaredNorm().asDiagonal()
+
+  // - Atb.head(3) = p_G_C.rowwise().sum()
+  // - Atb.tail(N) = columnwise dot products between t_G_bv and p_G_C
+  //               = t_G_bv.cwiseProduct(p_G_C).colwise().sum().transpose()
+  //
+  // 3.) Apply the Schur complement to solve after p_G_P only
+
+  const Eigen::DiagonalMatrix<double, Eigen::Dynamic> iAktAk =
+      t_G_bv.colwise().squaredNorm().asDiagonal().inverse();
+  const Eigen::Matrix3d AxtAx = N * Eigen::Matrix3d::Identity() -
+      t_G_bv * iAktAk * t_G_bv.transpose();
+  const Eigen::Vector3d Axtbx = p_G_C.rowwise().sum() -
+      t_G_bv *
+      (iAktAk * t_G_bv.cwiseProduct(p_G_C).colwise().sum().transpose());
+
+  *p_G_P = AxtAx.inverse() * Axtbx;
+  return TriangulationResult(TriangulationResult::SUCCESSFUL);
+}
+
 /// brief Triangulate a 3d point from a set of n keypoint measurements in
 ///       m cameras.
 /// @param measurements_normalized Keypoint measurements on normalized image
