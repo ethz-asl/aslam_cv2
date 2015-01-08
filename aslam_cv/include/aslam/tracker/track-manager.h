@@ -39,8 +39,7 @@ namespace aslam {
       if (!frame->hasTrackIds()) {
         frame->setTrackIds(Eigen::VectorXi::Constant(num_track_ids, -1));
       }
-      track_id_channel = frame->getTrackIdsMutable();
-      return CHECK_NOTNULL(track_id_channel);
+      return CHECK_NOTNULL(frame->getTrackIdsMutable());
     }
 
    protected:
