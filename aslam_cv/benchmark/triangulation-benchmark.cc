@@ -71,19 +71,19 @@ TYPED_TEST(TriangulationFixture, Performance) {
   plotIfDone<TypeParam>();
 }
 
-constexpr double kMaxAngleDisparity = 1. / 180. * M_PI;
+constexpr double kMaxAngleDisparity = 20. / 180. * M_PI;
 static_assert(kMaxAngleDisparity > 0. && kMaxAngleDisparity < M_PI / 2,
               "Maximum angle disparity must be between 0 and Pi/2.");
 constexpr size_t kNumAngleDisparitySteps = 50u;
 static_assert(kNumAngleDisparitySteps > 0u, "Need at least one disparity step.");
 constexpr double kDAngleDisparity = kMaxAngleDisparity / kNumAngleDisparitySteps;
 constexpr size_t kMinNumNoisedMeasurements = 2u;
-constexpr size_t kMaxNumNoisedMeasurements = 32u;
-constexpr size_t kNumNoisedMeasurementsMultiplier = 4u;
+constexpr size_t kMaxNumNoisedMeasurements = 18u;
+constexpr size_t kNumNoisedMeasurementsMultiplier = 3u;
 static_assert((kMaxNumNoisedMeasurements / kMinNumNoisedMeasurements) %
               kNumNoisedMeasurementsMultiplier == 0u, "Inconsistent series.");
 constexpr size_t kNumNoisedMeasurementsSteps = kMaxNumNoisedMeasurements /
-    (kMinNumNoisedMeasurements * kNumNoisedMeasurementsMultiplier);
+    (kMinNumNoisedMeasurements * kNumNoisedMeasurementsMultiplier) + 1;
 
 double stats[2][kNumAngleDisparitySteps][kNumNoisedMeasurementsSteps];
 
@@ -93,47 +93,68 @@ void plotAngleNoiseIfDone() {}
 template <>
 void plotAngleNoiseIfDone<Eigen::Matrix3Xd>() {
   FILE* plot = popen("gnuplot --persist", "w");
-  fprintf(plot, "set logscale y\n");
-  fprintf(plot, "plot '-' w l, '-' w l\n");
-  for (size_t i = 0u; i < kNumAngleDisparitySteps; ++i) {
-    fprintf(plot, "%lf %lf\n", kDAngleDisparity * (1 + i), stats[0][i][0]);
+
+  for (size_t measurement_i = 0u; measurement_i < 2 * kNumNoisedMeasurementsSteps;
+      ++measurement_i) {
+    if (measurement_i == 0) {
+      fprintf(plot, "plot ");
+    } else {
+      fprintf(plot, ", ");
+    }
+    fprintf(plot, "'-' w l");
   }
-  fprintf(plot, "e\n");
-  for (size_t i = 0u; i < kNumAngleDisparitySteps; ++i) {
-    fprintf(plot, "%lf %lf\n", kMaxAngleDisparity / kNumAngleDisparitySteps * (1 + i), stats[1][i][0]);
+  fprintf(plot, "\n");
+  for (size_t measurement_i = 0u; measurement_i < kNumNoisedMeasurementsSteps;
+      ++measurement_i) {
+    for (size_t i = 0u; i < kNumAngleDisparitySteps; ++i) {
+      fprintf(plot, "%lf %lf\n", kDAngleDisparity * (1 + i) * 180 / M_PI,
+              stats[0][i][measurement_i]);
+    }
+    fprintf(plot, "e\n");
   }
-  fprintf(plot, "e\n");
+  for (size_t measurement_i = 0u; measurement_i < kNumNoisedMeasurementsSteps;
+      ++measurement_i) {
+    for (size_t i = 0u; i < kNumAngleDisparitySteps; ++i) {
+      fprintf(plot, "%lf %lf\n", kDAngleDisparity * (1 + i) * 180 / M_PI,
+              stats[1][i][measurement_i]);
+    }
+    fprintf(plot, "e\n");
+  }
+
   fflush(plot);
 }
 
 
 TYPED_TEST(TriangulationFixture, AngleNoise) {
-  constexpr double kDepth = 5;
-  this->p_W_L_ << 1, 1, kDepth;
+  constexpr double kDepth = 1;
+  constexpr size_t kNumSamples = 50;
+  this->p_W_L_ << 0, 0, kDepth;
   CHECK_GT(kMinNumNoisedMeasurements, 1);
   CHECK_GE(kMaxNumNoisedMeasurements, kMinNumNoisedMeasurements);
   CHECK_GE(kNumNoisedMeasurementsMultiplier, 1);
 
   for (size_t disparity_i = 0u; disparity_i < kNumAngleDisparitySteps; ++disparity_i) {
     double disparity = kDAngleDisparity * (1 + disparity_i);
-    for (size_t num_measurements = kMinNumNoisedMeasurements;
-        num_measurements <= kMaxNumNoisedMeasurements;
-        num_measurements *= kNumNoisedMeasurementsMultiplier) {
+    for (size_t measurement_i = 0; measurement_i < kNumNoisedMeasurementsSteps;
+        ++measurement_i) {
+      size_t num_measurements = kMinNumNoisedMeasurements *
+          pow(kNumNoisedMeasurementsMultiplier, measurement_i);
       this->setNMeasurements(num_measurements);
       Eigen::Matrix3Xd p_W_B;
-      sampleXYPlaneSine(-100., 100., num_measurements, &p_W_B);
+      sampleXYPlaneSine(-1., 1., num_measurements, &p_W_B);
       for (size_t i = 0; i < num_measurements; ++i) {
         this->T_W_B_[i].getPosition() = p_W_B.block<3, 1>(0, i);
       }
-      this->inferMeasurements(disparity);
-      Eigen::Vector3d triangulation;
-      aslam::TriangulationResult result = this->triangulate(&triangulation);
-      EXPECT_TRUE(result.wasTriangulationSuccessful());
-      stats[handleOffset<TypeParam>() / 1000 - 1]
-            [disparity_i]
-             [num_measurements /
-              (kMinNumNoisedMeasurements * kNumNoisedMeasurementsMultiplier)] =
-                  (this->p_W_L_ - triangulation).norm();
+      Eigen::VectorXd samples(kNumSamples, 1);
+      for (size_t i = 0u; i < kNumSamples; ++i) {
+        this->inferMeasurements(disparity);
+        Eigen::Vector3d triangulation;
+        aslam::TriangulationResult result = this->triangulate(&triangulation);
+        EXPECT_TRUE(result.wasTriangulationSuccessful());
+        samples[i] = (this->p_W_L_ - triangulation).norm();
+      }
+      stats[handleOffset<TypeParam>() / 1000 - 1][disparity_i][measurement_i] =
+                  samples.mean();
     }
   }
   plotAngleNoiseIfDone<TypeParam>();
