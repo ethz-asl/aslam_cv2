@@ -19,4 +19,5 @@
   <depend>opencv2_catkin</depend>
   <depend>opengv</depend>
   <depend>sm_property_tree</depend>
+  <depend>sm_timing</depend>
 </package>
