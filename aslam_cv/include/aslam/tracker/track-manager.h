@@ -25,6 +25,12 @@ namespace aslam {
                                       VisualFrame* apple_frame,
                                       VisualFrame* banana_frame) = 0;
 
+    /// \brief Returns a pointer to the track id channel. If no track id channel is present for the
+    ///        given frame, a new track id channel will be created with num_keypoints many track
+    ///        ids, all set to to -1.
+    ///
+    /// @param[in]  frame   Pointer to the visual frame.
+    /// @return             Pointer to the track id channel.
     inline Eigen::VectorXi* createAndGetTrackIdChannel(VisualFrame* frame) {
       // Load (and create) track id channels.
       CHECK_NOTNULL(frame);
