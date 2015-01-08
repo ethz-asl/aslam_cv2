@@ -77,11 +77,17 @@ class TriangulationFixture : public testing::Test {
     p_W_L_ = p_W_L;
   }
 
-  void inferMeasurements() {
+  void inferMeasurements(double angle_noise = 0.) {
     for (size_t i = 0; i < T_W_B_.size(); ++i) {
       // Ignoring IMU to camera transformation (set to identity in SetUp()).
       C_bearing_measurements_.block<3, 1>(0, i) =
           T_W_B_[i].inverted().transform(p_W_L_);
+      if (angle_noise > 0.) {
+        aslam::Transformation noiser;
+        noiser.setRandom(0., angle_noise);
+        C_bearing_measurements_.block<3, 1>(0, i) = noiser *
+            C_bearing_measurements_.block<3, 1>(0, i);
+      }
     }
     setMeasurements(C_bearing_measurements_);
   }
