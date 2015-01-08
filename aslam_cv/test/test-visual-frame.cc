@@ -52,7 +52,7 @@ data.setRandom();
 frame.setDescriptors(data);
 const aslam::VisualFrame::DescriptorsT& data_2 =
     frame.getDescriptors();
-EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
+EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 0));
 EXPECT_EQ(&data_2, frame.getDescriptorsMutable());
 for (int i = 0; i < data.cols(); ++i) {
   const unsigned char* data_ptr = frame.getDescriptor(i);

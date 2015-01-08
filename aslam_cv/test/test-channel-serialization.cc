@@ -82,6 +82,7 @@ template <typename TYPE>
 class ChannelSerializationTest : public ::testing::Test {
  public:
   typedef TYPE MatrixType;
+  typedef typename MatrixType::Scalar Scalar;
   static const int num_rows = 15;
   static const int num_cols = 20;
 
@@ -115,6 +116,7 @@ typedef ::testing::Types<MAKE_TYPE_LIST(double),
 TYPED_TEST_CASE(ChannelSerializationTest, DoubleTests);
 
 TYPED_TEST(ChannelSerializationTest, SerializeDeserializeString) {
+  typedef typename TypeParam::Scalar Scalar;
   aslam::internal::HeaderInformation header_info;
   std::string serialized_value;
   EXPECT_TRUE(this->value_a.serializeToString(&serialized_value));
@@ -122,12 +124,13 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeString) {
   ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
             this->value_a.value_.cols() *
             sizeof(typename TypeParam::Scalar), serialized_value.size());
-  EXPECT_FALSE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, 1e-4));
+  EXPECT_FALSE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, static_cast<Scalar>(1e-4)));
   EXPECT_TRUE(this->value_b.deSerializeFromString(serialized_value));
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, 1e-4));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, static_cast<Scalar>(1e-4)));
 }
 
 TYPED_TEST(ChannelSerializationTest, SerializeDeserializeBuffer) {
+  typedef typename TypeParam::Scalar Scalar;
   aslam::internal::HeaderInformation header_info;
   char* buffer;
   size_t size;
@@ -136,9 +139,9 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeBuffer) {
   ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
             this->value_a.value_.cols() *
             sizeof(typename TypeParam::Scalar), size);
-  EXPECT_FALSE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, 1e-4));
+  EXPECT_FALSE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, static_cast<Scalar>(1e-4)));
   EXPECT_TRUE(this->value_b.deSerializeFromBuffer(buffer, size));
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, 1e-4));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, static_cast<Scalar>(1e-4)));
 }
 
 TEST(ChannelSerialization, HeaderInfoSize) {
@@ -154,10 +157,10 @@ TEST(ChannelSerialization, HeaderInfoSize) {
 
   aslam::internal::HeaderInformation header_info2;
   header_info2.deSerializeFromBuffer(&header_serialized[0], 0);
-  EXPECT_EQ(12, header_info2.cols);
-  EXPECT_EQ(10, header_info2.rows);
-  EXPECT_EQ(4, header_info2.depth);
-  ASSERT_EQ(13, header_info2.channels);
+  EXPECT_EQ(12u, header_info2.cols);
+  EXPECT_EQ(10u, header_info2.rows);
+  EXPECT_EQ(4u, header_info2.depth);
+  ASSERT_EQ(13u, header_info2.channels);
 }
 
 TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
