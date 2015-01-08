@@ -24,6 +24,24 @@ namespace aslam {
     virtual void applyMatchesToFrames(const std::vector<Match>& matches,
                                       VisualFrame* apple_frame,
                                       VisualFrame* banana_frame) = 0;
+
+    /// \brief Returns a pointer to the track id channel. If no track id channel is present for the
+    ///        given frame, a new track id channel will be created with num_keypoints many track
+    ///        ids, all set to to -1.
+    ///
+    /// @param[in]  frame   Pointer to the visual frame.
+    /// @return             Pointer to the track id channel.
+    inline Eigen::VectorXi* createAndGetTrackIdChannel(VisualFrame* frame) {
+      // Load (and create) track id channels.
+      CHECK_NOTNULL(frame);
+      Eigen::VectorXi* track_id_channel = nullptr;
+      size_t num_track_ids = frame->getNumKeypointMeasurements();
+      if (!frame->hasTrackIds()) {
+        frame->setTrackIds(Eigen::VectorXi::Constant(num_track_ids, -1));
+      }
+      return CHECK_NOTNULL(frame->getTrackIdsMutable());
+    }
+
    protected:
     size_t track_id_provider_;
   };
