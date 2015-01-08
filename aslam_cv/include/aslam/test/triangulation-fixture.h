@@ -105,6 +105,7 @@ class TriangulationFixture : public testing::Test {
   aslam::Aligned<std::vector, aslam::Transformation>::type T_W_B_;
   Eigen::Vector3d p_W_L_;
 
+ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
