@@ -117,7 +117,8 @@ inline TriangulationResult linearTriangulateFromNViews(
 
 /// brief Triangulate a 3d point from a set of n keypoint measurements as
 ///       bearing vectors.
-/// @param t_G_bv Bearing vectors from visual frames, expressed in global frame.
+/// @param t_G_bv Back-projected bearing vectors from visual frames to
+///               observations, expressed in the global frame.
 /// @param p_G_C Global positions of visual frames (cameras).
 /// @param p_G_P Triangulated point in global frame.
 /// @return Was the triangulation successful?
