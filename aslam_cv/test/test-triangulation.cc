@@ -69,10 +69,8 @@ class TriangulationTest : public testing::Test {
   aslam::TriangulationResult triangulate(Eigen::Vector3d* result) const;
 
   void setNMeasurements(const size_t n) {
-    aslam::Transformation identity;
-    identity.setIdentity();
-    bearing_measurements_.resize(3, n);
-    T_W_B_.resize(n, identity);
+    C_bearing_measurements_.resize(3, n);
+    T_W_B_.resize(n);
   }
 
   void setLandmark(const Eigen::Vector3d& p_W_L) {
@@ -81,10 +79,11 @@ class TriangulationTest : public testing::Test {
 
   void inferMeasurements() {
     for (size_t i = 0; i < T_W_B_.size(); ++i) {
-      bearing_measurements_.block<3, 1>(0, i) =
+      // Ignoring IMU to camera transformation (set to identity in SetUp()).
+      C_bearing_measurements_.block<3, 1>(0, i) =
           T_W_B_[i].inverted().transform(p_W_L_);
     }
-    setMeasurements(bearing_measurements_);
+    setMeasurements(C_bearing_measurements_);
   }
 
   void setMeasurements(const Eigen::Matrix3Xd& measurements);
@@ -102,7 +101,7 @@ class TriangulationTest : public testing::Test {
 
   aslam::Transformation T_B_C_;
   MeasurementsType measurements_;
-  Eigen::Matrix3Xd bearing_measurements_;
+  Eigen::Matrix3Xd C_bearing_measurements_;
   aslam::Aligned<std::vector, aslam::Transformation>::type T_W_B_;
   Eigen::Vector3d p_W_L_;
 };
@@ -233,7 +232,6 @@ TYPED_TEST(TriangulationTest, TwoNearParallelRays) {
   const double disparity_angle_rad = 0.1 / 180.0 * M_PI;
   const double camrea_shift = std::atan(disparity_angle_rad) * depth;
   noise.setRandom(camrea_shift, 0.0);
-  //T_W_B_[1] = T_W_B_[1] * noise;
   this->T_W_B_[1] = this->T_W_B_[1] * noise;
 
   this->inferMeasurements();
