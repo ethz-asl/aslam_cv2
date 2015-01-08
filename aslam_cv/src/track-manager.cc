@@ -18,18 +18,12 @@ namespace aslam {
     CHECK_NOTNULL(apple_frame);
     CHECK_NOTNULL(banana_frame);
 
-    // Load (and create) track id channels.
-    size_t num_apple_track_ids = apple_frame->getNumKeypointMeasurements();
-    if (!apple_frame->hasTrackIds()) {
-      apple_frame->setTrackIds(Eigen::VectorXi::Constant(num_apple_track_ids, -1));
-    }
-    Eigen::VectorXi& apple_track_ids = *CHECK_NOTNULL(apple_frame->getTrackIdsMutable());
+    //  Get the track ID channels.
+    Eigen::VectorXi& apple_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(apple_frame));
+    Eigen::VectorXi& banana_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(banana_frame));
 
-    size_t num_banana_track_ids = banana_frame->getNumKeypointMeasurements();
-    if (!banana_frame->hasTrackIds()) {
-      banana_frame->setTrackIds(Eigen::VectorXi::Constant(num_banana_track_ids, -1));
-    }
-    Eigen::VectorXi& banana_track_ids = *CHECK_NOTNULL(banana_frame->getTrackIdsMutable());
+    size_t num_apple_track_ids = static_cast<size_t>(apple_track_ids.rows());
+    size_t num_banana_track_ids = static_cast<size_t>(banana_track_ids.rows());
 
     std::unordered_set<int> consumed_apples;
     std::unordered_set<int> consumed_bananas;
@@ -81,18 +75,12 @@ namespace aslam {
     CHECK_NOTNULL(apple_frame);
     CHECK_NOTNULL(banana_frame);
 
-    // Load (and create) track id channels.
-    size_t num_apple_track_ids = apple_frame->getNumKeypointMeasurements();
-    if (!apple_frame->hasTrackIds()) {
-      apple_frame->setTrackIds(Eigen::VectorXi::Constant(num_apple_track_ids, -1));
-    }
-    Eigen::VectorXi& apple_track_ids = *CHECK_NOTNULL(apple_frame->getTrackIdsMutable());
+    //  Get the track ID channels.
+    Eigen::VectorXi& apple_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(apple_frame));
+    Eigen::VectorXi& banana_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(banana_frame));
 
-    size_t num_banana_track_ids = banana_frame->getNumKeypointMeasurements();
-    if (!banana_frame->hasTrackIds()) {
-      banana_frame->setTrackIds(Eigen::VectorXi::Constant(num_banana_track_ids, -1));
-    }
-    Eigen::VectorXi& banana_track_ids = *CHECK_NOTNULL(banana_frame->getTrackIdsMutable());
+    size_t num_apple_track_ids = static_cast<size_t>(apple_track_ids.rows());
+    size_t num_banana_track_ids = static_cast<size_t>(banana_track_ids.rows());
 
     std::unordered_set<int> consumed_apples;
     std::unordered_set<int> consumed_bananas;
@@ -100,7 +88,7 @@ namespace aslam {
     const aslam::Camera::ConstPtr& camera = apple_frame->getCameraGeometry();
 
     // Prepare buckets.
-    std::vector<int> buckets;
+    std::vector<size_t> buckets;
     buckets.resize(number_of_tracking_buckets_root_ *
                    number_of_tracking_buckets_root_, 0);
 
@@ -208,7 +196,7 @@ namespace aslam {
           apple_frame->getKeypointMeasurement(index_apple);
       int bin_index = compute_bin_index(keypoint);
 
-      if (buckets[bin_index] < static_cast<int>(bucket_capacity_)) {
+      if (buckets[bin_index] < bucket_capacity_) {
         ++buckets[bin_index];
 
         // Write back the applied match.
