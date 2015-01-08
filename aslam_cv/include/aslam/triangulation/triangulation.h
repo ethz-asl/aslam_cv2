@@ -115,6 +115,61 @@ inline TriangulationResult linearTriangulateFromNViews(
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
+/// brief Triangulate a 3d point from a set of n keypoint measurements as
+///       bearing vectors.
+/// @param t_G_bv Bearing vectors from visual frames, expressed in global frame.
+/// @param p_G_C Global positions of visual frames (cameras).
+/// @param p_G_P Triangulated point in global frame.
+/// @return Was the triangulation successful?
+inline TriangulationResult linearTriangulateFromNViews(
+    const Eigen::Matrix3Xd& t_G_bv,
+    const Eigen::Matrix3Xd& p_G_C,
+    Eigen::Vector3d* p_G_P) {
+  CHECK_NOTNULL(p_G_P);
+
+  const int num_measurements = t_G_bv.cols();
+  if (num_measurements < 2) {
+    return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
+  }
+
+  // 1.) Formulate the geometrical problem
+  // p_G_P + alpha[i] * t_G_bv[i] = p_G_C[i]      (+ alpha intended)
+  // as linear system Ax = b, where
+  // x = [p_G_P; alpha[0]; alpha[1]; ... ] and b = [p_G_C[0]; p_G_C[1]; ...]
+  //
+  // 2.) Apply the approximation AtAx = Atb
+  // AtA happens to be composed of mostly more convenient blocks than A:
+  // - Top left = N * Eigen::Matrix3d::Identity()
+  // - Top right and bottom left = t_G_bv
+  // - Bottom right = t_G_bv.colwise().squaredNorm().asDiagonal()
+
+  // - Atb.head(3) = p_G_C.rowwise().sum()
+  // - Atb.tail(N) = columnwise dot products between t_G_bv and p_G_C
+  //               = t_G_bv.cwiseProduct(p_G_C).colwise().sum().transpose()
+  //
+  // 3.) Apply the Schur complement to solve after p_G_P only
+  // AtA = [E B; C D] (same blocks as above) ->
+  // (E - B * D.inverse() * C) * p_G_P = Atb.head(3) - B * D.inverse() * Atb.tail(N)
+
+  const Eigen::MatrixXd BiD = t_G_bv *
+      t_G_bv.colwise().squaredNorm().asDiagonal().inverse();
+  const Eigen::Matrix3d AxtAx = num_measurements * Eigen::Matrix3d::Identity() -
+      BiD * t_G_bv.transpose();
+  const Eigen::Vector3d Axtbx = p_G_C.rowwise().sum() - BiD *
+      t_G_bv.cwiseProduct(p_G_C).colwise().sum().transpose();
+
+  Eigen::ColPivHouseholderQR<Eigen::Matrix3d> qr = AxtAx.colPivHouseholderQr();
+  static constexpr double kRankLossTolerance = 0.0001;
+  qr.setThreshold(kRankLossTolerance);
+  const size_t rank = qr.rank();
+  if (rank < 3) {
+    return TriangulationResult(TriangulationResult::UNOBSERVABLE);
+  }
+
+  *p_G_P = qr.solve(Axtbx);
+  return TriangulationResult(TriangulationResult::SUCCESSFUL);
+}
+
 /// brief Triangulate a 3d point from a set of n keypoint measurements in
 ///       m cameras.
 /// @param measurements_normalized Keypoint measurements on normalized image
