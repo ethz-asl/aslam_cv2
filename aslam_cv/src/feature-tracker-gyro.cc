@@ -26,9 +26,9 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
   //                * there are no keypoints in the current frame
   // keep this frame as the previous frame and return!
   if (previous_frame_ptr_.get() == nullptr ||
-      current_frame_ptr->getKeypointMeasurements().cols() == 0) {
+      current_frame_ptr->getNumKeypointMeasurements() == 0) {
     // Initialize all keypoints as untracked.
-    const size_t num_keypoints = current_frame_ptr->getKeypointMeasurements().cols();
+    const size_t num_keypoints = current_frame_ptr->getNumKeypointMeasurements();
     Eigen::VectorXi track_ids = Eigen::VectorXi::Constant(num_keypoints, -1);
     current_frame_ptr->swapTrackIds(&track_ids);
     previous_track_lengths_.resize(num_keypoints, 0);
@@ -38,7 +38,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   // Convenience access references
   VisualFrame& current_frame = *current_frame_ptr;
-  VisualFrame& previous_frame = *CHECK_NOTNULL(previous_frame_ptr_.get());
+  const VisualFrame& previous_frame = *CHECK_NOTNULL(previous_frame_ptr_.get());
 
   // Make sure the frames are in order time-wise
   // TODO(schneith): Maybe also enforce that deltaT < tolerance?
@@ -46,8 +46,9 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   // Check that the required data is available in the frame
   CHECK(current_frame.hasDescriptors());
-  CHECK_EQ(current_frame.getDescriptors().rows(), current_frame.getDescriptorSizeBytes());
-  CHECK_EQ(current_frame.getKeypointMeasurements().cols(), current_frame.getDescriptors().cols());
+  CHECK_EQ(static_cast<size_t>(current_frame.getDescriptors().rows()),
+           current_frame.getDescriptorSizeBytes());
+  CHECK_EQ(current_frame.getNumKeypointMeasurements(), current_frame.getDescriptors().cols());
 
   // Match the keypoints in the current frame to the previous one.
   std::vector<FeatureMatch> matches_prev_current;
@@ -79,7 +80,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
         return bin_index;
       };
 
-  const size_t current_num_keypoints = current_frame.getKeypointMeasurements().cols();
+  const size_t current_num_keypoints = current_frame.getNumKeypointMeasurements();
   Eigen::VectorXi current_track_ids = Eigen::VectorXi::Constant(current_num_keypoints, -1);
   current_track_lengths_.clear();
   current_track_lengths_.resize(current_num_keypoints, 0);
@@ -98,7 +99,8 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
     // Check if this is a continued track.
     if (track_id_in_previous_frame >= 0) {
       // Put the current keypoint into the bucket.
-      CHECK_LT(matches_prev_current[i].index_current_frame_, current_num_keypoints);
+      CHECK_LT(static_cast<size_t>(matches_prev_current[i].index_current_frame_),
+               current_num_keypoints);
       const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint = current_frame.getKeypointMeasurement(
           matches_prev_current[i].index_current_frame_);
       int bin_index = compute_bin_index(keypoint);
@@ -194,26 +196,13 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   // Assign new Id's to all candidates that are not continued tracks.
   aslam::statistics::DebugStatsCollector stats_track_length("GyroTracker Track lengths");
-  Eigen::VectorXi* previous_track_ids = previous_frame.getTrackIdsMutable();
-  CHECK_NOTNULL(previous_track_ids);
-  int num_keypoints_in_previous_frame = previous_track_ids->rows();
   for (size_t i = 0; i < candidates_new_tracks.size(); ++i) {
-    int index_current_frame = candidates_new_tracks[i].index_current_frame_;
-    if (current_track_ids(index_current_frame) == -1) {
-      int index_previous_frame = candidates_new_tracks[i].index_previous_frame_;
-      CHECK_LT(index_previous_frame, num_keypoints_in_previous_frame);
-      int previous_track_id = (*previous_track_ids)(index_previous_frame);
-      CHECK_EQ(previous_track_id, -1) << "Have a match that supposedly represents a new track "
-          "but the track id of the previous frame is not -1, so this would indicate a continued "
-          "track, and not a new track!";
-
-      int new_track_id = ++current_track_id_;
-      current_track_ids(index_current_frame) = new_track_id;
-      (*previous_track_ids)(index_previous_frame) = new_track_id;
-
-      current_track_lengths_[index_current_frame] = 2;
+    int index_in_curr = candidates_new_tracks[i].index_current_frame_;
+    if (current_track_ids(index_in_curr) == -1) {
+      current_track_ids(index_in_curr) = ++current_track_id_;
+      current_track_lengths_[index_in_curr] = 1;
     }
-    stats_track_length.AddSample(current_track_lengths_[index_current_frame]);
+    stats_track_length.AddSample(current_track_lengths_[index_in_curr]);
   }
 
   // Save the output track-ids to the channel in the current frame.
@@ -224,7 +213,7 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
   previous_frame_ptr_ = current_frame_ptr;
 
   // Print some statistics every now and then.
-  VLOG_EVERY_N(5, 30) << statistics::Statistics::Print();
+  LOG_EVERY_N(WARNING, 30) << statistics::Statistics::Print();
 }
 
 void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
@@ -241,7 +230,7 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
   };
 
   // Sort keypoints by y-coordinate.
-  const int current_num_pts = current_frame.getKeypointMeasurements().cols();
+  const int current_num_pts = current_frame.getNumKeypointMeasurements();
   Aligned<std::vector, KeypointAndIndex>::type current_keypoints_by_y;
   current_keypoints_by_y.resize(current_num_pts);
 
@@ -266,10 +255,10 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
     }
     corner_row_LUT.push_back(v);
   }
-  CHECK_EQ(static_cast<int>(corner_row_LUT.size()), image_height);
+  CHECK_EQ(corner_row_LUT.size(), image_height);
 
   // Undistort and predict previous keypoints.
-  const int prev_num_pts =  previous_frame.getKeypointMeasurements().cols();
+  const int prev_num_pts =  previous_frame.getNumKeypointMeasurements();
 
   Eigen::Matrix<double, 2, Eigen::Dynamic> C2_previous_image_points;
   C2_previous_image_points.resize(Eigen::NoChange, prev_num_pts);
@@ -293,8 +282,8 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
 
   // Distance function.
   const unsigned int descriptorSizeBytes = current_frame.getDescriptorSizeBytes();
-  CHECK_LT(descriptorSizeBytes * 8, 512);
-  auto hammingDistance512 =
+  CHECK_LE(384u, descriptorSizeBytes * 8);
+  auto hammingDistance =
       [descriptorSizeBytes](const unsigned char* x, const unsigned char* y)->unsigned int {
         unsigned int distance = 0;
         for(unsigned int i = 0; i < descriptorSizeBytes; i++) {
@@ -344,10 +333,10 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
     CHECK_GE(idxnearest[1], 0);
     CHECK_GE(idxnear[0], 0);
     CHECK_GE(idxnear[1], 0);
-    CHECK_LT(idxnearest[0], image_height);
-    CHECK_LT(idxnearest[1], image_height);
-    CHECK_LT(idxnear[0], image_height);
-    CHECK_LT(idxnear[1], image_height);
+    CHECK_LT(idxnearest[0], static_cast<int>(image_height));
+    CHECK_LT(idxnearest[1], static_cast<int>(image_height));
+    CHECK_LT(idxnear[0], static_cast<int>(image_height));
+    CHECK_LT(idxnear[1], static_cast<int>(image_height));
 
     int nearest_top = std::min<int>(idxnearest[0], corner_row_LUT.size() - 1);
     int nearest_bottom = std::min<int>(idxnearest[1] + 1, corner_row_LUT.size() - 1);
@@ -366,7 +355,7 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
     bool found = false;
     int n_processed_corners = 0;
     KeyPointIterator it_best;
-    int best_score = 512 - kMatchingThresholdBits;
+    int best_score = 384 - kMatchingThresholdBits;
     // Keep track of processed corners s.t. we don't process them again in the
     // large window.
     std::vector<uint8_t> processed_current_corners;
@@ -381,7 +370,7 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
       CHECK_LT(it->index, current_num_pts);
       CHECK_GE(it->index, 0);
       const unsigned char* const current_descriptor = current_frame.getDescriptor(it->index);
-      int current_score = 512 - hammingDistance512(previous_descriptor, current_descriptor);
+      int current_score = 384 - hammingDistance(previous_descriptor, current_descriptor);
       if (current_score > best_score) {
         best_score = current_score;
         it_best = it;
@@ -407,7 +396,7 @@ void GyroTracker::matchFeatures(const Eigen::Matrix3d& C_current_prev,
         CHECK_LT(it->index, current_num_pts);
         CHECK_GE(it->index, 0);
         const unsigned char* const current_descriptor = current_frame.getDescriptor(it->index);
-        int current_score = 512 - hammingDistance512(previous_descriptor, current_descriptor);
+        int current_score = 384 - hammingDistance(previous_descriptor, current_descriptor);
         if (current_score > best_score) {
           best_score = current_score;
           it_best = it;

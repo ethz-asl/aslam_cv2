@@ -5,9 +5,9 @@
 
 namespace aslam {
 VisualFrame::VisualFrame()
-    : timestamp_nanoseconds_(getInvalidTime()),
-      hardware_timestamp_(getInvalidTime()),
-      system_timestamp_nanoseconds_(getInvalidTime()) {}
+    : timestamp_nanoseconds_(time::getInvalidTime()),
+      hardware_timestamp_(time::getInvalidTime()),
+      system_timestamp_nanoseconds_(time::getInvalidTime()) {}
 
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
@@ -338,8 +338,15 @@ void VisualFrame::print(std::ostream& out, const std::string& label) const {
   }
 }
 
-aslam::ProjectionResult VisualFrame::toRawImageCoordinates(const Eigen::Vector2d& keypoint,
-                                                           Eigen::Vector2d* out_image_coordinates) {
+aslam::ProjectionResult VisualFrame::getKeypointInRawImageCoordinates(
+    size_t keypoint_idx, Eigen::Vector2d* keypoint_raw_coordinates) const {
+  CHECK_NOTNULL(keypoint_raw_coordinates);
+  const Eigen::Vector2d& keypoint = getKeypointMeasurement(keypoint_idx);
+  return toRawImageCoordinates(keypoint, keypoint_raw_coordinates);
+}
+
+aslam::ProjectionResult VisualFrame::toRawImageCoordinates(
+    const Eigen::Vector2d& keypoint, Eigen::Vector2d* out_image_coordinates) const {
   CHECK_NOTNULL(out_image_coordinates);
   Eigen::Vector3d bearing;
   // Creating a bearing vector from the transformed camera, then projecting this
@@ -352,9 +359,9 @@ aslam::ProjectionResult VisualFrame::toRawImageCoordinates(const Eigen::Vector2d
   }
 }
 
-void VisualFrame::toRawImageCoordinatesVectorized(const Eigen::Matrix2Xd& keypoints,
-                                                  Eigen::Matrix2Xd* out_image_coordinates,
-                                                  std::vector<aslam::ProjectionResult>* results) {
+void VisualFrame::toRawImageCoordinatesVectorized(
+    const Eigen::Matrix2Xd& keypoints, Eigen::Matrix2Xd* out_image_coordinates,
+    std::vector<aslam::ProjectionResult>* results) const {
   CHECK_NOTNULL(out_image_coordinates);
   CHECK_NOTNULL(results);
   Eigen::Matrix3Xd bearings;
@@ -383,6 +390,9 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   frame->swapKeypointMeasurementUncertainties(&keypoint_uncertainties);
   aslam::VisualFrame::DescriptorsT descriptors = aslam::VisualFrame::DescriptorsT::Zero(48, 0);
   frame->swapDescriptors(&descriptors);
+  aslam::FrameId id;
+  id.randomize();
+  frame->setId(id);
   return frame;
 }
 }  // namespace aslam

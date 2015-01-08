@@ -17,12 +17,10 @@ namespace aslam {
 ///        NOTE: The inverse transformation (undistort) in this case is not available in
 ///        closed form and so it is computed iteratively!
 class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
-
- private:
+ public:
   /** \brief Number of parameters used for this distortion model. */
   enum { kNumOfParams = 4 };
 
- public:
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   ASLAM_POINTER_TYPEDEFS(RadTanDistortion);
 

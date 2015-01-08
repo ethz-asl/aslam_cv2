@@ -20,9 +20,12 @@ cs_add_library(${PROJECT_NAME}
                                src/distortion-radtan.cc
                                src/feature-tracker-gyro.cc
                                src/feature-tracker.cc
+                               src/matching-problem-frame-to-frame.cc
                                src/ncamera.cc
                                src/statistics.cc
                                src/thread-pool.cc
+                               src/track-manager.cc
+                               src/triangulation.cc
                                src/undistorter.cc
                                src/undistorter-mapped.cc
                                src/visual-frame.cc
@@ -69,6 +72,16 @@ catkin_add_gtest(test_matcher
 )
 target_link_libraries(test_matcher ${PROJECT_NAME}) 
 
+catkin_add_gtest(test_matcher_non_exclusive
+    test/test-matcher-non-exclusive.cc
+)
+target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
+
+catkin_add_gtest(test_track_manager
+    test/test-track-manager.cc
+)
+target_link_libraries(test_track_manager ${PROJECT_NAME})
+
 catkin_add_gtest(test_triangulation
     test/test-triangulation.cc
 )
@@ -78,6 +91,11 @@ catkin_add_gtest(test_thread-pool
     test/test-thread-pool.cc
 )
 target_link_libraries(test_thread-pool ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_time
+    test/test-time.cc
+)
+target_link_libraries(test_time ${PROJECT_NAME}) 
 
 catkin_add_gtest(test_undistorters
     test/test-undistorters.cc
