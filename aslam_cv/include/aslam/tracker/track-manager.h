@@ -35,9 +35,9 @@ namespace aslam {
       // Load (and create) track id channels.
       CHECK_NOTNULL(frame);
       Eigen::VectorXi* track_id_channel = nullptr;
-      size_t num_apple_track_ids = frame->getNumKeypointMeasurements();
+      size_t num_track_ids = frame->getNumKeypointMeasurements();
       if (!frame->hasTrackIds()) {
-        frame->setTrackIds(Eigen::VectorXi::Constant(num_apple_track_ids, -1));
+        frame->setTrackIds(Eigen::VectorXi::Constant(num_track_ids, -1));
       }
       track_id_channel = frame->getTrackIdsMutable();
       return CHECK_NOTNULL(track_id_channel);
