@@ -35,6 +35,9 @@ cs_add_library(${PROJECT_NAME}
                                src/visual-pipeline.cc
 )
 
+cs_add_executable(triangulation-benchmark benchmark/triangulation-benchmark.cc)
+target_link_libraries(triangulation-benchmark ${PROJECT_NAME} gtest pthread)
+
 add_doxygen(NOT_AUTOMATIC)
 
 add_definitions(-std=c++11)
