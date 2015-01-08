@@ -7,6 +7,7 @@
 #include <aslam/common/memory.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/predicates.h>
+#include <aslam/common/time.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/frames/visual-frame.h>
 
@@ -144,6 +145,7 @@ int64_t VisualNFrame::getMinTimestampNanoseconds() const {
     if (timestamp_frame_nanoseconds < min_timestamp_nanoseconds)
       min_timestamp_nanoseconds = timestamp_frame_nanoseconds;
   }
+  CHECK(aslam::time::isValidTime(min_timestamp_nanoseconds));
   return min_timestamp_nanoseconds;
 }
 
