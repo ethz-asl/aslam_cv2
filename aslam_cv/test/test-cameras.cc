@@ -574,23 +574,6 @@ TEST(TestCameraFactory, testBadIntrinsics2) {
 
 
 
-///////////////////////////////////////////////
-// Types to test
-///////////////////////////////////////////////
-using testing::Types;
-
-
-template<typename Type1, typename Type2>
-struct TypePair {
-  typedef Type1 Camera;
-  typedef Type2 Distortion;
-};
-typedef Types<TypePair<aslam::PinholeCamera, aslam::RadTanDistortion>,
-              TypePair<aslam::UnifiedProjectionCamera, aslam::RadTanDistortion>,
-              TypePair<aslam::PinholeCamera, aslam::EquidistantDistortion>,
-              TypePair<aslam::UnifiedProjectionCamera, aslam::EquidistantDistortion>,
-              TypePair<aslam::PinholeCamera, aslam::FisheyeDistortion>,
-              TypePair<aslam::UnifiedProjectionCamera, aslam::FisheyeDistortion>> CameraPlusDistortion;
 
 ///////////////////////////////////////////////
 // Test fixture
@@ -598,8 +581,7 @@ typedef Types<TypePair<aslam::PinholeCamera, aslam::RadTanDistortion>,
 template <class _CameraType>
 class TestYamlNoDistortion : public testing::Test {
  public:
-  typedef _CameraType CameraType;
-
+  typedef typename _CameraType::CameraType CameraType;
   protected:
   TestYamlNoDistortion() : camera_(CameraType::createTestCamera() ) {};
     virtual ~TestYamlNoDistortion() {};
@@ -609,8 +591,8 @@ class TestYamlNoDistortion : public testing::Test {
 template <class CameraDistortion>
 class TestYaml : public testing::Test {
  public:
-  typedef typename CameraDistortion::Camera CameraType;
-  typedef typename CameraDistortion::Distortion DistortionType;
+  typedef typename CameraDistortion::CameraType CameraType;
+  typedef typename CameraDistortion::DistortionType DistortionType;
 
   protected:
   TestYaml() : camera_(CameraType::template createTestCamera<DistortionType>()) {};
@@ -620,7 +602,7 @@ class TestYaml : public testing::Test {
 
 TYPED_TEST_CASE(TestYamlNoDistortion, Implementations);
 
-TYPED_TEST_CASE(TestYaml, CameraPlusDistortion);
+TYPED_TEST_CASE(TestYaml, Implementations);
 
 TYPED_TEST(TestYamlNoDistortion, TestSaveAndLoad){
   ASSERT_NE(this->camera_, nullptr);
