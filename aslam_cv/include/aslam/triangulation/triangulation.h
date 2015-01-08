@@ -115,14 +115,20 @@ inline TriangulationResult linearTriangulateFromNViews(
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
+/// brief Triangulate a 3d point from a set of n keypoint measurements as
+///       bearing vectors.
+/// @param t_G_bv Bearing vectors from visual frames, expressed in global frame.
+/// @param p_G_C Global positions of visual frames (cameras).
+/// @param p_G_P Triangulated point in global frame.
+/// @return Was the triangulation successful?
 inline TriangulationResult linearTriangulateFromNViews(
     const Eigen::Matrix3Xd& t_G_bv,
     const Eigen::Matrix3Xd& p_G_C,
     Eigen::Vector3d* p_G_P) {
   CHECK_NOTNULL(p_G_P);
 
-  const int N = t_G_bv.cols();
-  if (N < 2) {
+  const int num_measurements = t_G_bv.cols();
+  if (num_measurements < 2) {
     return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
   }
 
@@ -142,16 +148,25 @@ inline TriangulationResult linearTriangulateFromNViews(
   //               = t_G_bv.cwiseProduct(p_G_C).colwise().sum().transpose()
   //
   // 3.) Apply the Schur complement to solve after p_G_P only
+  // AtA = [E B; C D] (same blocks as above) ->
+  // (E - B * D.inverse() * C) * p_G_P = Atb.head(3) - B * D.inverse() * Atb.tail(N)
 
-  const Eigen::DiagonalMatrix<double, Eigen::Dynamic> iAktAk =
+  const Eigen::MatrixXd BiD = t_G_bv *
       t_G_bv.colwise().squaredNorm().asDiagonal().inverse();
-  const Eigen::Matrix3d AxtAx = N * Eigen::Matrix3d::Identity() -
-      t_G_bv * iAktAk * t_G_bv.transpose();
-  const Eigen::Vector3d Axtbx = p_G_C.rowwise().sum() -
-      t_G_bv *
-      (iAktAk * t_G_bv.cwiseProduct(p_G_C).colwise().sum().transpose());
+  const Eigen::Matrix3d AxtAx = num_measurements * Eigen::Matrix3d::Identity() -
+      BiD * t_G_bv.transpose();
+  const Eigen::Vector3d Axtbx = p_G_C.rowwise().sum() - BiD *
+      t_G_bv.cwiseProduct(p_G_C).colwise().sum().transpose();
 
-  *p_G_P = AxtAx.inverse() * Axtbx;
+  Eigen::ColPivHouseholderQR<Eigen::Matrix3d> qr = AxtAx.colPivHouseholderQr();
+  static constexpr double kRankLossTolerance = 0.0001;
+  qr.setThreshold(kRankLossTolerance);
+  const size_t rank = qr.rank();
+  if (rank < 3) {
+    return TriangulationResult(TriangulationResult::UNOBSERVABLE);
+  }
+
+  *p_G_P = qr.solve(Axtbx);
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
