@@ -24,6 +24,8 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
     if(distortion_config) {
       std::string distortion_type;
       Eigen::VectorXd distortion_parameters;
+      // TODO(mbuerki) validate parameters before initialization.
+      // https://github.com/ethz-asl/aslam_cv2/issues/240
       if(YAML::safeGet(distortion_config, "type", &distortion_type) &&
          YAML::safeGet(distortion_config, "parameters", &distortion_parameters)) {
         if(distortion_type == "none") {
@@ -57,6 +59,8 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
     unsigned image_width;
     unsigned image_height;
     Eigen::VectorXd intrinsics;
+    // TODO(mbuerki) validate parameters before initialization.
+    // https://github.com/ethz-asl/aslam_cv2/issues/240
     if(YAML::safeGet(node, "type", &camera_type) &&
         YAML::safeGet(node, "image_width", &image_width) &&
         YAML::safeGet(node, "image_height", &image_height) &&
