@@ -12,6 +12,16 @@ namespace aslam {
     track_id_provider_ = start_track_id;
   }
 
+  Eigen::VectorXi* TrackManager::createAndGetTrackIdChannel(VisualFrame* frame) {
+    // Load (and create) track id channels.
+    CHECK_NOTNULL(frame);
+    size_t num_track_ids = frame->getNumKeypointMeasurements();
+    if (!frame->hasTrackIds()) {
+      frame->setTrackIds(Eigen::VectorXi::Constant(num_track_ids, -1));
+    }
+    return CHECK_NOTNULL(frame->getTrackIdsMutable());
+  }
+
   void SimpleTrackManager::applyMatchesToFrames(const Matches& matches,
                                                 VisualFrame* apple_frame,
                                                 VisualFrame* banana_frame) {
