@@ -119,6 +119,9 @@ class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDis
   /// \name Methods to set/get distortion parameters
   /// @{
 
+  /// Static function that checks whether the given intrinsic parameters are valid for this model.
+  static bool areParametersValid(const Eigen::VectorXd& parameters);
+
   /// \brief Check the validity of distortion parameters.
   /// @param[in] dist_coeffs Vector containing the coefficients.
   ///            Parameters will NOT be stored.
