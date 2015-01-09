@@ -598,52 +598,5 @@ TEST(TestParameters, testUnifiedProjectionParameters) {
   EXPECT_TRUE(aslam::UnifiedProjectionCamera::areParametersValid(valid));
 }
 
-///////////////////////////////////////////////
-// Test fixture
-///////////////////////////////////////////////
-template <class _CameraType>
-class TestYamlNoDistortion : public testing::Test {
- public:
-  typedef typename _CameraType::CameraType CameraType;
-  protected:
-  TestYamlNoDistortion() : camera_(CameraType::createTestCamera() ) {};
-    virtual ~TestYamlNoDistortion() {};
-    typename aslam::Camera::Ptr camera_;
-};
-
-template <class CameraDistortion>
-class TestYaml : public testing::Test {
- public:
-  typedef typename CameraDistortion::CameraType CameraType;
-  typedef typename CameraDistortion::DistortionType DistortionType;
-
-  protected:
-  TestYaml() : camera_(CameraType::template createTestCamera<DistortionType>()) {};
-    virtual ~TestYaml() {};
-    typename aslam::Camera::Ptr camera_;
-};
-
-TYPED_TEST_CASE(TestYamlNoDistortion, Implementations);
-
-TYPED_TEST_CASE(TestYaml, Implementations);
-
-TYPED_TEST(TestYamlNoDistortion, TestSaveAndLoad){
-  ASSERT_NE(this->camera_, nullptr);
-  YAML::Save(this->camera_, "test.yaml");
-  aslam::Camera::Ptr camera;
-  YAML::Load("test.yaml", &camera);
-  ASSERT_NE(camera, nullptr);
-  EXPECT_TRUE(*camera.get() == *this->camera_.get());
-}
-
-TYPED_TEST(TestYaml, TestSaveAndLoad){
-  ASSERT_NE(this->camera_, nullptr);
-  YAML::Save(this->camera_, "test.yaml");
-  aslam::Camera::Ptr camera;
-  YAML::Load("test.yaml", &camera);
-  ASSERT_NE(camera, nullptr);
-  EXPECT_TRUE(*camera.get() == *this->camera_.get());
-}
-
 ASLAM_UNITTEST_ENTRYPOINT
 
