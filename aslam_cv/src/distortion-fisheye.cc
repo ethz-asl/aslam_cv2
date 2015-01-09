@@ -138,17 +138,21 @@ void FisheyeDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd
   (*point) *= r_u;
 }
 
-bool FisheyeDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
+bool FisheyeDistortion::areParametersValid(const Eigen::VectorXd& parameters) {
   // Check the vector size.
-  if (dist_coeffs.size() != kNumOfParams)
+  if (parameters.size() != kNumOfParams)
     return false;
 
   // Expect w to have sane magnitude.
-  double w = dist_coeffs(0);
+  double w = parameters(0);
   bool valid = std::abs(w) < 1e-16 || (w >= kMinValidW && w <= kMaxValidW);
   LOG_IF(INFO, !valid) << "Invalid w parameter: " << w << ", expected w in [" << kMinValidW
       << ", " << kMaxValidW << "].";
   return valid;
+}
+
+bool FisheyeDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
+  return areParametersValid(dist_coeffs);
 }
 
 void FisheyeDistortion::printParameters(std::ostream& out, const std::string& text) const {

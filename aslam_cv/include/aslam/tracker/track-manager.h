@@ -6,8 +6,8 @@
 #include <glog/logging.h>
 
 namespace aslam {
-  class VisualFrame;
   class Match;
+  class VisualNFrame;
 
   /// \brief The Track manager assigns track ids to the given matches with different strategies.
   class TrackManager {
@@ -31,16 +31,7 @@ namespace aslam {
     ///
     /// @param[in]  frame   Pointer to the visual frame.
     /// @return             Pointer to the track id channel.
-    inline Eigen::VectorXi* createAndGetTrackIdChannel(VisualFrame* frame) {
-      // Load (and create) track id channels.
-      CHECK_NOTNULL(frame);
-      Eigen::VectorXi* track_id_channel = nullptr;
-      size_t num_track_ids = frame->getNumKeypointMeasurements();
-      if (!frame->hasTrackIds()) {
-        frame->setTrackIds(Eigen::VectorXi::Constant(num_track_ids, -1));
-      }
-      return CHECK_NOTNULL(frame->getTrackIdsMutable());
-    }
+    static inline Eigen::VectorXi* createAndGetTrackIdChannel(VisualFrame* frame);
 
    protected:
     size_t track_id_provider_;
