@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include <aslam/common/memory.h>
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 
@@ -50,8 +51,8 @@ template <class ValueType>
 struct convert<std::queue<ValueType> > {
   static Node encode(const std::queue<ValueType>& queue) {
     Node node;
-    std::vector<ValueType> tmp_v;
-    std::queue<ValueType> q_cpy = queue;
+    typename aslam::Aligned<std::vector, ValueType>::type tmp_v;
+    typename aslam::Aligned<std::queue, ValueType>::type q_cpy = queue;
     while (!q_cpy.empty()) {
       tmp_v.push_back(q_cpy.front());
       q_cpy.pop();
