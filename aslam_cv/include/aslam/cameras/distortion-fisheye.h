@@ -113,6 +113,9 @@ class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion>
   /// \name Methods to set/get distortion parameters
   /// @{
 
+  /// Static function that checks whether the given intrinsic parameters are valid for this model.
+  static bool areParametersValid(const Eigen::VectorXd& parameters);
+
   /// \brief Check the validity of distortion parameters.
   /// @param[in] dist_coeffs Vector containing the coefficients.
   ///            Parameters will NOT be stored.
@@ -140,6 +143,11 @@ class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion>
   //////////////////////////////////////////////////////////////
   /// \name Valid parameter range definition.
   /// @{
+
+  /// Get the min valid w. W is valid in range [kMinValidW, kMaxValidW].
+  static double getMinValidW() {return kMinValidW; }
+  /// Get the max valid w. W is valid in range [kMinValidW, kMaxValidW].
+  static double getMaxValidW() { return kMaxValidW; }
  private:
   static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
   static constexpr double kMinValidW = 0.5;

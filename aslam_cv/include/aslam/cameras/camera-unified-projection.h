@@ -271,6 +271,9 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
       return kNumOfParams;
   }
 
+  /// Static function that checks whether the given intrinsic parameters are valid for this model.
+  static bool areParametersValid(const Eigen::VectorXd& parameters);
+
   /// Function to check wheter the given intrinic parameters are valid for this model.
   virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
 

@@ -528,5 +528,74 @@ TEST(CameraComparison, TestEquality) {
   EXPECT_FALSE(*pinhole_C == *pinhole_D);  // Different intrinsics and distortion coeffs.
 }
 
+///////////////////////////////////////////////
+// Test valid parameters
+///////////////////////////////////////////////
+TEST(TestParameters, testPinholeParameters) {
+  // Check num parameters:
+  Eigen::Vector3d invalid1 = Eigen::Vector3d::Zero();
+  EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid1));
+
+  Eigen::Matrix<double, 5, 1> invalid2 = Eigen::Matrix<double, 5, 1>::Zero();
+  EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid2));
+
+  Eigen::Vector4d invalid3 = Eigen::Vector4d::Zero();
+  EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid3));
+
+  // Check any of the paramters below 0:
+  Eigen::Vector4d invalid4 = Eigen::Vector4d(0.0, 1.0, 1.0, 1.0);
+  EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid4));
+
+  Eigen::Vector4d invalid5 = Eigen::Vector4d(1.0, 0.0, 1.0, 1.0);
+  EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid5));
+
+  Eigen::Vector4d invalid6 = Eigen::Vector4d(1.0, 1.0, 0.0, 1.0);
+  EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid6));
+
+  Eigen::Vector4d invalid7 = Eigen::Vector4d(1.0, 1.0, 1.0, 0.0);
+  EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid7));
+
+  Eigen::Vector4d valid = Eigen::Vector4d(1.0, 1.0, 1.0, 1.0);
+  EXPECT_TRUE(aslam::PinholeCamera::areParametersValid(valid));
+}
+
+TEST(TestParameters, testUnifiedProjectionParameters) {
+  // Check num parameters:
+  Eigen::Vector4d invalid1 = Eigen::Vector4d::Zero();
+  EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid1));
+
+  Eigen::Matrix<double, 6, 1> invalid2 = Eigen::Matrix<double, 6, 1>::Zero();
+  EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid2));
+
+  typedef Eigen::Matrix<double, 5, 1> Intrinsics;
+  Intrinsics invalid3 = Intrinsics::Zero();
+  EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid3));
+
+  // Check any of the paramters below 0:
+  Intrinsics invalid4;
+  invalid4 << -1.0, 1.0, 1.0, 1.0, 1.0;
+  EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid4));
+
+  Intrinsics invalid5;
+  invalid5 << 1.0, 0.0, 1.0, 1.0, 1.0;
+  EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid5));
+
+  Intrinsics invalid6;
+  invalid6 << 1.0, 1.0, 0.0, 1.0, 1.0;
+  EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid6));
+
+  Intrinsics invalid7;
+  invalid7 << 1.0, 1.0, 1.0, 0.0, 1.0;
+  EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid7));
+
+  Intrinsics invalid8;
+  invalid8 << 1.0, 1.0, 1.0, 1.0, 0.0;
+  EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid8));
+
+  Intrinsics valid;
+  valid << 0.0, 1.0, 1.0, 1.0, 1.0;
+  EXPECT_TRUE(aslam::UnifiedProjectionCamera::areParametersValid(valid));
+}
+
 ASLAM_UNITTEST_ENTRYPOINT
 
