@@ -61,8 +61,10 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
       }
 
       aslam::Camera::Ptr camera;
-      YAML::convert<aslam::Camera::Ptr>::decode(camera_node["camera"], camera);
-      CHECK(camera);
+      if (!YAML::safeGet(camera_node, "camera", &camera)) {
+        LOG(ERROR) << "Unable to retrieve camera " << camera_index;
+        return true;
+      }
 
       const Node& extrinsics_node = camera_node["extrinsics"];
       if (!extrinsics_node) {
@@ -121,8 +123,7 @@ Node convert<std::shared_ptr<aslam::NCamera> >::encode(
   for (size_t camera_index = 0; camera_index < num_cameras; ++camera_index) {
     Node camera_node;
 
-    camera_node["camera"]  =
-        YAML::convert<aslam::Camera::Ptr>::encode(ncamera->getCameraShared(camera_index));
+    camera_node["camera"]  = ncamera->getCameraShared(camera_index);
 
     Eigen::Vector3d t_B_C = ncamera->get_T_C_B(camera_index).inverted().getPosition();
     Eigen::Vector4d q_B_C = ncamera->get_T_C_B(camera_index).inverted().getRotation().vector();
@@ -141,6 +142,4 @@ Node convert<std::shared_ptr<aslam::NCamera> >::encode(
   return ncamera_node;
 }
 
-
 }  // namespace YAML
-
