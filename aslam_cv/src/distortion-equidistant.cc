@@ -174,12 +174,16 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
   y *= scaling;
 }
 
-bool EquidistantDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
+bool EquidistantDistortion::areParametersValid(const Eigen::VectorXd& parameters) {
   // Check the vector size.
-  if (dist_coeffs.size() != kNumOfParams)
+  if (parameters.size() != kNumOfParams)
     return false;
 
   return true;
+}
+
+bool EquidistantDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
+  return areParametersValid(dist_coeffs);
 }
 
 void EquidistantDistortion::printParameters(std::ostream& out, const std::string& text) const {

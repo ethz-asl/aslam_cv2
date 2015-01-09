@@ -155,4 +155,70 @@ TYPED_TEST(TestDistortions, JacobianWrtDistortion) {
                                   dist_coeffs, 1e-6, 1e-4, *(this->distortion_), keypoint);
 }
 
+///////
+// Test paramters
+///////
+TEST(TestParameter, testEquidistantDistortionParameters) {
+  Eigen::Vector3d invalid1 = Eigen::Vector3d::Zero();
+  EXPECT_FALSE(aslam::EquidistantDistortion::areParametersValid(invalid1));
+
+  Eigen::Matrix<double, 5, 1> invalid2 = Eigen::Matrix<double, 5, 1>::Zero();
+  EXPECT_FALSE(aslam::EquidistantDistortion::areParametersValid(invalid2));
+
+  Eigen::Vector4d valid = Eigen::Vector4d::Zero();
+  EXPECT_TRUE(aslam::EquidistantDistortion::areParametersValid(valid));
+}
+
+namespace aslam {
+TEST(TestParameter, testFisheyeDistortionParameters) {
+  Eigen::Matrix<double, 0, 1> invalid1 = Eigen::Matrix<double, 0, 1>::Zero();
+  EXPECT_FALSE(FisheyeDistortion::areParametersValid(invalid1));
+
+  Eigen::Vector2d invalid2 = Eigen::Vector2d::Zero();
+  EXPECT_FALSE(FisheyeDistortion::areParametersValid(invalid2));
+
+  /// todo: enable once https://github.com/ethz-asl/aslam_cv2/issues/245 is resolved.
+  //Eigen::Matrix<double, 1, 1> invalid3 = Eigen::Matrix<double, 1, 1>::Zero();
+  //EXPECT_FALSE(aslam::FisheyeDistortion::areParametersValid(invalid3));
+
+  Eigen::Matrix<double, 1, 1> invalid4 = Eigen::Matrix<double, 1, 1>::Zero();
+  aslam::FisheyeDistortion fisheye_distortion(invalid4);
+  double min_w = fisheye_distortion.kMinValidW;
+  double max_w = fisheye_distortion.kMaxValidW;
+
+  double invalid_w_5 = min_w - 1e-6;
+  double invalid_w_6 = max_w + 1e-6;
+
+  Eigen::Matrix<double, 1, 1> invalid5;
+  invalid5 << invalid_w_5;
+  EXPECT_FALSE(FisheyeDistortion::areParametersValid(invalid5));
+
+  invalid5(0) = invalid_w_6;
+  EXPECT_FALSE(FisheyeDistortion::areParametersValid(invalid5));
+
+  Eigen::Matrix<double, 1, 1> valid;
+  valid << min_w;
+  EXPECT_TRUE(FisheyeDistortion::areParametersValid(valid));
+
+  valid(0) =  max_w;
+  EXPECT_TRUE(FisheyeDistortion::areParametersValid(valid));
+
+  valid(0) = (min_w + max_w) / 2.0;
+  Eigen::Matrix<double, 1, 1> valid1;
+  valid1 << min_w;
+  EXPECT_TRUE(FisheyeDistortion::areParametersValid(valid));
+}
+}  // namespace aslam
+
+TEST(TestParameter, testRadTanParameters) {
+  Eigen::Vector3d invalid1 = Eigen::Vector3d::Zero();
+  EXPECT_FALSE(aslam::RadTanDistortion::areParametersValid(invalid1));
+
+  Eigen::Matrix<double, 5, 1> invalid2 = Eigen::Matrix<double, 5, 1>::Zero();
+  EXPECT_FALSE(aslam::RadTanDistortion::areParametersValid(invalid2));
+
+  Eigen::Vector4d valid = Eigen::Vector4d::Zero();
+  EXPECT_TRUE(aslam::RadTanDistortion::areParametersValid(valid));
+}
+
 ASLAM_UNITTEST_ENTRYPOINT
