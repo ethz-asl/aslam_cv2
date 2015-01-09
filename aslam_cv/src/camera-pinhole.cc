@@ -286,12 +286,16 @@ std::unique_ptr<MappedUndistorter> PinholeCamera::createMappedUndistorter(
       new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
 }
 
+bool PinholeCamera::areParametersValid(const Eigen::VectorXd& parameters) {
+  return (parameters.size() == parameterCount()) &&
+         (parameters[0] > 0.0)  && //fu
+         (parameters[1] > 0.0)  && //fv
+         (parameters[2] > 0.0)  && //cu
+         (parameters[3] > 0.0);    //cv
+}
+
 bool PinholeCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
-  return (intrinsics.size() == parameterCount()) &&
-         (intrinsics[0] > 0.0)  && //fu
-         (intrinsics[1] > 0.0)  && //fv
-         (intrinsics[2] > 0.0)  && //cu
-         (intrinsics[3] > 0.0);    //cv
+  return areParametersValid(intrinsics);
 }
 
 void PinholeCamera::printParameters(std::ostream& out, const std::string& text) const {
