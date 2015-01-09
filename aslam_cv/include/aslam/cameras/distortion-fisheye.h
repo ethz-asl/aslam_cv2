@@ -3,7 +3,6 @@
 
 #include <Eigen/Core>
 #include <glog/logging.h>
-#include <gtest/gtest_prod.h>
 
 #include <aslam/common/crtp-clone.h>
 #include <aslam/cameras/distortion.h>
@@ -15,7 +14,6 @@ namespace aslam {
 /// \brief An implementation of the fisheye distortion model for pinhole cameras.
 class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion> {
  public:
-  FRIEND_TEST(TestParameter, testFisheyeDistortionParameters);
   /** \brief Number of parameters used for this distortion model. */
   enum { kNumOfParams = 1 };
 
@@ -145,6 +143,11 @@ class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion>
   //////////////////////////////////////////////////////////////
   /// \name Valid parameter range definition.
   /// @{
+
+  /// Get the min valid w. W is valid in range [kMinValidW, kMaxValidW].
+  static double getMinValidW() {return kMinValidW; }
+  /// Get the max valid w. W is valid in range [kMinValidW, kMaxValidW].
+  static double getMaxValidW() { return kMaxValidW; }
  private:
   static constexpr double kMaxValidAngle = (89.0 * M_PI / 180.0);
   static constexpr double kMinValidW = 0.5;
