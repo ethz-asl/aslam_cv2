@@ -16,8 +16,8 @@ struct convert<std::shared_ptr<aslam::Camera>> {
   /// By default, yaml-cpp will throw and exception if the parsing fails.
   /// This function was written to *not* throw exceptions. Hence, decode always
   /// returns true, but when it fails, the shared pointer will be null.
-  static bool decode(const Node& node, std::shared_ptr<aslam::Camera>& M);
-  static Node encode(const std::shared_ptr<aslam::Camera>& M);
+  static bool decode(const Node& node, std::shared_ptr<aslam::Camera>& camera);
+  static Node encode(const std::shared_ptr<aslam::Camera>& camera);
 };
 
 }  // namespace YAML
