@@ -37,7 +37,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
             LOG(ERROR) << "Invalid distortion parameters for the Equidistant distortion model: "
                 << distortion_parameters.transpose() << std::endl <<
                 "See aslam::EquidistantDistortion::areParametersValid(...) for conditions on what "
-                "valid Equidistand distortion parameters look like.";
+                "valid Equidistant distortion parameters look like.";
             return true;
           }
         } else if(distortion_type == "fisheye") {
