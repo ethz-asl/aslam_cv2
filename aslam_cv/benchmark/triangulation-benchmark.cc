@@ -77,15 +77,15 @@ static_assert(kMaxAngleDisparity > 0. && kMaxAngleDisparity < M_PI / 2,
 constexpr size_t kNumAngleDisparitySteps = 50u;
 static_assert(kNumAngleDisparitySteps > 0u, "Need at least one disparity step.");
 constexpr double kDAngleDisparity = kMaxAngleDisparity / kNumAngleDisparitySteps;
-constexpr size_t kMinNumNoisedMeasurements = 2u;
-constexpr size_t kMaxNumNoisedMeasurements = 18u;
-constexpr size_t kNumNoisedMeasurementsMultiplier = 3u;
-static_assert((kMaxNumNoisedMeasurements / kMinNumNoisedMeasurements) %
-              kNumNoisedMeasurementsMultiplier == 0u, "Inconsistent series.");
-constexpr size_t kNumNoisedMeasurementsSteps = kMaxNumNoisedMeasurements /
-    (kMinNumNoisedMeasurements * kNumNoisedMeasurementsMultiplier) + 1;
+constexpr size_t kMinNumNoisyMeasurements = 2u;
+constexpr size_t kMaxNumNoisyMeasurements = 18u;
+constexpr size_t kNumNoisyMeasurementsMultiplier = 3u;
+static_assert((kMaxNumNoisyMeasurements / kMinNumNoisyMeasurements) %
+              kNumNoisyMeasurementsMultiplier == 0u, "Inconsistent series.");
+constexpr size_t kNumNoisyMeasurementsSteps = kMaxNumNoisyMeasurements /
+    (kMinNumNoisyMeasurements * kNumNoisyMeasurementsMultiplier) + 1;
 
-double stats[2][kNumAngleDisparitySteps][kNumNoisedMeasurementsSteps];
+double stats[2][kNumAngleDisparitySteps][kNumNoisyMeasurementsSteps];
 
 template <typename MeasurementType>
 void plotAngleNoiseIfDone() {}
@@ -94,7 +94,7 @@ template <>
 void plotAngleNoiseIfDone<Eigen::Matrix3Xd>() {
   FILE* plot = popen("gnuplot --persist", "w");
 
-  for (size_t measurement_i = 0u; measurement_i < 2 * kNumNoisedMeasurementsSteps;
+  for (size_t measurement_i = 0u; measurement_i < 2 * kNumNoisyMeasurementsSteps;
       ++measurement_i) {
     if (measurement_i == 0) {
       fprintf(plot, "plot ");
@@ -104,7 +104,7 @@ void plotAngleNoiseIfDone<Eigen::Matrix3Xd>() {
     fprintf(plot, "'-' w l");
   }
   fprintf(plot, "\n");
-  for (size_t measurement_i = 0u; measurement_i < kNumNoisedMeasurementsSteps;
+  for (size_t measurement_i = 0u; measurement_i < kNumNoisyMeasurementsSteps;
       ++measurement_i) {
     for (size_t i = 0u; i < kNumAngleDisparitySteps; ++i) {
       fprintf(plot, "%lf %lf\n", kDAngleDisparity * (1 + i) * 180 / M_PI,
@@ -112,7 +112,7 @@ void plotAngleNoiseIfDone<Eigen::Matrix3Xd>() {
     }
     fprintf(plot, "e\n");
   }
-  for (size_t measurement_i = 0u; measurement_i < kNumNoisedMeasurementsSteps;
+  for (size_t measurement_i = 0u; measurement_i < kNumNoisyMeasurementsSteps;
       ++measurement_i) {
     for (size_t i = 0u; i < kNumAngleDisparitySteps; ++i) {
       fprintf(plot, "%lf %lf\n", kDAngleDisparity * (1 + i) * 180 / M_PI,
@@ -129,16 +129,16 @@ TYPED_TEST(TriangulationFixture, AngleNoise) {
   constexpr double kDepth = 1;
   constexpr size_t kNumSamples = 50;
   this->p_W_L_ << 0, 0, kDepth;
-  CHECK_GT(kMinNumNoisedMeasurements, 1);
-  CHECK_GE(kMaxNumNoisedMeasurements, kMinNumNoisedMeasurements);
-  CHECK_GE(kNumNoisedMeasurementsMultiplier, 1);
+  CHECK_GT(kMinNumNoisyMeasurements, 1);
+  CHECK_GE(kMaxNumNoisyMeasurements, kMinNumNoisyMeasurements);
+  CHECK_GE(kNumNoisyMeasurementsMultiplier, 1);
 
   for (size_t disparity_i = 0u; disparity_i < kNumAngleDisparitySteps; ++disparity_i) {
     double disparity = kDAngleDisparity * (1 + disparity_i);
-    for (size_t measurement_i = 0; measurement_i < kNumNoisedMeasurementsSteps;
+    for (size_t measurement_i = 0; measurement_i < kNumNoisyMeasurementsSteps;
         ++measurement_i) {
-      size_t num_measurements = kMinNumNoisedMeasurements *
-          pow(kNumNoisedMeasurementsMultiplier, measurement_i);
+      size_t num_measurements = kMinNumNoisyMeasurements *
+          pow(kNumNoisyMeasurementsMultiplier, measurement_i);
       this->setNMeasurements(num_measurements);
       Eigen::Matrix3Xd p_W_B;
       sampleXYPlaneSine(-1., 1., num_measurements, &p_W_B);

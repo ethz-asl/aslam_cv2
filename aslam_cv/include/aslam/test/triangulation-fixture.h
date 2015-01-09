@@ -83,9 +83,9 @@ class TriangulationFixture : public testing::Test {
       C_bearing_measurements_.block<3, 1>(0, i) =
           T_W_B_[i].inverted().transform(p_W_L_);
       if (angle_noise > 0.) {
-        aslam::Transformation noiser;
-        noiser.setRandom(0., angle_noise);
-        C_bearing_measurements_.block<3, 1>(0, i) = noiser *
+        aslam::Transformation perturbation;
+        perturbation.setRandom(0., angle_noise);
+        C_bearing_measurements_.block<3, 1>(0, i) = perturbation *
             C_bearing_measurements_.block<3, 1>(0, i);
       }
     }
