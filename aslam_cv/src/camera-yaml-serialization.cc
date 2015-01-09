@@ -61,7 +61,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
             return true;
           }
         } else {
-            LOG(FATAL) << "Unknown distortion model: \"" << distortion_type << "\". "
+            LOG(ERROR) << "Unknown distortion model: \"" << distortion_type << "\". "
                 << "Valid values are {none, equidistant, fisheye, radial-tangential}.";
             return true;
         }
@@ -175,7 +175,7 @@ Node convert<std::shared_ptr<aslam::Camera> >::encode(
       camera_node["type"] = "unified-projection";
       break;
     default:
-      LOG(FATAL) << "Unknown camera model: "
+      LOG(ERROR) << "Unknown camera model: "
         << static_cast<std::underlying_type<aslam::Camera::Type>::type>(camera->getType());
   }
   camera_node["intrinsics"] = camera->getParameters();
@@ -194,7 +194,7 @@ Node convert<std::shared_ptr<aslam::Camera> >::encode(
         distortion_node["type"] = "radial-tangential";
         break;
       default:
-        LOG(FATAL) << "Unknown distortion model: "
+        LOG(ERROR) << "Unknown distortion model: "
           << static_cast<std::underlying_type<aslam::Distortion::Type>::type>(
               distortion->getType());
     }

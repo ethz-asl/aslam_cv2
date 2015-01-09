@@ -96,7 +96,7 @@ TEST(EigenYamlSerialization, EigenYamlSerialization_DeathFromWrongMatrixType) {
   lhs.setRandom();
   std::string filename = "death_from_wrong_matrix_type.yaml";
   YAML::Save(lhs, filename);
-  EXPECT_DEATH(YAML::Load(filename, &rhs), "^");
+  EXPECT_FALSE(YAML::Load(filename, &rhs));
 }
 
 }  // namespace aslam
