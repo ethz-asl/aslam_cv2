@@ -2,6 +2,7 @@
 #include <eigen-checks/gtest.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <typeinfo>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-factory.h>
