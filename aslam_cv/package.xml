@@ -19,5 +19,6 @@
   <depend>opencv2_catkin</depend>
   <depend>opengv</depend>
   <depend>sm_common</depend>
+  <depend>sm_timing</depend>
   <depend>yaml_cpp_catkin</depend>
 </package>
