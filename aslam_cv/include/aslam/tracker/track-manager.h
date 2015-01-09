@@ -34,7 +34,6 @@ namespace aslam {
     inline Eigen::VectorXi* createAndGetTrackIdChannel(VisualFrame* frame) {
       // Load (and create) track id channels.
       CHECK_NOTNULL(frame);
-      Eigen::VectorXi* track_id_channel = nullptr;
       size_t num_track_ids = frame->getNumKeypointMeasurements();
       if (!frame->hasTrackIds()) {
         frame->setTrackIds(Eigen::VectorXi::Constant(num_track_ids, -1));
