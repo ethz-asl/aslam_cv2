@@ -156,7 +156,7 @@ TYPED_TEST(TestDistortions, JacobianWrtDistortion) {
 }
 
 ///////
-// Test paramters
+// Test parameters
 ///////
 TEST(TestParameter, testEquidistantDistortionParameters) {
   Eigen::Vector3d invalid1 = Eigen::Vector3d::Zero();
@@ -177,14 +177,14 @@ TEST(TestParameter, testFisheyeDistortionParameters) {
   Eigen::Vector2d invalid2 = Eigen::Vector2d::Zero();
   EXPECT_FALSE(FisheyeDistortion::areParametersValid(invalid2));
 
-  /// todo: enable once https://github.com/ethz-asl/aslam_cv2/issues/245 is resolved.
+  /// todo(mbuerki): enable once https://github.com/ethz-asl/aslam_cv2/issues/245 is resolved.
   //Eigen::Matrix<double, 1, 1> invalid3 = Eigen::Matrix<double, 1, 1>::Zero();
   //EXPECT_FALSE(aslam::FisheyeDistortion::areParametersValid(invalid3));
 
   Eigen::Matrix<double, 1, 1> invalid4 = Eigen::Matrix<double, 1, 1>::Zero();
   aslam::FisheyeDistortion fisheye_distortion(invalid4);
-  double min_w = fisheye_distortion.kMinValidW;
-  double max_w = fisheye_distortion.kMaxValidW;
+  double min_w = fisheye_distortion.getMinValidW();
+  double max_w = fisheye_distortion.getMaxValidW();
 
   double invalid_w_5 = min_w - 1e-6;
   double invalid_w_6 = max_w + 1e-6;

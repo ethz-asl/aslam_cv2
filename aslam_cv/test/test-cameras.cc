@@ -2,7 +2,6 @@
 #include <eigen-checks/gtest.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <typeinfo>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-factory.h>
@@ -544,16 +543,16 @@ TEST(TestParameters, testPinholeParameters) {
   EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid3));
 
   // Check any of the paramters below 0:
-  Eigen::Vector4d invalid4 = Eigen::Vector4d(-1.0, 1.0, 1.0, 1.0);
+  Eigen::Vector4d invalid4 = Eigen::Vector4d(0.0, 1.0, 1.0, 1.0);
   EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid4));
 
-  Eigen::Vector4d invalid5 = Eigen::Vector4d(1.0, -1.0, 1.0, 1.0);
+  Eigen::Vector4d invalid5 = Eigen::Vector4d(1.0, 0.0, 1.0, 1.0);
   EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid5));
 
-  Eigen::Vector4d invalid6 = Eigen::Vector4d(1.0, 1.0, -1.0, 1.0);
+  Eigen::Vector4d invalid6 = Eigen::Vector4d(1.0, 1.0, 0.0, 1.0);
   EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid6));
 
-  Eigen::Vector4d invalid7 = Eigen::Vector4d(1.0, 1.0, 1.0, -1.0);
+  Eigen::Vector4d invalid7 = Eigen::Vector4d(1.0, 1.0, 1.0, 0.0);
   EXPECT_FALSE(aslam::PinholeCamera::areParametersValid(invalid7));
 
   Eigen::Vector4d valid = Eigen::Vector4d(1.0, 1.0, 1.0, 1.0);
@@ -578,19 +577,19 @@ TEST(TestParameters, testUnifiedProjectionParameters) {
   EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid4));
 
   Intrinsics invalid5;
-  invalid5 << 1.0, -1.0, 1.0, 1.0, 1.0;
+  invalid5 << 1.0, 0.0, 1.0, 1.0, 1.0;
   EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid5));
 
   Intrinsics invalid6;
-  invalid6 << 1.0, 1.0, -1.0, 1.0, 1.0;
+  invalid6 << 1.0, 1.0, 0.0, 1.0, 1.0;
   EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid6));
 
   Intrinsics invalid7;
-  invalid7 << 1.0, 1.0, 1.0, -1.0, 1.0;
+  invalid7 << 1.0, 1.0, 1.0, 0.0, 1.0;
   EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid7));
 
   Intrinsics invalid8;
-  invalid8 << 1.0, 1.0, 1.0, 1.0, -1.0;
+  invalid8 << 1.0, 1.0, 1.0, 1.0, 0.0;
   EXPECT_FALSE(aslam::UnifiedProjectionCamera::areParametersValid(invalid8));
 
   Intrinsics valid;
