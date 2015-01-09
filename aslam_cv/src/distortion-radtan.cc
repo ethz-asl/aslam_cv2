@@ -112,12 +112,16 @@ void RadTanDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd&
   y = ybar;
 }
 
-bool RadTanDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
+bool RadTanDistortion::areParametersValid(const Eigen::VectorXd& parameters) {
   // Just check the vector size.
-  if (dist_coeffs.size() != kNumOfParams)
+  if (parameters.size() != kNumOfParams)
     return false;
 
   return true;
+}
+
+bool RadTanDistortion::distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
+  areParametersValid(dist_coeffs);
 }
 
 void RadTanDistortion::printParameters(std::ostream& out, const std::string& text) const {

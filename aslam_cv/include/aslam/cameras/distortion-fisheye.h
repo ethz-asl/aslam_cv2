@@ -3,6 +3,7 @@
 
 #include <Eigen/Core>
 #include <glog/logging.h>
+#include <gtest/gtest_prod.h>
 
 #include <aslam/common/crtp-clone.h>
 #include <aslam/cameras/distortion.h>
@@ -14,6 +15,7 @@ namespace aslam {
 /// \brief An implementation of the fisheye distortion model for pinhole cameras.
 class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion> {
  public:
+  FRIEND_TEST(TestParameter, testFisheyeDistortionParameters);
   /** \brief Number of parameters used for this distortion model. */
   enum { kNumOfParams = 1 };
 
@@ -112,6 +114,9 @@ class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion>
   ///////////////////////////////////////////////////////////////////////////////
   /// \name Methods to set/get distortion parameters
   /// @{
+
+  /// Static function that checks whether the given intrinsic parameters are valid for this model.
+  static bool areParametersValid(const Eigen::VectorXd& parameters);
 
   /// \brief Check the validity of distortion parameters.
   /// @param[in] dist_coeffs Vector containing the coefficients.

@@ -401,13 +401,17 @@ std::unique_ptr<MappedUndistorter> UnifiedProjectionCamera::createMappedUndistor
       new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
 }
 
+bool UnifiedProjectionCamera::areParametersValid(const Eigen::VectorXd& parameters) {
+  return (parameters.size() == parameterCount()) &&
+         (parameters[0] >= 0.0) && //xi
+         (parameters[1] > 0.0)  && //fu
+         (parameters[2] > 0.0)  && //fv
+         (parameters[3] > 0.0)  && //cu
+         (parameters[4] > 0.0);    //cv
+}
+
 bool UnifiedProjectionCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
-  return (intrinsics.size() == parameterCount()) &&
-         (intrinsics[0] >= 0.0) && //xi
-         (intrinsics[1] > 0.0)  && //fu
-         (intrinsics[2] > 0.0)  && //fv
-         (intrinsics[3] > 0.0)  && //cu
-         (intrinsics[4] > 0.0);    //cv
+  return areParametersValid(intrinsics);
 }
 
 void UnifiedProjectionCamera::printParameters(std::ostream& out, const std::string& text) const {
