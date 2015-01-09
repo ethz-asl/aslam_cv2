@@ -31,11 +31,35 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
         if(distortion_type == "none") {
             distortion = nullptr;
         } else if(distortion_type == "equidistant") {
-          distortion.reset(new aslam::EquidistantDistortion(distortion_parameters));
+          if (aslam::EquidistantDistortion::areParametersValid(distortion_parameters)) {
+            distortion.reset(new aslam::EquidistantDistortion(distortion_parameters));
+          } else {
+            LOG(ERROR) << "Invalid distortion parameters for the Equidistant distortion model: "
+                << distortion_parameters.transpose() << std::endl <<
+                "See aslam::EquidistantDistortion::areParametersValid(...) for conditions on what "
+                "valid Equidistand distortion parameters look like.";
+            return true;
+          }
         } else if(distortion_type == "fisheye") {
-          distortion.reset(new aslam::FisheyeDistortion(distortion_parameters));
+          if (aslam::FisheyeDistortion::areParametersValid(distortion_parameters)) {
+            distortion.reset(new aslam::FisheyeDistortion(distortion_parameters));
+          } else {
+            LOG(ERROR) << "Invalid distortion parameters for the Fisheye distortion model: "
+                << distortion_parameters.transpose() << std::endl <<
+                "See aslam::FisheyeDistortion::areParametersValid(...) for conditions on what "
+                "valid Fisheye distortion parameters look like.";
+            return true;
+          }
         } else if(distortion_type == "radial-tangential") {
+          if (aslam::RadTanDistortion::areParametersValid(distortion_parameters)) {
             distortion.reset(new aslam::RadTanDistortion(distortion_parameters));
+          } else {
+            LOG(ERROR) << "Invalid distortion parameters for the RadTan distortion model: "
+                << distortion_parameters.transpose() << std::endl <<
+                "See aslam::RadTanDistortion::areParametersValid(...) for conditions on what "
+                "valid RadTan distortion parameters look like.";
+            return true;
+          }
         } else {
             LOG(FATAL) << "Unknown distortion model: \"" << distortion_type << "\". "
                 << "Valid values are {none, equidistant, fisheye, radial-tangential}.";
@@ -59,30 +83,32 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
     unsigned image_width;
     unsigned image_height;
     Eigen::VectorXd intrinsics;
-    // TODO(mbuerki) validate parameters before initialization.
-    // https://github.com/ethz-asl/aslam_cv2/issues/240
     if(YAML::safeGet(node, "type", &camera_type) &&
         YAML::safeGet(node, "image_width", &image_width) &&
         YAML::safeGet(node, "image_height", &image_height) &&
         YAML::safeGet(node, "intrinsics", &intrinsics)){
       if(camera_type == "pinhole") {
-        if(intrinsics.size() != aslam::PinholeCamera::parameterCount()) {
-          LOG(ERROR) << "Wrong number of intrinsic parameters for the pinhole camera. "
-              << "Wanted: " << aslam::PinholeCamera::parameterCount() << ", got: "
-              << intrinsics.size();
+        if (aslam::PinholeCamera::areParametersValid(intrinsics)) {
+          camera.reset(new aslam::PinholeCamera(intrinsics, image_width, image_height,
+                                         distortion));
+        } else {
+          LOG(ERROR) << "Invalid intrinsics parameters for the Pinhole camera model: "
+              << intrinsics.transpose() << std::endl <<
+              "See aslam::PinholeCamera::areParametersValid(...) for conditions on what "
+              "valid Pinhole camera intrinsics look like.";
           return true;
         }
-        camera.reset(new aslam::PinholeCamera(intrinsics, image_width, image_height,
-                                       distortion));
       } else if(camera_type == "unified-projection") {
-        if(intrinsics.size() != aslam::UnifiedProjectionCamera::parameterCount()) {
-          LOG(ERROR) << "Wrong number of intrinsic parameters for the unified projection camera. "
-              << "Wanted: " << aslam::UnifiedProjectionCamera::parameterCount() << ", got: "
-              << intrinsics.size();
+        if (aslam::UnifiedProjectionCamera::areParametersValid(intrinsics)) {
+          camera.reset(new aslam::UnifiedProjectionCamera(intrinsics, image_width,
+                                                   image_height, distortion));
+        } else {
+          LOG(ERROR) << "Invalid intrinsics parameters for the UnifiedProjection camera model: "
+              << intrinsics.transpose() << std::endl <<
+              "See aslam::UnifiedProjectionCamera::areParametersValid(...) for conditions on what "
+              "valid UnifiedProjection camera intrinsics look like.";
           return true;
         }
-        camera.reset(new aslam::UnifiedProjectionCamera(intrinsics, image_width,
-                                                 image_height, distortion));
       } else {
         LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
             << "Valid values are {pinhole, unified-projection}.";
