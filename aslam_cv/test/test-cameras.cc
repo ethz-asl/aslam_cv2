@@ -641,7 +641,6 @@ TEST(TestParameters, testUnifiedProjectionParameters) {
   EXPECT_TRUE(aslam::UnifiedProjectionCamera::areParametersValid(valid));
 }
 
-
 ///////////////////////////////////////////////
 // Test fixture
 ///////////////////////////////////////////////
