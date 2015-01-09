@@ -64,7 +64,7 @@ public:
   /// Get a short list of candidates in list a for index b
   ///
   /// Return all indices of list a for n^2 matching; or use something
-  /// smarter like nabo to get nearest neighbors.  Can also be used to
+  /// smarter like nabo to get nearest neighbors. Can also be used to
   /// mask out invalid elements in the lists, or an invalid b, by
   /// returning and empty candidate list.  
   ///
@@ -72,7 +72,7 @@ public:
   /// for sorting, pre-filtering, and will be explicitly recomputed
   /// using the computeScore function.
   ///
-  /// \param[in] b            The index of b queried for candidates.
+  /// \param[in] banana_index The index of b queried for candidates.
   /// \param[out] candidates  Candidates from the Apples-list that could potentially match this
   ///                         element of Bananas.
   virtual void getAppleCandidatesForBanana(int banana_index, Candidates* candidates);
