@@ -18,6 +18,7 @@
   <depend>minkindr</depend> 
   <depend>opencv2_catkin</depend>
   <depend>opengv</depend>
-  <depend>sm_property_tree</depend>
+  <depend>sm_common</depend>
   <depend>sm_timing</depend>
+  <depend>yaml_cpp_catkin</depend>
 </package>

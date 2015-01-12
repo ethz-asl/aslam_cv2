@@ -12,6 +12,7 @@ cs_add_library(${PROJECT_NAME}
                                src/camera-factory.cc
                                src/camera-pinhole.cc
                                src/camera-unified-projection.cc
+                               src/camera-yaml-serialization.cc
                                src/channel-serialization.cc
                                src/distortion.cc
                                src/distortion-equidistant.cc
@@ -21,6 +22,7 @@ cs_add_library(${PROJECT_NAME}
                                src/feature-tracker.cc
                                src/matching-problem-frame-to-frame.cc
                                src/ncamera.cc
+                               src/ncamera-yaml-serialization.cc
                                src/statistics.cc
                                src/thread-pool.cc
                                src/track-manager.cc
@@ -79,6 +81,11 @@ catkin_add_gtest(test_matcher_non_exclusive
 )
 target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
 
+catkin_add_gtest(test_ncamera
+  test/test-ncamera.cc
+)
+target_link_libraries(test_ncamera ${PROJECT_NAME})
+
 catkin_add_gtest(test_track_manager
     test/test-track-manager.cc
 )
@@ -118,6 +125,11 @@ catkin_add_gtest(test_visual-npipeline
     test/test-visual-npipeline.cc
 )
 target_link_libraries(test_visual-npipeline ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_eigen-yaml-serialization
+    test/test-eigen-yaml-serialization.cc
+)
+target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME}) 
 
 ##########
 # EXPORT #
