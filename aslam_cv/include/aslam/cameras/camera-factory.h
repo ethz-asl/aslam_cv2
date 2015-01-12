@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include <Eigen/Dense>
+#include <yaml-cpp/yaml.h>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion.h>
@@ -12,7 +13,7 @@
 
 namespace aslam {
 
-/// \brief A factory function to create a derived class camera
+/// \brief A factory function to create a derived class camera.
 ///
 /// This function takes vectors of intrinsics and distortion parameters
 /// and creates a camera.
@@ -52,7 +53,7 @@ typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
   return camera;
 }
 
-/// \brief A factory function to create a derived class camera
+/// \brief A factory function to create a derived class camera.
 ///
 /// This function takes vectors of intrinsics and distortion parameters
 /// and creates a camera.

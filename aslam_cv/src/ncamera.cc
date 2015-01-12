@@ -2,7 +2,6 @@
 #include <utility>
 
 #include <glog/logging.h>
-#include <sm/PropertyTree.hpp>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
