@@ -8,11 +8,11 @@
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
-#include <aslam/cameras/camera-yaml-serialization.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
+#include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
 #include <aslam/common/numdiff-jacobian-tester.h>
@@ -640,7 +640,6 @@ TEST(TestCameraFactory, testBadIntrinsics2) {
   camera = node.as<aslam::Camera::Ptr>();
   EXPECT_EQ(camera, nullptr);
 }
-
 
 ///////////////////////////////////////////////
 // Test fixture
