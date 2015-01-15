@@ -178,8 +178,6 @@ TEST(TestParameter, testEquidistantDistortionParameters) {
   Eigen::Vector4d valid = Eigen::Vector4d::Zero();
   EXPECT_TRUE(aslam::EquidistantDistortion::areParametersValid(valid));
 
-  Eigen::Vector4d valid_null;
-  EXPECT_TRUE(aslam::NullDistortion::areParametersValid(valid_null));
 }
 
 namespace aslam {
