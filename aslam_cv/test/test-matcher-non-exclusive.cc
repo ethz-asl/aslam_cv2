@@ -248,7 +248,7 @@ TEST_F(MatcherTest, TestComplex) {
         camera_->project3(banana_rays_apple.col(apple_idx), &banana_keypoint);
     if (result.isKeypointVisible()) banana_keypoints.col(banana_idx++) = banana_keypoint;
   }
-  CHECK_EQ(banana_idx, 5);
+  CHECK_EQ(banana_idx, 5u);
 
   Eigen::Matrix<unsigned char, 48, 5> apple_descriptors =
       Eigen::Matrix<unsigned char, 48, 5>::Zero();
