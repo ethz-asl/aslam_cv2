@@ -6,7 +6,7 @@
 #include <glog/logging.h>
 
 namespace aslam {
-  class Match;
+  struct Match;
   class VisualNFrame;
 
   /// \brief The Track manager assigns track ids to the given matches with different strategies.
