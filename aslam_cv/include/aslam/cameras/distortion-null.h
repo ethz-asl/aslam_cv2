@@ -10,7 +10,7 @@
 namespace aslam {
 
 /// \class NullDistortion
-/// \brief An implementation of the Null distortion model for pinhole cameras.
+/// \brief An implementation of the Null distortion model does nothing.
 class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
  public:
   /** \brief Number of parameters used for this distortion model. */
@@ -68,7 +68,8 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   void distortUsingExternalCoefficients(const Eigen::MatrixBase<MDistortion>& /* dist_coeffs */,
                                         const Eigen::Matrix<ScalarType, 2, 1>& point,
                                         Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
-    if(out_point){ *out_point = point; }
+    CHECK_NOTNULL(out_point);
+    *out_point = point;
   }
 
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
