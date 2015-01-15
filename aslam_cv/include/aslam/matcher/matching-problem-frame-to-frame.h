@@ -82,10 +82,14 @@ public:
   }
 
   inline int computeHammingDistance(int banana_index, int apple_index) {
-    CHECK_LT(apple_index, apple_descriptors_.size()) << "No descriptor for this apple.";
-    CHECK_LT(banana_index, banana_descriptors_.size()) << "No descriptor for this banana.";
-    CHECK_LT(apple_index, valid_apples_.size()) << "No valid flag for this apple.";
-    CHECK_LT(banana_index, valid_bananas_.size()) << "No valid flag for this apple.";
+    CHECK_LT(apple_index, static_cast<int>(apple_descriptors_.size()))
+        << "No descriptor for this apple.";
+    CHECK_LT(banana_index, static_cast<int>(banana_descriptors_.size()))
+        << "No descriptor for this banana.";
+    CHECK_LT(apple_index, static_cast<int>(valid_apples_.size()))
+        << "No valid flag for this apple.";
+    CHECK_LT(banana_index, static_cast<int>(valid_bananas_.size()))
+        << "No valid flag for this apple.";
     CHECK(valid_apples_[apple_index]) << "The given apple is not valid.";
     CHECK(valid_bananas_[banana_index]) << "The given banana is not valid.";
 
