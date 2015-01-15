@@ -132,7 +132,7 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
 
   /// \brief Returns the number of parameters used in this distortion model.
   inline static constexpr size_t parameterCount() {
-      return kNumOfParams;
+    return kNumOfParams;
   }
 
   /// \brief Returns the number of parameters used in the distortion model.

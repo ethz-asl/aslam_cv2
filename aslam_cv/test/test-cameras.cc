@@ -34,7 +34,9 @@ typedef Types<CameraDistortion<aslam::PinholeCamera,aslam::FisheyeDistortion>,
     CameraDistortion<aslam::PinholeCamera,aslam::EquidistantDistortion>,
     CameraDistortion<aslam::UnifiedProjectionCamera,aslam::EquidistantDistortion>,
     CameraDistortion<aslam::PinholeCamera,aslam::RadTanDistortion>,
-    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::RadTanDistortion>>
+    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::RadTanDistortion>,
+    CameraDistortion<aslam::PinholeCamera,aslam::NullDistortion>,
+    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::NullDistortion>>
     Implementations;
 
 ///////////////////////////////////////////////
