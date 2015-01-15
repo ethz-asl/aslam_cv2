@@ -55,7 +55,9 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   ///                             calculation is skipped.
   virtual void distortUsingExternalCoefficients(const Eigen::VectorXd* /* dist_coeffs */,
                                                 Eigen::Vector2d* /* point */,
-                                                Eigen::Matrix2d* /* out_jacobian */) const { }
+                                                Eigen::Matrix2d* out_jacobian) const {
+    if(out_jacobian){ out_jacobian->setIdentity(); }
+  }
 
   /// \brief Template version of the distortExternalCoeffs function.
   /// @param[in]  dist_coeffs Vector containing the coefficients for the distortion model.
@@ -76,7 +78,9 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   ///                          the distortion parameters.
   virtual void distortParameterJacobian(const Eigen::VectorXd* /* dist_coeffs */,
                                         const Eigen::Vector2d& /* point */,
-                                        Eigen::Matrix<double, 2, Eigen::Dynamic>* /* out_jacobian */) const { }
+                                        Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+    if(out_jacobian){ out_jacobian->resize(2,0); }
+  }
 
   /// @}
 

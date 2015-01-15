@@ -97,8 +97,8 @@ TYPED_TEST(TriangulationFixture, TwoNearParallelRays) {
   // Create near parallel rays.
   aslam::Transformation noise;
   const double disparity_angle_rad = 0.1 / 180.0 * M_PI;
-  const double camrea_shift = std::atan(disparity_angle_rad) * depth;
-  noise.setRandom(camrea_shift, 0.0);
+  const double camera_shift = std::atan(disparity_angle_rad) * depth;
+  noise.setRandom(camera_shift, 0.0);
   this->T_W_B_[1] = this->T_W_B_[1] * noise;
 
   this->inferMeasurements();
@@ -114,7 +114,7 @@ TYPED_TEST(TriangulationFixture, CombinedParallelAndGoodRays) {
   noise.setRandom(0.01, 0.1);
   this->T_W_B_[1] = this->T_W_B_[1] * noise;
 
-  this->T_W_B_[2].setRandom(0.5, 0.2);
+  this->T_W_B_[2].setRandom(0.4, 0.2);
 
   // Create a landmark.
   const double depth = 5.0;
