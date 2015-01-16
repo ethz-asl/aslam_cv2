@@ -12,6 +12,7 @@
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
+#include <aslam/cameras/distortion-null.h>
 #include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
@@ -33,7 +34,9 @@ typedef Types<CameraDistortion<aslam::PinholeCamera,aslam::FisheyeDistortion>,
     CameraDistortion<aslam::PinholeCamera,aslam::EquidistantDistortion>,
     CameraDistortion<aslam::UnifiedProjectionCamera,aslam::EquidistantDistortion>,
     CameraDistortion<aslam::PinholeCamera,aslam::RadTanDistortion>,
-    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::RadTanDistortion>>
+    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::RadTanDistortion>,
+    CameraDistortion<aslam::PinholeCamera,aslam::NullDistortion>,
+    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::NullDistortion>>
     Implementations;
 
 ///////////////////////////////////////////////
@@ -198,6 +201,7 @@ TYPED_TEST(TestCameras, JacobianWrtDistortion) {
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(DistortionJacobianFunctor<TypeParam::DistortionType::kNumOfParams>,
                                   dist_coeffs, 1e-8, 1e-4 , this->camera_, point_3d);
+
 }
 
 TYPED_TEST(TestCameras, EuclideanToOnAxisKeypoint) {

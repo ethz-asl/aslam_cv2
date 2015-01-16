@@ -47,7 +47,7 @@ namespace common {
 #define TEST_JACOBIAN_FINITE_DIFFERENCE(FUNCTOR_TYPE, X, STEP, TOLERANCE, ...) \
     do {\
       FUNCTOR_TYPE functor(__VA_ARGS__);                                 \
-      aslam::common::NumericalDiff<FUNCTOR_TYPE> numDiff(functor, STEP); \
+      typename aslam::common::NumericalDiffTraits<FUNCTOR_TYPE>::type numDiff(functor, STEP); \
       typename FUNCTOR_TYPE::JacobianType Jnumeric;                      \
       bool success = numDiff.getJacobianNumerical(X, Jnumeric);          \
       EXPECT_TRUE(success) << "Num. differentiation failed!";            \
@@ -98,6 +98,29 @@ enum NumericalDiffMode {
   CentralSecond
 };
 
+
+// The NumericalDiff class won't compile if ValuesAtCompileTime is zero.
+// This class can be chosen by template magic in this case.
+template<typename _Functor, NumericalDiffMode mode = CentralSecond>
+class ZeroNumericalDiff {
+ public:
+  typedef _Functor Functor;
+  typedef typename Functor::Scalar Scalar;
+  typedef typename Functor::InputType InputType;
+  typedef typename Functor::ValueType ValueType;
+  typedef typename Functor::JacobianType JacobianType;
+  enum {
+    InputsAtCompileTime = _Functor::InputsAtCompileTime,
+    ValuesAtCompileTime = _Functor::ValuesAtCompileTime
+  };
+
+  ZeroNumericalDiff(const Functor& /* f */, Scalar /* _epsfcn */) {};
+  virtual ~ZeroNumericalDiff() {};
+  bool getJacobianNumerical(const InputType& /* _x */, JacobianType &/* jac */) const {
+    return true;
+  }
+};
+
 /// \class NumericalDiff
 /// \brief Modified numerical differentiation code from unsupported/Eigen library
 template<typename _Functor, NumericalDiffMode mode = CentralSecond>
@@ -119,6 +142,8 @@ class NumericalDiff : public _Functor {
   };
 
   bool getJacobianNumerical(const InputType& _x, JacobianType &jac) const {
+    static_assert(InputsAtCompileTime > 0,
+                  "Numerical Differentiation does not work for zero-sized Jacobians.");
     using std::sqrt;
     using std::abs;
     /* Local variables */
@@ -173,6 +198,21 @@ class NumericalDiff : public _Functor {
  private:
   Scalar epsfcn;
   NumericalDiff& operator=(const NumericalDiff&);
+};
+
+template<typename _Functor, NumericalDiffMode mode, int ValuesAtCompileTime>
+struct NumericalDiffTraitsSelector {
+  typedef NumericalDiff<_Functor, mode> type;
+};
+
+template<typename _Functor, NumericalDiffMode mode>
+struct NumericalDiffTraitsSelector<_Functor, mode, 0> {
+  typedef ZeroNumericalDiff<_Functor, mode> type;
+};
+
+template<typename _Functor, NumericalDiffMode mode = CentralSecond>
+struct NumericalDiffTraits {
+  typedef typename NumericalDiffTraitsSelector<_Functor, mode, _Functor::InputsAtCompileTime>::type type;
 };
 
 }  // namespace common

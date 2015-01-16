@@ -10,7 +10,7 @@
 namespace aslam {
 
 /// \class NullDistortion
-/// \brief An implementation of the Null distortion model for pinhole cameras.
+/// \brief An implementation of the Null distortion model does nothing.
 class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
  public:
   /** \brief Number of parameters used for this distortion model. */
@@ -55,7 +55,9 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   ///                             calculation is skipped.
   virtual void distortUsingExternalCoefficients(const Eigen::VectorXd* /* dist_coeffs */,
                                                 Eigen::Vector2d* /* point */,
-                                                Eigen::Matrix2d* /* out_jacobian */) const { }
+                                                Eigen::Matrix2d* out_jacobian) const {
+    if(out_jacobian){ out_jacobian->setIdentity(); }
+  }
 
   /// \brief Template version of the distortExternalCoeffs function.
   /// @param[in]  dist_coeffs Vector containing the coefficients for the distortion model.
@@ -64,8 +66,11 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   /// @param[out] out_point   The distorted point.
   template <typename ScalarType, typename MDistortion>
   void distortUsingExternalCoefficients(const Eigen::MatrixBase<MDistortion>& /* dist_coeffs */,
-                                        const Eigen::Matrix<ScalarType, 2, 1>& /* point */,
-                                        Eigen::Matrix<ScalarType, 2, 1>* /* out_point */) const { }
+                                        const Eigen::Matrix<ScalarType, 2, 1>& point,
+                                        Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
+    CHECK_NOTNULL(out_point);
+    *out_point = point;
+  }
 
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
@@ -76,7 +81,9 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   ///                          the distortion parameters.
   virtual void distortParameterJacobian(const Eigen::VectorXd* /* dist_coeffs */,
                                         const Eigen::Vector2d& /* point */,
-                                        Eigen::Matrix<double, 2, Eigen::Dynamic>* /* out_jacobian */) const { }
+                                        Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+    if(out_jacobian){ out_jacobian->resize(2,0); }
+  }
 
   /// @}
 
@@ -126,7 +133,7 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
 
   /// \brief Returns the number of parameters used in this distortion model.
   inline static constexpr size_t parameterCount() {
-      return kNumOfParams;
+    return kNumOfParams;
   }
 
   /// \brief Returns the number of parameters used in the distortion model.
