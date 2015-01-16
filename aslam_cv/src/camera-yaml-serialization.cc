@@ -4,6 +4,7 @@
 #include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/cameras/distortion-fisheye.h>
+#include <aslam/cameras/distortion-null.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/common/yaml-serialization.h>
 
@@ -28,7 +29,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
       if(YAML::safeGet(distortion_config, "type", &distortion_type) &&
          YAML::safeGet(distortion_config, "parameters", &distortion_parameters)) {
         if(distortion_type == "none") {
-            distortion = nullptr;
+            distortion.reset(new aslam::NullDistortion());
         } else if(distortion_type == "equidistant") {
           if (aslam::EquidistantDistortion::areParametersValid(distortion_parameters)) {
             distortion.reset(new aslam::EquidistantDistortion(distortion_parameters));
@@ -75,6 +76,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
         return true;
       }
     } else {
+      distortion.reset(new aslam::NullDistortion());
       LOG(INFO) << "Found a camera with no distortion.";
     }
 

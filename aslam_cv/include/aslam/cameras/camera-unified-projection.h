@@ -45,7 +45,6 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
  public:
   /// Copy constructor for clone operation.
   UnifiedProjectionCamera(const UnifiedProjectionCamera& other) : Base(other) {
-    if (other.distortion_) // Clone distortion if model is set.
       distortion_.reset(other.distortion_->clone());
   };
 

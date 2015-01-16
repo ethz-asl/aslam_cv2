@@ -626,7 +626,8 @@ TEST(TestCameraFactory, testNoDistortionYaml) {
   EXPECT_EQ(640u, pincam->imageWidth());
   EXPECT_FALSE(pincam->getId().isValid());
   EXPECT_EQ(0u, pincam->getLineDelayNanoSeconds());
-  EXPECT_EQ(pincam->getDistortion(), nullptr);
+  EXPECT_NE(nullptr, pincam->getDistortion());
+  EXPECT_EQ(aslam::NullDistortion(), *pincam->getDistortion());
 }
 
 TEST(TestCameraFactory, testBadIntrinsics1) {
