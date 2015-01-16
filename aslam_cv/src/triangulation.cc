@@ -113,7 +113,7 @@ TriangulationResult linearTriangulateFromNViewsMultiCam(
   CHECK_EQ(measurements_normalized.size(), T_G_B.size());
   CHECK_EQ(measurements_normalized.size(), measurement_camera_indices.size());
   if (measurements_normalized.size() < 2u) {
-    return false;
+    return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
   }
 
   const size_t rows = 3 * measurements_normalized.size();
