@@ -150,8 +150,13 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
 
   // Check if point will lead to a valid projection
   const bool valid_proj = z > -(fov_parameter(xi) * d);
-  if(!valid_proj)
-  {
+  if (!valid_proj) {
+    if (out_jacobian_intrinsics) {
+      out_jacobian_intrinsics->setZero(2, kNumOfParams);
+    }
+    if (out_jacobian_distortion && distortion_) {
+      out_jacobian_distortion->setZero(2, distortion_->getParameterSize());
+    }
     out_keypoint->setZero();
     return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
   }
@@ -162,7 +167,7 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
   // Distort the point and get the Jacobian wrt. keypoint.
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
 
-  if(distortion_) {
+  if (distortion_) {
     // Calculate the Jacobian w.r.t to the distortion parameters,
     // if requested (and distortion set).
     if(out_jacobian_distortion) {
@@ -211,8 +216,7 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
 
   // Calculate the Jacobian w.r.t to the intrinsic parameters, if requested.
   if(out_jacobian_intrinsics) {
-    out_jacobian_intrinsics->resize(2, kNumOfParams);
-    out_jacobian_intrinsics->setZero();
+    out_jacobian_intrinsics->setZero(2, kNumOfParams);
 
     Eigen::Vector2d Jxi;
     Jxi[0] = -x * rz * d * rz;
