@@ -8,26 +8,7 @@
 #include <aslam/common/undistort-helpers.h>
 #include <aslam/pipeline/undistorter-mapped.h>
 
-// TODO(slynen) Enable commented out PropertyTree support
-//#include <sm/PropertyTree.hpp>
-
 namespace aslam {
-// TODO(slynen) Enable commented out PropertyTree support
-//UnifiedProjection::UnifiedProjection(
-//    const sm::PropertyTree & config)
-//: Camera(config) {
-//  _fu = config.getDouble("fu");
-//  _fv = config.getDouble("fv");
-//  _cu = config.getDouble("cu");
-//  _cv = config.getDouble("cv");
-//  imageWidth() = config.getInt("ru");
-//  imageHeight() = config.getInt("rv");
-//
-//  //TODO(slynen): Load and instantiate correct distortion here.
-//  // distortion.(config, "distortion")
-//  CHECK(false) << "Loading of distortion from property tree not implemented.";
-//
-//}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera()
     : Base((Eigen::Matrix<double, 5, 1>() << 0.0, 0.0, 0.0, 0.0, 0.0).finished(), 0, 0,
@@ -143,8 +124,13 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
 
   // Check if point will lead to a valid projection
   const bool valid_proj = z > -(fov_parameter(xi) * d);
-  if(!valid_proj)
-  {
+  if (!valid_proj) {
+    if (out_jacobian_intrinsics) {
+      out_jacobian_intrinsics->setZero(2, kNumOfParams);
+    }
+    if (out_jacobian_distortion && distortion_) {
+      out_jacobian_distortion->setZero(2, distortion_->getParameterSize());
+    }
     out_keypoint->setZero();
     return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
   }
@@ -155,8 +141,7 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
   // Distort the point and get the Jacobian wrt. keypoint.
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
 
-  // Calculate the Jacobian w.r.t to the distortion parameters,
-  // if requested (and distortion set).
+  // Calculate the Jacobian w.r.t to the distortion parameters, if requested.
   if(out_jacobian_distortion) {
     distortion_->distortParameterJacobian(distortion_coefficients,
                                           *out_keypoint,
@@ -202,8 +187,7 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
 
   // Calculate the Jacobian w.r.t to the intrinsic parameters, if requested.
   if(out_jacobian_intrinsics) {
-    out_jacobian_intrinsics->resize(2, kNumOfParams);
-    out_jacobian_intrinsics->setZero();
+    out_jacobian_intrinsics->setZero(2, kNumOfParams);
 
     Eigen::Vector2d Jxi;
     Jxi[0] = -x * rz * d * rz;
