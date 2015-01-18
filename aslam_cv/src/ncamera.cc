@@ -142,7 +142,7 @@ NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
     cameras.push_back(aslam::PinholeCamera::createTestCamera());
 
     // Offset each camera 0.1 m in x direction and rotate it to face forward.
-    Eigen::Vector3d position(0.1 * camera_idx, 0.0, 0.0);
+    Eigen::Vector3d position(0.1 * (camera_idx + 1), 0.0, 0.0);
     aslam::Quaternion q_C_B(0.5, 0.5, -0.5, 0.5);
     aslam::Transformation T_C_B(q_C_B, position);
     T_C_B_vector.push_back(T_C_B);
