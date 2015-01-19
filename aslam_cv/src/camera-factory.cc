@@ -37,11 +37,9 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
         << static_cast<std::underlying_type<Distortion::Type>::type>(
             distortion_type);
   }
-  if (distortion != nullptr) {
-    CHECK(distortion->distortionParametersValid(distortion_parameters))
-        << "Invalid distortion parameters: "
-        << distortion_parameters.transpose();
-  }
+  CHECK(distortion->distortionParametersValid(distortion_parameters))
+    << "Invalid distortion parameters: "
+    << distortion_parameters.transpose();
 
   Camera::Ptr camera;
   switch(camera_type) {

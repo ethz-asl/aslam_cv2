@@ -455,14 +455,12 @@ class Camera {
   /// @{
 
   /// \brief Returns a pointer to the underlying distortion object.
-  /// @return Pointer for the distortion model;
-  ///         NOTE: Returns nullptr if no model is set or not available for the camera type
+  /// @return Pointer for the distortion model
   virtual aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
 
   /// \brief Returns a const pointer to the underlying distortion object.
-  /// @return ConstPointer for the distortion model;
-  ///         NOTE: Returns nullptr if no model is set or not available for the camera type
-  virtual const aslam::Distortion* getDistortion() const { return distortion_.get(); };
+  /// @return ConstPointer for the distortion model
+  virtual const aslam::Distortion& getDistortion() const { return *distortion_; };
 
   /// @}
 

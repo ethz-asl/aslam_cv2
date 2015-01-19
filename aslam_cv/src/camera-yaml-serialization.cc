@@ -65,8 +65,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
                 << "Valid values are {none, equidistant, fisheye, radial-tangential}.";
             return true;
         }
-        if (distortion != nullptr &&
-            !distortion->distortionParametersValid(distortion_parameters)) {
+        if (!distortion->distortionParametersValid(distortion_parameters)) {
           LOG(ERROR) << "Invalid distortion parameters: " << distortion_parameters.transpose();
           return true;
         }
@@ -148,7 +147,6 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
       camera->setLabel(node["label"].as<std::string>());
     }
   } catch(const std::exception& e) {
-    camera = nullptr;
     LOG(ERROR) << "Yaml exception during parsing: " << e.what();
     camera.reset();
     return true;
@@ -181,10 +179,10 @@ Node convert<std::shared_ptr<aslam::Camera> >::encode(
   }
   camera_node["intrinsics"] = camera->getParameters();
 
-  const aslam::Distortion* distortion = camera->getDistortion();
-  if(distortion && distortion->getType() != aslam::Distortion::Type::kNoDistortion) {
+  const aslam::Distortion& distortion = camera->getDistortion();
+  if(distortion.getType() != aslam::Distortion::Type::kNoDistortion) {
     Node distortion_node;
-    switch(distortion->getType()) {
+    switch(distortion.getType()) {
       case aslam::Distortion::Type::kEquidistant:
         distortion_node["type"] = "equidistant";
         break;
@@ -197,9 +195,9 @@ Node convert<std::shared_ptr<aslam::Camera> >::encode(
       default:
         LOG(ERROR) << "Unknown distortion model: "
           << static_cast<std::underlying_type<aslam::Distortion::Type>::type>(
-              distortion->getType());
+              distortion.getType());
     }
-    distortion_node["parameters"] = distortion->getParameters();
+    distortion_node["parameters"] = distortion.getParameters();
     camera_node["distortion"] = distortion_node;
   }
   return camera_node;
