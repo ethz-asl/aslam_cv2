@@ -81,7 +81,7 @@ TEST_F(MatcherTest, MatchIdentity) {
   aslam::Matches matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
-  ASSERT_EQ(1, matches.size());
+  ASSERT_EQ(1u, matches.size());
 
   aslam::Match match = matches[0];
   EXPECT_EQ(0, match.getIndexApple());
@@ -134,7 +134,7 @@ TEST_F(MatcherTest, MatchRotation) {
   aslam::Matches matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
-  ASSERT_EQ(1, matches.size());
+  ASSERT_EQ(1u, matches.size());
   aslam::Match match = matches[0];
   EXPECT_EQ(0, match.getIndexApple());
   EXPECT_EQ(0, match.getIndexBanana());
@@ -199,7 +199,7 @@ TEST_F(MatcherTest, TestImageSpaceBorderIn) {
   aslam::Matches matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
-  EXPECT_EQ(1, matches.size());
+  EXPECT_EQ(1u, matches.size());
 }
 
 TEST_F(MatcherTest, TestComplex) {
