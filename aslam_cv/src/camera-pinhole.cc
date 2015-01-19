@@ -114,7 +114,7 @@ const ProjectionResult PinholeCamera::project3Functional(
 
   const Eigen::VectorXd* distortion_coefficients;
   if(!distortion_coefficients_external) {
-    distortion_coefficients = &getDistortion()->getParameters();
+    distortion_coefficients = &getDistortion().getParameters();
   } else {
     distortion_coefficients = distortion_coefficients_external;
   }

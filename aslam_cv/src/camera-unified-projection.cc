@@ -103,7 +103,7 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
 
   const Eigen::VectorXd* distortion_coefficients;
   if(!distortion_coefficients_external) {
-    distortion_coefficients = &getDistortion()->getParameters();
+    distortion_coefficients = &getDistortion().getParameters();
   } else {
     distortion_coefficients = distortion_coefficients_external;
   }
@@ -128,7 +128,7 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
     if (out_jacobian_intrinsics) {
       out_jacobian_intrinsics->setZero(2, kNumOfParams);
     }
-    if (out_jacobian_distortion && distortion_) {
+    if (out_jacobian_distortion) {
       out_jacobian_distortion->setZero(2, distortion_->getParameterSize());
     }
     out_keypoint->setZero();
