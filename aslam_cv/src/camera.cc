@@ -3,19 +3,11 @@
 #include <glog/logging.h>
 
 #include <aslam/cameras/camera.h>
+#include <aslam/cameras/distortion-null.h>
 
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
 namespace aslam {
-
-// TODO(slynen) Enable commented out PropertyTree support
-//Camera::Camera(const sm::PropertyTree& property_tree) {
-//  double value = property_tree.getDouble("line_delay_nano_seconds", -1.0);
-//  if (value == -1.0) {
-//    value = 0.0;
-//    VLOG(3) << "Failed to load line delay property for camera. Using " << value << ".";
-//  }
-//}
 
 /// Camera constructor with distortion
 Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
@@ -26,7 +18,9 @@ Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& 
       image_height_(image_height),
       intrinsics_(intrinsics),
       camera_type_(camera_type),
-      distortion_(std::move(distortion)) {}
+      distortion_(std::move(distortion)) {
+  CHECK_NOTNULL(distortion_.get());
+}
 
 /// Camera constructor without distortion
 Camera::Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
@@ -37,7 +31,7 @@ Camera::Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t
       image_height_(image_height),
       intrinsics_(intrinsics),
       camera_type_(camera_type),
-      distortion_(nullptr) {}
+      distortion_(new NullDistortion()) {}
 
 void Camera::printParameters(std::ostream& out, const std::string& text) const {
   if(text.size() > 0) {

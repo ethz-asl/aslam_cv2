@@ -7,6 +7,7 @@
 #include <aslam/common/memory.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/cameras/distortion-fisheye.h>
+#include <aslam/cameras/distortion-null.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/common/numdiff-jacobian-tester.h>
@@ -17,7 +18,12 @@
 using testing::Types;
 typedef Types<aslam::RadTanDistortion,
               aslam::FisheyeDistortion,
-              aslam::EquidistantDistortion> Implementations;
+              aslam::EquidistantDistortion> ImplementationsNoNull;
+
+typedef Types<aslam::RadTanDistortion,
+              aslam::FisheyeDistortion,
+              aslam::EquidistantDistortion,
+              aslam::NullDistortion> Implementations;
 
 ///////////////////////////////////////////////
 // Test fixture
@@ -30,7 +36,11 @@ class TestDistortions : public testing::Test {
   typename DistortionType::Ptr distortion_;
 };
 
+template <class DistortionType>
+class TestDistortionsNotNull : public TestDistortions<DistortionType> { };
+
 TYPED_TEST_CASE(TestDistortions, Implementations);
+TYPED_TEST_CASE(TestDistortionsNotNull, ImplementationsNoNull);
 
 ///////////////////////////////////////////////
 // Test cases
@@ -147,7 +157,7 @@ struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, numDi
   const Eigen::Vector2d keypoint_;
 };
 
-TYPED_TEST(TestDistortions, JacobianWrtDistortion) {
+TYPED_TEST(TestDistortionsNotNull, JacobianWrtDistortion) {
   Eigen::Vector2d keypoint(0.3, -0.2);
   Eigen::VectorXd dist_coeffs = this->distortion_->getParameters();
 

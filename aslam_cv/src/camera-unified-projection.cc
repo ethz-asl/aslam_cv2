@@ -8,26 +8,7 @@
 #include <aslam/common/undistort-helpers.h>
 #include <aslam/pipeline/undistorter-mapped.h>
 
-// TODO(slynen) Enable commented out PropertyTree support
-//#include <sm/PropertyTree.hpp>
-
 namespace aslam {
-// TODO(slynen) Enable commented out PropertyTree support
-//UnifiedProjection::UnifiedProjection(
-//    const sm::PropertyTree & config)
-//: Camera(config) {
-//  _fu = config.getDouble("fu");
-//  _fv = config.getDouble("fv");
-//  _cu = config.getDouble("cu");
-//  _cv = config.getDouble("cv");
-//  imageWidth() = config.getInt("ru");
-//  imageHeight() = config.getInt("rv");
-//
-//  //TODO(slynen): Load and instantiate correct distortion here.
-//  // distortion.(config, "distortion")
-//  CHECK(false) << "Loading of distortion from property tree not implemented.";
-//
-//}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera()
     : Base((Eigen::Matrix<double, 5, 1>() << 0.0, 0.0, 0.0, 0.0, 0.0).finished(), 0, 0,
@@ -75,15 +56,9 @@ bool UnifiedProjectionCamera::operator==(const Camera& other) const {
   if (!Camera::operator==(other))
     return false;
 
-  // Check if only one camera defines a distortion.
-  if ((distortion_ && !rhs->distortion_) || (!distortion_ && rhs->distortion_))
-    return false;
-
   // Compare the distortion model (if distortion is set for both).
-  if (distortion_ && rhs->distortion_) {
-    if ( !(*(this->distortion_) == *(rhs->distortion_)) )
+  if ( !(*(this->distortion_) == *(rhs->distortion_)) )
       return false;
-  }
 
   return true;
 }
@@ -96,8 +71,7 @@ bool UnifiedProjectionCamera::backProject3(const Eigen::Vector2d& keypoint,
   kp[0] = (kp[0] - cu()) / fu();
   kp[1] = (kp[1] - cv()) / fv();
 
-  if(distortion_)
-    distortion_->undistort(&kp);
+  distortion_->undistort(&kp);
 
   const double rho2_d = kp[0] * kp[0] + kp[1] * kp[1];
   const double tmpD = std::max(1 + (1 - xi()*xi()) * rho2_d, 0.0);
@@ -128,8 +102,8 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
   CHECK_EQ(intrinsics->size(), kNumOfParams) << "intrinsics: invalid size!";
 
   const Eigen::VectorXd* distortion_coefficients;
-  if(!distortion_coefficients_external && distortion_) {
-    distortion_coefficients = &getDistortion()->getParameters();
+  if(!distortion_coefficients_external) {
+    distortion_coefficients = &getDistortion().getParameters();
   } else {
     distortion_coefficients = distortion_coefficients_external;
   }
@@ -150,8 +124,13 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
 
   // Check if point will lead to a valid projection
   const bool valid_proj = z > -(fov_parameter(xi) * d);
-  if(!valid_proj)
-  {
+  if (!valid_proj) {
+    if (out_jacobian_intrinsics) {
+      out_jacobian_intrinsics->setZero(2, kNumOfParams);
+    }
+    if (out_jacobian_distortion) {
+      out_jacobian_distortion->setZero(2, distortion_->getParameterSize());
+    }
     out_keypoint->setZero();
     return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
   }
@@ -162,28 +141,25 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
   // Distort the point and get the Jacobian wrt. keypoint.
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
 
-  if(distortion_) {
-    // Calculate the Jacobian w.r.t to the distortion parameters,
-    // if requested (and distortion set).
-    if(out_jacobian_distortion) {
-      distortion_->distortParameterJacobian(distortion_coefficients,
-                                            *out_keypoint,
-                                            out_jacobian_distortion);
-      (*out_jacobian_distortion).row(0) *= fu;
-      (*out_jacobian_distortion).row(1) *= fv;
-    }
+  // Calculate the Jacobian w.r.t to the distortion parameters, if requested.
+  if(out_jacobian_distortion) {
+    distortion_->distortParameterJacobian(distortion_coefficients,
+                                          *out_keypoint,
+                                          out_jacobian_distortion);
+    (*out_jacobian_distortion).row(0) *= fu;
+    (*out_jacobian_distortion).row(1) *= fv;
+  }
 
-    if (out_jacobian_point || out_jacobian_intrinsics) {
-      // Distortion active and we want the Jacobian.
-      distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                    out_keypoint,
-                                                    &J_distortion);
-    } else {
-      // Distortion active but Jacobian NOT wanted.
-      distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                    out_keypoint,
-                                                    nullptr);
-    }
+  if (out_jacobian_point || out_jacobian_intrinsics) {
+    // Distortion active and we want the Jacobian.
+    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
+                                                  out_keypoint,
+                                                  &J_distortion);
+  } else {
+    // Distortion active but Jacobian NOT wanted.
+    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
+                                                  out_keypoint,
+                                                  nullptr);
   }
 
   // Calculate the Jacobian w.r.t to the 3d point, if requested.
@@ -211,8 +187,7 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
 
   // Calculate the Jacobian w.r.t to the intrinsic parameters, if requested.
   if(out_jacobian_intrinsics) {
-    out_jacobian_intrinsics->resize(2, kNumOfParams);
-    out_jacobian_intrinsics->setZero();
+    out_jacobian_intrinsics->setZero(2, kNumOfParams);
 
     Eigen::Vector2d Jxi;
     Jxi[0] = -x * rz * d * rz;
@@ -263,8 +238,7 @@ bool UnifiedProjectionCamera::isLiftable(const Eigen::Vector2d& keypoint) const 
   y[0] = 1.0/fu() * (keypoint[0] - cu());
   y[1] = 1.0/fv() * (keypoint[1] - cv());
 
-  if(distortion_)
-    distortion_->undistort(&y);
+  distortion_->undistort(&y);
 
   // Now check if it is on the sensor
   double rho2_d = y[0] * y[0] + y[1] * y[1];
@@ -295,8 +269,7 @@ Eigen::Vector2d UnifiedProjectionCamera::createRandomKeypoint() const {
 
     // Now we run the point through distortion and projection.
     // Apply distortion
-    if(distortion_)
-      distortion_->distort(&u);
+    distortion_->distort(&u);
 
     u[0] = fu() * u[0] + cu();
     u[1] = fv() * u[1] + cv();
@@ -423,9 +396,7 @@ void UnifiedProjectionCamera::printParameters(std::ostream& out, const std::stri
   out << "  optical center (cols,rows): "
       << cu() << ", " << cv() << std::endl;
 
-  if(distortion_) {
-    out << "  distortion: ";
-    distortion_->printParameters(out, text);
-  }
+  out << "  distortion: ";
+  distortion_->printParameters(out, text);
 }
 }  // namespace aslam

@@ -12,6 +12,7 @@
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
+#include <aslam/cameras/distortion-null.h>
 #include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
@@ -33,7 +34,9 @@ typedef Types<CameraDistortion<aslam::PinholeCamera,aslam::FisheyeDistortion>,
     CameraDistortion<aslam::PinholeCamera,aslam::EquidistantDistortion>,
     CameraDistortion<aslam::UnifiedProjectionCamera,aslam::EquidistantDistortion>,
     CameraDistortion<aslam::PinholeCamera,aslam::RadTanDistortion>,
-    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::RadTanDistortion>>
+    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::RadTanDistortion>,
+    CameraDistortion<aslam::PinholeCamera,aslam::NullDistortion>,
+    CameraDistortion<aslam::UnifiedProjectionCamera,aslam::NullDistortion>>
     Implementations;
 
 ///////////////////////////////////////////////
@@ -66,8 +69,7 @@ struct Point3dFunctor : public aslam::common::NumDiffFunctor<2, 3> {
                   typename NumDiffFunctor::ValueType& fvec,
                   typename NumDiffFunctor::JacobianType* Jout) const {
     typename NumDiffFunctor::ValueType out_keypoint;
-    CHECK(camera_->getDistortion()) << "Distortion model not set!";
-    Eigen::VectorXd dist_coeffs = camera_->getDistortion()->getParameters();
+    Eigen::VectorXd dist_coeffs = camera_->getDistortion().getParameters();
     aslam::ProjectionResult res = camera_->project3Functional(x, nullptr, &dist_coeffs,
                                                               &out_keypoint, Jout, nullptr,
                                                               nullptr);
@@ -108,8 +110,7 @@ struct IntrinsicJacobianFunctor : public aslam::common::NumDiffFunctor<2, numInt
       typename aslam::common::NumDiffFunctor<2, numIntrinsics>::ValueType& fvec,
       typename aslam::common::NumDiffFunctor<2, numIntrinsics>::JacobianType* Jout) const {
 
-    CHECK(camera_->getDistortion()) << "Distortion model not set";
-    Eigen::VectorXd dist_coeffs = camera_->getDistortion()->getParameters();
+    Eigen::VectorXd dist_coeffs = camera_->getDistortion().getParameters();
 
     typename aslam::common::NumDiffFunctor<2, numIntrinsics>::ValueType out_keypoint;
     Eigen::Matrix<double, 2, Eigen::Dynamic> JoutDynamic;
@@ -161,8 +162,7 @@ struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, numPa
       typename Functor::ValueType& fvec,
       typename Functor::JacobianType* Jout) const {
 
-    CHECK(camera_->getDistortion()) << "Distortion model not set";
-    Eigen::VectorXd dist_coeffs = camera_->getDistortion()->getParameters();
+    Eigen::VectorXd dist_coeffs = camera_->getDistortion().getParameters();
 
     typename Functor::ValueType out_keypoint;
 
@@ -193,11 +193,11 @@ TYPED_TEST(TestCameras, JacobianWrtDistortion) {
   Eigen::Vector3d point_3d = this->camera_->createRandomVisiblePoint(3);
 
   // Using the test distortion parameters.
-  CHECK(this->camera_->getDistortion());
-  Eigen::VectorXd dist_coeffs = this->camera_->getDistortion()->getParameters();
+  Eigen::VectorXd dist_coeffs = this->camera_->getDistortion().getParameters();
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(DistortionJacobianFunctor<TypeParam::DistortionType::kNumOfParams>,
                                   dist_coeffs, 1e-8, 1e-4 , this->camera_, point_3d);
+
 }
 
 TYPED_TEST(TestCameras, EuclideanToOnAxisKeypoint) {
@@ -294,9 +294,9 @@ TYPED_TEST(TestCameras, TestClone) {
   EXPECT_TRUE(*(this->camera_) == *cam1);  // Check that the copy is the same as the original.
 
   // Check that the distortion object is copied aswell.
-  EXPECT_TRUE(this->camera_->getDistortion() != cam1->getDistortion());
+  EXPECT_TRUE(&this->camera_->getDistortion() != &cam1->getDistortion());
   // Check that the copy is the same as the original.
-  EXPECT_TRUE(*(this->camera_->getDistortion()) == *cam1->getDistortion());
+  EXPECT_TRUE(this->camera_->getDistortion() == cam1->getDistortion());
 }
 
 
@@ -622,7 +622,7 @@ TEST(TestCameraFactory, testNoDistortionYaml) {
   EXPECT_EQ(640u, pincam->imageWidth());
   EXPECT_FALSE(pincam->getId().isValid());
   EXPECT_EQ(0u, pincam->getLineDelayNanoSeconds());
-  EXPECT_EQ(pincam->getDistortion(), nullptr);
+  EXPECT_EQ(aslam::NullDistortion(), pincam->getDistortion());
 }
 
 TEST(TestCameraFactory, testBadIntrinsics1) {
