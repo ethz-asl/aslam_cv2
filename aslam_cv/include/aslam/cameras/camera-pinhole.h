@@ -31,6 +31,13 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  enum Parameters {
+    kFu = 0,
+    kFv = 1,
+    kCu = 2,
+    kCv = 3
+  };
+
   // TODO(slynen) Enable commented out PropertyTree support
   // PinholeCamera(const sm::PropertyTree& config);
 
@@ -238,13 +245,13 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   }
 
   /// \brief The horizontal focal length in pixels.
-  double fu() const { return intrinsics_[0]; };
+  double fu() const { return intrinsics_[Parameters::kFu]; };
   /// \brief The vertical focal length in pixels.
-  double fv() const { return intrinsics_[1]; };
+  double fv() const { return intrinsics_[Parameters::kFv]; };
   /// \brief The horizontal image center in pixels.
-  double cu() const { return intrinsics_[2]; };
+  double cu() const { return intrinsics_[Parameters::kCu]; };
   /// \brief The vertical image center in pixels.
-  double cv() const { return intrinsics_[3]; };
+  double cv() const { return intrinsics_[Parameters::kCv]; };
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
   inline static constexpr int parameterCount() {
