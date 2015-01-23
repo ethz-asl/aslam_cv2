@@ -76,6 +76,7 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
         return true;
       }
 
+      // The vector from the origin of B to the origin of C expressed in B
       Eigen::Vector3d p_B_C;
       if (!YAML::safeGet(extrinsics_node, "p_B_C", &p_B_C)) {
         LOG(ERROR) << "Unable to get extrinsic position p_B_C for camera " << camera_index;
@@ -130,6 +131,7 @@ Node convert<std::shared_ptr<aslam::NCamera> >::encode(
         ncamera->get_T_C_B(camera_index).inverted().getRotationMatrix();
 
     Node extrinsics;
+    // The vector from the origin of B to the origin of C expressed in B
     extrinsics["p_B_C"] = p_B_C;
     extrinsics["R_B_C"] = R_B_C;
 
