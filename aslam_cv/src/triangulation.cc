@@ -92,7 +92,7 @@ TriangulationResult linearTriangulateFromNViews(
       t_G_bv.cwiseProduct(p_G_C).colwise().sum().transpose();
 
   Eigen::ColPivHouseholderQR<Eigen::Matrix3d> qr = AxtAx.colPivHouseholderQr();
-  static constexpr double kRankLossTolerance = 0.0001;
+  static constexpr double kRankLossTolerance = 1e-5;
   qr.setThreshold(kRankLossTolerance);
   const size_t rank = qr.rank();
   if (rank < 3) {
