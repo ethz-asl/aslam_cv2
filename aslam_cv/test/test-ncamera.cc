@@ -40,6 +40,9 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
     EXPECT_EQ(camera_loaded.getLabel(), camera_gt.getLabel());
     EXPECT_EQ(camera_loaded.imageHeight(), camera_gt.imageHeight());
     EXPECT_EQ(camera_loaded.imageWidth(), camera_gt.imageWidth());
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(ncamera->get_T_C_B(cam_idx).getTransformationMatrix(),
+                                  ncamera_loaded->get_T_C_B(cam_idx).getTransformationMatrix(),
+                                  1e-8));
   }
 }
 
