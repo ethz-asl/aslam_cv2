@@ -620,7 +620,8 @@ TEST(TestCameraFactory, testNoDistortionYaml) {
   EXPECT_EQ(240, pincam->cv());
   EXPECT_EQ(480u, pincam->imageHeight());
   EXPECT_EQ(640u, pincam->imageWidth());
-  EXPECT_FALSE(pincam->getId().isValid());
+  // To keep the yaml simple, if there is no id, a random id is created.
+  EXPECT_TRUE(pincam->getId().isValid());
   EXPECT_EQ(0u, pincam->getLineDelayNanoSeconds());
   EXPECT_EQ(aslam::NullDistortion(), pincam->getDistortion());
 }
