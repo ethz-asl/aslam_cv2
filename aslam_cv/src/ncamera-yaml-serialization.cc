@@ -26,7 +26,7 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
     // Parse the id.
     aslam::NCameraId ncam_id;
     std::string id_string;
-    if (!YAML::safeGet<std::string>(node, "id", &id_string)) {
+    if (!node["id"] || !YAML::safeGet<std::string>(node, "id", &id_string)) {
       LOG(WARNING) << "Unable to get the id for the ncamera. Generating new random id.";
       ncam_id.randomize();
     } else {
