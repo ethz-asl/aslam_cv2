@@ -96,7 +96,7 @@ class TriangulationFixture : public testing::Test {
 
   void expectSuccess() {
     Eigen::Vector3d p_W_L_estimate;
-    EXPECT_TRUE(triangulate(&p_W_L_estimate).wasTriangulationSuccessful());
+    ASSERT_TRUE(triangulate(&p_W_L_estimate).wasTriangulationSuccessful());
     EXPECT_TRUE(EIGEN_MATRIX_NEAR(p_W_L_, p_W_L_estimate, kDoubleTolerance));
   }
 
