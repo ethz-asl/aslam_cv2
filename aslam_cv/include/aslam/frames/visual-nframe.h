@@ -24,6 +24,7 @@ class VisualNFrame {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef std::vector<VisualNFrame::Ptr> PtrVector;
+  typedef std::vector<VisualNFrame::ConstPtr> ConstPtrVector;
 
  protected:
   /// \brief Creates an empty visual VisualNFrame.
