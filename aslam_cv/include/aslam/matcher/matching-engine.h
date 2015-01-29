@@ -4,7 +4,6 @@
 #include <aslam/common/macros.h>
 #include <aslam/matcher/match.h>
 #include <aslam/matcher/matching-problem.h>
-
 /// \addtogroup Matching
 /// @{
 ///
@@ -23,8 +22,21 @@ class MatchingEngine {
   MatchingEngine() {};
   virtual ~MatchingEngine() {};
 
-  virtual bool match(MatchingProblem* problem, Matches* matches) = 0;
-  virtual bool match(MatchingProblem* problem, std::vector<std::pair<size_t,size_t> >& matches) = 0;
+  virtual bool match(MatchingProblem* problem, MatchesWithScore* matches) = 0;
+
+  bool match_without_score(MatchingProblem* problem,
+                           Matches* matches_0_1) {
+    CHECK_NOTNULL(problem);
+    CHECK_NOTNULL(matches_0_1);
+    MatchesWithScore matches_with_score_0_1;
+    const bool success = match(problem, &matches_with_score_0_1);
+    for (const aslam::MatchWithScore& match : matches_with_score_0_1) {
+      // N.b.: Matching from frame 0 to frame 1.
+      matches_0_1->emplace_back(match.getIndexBanana(), match.getIndexApple());
+    }
+    CHECK_EQ(matches_with_score_0_1.size(), matches_0_1->size());
+    return success;
+  }
 };
 }
 #endif //ASLAM_CV_MATCHINGENGINE_H_

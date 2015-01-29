@@ -6,7 +6,7 @@
 #include <glog/logging.h>
 
 namespace aslam {
-  struct Match;
+  struct MatchWithScore;
   class VisualNFrame;
 
   /// \brief The Track manager assigns track ids to the given matches with different strategies.
@@ -21,7 +21,7 @@ namespace aslam {
     /// @param[in]  matches       List of matches between the two given frames.
     /// @param[in]  apple_frame   Pointer to the apple frame.
     /// @param[in]  banana_frame  Pointer to the banana frame.
-    virtual void applyMatchesToFrames(const std::vector<Match>& matches,
+    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches,
                                       VisualFrame* apple_frame,
                                       VisualFrame* banana_frame) = 0;
 
@@ -54,7 +54,7 @@ namespace aslam {
     ///        either expected to be identical (in which case no change is
     ///        applied) or < 0, in which case the valid id (>=0) is copied over.
     ///        Matches are expected to be exclusive.
-    virtual void applyMatchesToFrames(const std::vector<Match>& matches,
+    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches,
                                       VisualFrame* apple_frame,
                                       VisualFrame* banana_frame);
   };
@@ -117,7 +117,7 @@ namespace aslam {
     ///        filled with the next best matches until either all buckets are
     ///        full or all matches have been accepted.
     ///        The matches are expected to be exclusive.
-    virtual void applyMatchesToFrames(const std::vector<Match>& matches,
+    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches,
                                       VisualFrame* apple_frame,
                                       VisualFrame* banana_frame);
    private:
