@@ -22,7 +22,7 @@ namespace aslam {
     return CHECK_NOTNULL(frame->getTrackIdsMutable());
   }
 
-  void SimpleTrackManager::applyMatchesToFrames(const Matches& matches,
+  void SimpleTrackManager::applyMatchesToFrames(const MatchesWithScore& matches,
                                                 VisualFrame* apple_frame,
                                                 VisualFrame* banana_frame) {
     CHECK_NOTNULL(apple_frame);
@@ -38,7 +38,7 @@ namespace aslam {
     std::unordered_set<int> consumed_apples;
     std::unordered_set<int> consumed_bananas;
 
-    for (const Match& match : matches) {
+    for (const MatchWithScore& match : matches) {
       int index_apple = match.getIndexApple();
       CHECK_LT(index_apple, num_apple_track_ids);
 
@@ -79,7 +79,7 @@ namespace aslam {
     }
   }
 
-  void UniformTrackManager::applyMatchesToFrames(const Matches& matches,
+  void UniformTrackManager::applyMatchesToFrames(const MatchesWithScore& matches,
                                                  VisualFrame* apple_frame,
                                                  VisualFrame* banana_frame) {
     CHECK_NOTNULL(apple_frame);
@@ -122,9 +122,9 @@ namespace aslam {
           return bin_index;
         };
 
-    std::set<Match, std::greater<Match> > candidates_for_new_tracks;
+    std::set<MatchWithScore, std::greater<MatchWithScore> > candidates_for_new_tracks;
 
-    for (const Match& match : matches) {
+    for (const MatchWithScore& match : matches) {
       int index_apple = match.getIndexApple();
       CHECK_LT(index_apple, num_apple_track_ids);
 
