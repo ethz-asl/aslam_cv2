@@ -126,9 +126,9 @@ bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
     // Assign the exclusive matches to the match vector.
     for (const typename MatchingProblem::Candidate& candidate : temporary_matches_)  {
       if (candidate.index_apple >= 0) {
-        CHECK_LT(candidate.index_apple, num_apples);
+        CHECK_LT(candidate.index_apple, static_cast<int>(num_apples));
         CHECK_GE(candidate.index_banana, 0);
-        CHECK_LT(candidate.index_banana, num_bananas);
+        CHECK_LT(candidate.index_banana, static_cast<int>(num_bananas));
 
         matches->emplace_back(candidate.index_apple, candidate.index_banana, candidate.score);
       }
