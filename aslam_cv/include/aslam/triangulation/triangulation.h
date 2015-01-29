@@ -102,7 +102,7 @@ TriangulationResult linearTriangulateFromNViews(
 /// @return Was the triangulation successful?
 bool linearTriangulateFromNViewsMultiCam(
     const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
-    const std::vector<int>& measurement_camera_indices,
+    const std::vector<size_t>& measurement_camera_indices,
     const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
     const Aligned<std::vector, aslam::Transformation>::type& T_B_C,
     Eigen::Vector3d* G_point);
