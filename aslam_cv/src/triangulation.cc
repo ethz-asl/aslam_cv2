@@ -105,7 +105,7 @@ TriangulationResult linearTriangulateFromNViews(
 
 bool linearTriangulateFromNViewsMultiCam(
     const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
-    const std::vector<int>& measurement_camera_indices,
+    const std::vector<size_t>& measurement_camera_indices,
     const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
     const Aligned<std::vector, aslam::Transformation>::type& T_B_C,
     Eigen::Vector3d* G_point) {
@@ -123,7 +123,7 @@ bool linearTriangulateFromNViewsMultiCam(
 
   // Fill in A and b.
   for (size_t i = 0; i < measurements_normalized.size(); ++i) {
-    int cam_index = measurement_camera_indices[i];
+    size_t cam_index = measurement_camera_indices[i];
     CHECK_LT(cam_index, T_B_C.size());
     Eigen::Vector3d v(measurements_normalized[i](0),
         measurements_normalized[i](1), 1.);
