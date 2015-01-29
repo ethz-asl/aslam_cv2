@@ -150,7 +150,7 @@ int64_t VisualNFrame::getMinTimestampNanoseconds() const {
 }
 
 int64_t VisualNFrame::getMaxTimestampNanoseconds() const {
-  int64_t max_timestamp_nanoseconds = std::numeric_limits<int64_t>::min();
+  int64_t max_timestamp_nanoseconds = aslam::time::getInvalidTime();
   for (size_t camera_idx = 0; camera_idx < getNumCameras(); ++camera_idx) {
     const int64_t timestamp_frame_nanoseconds = getFrame(camera_idx).getTimestampNanoseconds();
     if (timestamp_frame_nanoseconds > max_timestamp_nanoseconds)
