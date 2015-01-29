@@ -24,6 +24,7 @@ class MatchingEngine {
   virtual ~MatchingEngine() {};
 
   virtual bool match(MatchingProblem* problem, Matches* matches) = 0;
+  virtual bool match(MatchingProblem* problem, std::vector<std::pair<size_t,size_t> >& matches) = 0;
 };
 }
 #endif //ASLAM_CV_MATCHINGENGINE_H_

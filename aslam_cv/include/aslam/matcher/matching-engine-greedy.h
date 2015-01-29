@@ -24,6 +24,7 @@ class MatchingEngineGreedy : public MatchingEngine<MatchingProblem> {
   MatchingEngineGreedy() {};
   virtual ~MatchingEngineGreedy() {};
   virtual bool match(MatchingProblem* problem, Matches* matches);
+  virtual bool match(MatchingProblem* problem, std::vector<std::pair<size_t,size_t> >& matches);
 };
 
 template<typename MatchingProblem>
@@ -70,6 +71,18 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
   matches->erase(match_out, matches->end());
 
   return status;
+}
+
+template<typename MatchingProblem>
+bool MatchingEngineGreedy<MatchingProblem>::match(
+      MatchingProblem* problem, std::vector<std::pair<size_t,size_t> >& matches_0_1_gv) {
+    aslam::Matches matches_0_1_aslam;
+    const bool success = match(problem, &matches_0_1_aslam);
+    for (const aslam::Match& match : matches_0_1_aslam) {
+      matches_0_1_gv.emplace_back(match.getIndexBanana(), match.getIndexApple());
+    }
+    CHECK_EQ(matches_0_1_aslam.size(), matches_0_1_gv.size());
+    return success;
 }
 }
 
