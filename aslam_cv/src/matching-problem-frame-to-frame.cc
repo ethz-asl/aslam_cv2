@@ -55,7 +55,7 @@ bool MatchingProblemFrameToFrame::doSetup() {
       apple_frame_->getDescriptors();
 
   const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& banana_descriptors =
-        banana_frame_->getDescriptors();
+      banana_frame_->getDescriptors();
 
   size_t num_apple_descriptors = static_cast<size_t>(apple_descriptors.cols());
   size_t num_banana_descriptors = static_cast<size_t>(banana_descriptors.cols());
@@ -95,17 +95,17 @@ bool MatchingProblemFrameToFrame::doSetup() {
     << "The number of apple keypoints does not match the number of columns in the "
     << "apple keypoint matrix.";
 
-  Camera::ConstPtr iCam = apple_frame_->getCameraGeometry();
-  CHECK(iCam);
+  Camera::ConstPtr apple_camera = apple_frame_->getCameraGeometry();
+  CHECK(apple_camera);
 
   for (size_t apple_idx = 0; apple_idx < num_apple_keypoints; ++apple_idx) {
     // Check if the apple is valid.
     const Eigen::Vector2d& apple_keypoint = A_keypoints_apple_->col(apple_idx);
-    if (iCam->isMasked(apple_keypoint)) {
+    if (apple_camera->isMasked(apple_keypoint)) {
       // This keypoint is masked out and hence not valid.
       valid_apples_[apple_idx] = false;
     } else {
-      size_t y_coordinate = static_cast<size_t>(std::round(apple_keypoint(1)));
+      size_t y_coordinate = static_cast<size_t>(std::floor(apple_keypoint(1)));
       CHECK_LT(y_coordinate, image_height_apple_frame_) << "The y coordinate for apple keypoint "
           << apple_idx << " is bigger than or equal to the number of rows in the image.";
 
@@ -117,24 +117,21 @@ bool MatchingProblemFrameToFrame::doSetup() {
 
   // Then, project all banana keypoints into the apple frame.
   const Eigen::Matrix2Xd& banana_keypoints = banana_frame_->getKeypointMeasurements();
-
   CHECK_EQ(static_cast<int>(num_banana_keypoints), banana_keypoints.cols()) << "The number of "
       "banana keypoints  and the number of columns in the banana keypoint matrix is different.";
 
-  Camera::ConstPtr banana_cam = banana_frame_->getCameraGeometry();
-  CHECK(banana_cam);
+  Camera::ConstPtr banana_camera = banana_frame_->getCameraGeometry();
+  CHECK(banana_camera);
 
   Eigen::Matrix3Xd B_rays_banana = Eigen::Matrix3Xd::Zero(3, num_banana_keypoints);
   // Compute all back projections in the banana frame.
   for (size_t banana_idx = 0; banana_idx < num_banana_keypoints; ++banana_idx) {
     const Eigen::Vector2d& banana_keypoint = banana_keypoints.col(banana_idx);
-    if (banana_cam->isMasked(banana_keypoint)) {
+    if (banana_camera->isMasked(banana_keypoint)) {
       valid_bananas_[banana_idx] = false;
     } else {
       Eigen::Vector3d B_ray_banana;
-      banana_cam->backProject3(banana_keypoint, &B_ray_banana);
-      // Normalize the ray... because it may not be normalized.
-      B_ray_banana.normalize();
+      banana_camera->backProject3(banana_keypoint, &B_ray_banana);
       B_rays_banana.col(banana_idx) = B_ray_banana;
       valid_bananas_[banana_idx] = true;
     }
@@ -153,7 +150,7 @@ bool MatchingProblemFrameToFrame::doSetup() {
       Eigen::Vector3d A_ray_banana = A_rays_banana.col(banana_idx);
 
       ProjectionResult projection_result =
-          iCam->project3(A_ray_banana, &A_keypoint_banana);
+          apple_camera->project3(A_ray_banana, &A_keypoint_banana);
 
       // If the banana keypoint projects into the image plane of the apple frame, we accept it.
       if (projection_result.isKeypointVisible()) {
@@ -253,7 +250,7 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
       }
     }
   } else {
-    LOG(WARNING) << "Banana " << banana_index << " is not valid";
+    LOG(WARNING) << "Banana " << banana_index << " is not valid.";
   }
 }
 
