@@ -152,7 +152,7 @@ TEST(TestMatcherExclusive, EmptyMatch) {
   SimpleMatchProblem mp;
   aslam::MatchingEngineExclusive<SimpleMatchProblem> me;
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   me.match(&mp, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -174,7 +174,7 @@ TEST(TestMatcherExclusive, ExclusiveMatcher) {
   match_problem.setApples(apples.begin(), apples.end());
   EXPECT_EQ(5u, match_problem.numApples());
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   matching_engine.match(&match_problem, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -196,7 +196,7 @@ TEST(TestMatcher, EmptyMatch) {
   SimpleMatchProblem mp;
   aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   me.match(&mp, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -219,7 +219,7 @@ TEST(TestMatcher, GreedyMatcher) {
   mp.setApples(apples.begin(), apples.end());
   EXPECT_EQ(5u, mp.numApples());
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   me.match(&mp, &matches);
   EXPECT_TRUE(matches.empty());
 

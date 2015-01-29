@@ -47,7 +47,7 @@ TEST_F(MatcherTest, EmptyMatch) {
                                                    q_A_B,
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
   EXPECT_TRUE(matches.empty());
@@ -78,12 +78,12 @@ TEST_F(MatcherTest, MatchIdentity) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
   ASSERT_EQ(1u, matches.size());
 
-  aslam::Match match = matches[0];
+  aslam::MatchWithScore match = matches[0];
   EXPECT_EQ(0, match.getIndexApple());
   EXPECT_EQ(0, match.getIndexBanana());
   EXPECT_DOUBLE_EQ(1.0, match.score);
@@ -131,11 +131,11 @@ TEST_F(MatcherTest, MatchRotation) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
   ASSERT_EQ(1u, matches.size());
-  aslam::Match match = matches[0];
+  aslam::MatchWithScore match = matches[0];
   EXPECT_EQ(0, match.getIndexApple());
   EXPECT_EQ(0, match.getIndexBanana());
   EXPECT_DOUBLE_EQ(1.0, match.score);
@@ -164,7 +164,7 @@ TEST_F(MatcherTest, TestImageSpaceBorderOut) {
       aslam::MatchingProblemFrameToFrame>(apple_frame_, banana_frame_, q_A_B,
                                           image_space_distance_threshold_,
                                           hamming_distance_threshold_);
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
   EXPECT_TRUE(matches.empty());
@@ -196,7 +196,7 @@ TEST_F(MatcherTest, TestImageSpaceBorderIn) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
   EXPECT_EQ(1u, matches.size());
@@ -270,10 +270,10 @@ TEST_F(MatcherTest, TestComplex) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   matching_engine_.match(matching_problem.get(), &matches);
 
-  aslam::Matches ground_truth_matches;
+  aslam::MatchesWithScore ground_truth_matches;
   // The ground truth matches: keypoint 0 and 1 are within image_space distance!
   // The non-exclusive matcher matches banana 0 to apple 0 because they both have zero bits
   // different, whereas banana 0 and apple 1 have 1 bit different.
