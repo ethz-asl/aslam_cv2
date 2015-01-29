@@ -37,6 +37,7 @@ class MatchingEngineExclusive : public MatchingEngine<MatchingProblem> {
   virtual ~MatchingEngineExclusive() {};
 
   virtual bool match(MatchingProblem* problem, typename aslam::Matches* matches);
+  virtual bool match(MatchingProblem* problem, std::vector<std::pair<size_t,size_t> >& matches);
 
 private:
   /// \brief Recursively assigns the next best apple to the given banana.
@@ -140,6 +141,18 @@ bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
     LOG(ERROR) << "Setting up the matching problem (.doSetup()) failed.";
     return false;
   }
+}
+
+template<typename MatchingProblem>
+bool MatchingEngineExclusive<MatchingProblem>::match(
+      MatchingProblem* problem, std::vector<std::pair<size_t,size_t> >& matches_0_1_gv) {
+    aslam::Matches matches_0_1_aslam;
+    const bool success = match(problem, &matches_0_1_aslam);
+    for (const aslam::Match& match : matches_0_1_aslam) {
+      matches_0_1_gv.emplace_back(match.getIndexBanana(), match.getIndexApple());
+    }
+    CHECK_EQ(matches_0_1_aslam.size(), matches_0_1_gv.size());
+    return success;
 }
 
 }  // namespace aslam
