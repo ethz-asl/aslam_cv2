@@ -32,7 +32,7 @@ TEST(TrackManagerTests, TestApplyMatcher) {
   apple_frame->swapTrackIds(&apple_tracks);
 
   /// matches: {(0,0), (1,1), (2,2), (3,3), (4,4)}
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   matches.reserve(5);
 
   matches.emplace_back(0, 0, 0.1);
@@ -79,7 +79,7 @@ TEST(TrackManagerTests, TestApplyMatchesEmpty) {
   banana_frame->swapTrackIds(&banana_tracks);
   apple_frame->swapTrackIds(&apple_tracks);
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
 
   aslam::SimpleTrackManager track_manager(3);
   track_manager.applyMatchesToFrames(matches, apple_frame.get(), banana_frame.get());
@@ -167,7 +167,7 @@ TEST(TrackManagerTests, TestApplyMatchesUniformly) {
   apple_frame->swapTrackIds(&apple_tracks);
 
   /// matches: {(0,0), (1,1), (2,2), (3,3), (4,4), ...}
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
   matches.reserve(kNumKeypoints);
   for (size_t match_idx = 0; match_idx < kNumKeypoints; ++match_idx) {
     double score = 1.0 - (static_cast<double>(match_idx) /
@@ -248,7 +248,7 @@ TEST(TrackManagerTests, TestApplyMatchesUniformEmpty) {
   banana_frame->swapTrackIds(&banana_tracks);
   apple_frame->swapTrackIds(&apple_tracks);
 
-  aslam::Matches matches;
+  aslam::MatchesWithScore matches;
 
   const size_t kBucketCapacity = 5u;
   const size_t kNumStrongToPush = 20u;
