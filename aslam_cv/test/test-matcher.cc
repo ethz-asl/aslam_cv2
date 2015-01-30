@@ -13,7 +13,7 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
   std::vector<double> apples_;
   std::vector<double> bananas_;
 
-  aslam::Matches matches_;
+  aslam::Matches matches_A_B_;
 
  public:
   SimpleMatchProblem() {
@@ -44,7 +44,7 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
   }
 
   void sortMatches() {
-    std::sort(matches_.begin(),matches_.end());
+    std::sort(matches_A_B_.begin(),matches_A_B_.end());
   }
 
   virtual void getAppleCandidatesForBanana(int b, Candidates* candidates) {

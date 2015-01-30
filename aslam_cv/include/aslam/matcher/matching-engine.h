@@ -22,30 +22,28 @@ class MatchingEngine {
   MatchingEngine() {};
   virtual ~MatchingEngine() {};
 
-  virtual bool match(MatchingProblem* problem, MatchesWithScore* matches) = 0;
+  virtual bool match(MatchingProblem* problem, MatchesWithScore* matches_A_B) = 0;
 
-  bool match(MatchingProblem* problem,
-	     Matches* matches_0_1) {
+  bool match(MatchingProblem* problem, Matches* matches_A_B) {
     CHECK_NOTNULL(problem);
-    CHECK_NOTNULL(matches_0_1);
-    MatchesWithScore matches_with_score_0_1;
-    const bool success = match(problem, &matches_with_score_0_1);
-    convertMatch(&matches_with_score_0_1, matches_0_1);
+    CHECK_NOTNULL(matches_A_B);
+    MatchesWithScore matches_with_score_A_B;
+    const bool success = match(problem, &matches_with_score_A_B);
+    convertMatch(&matches_with_score_A_B, matches_A_B);
     return success;
   }
 
-  static void convertMatch(MatchesWithScore* matches_with_score_0_1,
-                           Matches* matches_0_1) {
-    CHECK_NOTNULL(matches_with_score_0_1);
-    CHECK_NOTNULL(matches_0_1);
-    for (const aslam::MatchWithScore& match : *matches_with_score_0_1) {
-      CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is -1.";
-      CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is -1.";
-      // N.b.: Matching from frame 0 to frame 1.
-      matches_0_1->emplace_back(static_cast<size_t> (match.getIndexBanana()),
-                                static_cast<size_t> (match.getIndexApple()));
+  static void convertMatch(MatchesWithScore* matches_with_score_A_B,
+                           Matches* matches_A_B) {
+    CHECK_NOTNULL(matches_with_score_A_B);
+    CHECK_NOTNULL(matches_A_B);
+    for (const aslam::MatchWithScore& match : *matches_with_score_A_B) {
+      CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
+      CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
+      matches_A_B->emplace_back(static_cast<size_t> (match.getIndexApple()),
+                                static_cast<size_t> (match.getIndexBanana()));
     }
-    CHECK_EQ(matches_with_score_0_1->size(), matches_0_1->size());
+    CHECK_EQ(matches_with_score_A_B->size(), matches_A_B->size());
   }
 };
 }

@@ -31,18 +31,18 @@ TEST(TrackManagerTests, TestApplyMatcher) {
   banana_frame->swapTrackIds(&banana_tracks);
   apple_frame->swapTrackIds(&apple_tracks);
 
-  /// matches: {(0,0), (1,1), (2,2), (3,3), (4,4)}
-  aslam::MatchesWithScore matches;
-  matches.reserve(5);
+  /// matches_A_B: {(0,0), (1,1), (2,2), (3,3), (4,4)}
+  aslam::MatchesWithScore matches_A_B;
+  matches_A_B.reserve(5);
 
-  matches.emplace_back(0, 0, 0.1);
-  matches.emplace_back(1, 1, 0.2);
-  matches.emplace_back(2, 2, 0.3);
-  matches.emplace_back(3, 3, 0.4);
-  matches.emplace_back(4, 4, 0.5);
+  matches_A_B.emplace_back(0, 0, 0.1);
+  matches_A_B.emplace_back(1, 1, 0.2);
+  matches_A_B.emplace_back(2, 2, 0.3);
+  matches_A_B.emplace_back(3, 3, 0.4);
+  matches_A_B.emplace_back(4, 4, 0.5);
 
   aslam::SimpleTrackManager track_manager(3);
-  track_manager.applyMatchesToFrames(matches, apple_frame.get(), banana_frame.get());
+  track_manager.applyMatchesToFrames(matches_A_B, apple_frame.get(), banana_frame.get());
 
   // Expected output:
   /// banana frame: 3, 2, 0, 1, 4
@@ -79,10 +79,10 @@ TEST(TrackManagerTests, TestApplyMatchesEmpty) {
   banana_frame->swapTrackIds(&banana_tracks);
   apple_frame->swapTrackIds(&apple_tracks);
 
-  aslam::MatchesWithScore matches;
+  aslam::MatchesWithScore matches_A_B;
 
   aslam::SimpleTrackManager track_manager(3);
-  track_manager.applyMatchesToFrames(matches, apple_frame.get(), banana_frame.get());
+  track_manager.applyMatchesToFrames(matches_A_B, apple_frame.get(), banana_frame.get());
 
   // Expected output:
   Eigen::VectorXi expected_banana_tracks = Eigen::VectorXi::Constant(5, -1);
@@ -166,13 +166,13 @@ TEST(TrackManagerTests, TestApplyMatchesUniformly) {
   banana_frame->swapTrackIds(&banana_tracks);
   apple_frame->swapTrackIds(&apple_tracks);
 
-  /// matches: {(0,0), (1,1), (2,2), (3,3), (4,4), ...}
-  aslam::MatchesWithScore matches;
-  matches.reserve(kNumKeypoints);
+  /// matches_A_B: {(0,0), (1,1), (2,2), (3,3), (4,4), ...}
+  aslam::MatchesWithScore matches_A_B;
+  matches_A_B.reserve(kNumKeypoints);
   for (size_t match_idx = 0; match_idx < kNumKeypoints; ++match_idx) {
     double score = 1.0 - (static_cast<double>(match_idx) /
         static_cast<double>(kNumKeypoints));
-    matches.emplace_back(match_idx, match_idx, score);
+    matches_A_B.emplace_back(match_idx, match_idx, score);
   }
 
   const size_t kBucketCapacity = 5u;
@@ -186,7 +186,7 @@ TEST(TrackManagerTests, TestApplyMatchesUniformly) {
                                            kNumBucketsRoot * kNumBucketsRoot,
                                            kNumStrongToPush,
                                            kScoreTresholdUnconditional);
-  track_manager.applyMatchesToFrames(matches,
+  track_manager.applyMatchesToFrames(matches_A_B,
                                      apple_frame.get(),
                                      banana_frame.get());
 
@@ -248,7 +248,7 @@ TEST(TrackManagerTests, TestApplyMatchesUniformEmpty) {
   banana_frame->swapTrackIds(&banana_tracks);
   apple_frame->swapTrackIds(&apple_tracks);
 
-  aslam::MatchesWithScore matches;
+  aslam::MatchesWithScore matches_A_B;
 
   const size_t kBucketCapacity = 5u;
   const size_t kNumStrongToPush = 20u;
@@ -260,7 +260,7 @@ TEST(TrackManagerTests, TestApplyMatchesUniformEmpty) {
                                            kNumStrongToPush,
                                            kScoreTresholdUnconditional);
 
-  track_manager.applyMatchesToFrames(matches,
+  track_manager.applyMatchesToFrames(matches_A_B,
                                      apple_frame.get(),
                                      banana_frame.get());
 
