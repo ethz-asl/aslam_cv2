@@ -286,9 +286,9 @@ TEST_F(MatcherTest, TestComplex) {
   ground_truth_matches.emplace_back(4, 4, 1.0);
 
   size_t num_matches = matches_A_B.size();
-  EXPECT_EQ(ground_truth_matches.size(), num_matches_A_B);
+  EXPECT_EQ(ground_truth_matches.size(), num_matches);
   for (size_t i = 0; i < num_matches; ++i) {
-    EXPECT_EQ(matches_A_B[i], ground_truth_matches_A_B[i]);
+    EXPECT_EQ(matches_A_B[i], ground_truth_matches[i]);
   }
 }
 
