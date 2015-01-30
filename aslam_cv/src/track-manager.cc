@@ -35,8 +35,8 @@ namespace aslam {
     size_t num_apple_track_ids = static_cast<size_t>(apple_track_ids.rows());
     size_t num_banana_track_ids = static_cast<size_t>(banana_track_ids.rows());
 
-    std::unordered_set consumed_apples;
-    std::unordered_set consumed_bananas;
+    std::unordered_set<int> consumed_apples;
+    std::unordered_set<int> consumed_bananas;
 
     for (const MatchWithScore& match : matches) {
       int index_apple = match.getIndexApple();
