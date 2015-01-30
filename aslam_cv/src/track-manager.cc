@@ -35,15 +35,17 @@ namespace aslam {
     size_t num_apple_track_ids = static_cast<size_t>(apple_track_ids.rows());
     size_t num_banana_track_ids = static_cast<size_t>(banana_track_ids.rows());
 
-    std::unordered_set<int> consumed_apples;
-    std::unordered_set<int> consumed_bananas;
+    std::unordered_set consumed_apples;
+    std::unordered_set consumed_bananas;
 
     for (const MatchWithScore& match : matches) {
       int index_apple = match.getIndexApple();
       CHECK_LT(index_apple, num_apple_track_ids);
+      CHECK_GE(index_apple, 0);
 
       int index_banana = match.getIndexBanana();
       CHECK_LT(index_banana, num_banana_track_ids);
+      CHECK_GE(index_banana, 0);
 
       addToSetsAndCheckExclusiveness(index_apple,
                                      index_banana,
