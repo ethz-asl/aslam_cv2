@@ -21,7 +21,7 @@ TEST_F(TriangulationMultiviewTest, linearTriangulateFromNViewsMultiCam) {
   aslam::Aligned<std::vector, Eigen::Vector2d>::type measurements;
   aslam::Aligned<std::vector, aslam::Transformation>::type T_W_B;
   aslam::Aligned<std::vector, aslam::Transformation>::type T_B_C;
-  std::vector<int> measurement_camera_indices;
+  std::vector<size_t> measurement_camera_indices;
   Eigen::Vector3d W_point;
 
   // To make the test simple to write, create 2 cameras and fill observations

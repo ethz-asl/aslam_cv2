@@ -33,13 +33,11 @@ void FeatureTracker::drawTracks(const VisualFrame& current_frame, cv::Mat* track
   std::map<int, Track> current_tracks;
 
   // Find currently active tracks
-  const int num_keypoints = current_frame.getNumKeypointMeasurements();
-  CHECK_EQ(current_track_ids.rows(), num_keypoints);
-  for (int i = 0; i < current_frame.getTrackIds().rows(); i++) {
+  const size_t num_keypoints = current_frame.getNumKeypointMeasurements();
+  CHECK_EQ(current_track_ids.rows(), static_cast<int>(num_keypoints));
+  for (size_t i = 0; i < num_keypoints; i++) {
     const int track_id = current_track_ids(i);
     if (track_id != -1) {
-      CHECK_LT(i, num_keypoints);
-
       Track track;
       track.track_id = track_id;
       current_frame.toRawImageCoordinates(current_frame.getKeypointMeasurement(i),
