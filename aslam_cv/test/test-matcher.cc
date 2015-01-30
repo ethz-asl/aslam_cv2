@@ -179,7 +179,7 @@ TEST(TestMatcherExclusive, ExclusiveMatcher) {
   EXPECT_TRUE(matches.empty());
 
   match_problem.setBananas(bananas.begin(), bananas.end());
-  EXPECT_EQ(6, match_problem.numBananas());
+  EXPECT_EQ(6u, match_problem.numBananas());
 
   matches.clear();
   matching_engine.match(&match_problem, &matches);
@@ -224,7 +224,7 @@ TEST(TestMatcher, GreedyMatcher) {
   EXPECT_TRUE(matches.empty());
 
   mp.setBananas(bananas.begin(), bananas.end());
-  EXPECT_EQ(6, mp.numBananas());
+  EXPECT_EQ(6u, mp.numBananas());
 
   matches.clear();
   me.match(&mp, &matches);

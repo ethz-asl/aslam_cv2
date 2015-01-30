@@ -114,7 +114,7 @@ private:
   std::shared_ptr<VisualFrame> banana_frame_;
   /// \brief Rotation matrix taking vectors from the banana frame into the apple frame.
   aslam::Quaternion q_A_B_;
-  /// \breif Map mapping y coordinates in the image plane onto keypoint indices of apple keypoints.
+  /// \brief Map mapping y coordinates in the image plane onto keypoint indices of apple keypoints.
   std::multimap<size_t, size_t> y_coordinate_to_apple_keypoint_index_map_;
 
   /// \brief Index marking apples as valid or invalid.

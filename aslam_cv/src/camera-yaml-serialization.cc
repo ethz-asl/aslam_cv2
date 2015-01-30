@@ -120,18 +120,19 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
       return true;
     }
     // ID
+    aslam::CameraId id;
     if(node["id"]) {
-      aslam::CameraId id;
       std::string id_string = node["id"].as<std::string>();
-      if(id.fromHexString(id_string)) {
-        camera->setId(id);
-      } else {
+      if(!id.fromHexString(id_string)) {
         LOG(ERROR) << "Unable to parse \"" << id_string << "\" as a hex string.";
         camera.reset();
         return true;
       }
+    } else {
+      LOG(WARNING) << "Unable to get the id for the camera. Generating new random id.";
+      id.randomize();
     }
-
+    camera->setId(id);
     if(node["line-delay-nanoseconds"]) {
       uint64_t line_delay_nanoseconds = camera->getLineDelayNanoSeconds();
       if(YAML::safeGet(node, "line-delay-nanoseconds", &line_delay_nanoseconds)){
