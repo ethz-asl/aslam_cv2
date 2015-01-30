@@ -24,8 +24,8 @@ class MatchingEngine {
 
   virtual bool match(MatchingProblem* problem, MatchesWithScore* matches) = 0;
 
-  bool match_without_score(MatchingProblem* problem,
-                           Matches* matches_0_1) {
+  bool match(MatchingProblem* problem,
+	     Matches* matches_0_1) {
     CHECK_NOTNULL(problem);
     CHECK_NOTNULL(matches_0_1);
     MatchesWithScore matches_with_score_0_1;
@@ -36,9 +36,11 @@ class MatchingEngine {
 
   static void convertMatch(MatchesWithScore* matches_with_score_0_1,
                            Matches* matches_0_1) {
+    CHECK_NOTNULL(matches_with_score_0_1);
+    CHECK_NOTNULL(matches_0_1);
     for (const aslam::MatchWithScore& match : *matches_with_score_0_1) {
-      CHECK_NE(match.getIndexApple(), -1) << "Apple keypoint index is -1.";
-      CHECK_NE(match.getIndexBanana(), -1) << "Banana keypoint index is -1.";
+      CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is -1.";
+      CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is -1.";
       // N.b.: Matching from frame 0 to frame 1.
       matches_0_1->emplace_back(static_cast<size_t> (match.getIndexBanana()),
                                 static_cast<size_t> (match.getIndexApple()));
