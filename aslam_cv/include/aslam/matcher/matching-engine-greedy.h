@@ -27,7 +27,8 @@ class MatchingEngineGreedy : public MatchingEngine<MatchingProblem> {
 };
 
 template<typename MatchingProblem>
-bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, MatchesWithScore* matches) {
+bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem,
+						  MatchesWithScore* matches_A_B) {
   CHECK_NOTNULL(problem);
   CHECK_NOTNULL(matches_A_B);
   matches_A_B->clear();
