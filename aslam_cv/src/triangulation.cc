@@ -103,7 +103,7 @@ TriangulationResult linearTriangulateFromNViews(
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
-bool linearTriangulateFromNViewsMultiCam(
+TriangulationResult linearTriangulateFromNViewsMultiCam(
     const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
     const std::vector<size_t>& measurement_camera_indices,
     const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
@@ -113,7 +113,7 @@ bool linearTriangulateFromNViewsMultiCam(
   CHECK_EQ(measurements_normalized.size(), T_G_B.size());
   CHECK_EQ(measurements_normalized.size(), measurement_camera_indices.size());
   if (measurements_normalized.size() < 2u) {
-    return false;
+    return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
   }
 
   const size_t rows = 3 * measurements_normalized.size();
@@ -140,11 +140,11 @@ bool linearTriangulateFromNViewsMultiCam(
   qr.setThreshold(kRankLossTolerance);
   const size_t rank = qr.rank();
   if ((rank - measurements_normalized.size()) < 3) {
-    return false;
+    return TriangulationResult(TriangulationResult::UNOBSERVABLE);
   }
 
   *G_point = qr.solve(b).head<3>();
-  return true;
+  return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
 }  // namespace aslam
