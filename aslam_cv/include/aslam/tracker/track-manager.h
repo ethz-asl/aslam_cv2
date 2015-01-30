@@ -18,10 +18,10 @@ namespace aslam {
 
     /// \brief Writes track ids for a list of matches into two given frames.
     ///
-    /// @param[in]  matches       List of matches between the two given frames.
+    /// @param[in]  matches_A_B   List of matches between the Apple and Banana frame.
     /// @param[in]  apple_frame   Pointer to the apple frame.
     /// @param[in]  banana_frame  Pointer to the banana frame.
-    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches,
+    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches_A_B,
                                       VisualFrame* apple_frame,
                                       VisualFrame* banana_frame) = 0;
 
@@ -117,7 +117,7 @@ namespace aslam {
     ///        filled with the next best matches until either all buckets are
     ///        full or all matches have been accepted.
     ///        The matches are expected to be exclusive.
-    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches,
+    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches_A_B,
                                       VisualFrame* apple_frame,
                                       VisualFrame* banana_frame);
    private:
