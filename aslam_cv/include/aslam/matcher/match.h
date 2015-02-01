@@ -8,13 +8,13 @@ namespace aslam {
 /// \brief A struct to encapsulate a match between two lists and associated
 ///        matching score. There are two lists, A and B and the matches are
 ///        indices into these lists.
-struct Match {
+struct MatchWithScore {
   /// \brief Initialize to an invalid match.
-  Match()
+  MatchWithScore()
       : correspondence {-1, -1}, score(0.0) {}
 
   /// \brief Initialize with correspondences and a score.
-  Match(int index_apple, int index_banana, double _score)
+  MatchWithScore(int index_apple, int index_banana, double _score)
       : correspondence {index_apple, index_banana}, score(_score) {}
 
   /// \brief Get the index into list A.
@@ -44,14 +44,14 @@ struct Match {
     return score;
   }
 
-  bool operator<(const Match &other) const {
+  bool operator<(const MatchWithScore &other) const {
     return this->score < other.score;
   }
-  bool operator>(const Match &other) const {
+  bool operator>(const MatchWithScore &other) const {
     return this->score > other.score;
   }
 
-  bool operator==(const Match& other) const {
+  bool operator==(const MatchWithScore& other) const {
     return (this->correspondence[0] == other.correspondence[0]) &&
            (this->correspondence[1] == other.correspondence[1]) &&
            (this->score == other.score);
@@ -61,6 +61,8 @@ struct Match {
   double score;
 };
 
+typedef std::vector<MatchWithScore> MatchesWithScore;
+typedef std::pair<size_t, size_t> Match;
 typedef std::vector<Match> Matches;
 
 }  // namespace aslam
