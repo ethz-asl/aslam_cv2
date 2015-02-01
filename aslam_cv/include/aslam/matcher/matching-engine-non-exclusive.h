@@ -27,15 +27,15 @@ class MatchingEngineNonExclusive : public MatchingEngine<MatchingProblem> {
 
   MatchingEngineNonExclusive() {};
   virtual ~MatchingEngineNonExclusive() {};
-  virtual bool match(MatchingProblem* problem, typename aslam::Matches* matches);
+  virtual bool match(MatchingProblem* problem, typename aslam::MatchesWithScore* matches_A_B);
 };
 
 template<typename MatchingProblem>
 bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem,
-                                                        aslam::Matches* matches) {
+                                                        aslam::MatchesWithScore* matches_A_B) {
   CHECK_NOTNULL(problem);
-  CHECK_NOTNULL(matches);
-  matches->clear();
+  CHECK_NOTNULL(matches_A_B);
+  matches_A_B->clear();
 
   if (problem->doSetup()) {
     size_t num_bananas = problem->numBananas();
@@ -51,10 +51,10 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
       }
 
       if (best_candidate != candidates.end()) {
-        matches->emplace_back(best_candidate->index_apple, index_banana, best_candidate->score);
+        matches_A_B->emplace_back(best_candidate->index_apple, index_banana, best_candidate->score);
       }
     }
-    VLOG(10) << "Matched " << matches->size() << " keypoints.";
+    VLOG(10) << "Matched " << matches_A_B->size() << " keypoints.";
     return true;
   } else {
     LOG(ERROR) << "Setting up the matching problem (.doSetup()) failed.";

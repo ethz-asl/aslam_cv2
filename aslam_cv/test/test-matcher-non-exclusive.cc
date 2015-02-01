@@ -47,10 +47,10 @@ TEST_F(MatcherTest, EmptyMatch) {
                                                    q_A_B,
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
-  aslam::Matches matches;
-  matching_engine_.match(matching_problem.get(), &matches);
+  aslam::MatchesWithScore matches_A_B;
+  matching_engine_.match(matching_problem.get(), &matches_A_B);
 
-  EXPECT_TRUE(matches.empty());
+  EXPECT_TRUE(matches_A_B.empty());
 }
 
 TEST_F(MatcherTest, MatchIdentity) {
@@ -78,12 +78,12 @@ TEST_F(MatcherTest, MatchIdentity) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-  aslam::Matches matches;
-  matching_engine_.match(matching_problem.get(), &matches);
+  aslam::MatchesWithScore matches_A_B;
+  matching_engine_.match(matching_problem.get(), &matches_A_B);
 
-  ASSERT_EQ(1u, matches.size());
+  ASSERT_EQ(1u, matches_A_B.size());
 
-  aslam::Match match = matches[0];
+  aslam::MatchWithScore match = matches_A_B[0];
   EXPECT_EQ(0, match.getIndexApple());
   EXPECT_EQ(0, match.getIndexBanana());
   EXPECT_DOUBLE_EQ(1.0, match.score);
@@ -131,11 +131,11 @@ TEST_F(MatcherTest, MatchRotation) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-  aslam::Matches matches;
-  matching_engine_.match(matching_problem.get(), &matches);
+  aslam::MatchesWithScore matches_A_B;
+  matching_engine_.match(matching_problem.get(), &matches_A_B);
 
-  ASSERT_EQ(1u, matches.size());
-  aslam::Match match = matches[0];
+  ASSERT_EQ(1u, matches_A_B.size());
+  aslam::MatchWithScore match = matches_A_B[0];
   EXPECT_EQ(0, match.getIndexApple());
   EXPECT_EQ(0, match.getIndexBanana());
   EXPECT_DOUBLE_EQ(1.0, match.score);
@@ -164,10 +164,10 @@ TEST_F(MatcherTest, TestImageSpaceBorderOut) {
       aslam::MatchingProblemFrameToFrame>(apple_frame_, banana_frame_, q_A_B,
                                           image_space_distance_threshold_,
                                           hamming_distance_threshold_);
-  aslam::Matches matches;
-  matching_engine_.match(matching_problem.get(), &matches);
+  aslam::MatchesWithScore matches_A_B;
+  matching_engine_.match(matching_problem.get(), &matches_A_B);
 
-  EXPECT_TRUE(matches.empty());
+  EXPECT_TRUE(matches_A_B.empty());
 }
 
 TEST_F(MatcherTest, TestImageSpaceBorderIn) {
@@ -196,10 +196,10 @@ TEST_F(MatcherTest, TestImageSpaceBorderIn) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-  aslam::Matches matches;
-  matching_engine_.match(matching_problem.get(), &matches);
+  aslam::MatchesWithScore matches_A_B;
+  matching_engine_.match(matching_problem.get(), &matches_A_B);
 
-  EXPECT_EQ(1u, matches.size());
+  EXPECT_EQ(1u, matches_A_B.size());
 }
 
 TEST_F(MatcherTest, TestComplex) {
@@ -270,10 +270,10 @@ TEST_F(MatcherTest, TestComplex) {
                                                    image_space_distance_threshold_,
                                                    hamming_distance_threshold_);
 
-  aslam::Matches matches;
-  matching_engine_.match(matching_problem.get(), &matches);
+  aslam::MatchesWithScore matches_A_B;
+  matching_engine_.match(matching_problem.get(), &matches_A_B);
 
-  aslam::Matches ground_truth_matches;
+  aslam::MatchesWithScore ground_truth_matches;
   // The ground truth matches: keypoint 0 and 1 are within image_space distance!
   // The non-exclusive matcher matches banana 0 to apple 0 because they both have zero bits
   // different, whereas banana 0 and apple 1 have 1 bit different.
@@ -285,10 +285,10 @@ TEST_F(MatcherTest, TestComplex) {
   ground_truth_matches.emplace_back(3, 3, 1.0);
   ground_truth_matches.emplace_back(4, 4, 1.0);
 
-  size_t num_matches = matches.size();
+  size_t num_matches = matches_A_B.size();
   EXPECT_EQ(ground_truth_matches.size(), num_matches);
   for (size_t i = 0; i < num_matches; ++i) {
-    EXPECT_EQ(matches[i], ground_truth_matches[i]);
+    EXPECT_EQ(matches_A_B[i], ground_truth_matches[i]);
   }
 }
 

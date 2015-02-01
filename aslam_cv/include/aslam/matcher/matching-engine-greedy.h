@@ -23,14 +23,15 @@ class MatchingEngineGreedy : public MatchingEngine<MatchingProblem> {
 
   MatchingEngineGreedy() {};
   virtual ~MatchingEngineGreedy() {};
-  virtual bool match(MatchingProblem* problem, Matches* matches);
+  virtual bool match(MatchingProblem* problem, MatchesWithScore* matches_A_B);
 };
 
 template<typename MatchingProblem>
-bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matches* matches) {
+bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem,
+						  MatchesWithScore* matches_A_B) {
   CHECK_NOTNULL(problem);
-  CHECK_NOTNULL(matches);
-  matches->clear();
+  CHECK_NOTNULL(matches_A_B);
+  matches_A_B->clear();
   bool status = problem->doSetup();
   size_t numA = problem->numApples();
   size_t numB = problem->numBananas();
@@ -43,21 +44,21 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
     totalNumCandidates += candidates[b].size();
   }
 
-  matches->reserve(totalNumCandidates);
+  matches_A_B->reserve(totalNumCandidates);
   for (unsigned int b = 0; b < numB; ++b) {
     // compute the score for each candidate and put in queue
     for (const typename MatchingProblem::Candidate& candidate_for_b : candidates[b]) {
-      matches->emplace_back(candidate_for_b.index_apple, b, candidate_for_b.score);
+      matches_A_B->emplace_back(candidate_for_b.index_apple, b, candidate_for_b.score);
     }
   }
   // reverse sort with reverse iterators
-  std::sort(matches->rbegin(), matches->rend());
+  std::sort(matches_A_B->rbegin(), matches_A_B->rend());
 
   // compress in place best unique match
   std::vector<unsigned char> assignedA(numA, false);
 
-  auto match_out = matches->begin();
-  for (auto match_in = matches->begin(); match_in != matches->end(); ++match_in) {
+  auto match_out = matches_A_B->begin();
+  for (auto match_in = matches_A_B->begin(); match_in != matches_A_B->end(); ++match_in) {
     int a = match_in->getIndexApple();
 
     if (!assignedA[a]) {
@@ -67,10 +68,11 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem, Matc
   }
 
   // trim end of vector
-  matches->erase(match_out, matches->end());
+  matches_A_B->erase(match_out, matches_A_B->end());
 
   return status;
 }
+
 }
 
 #endif //ASLAM_CV_MATCHINGENGINE_GREEDY_H_
