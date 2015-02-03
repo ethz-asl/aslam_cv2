@@ -7,8 +7,7 @@
 
 namespace aslam {
 
-void convertMatches(const MatchesWithScore& matches_with_score_A_B,
-                           Matches* matches_A_B) {
+void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B) {
   CHECK_NOTNULL(matches_A_B);
   matches_A_B->clear();
   for (const aslam::MatchWithScore& match : matches_with_score_A_B) {
@@ -21,9 +20,10 @@ void convertMatches(const MatchesWithScore& matches_with_score_A_B,
 }
 
 size_t extractMatchesFromTrackIdChannel(const aslam::VisualFrame& frame_kp1,
-    const aslam::VisualFrame& frame_k, aslam::Matches* matches_kp1_kp) {
+                                        const aslam::VisualFrame& frame_k,
+                                        aslam::Matches* matches_kp1_kp) {
   CHECK_NOTNULL(matches_kp1_kp);
-  CHECK(frame_kp1.getRawCameraGeometry().get() == frame_k.getRawCameraGeometry().get());
+  CHECK_EQ(frame_kp1.getRawCameraGeometry().get(), frame_k.getRawCameraGeometry().get());
   const Eigen::VectorXi& track_ids_kp1 = frame_kp1.getTrackIds();
   const Eigen::VectorXi& track_ids_k = frame_k.getTrackIds();
 
@@ -56,7 +56,7 @@ size_t extractMatchesFromTrackIdChannels(const aslam::VisualNFrame& nframe_kp1,
                                          const aslam::VisualNFrame& nframe_k,
                                          std::vector<aslam::Matches>* rig_matches_kp1_kp) {
   CHECK_NOTNULL(rig_matches_kp1_kp);
-  CHECK(nframe_kp1.getNCameraShared().get() == nframe_k.getNCameraShared().get());
+  CHECK_EQ(nframe_kp1.getNCameraShared().get(), nframe_k.getNCameraShared().get());
 
   size_t num_cameras = nframe_kp1.getNumCameras();
   rig_matches_kp1_kp->clear();
@@ -74,16 +74,17 @@ size_t extractMatchesFromTrackIdChannels(const aslam::VisualNFrame& nframe_kp1,
 double getMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
                                     const aslam::VisualNFrame& nframe_k,
                                     const std::vector<aslam::Matches>& matches_kp1_kp) {
-  CHECK(nframe_kp1.getNCameraShared().get() == nframe_k.getNCameraShared().get());
+  CHECK_EQ(nframe_kp1.getNCameraShared().get(), nframe_k.getNCameraShared().get());
 
-  size_t num_matches = countRigMatches(matches_kp1_kp);
+  const size_t num_cameras = nframe_kp1.getNumCameras();
+  CHECK_EQ(matches_kp1_kp.size(), num_cameras);
+  const size_t num_matches = countRigMatches(matches_kp1_kp);
   std::vector<double> disparity_px(num_matches);
 
   size_t match_idx = 0;
-  for (size_t cam_idx = 0; cam_idx < nframe_kp1.getNumCameras(); ++cam_idx) {
+  for (size_t cam_idx = 0; cam_idx < num_cameras; ++cam_idx) {
     const Eigen::Matrix2Xd& keypoints_kp1 = nframe_kp1.getFrame(cam_idx).getKeypointMeasurements();
     const Eigen::Matrix2Xd& keypoints_k = nframe_k.getFrame(cam_idx).getKeypointMeasurements();
-
     for (const aslam::Match& match_kp1_kp : matches_kp1_kp[cam_idx]) {
       CHECK_LT(static_cast<int>(match_kp1_kp.first), keypoints_kp1.cols());
       CHECK_LT(static_cast<int>(match_kp1_kp.second), keypoints_k.cols());
