@@ -4,6 +4,7 @@
 #include <random>
 #include <vector>
 
+namespace aslam {
 namespace common {
 template <typename PointerType>
 inline FeatureDescriptorRefBase<
@@ -215,4 +216,6 @@ void DescriptorMean(
 }
 
 }  // namespace common
+}  // namespace aslam
+
 #endif  // ASLAM_COMMON_FEATURE_DESCRIPTOR_REF_INL_H_

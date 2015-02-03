@@ -37,15 +37,14 @@ struct TriangulationResult {
   explicit operator bool() const { return wasTriangulationSuccessful(); };
 
   /// \brief Convenience function to print the state using streams.
-  friend std::ostream& operator<< (std::ostream& out,
-                                   const TriangulationResult& state)  {
+  friend std::ostream& operator<< (std::ostream& out, const TriangulationResult& state)  {
     std::string enum_str;
     switch (state.status_){
-      case Status::kSuccessful:                enum_str = "SUCCESSFUL"; break;
-      case Status::kTooFewMeasurments:      enum_str = "TOO_FEW_MEASUREMENTS"; break;
-      case Status::kUnobservable:              enum_str = "UNOBSERVABLE"; break;
+      case Status::kSuccessful:         enum_str = "SUCCESSFUL"; break;
+      case Status::kTooFewMeasurments:  enum_str = "TOO_FEW_MEASUREMENTS"; break;
+      case Status::kUnobservable:       enum_str = "UNOBSERVABLE"; break;
       default:
-        case Status::kUninitialized:             enum_str = "UNINITIALIZED"; break;
+        case Status::kUninitialized:    enum_str = "UNINITIALIZED"; break;
     }
     out << "ProjectionResult: " << enum_str << std::endl;
     return out;
@@ -67,7 +66,7 @@ struct TriangulationResult {
 ///       normalized camera plane.
 /// @param measurements_normalized Keypoint measurements on normalized camera
 ///       plane.
-/// @param T_W_B Pose of the body frame of reference w.r.t. the global frame,
+/// @param T_G_B Pose of the body frame of reference w.r.t. the global frame,
 ///       expressed in the global frame.
 /// @param T_B_C Pose of the camera w.r.t. the body frame expressed in the body
 ///       frame of reference.
