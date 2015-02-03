@@ -20,7 +20,7 @@ class MatchingEngine {
 
   virtual bool match(MatchingProblem* problem, MatchesWithScore* matches_A_B) = 0;
 
-  bool match(MatchingProblem* problem, Matches* matches_A_B) {
+  virtual bool match(MatchingProblem* problem, Matches* matches_A_B) {
     CHECK_NOTNULL(problem);
     CHECK_NOTNULL(matches_A_B);
     MatchesWithScore matches_with_score_A_B;
