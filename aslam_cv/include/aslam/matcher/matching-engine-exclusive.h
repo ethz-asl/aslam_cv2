@@ -28,6 +28,7 @@ namespace aslam {
 template<typename MatchingProblem>
 class MatchingEngineExclusive : public MatchingEngine<MatchingProblem> {
  public:
+  using MatchingEngine<MatchingProblem>::match;
   FRIEND_TEST(PriorityMatchingTest, TestAssignBest);
 
   ASLAM_POINTER_TYPEDEFS(MatchingEngineExclusive);

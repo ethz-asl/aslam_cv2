@@ -31,7 +31,7 @@ namespace aslam {
     ///
     /// @param[in]  frame   Pointer to the visual frame.
     /// @return             Pointer to the track id channel.
-    static inline Eigen::VectorXi* createAndGetTrackIdChannel(VisualFrame* frame);
+    static Eigen::VectorXi* createAndGetTrackIdChannel(VisualFrame* frame);
 
    protected:
     size_t track_id_provider_;
