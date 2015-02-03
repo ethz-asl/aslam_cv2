@@ -45,6 +45,7 @@
 #include <brisk/internal/neon-helpers.h>
 #endif  // __ARM_NEON__
 
+namespace aslam {
 namespace common {
 
 #ifdef __GNUC__
@@ -137,4 +138,5 @@ const int numberOf128BitWords) {
 #endif  // __ARM_NEON__
 
 }  // namespace common
+}  // namespace aslam
 #endif  // ASLAM_COMMON_HAMMING_INL_H_

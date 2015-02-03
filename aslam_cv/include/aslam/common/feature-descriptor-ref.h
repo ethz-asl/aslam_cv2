@@ -8,6 +8,7 @@
 
 #include <aslam/common/hamming.h>
 
+namespace aslam {
 namespace common {
 enum AccessorLevels {
   // Read-only access via a member function.
@@ -141,10 +142,9 @@ inline void FlipNRandomBits(size_t num_bits_to_flip, FeatureDescriptorRef* descr
 }
 
 template <typename PointerType, int AccessorLevel>
-inline size_t GetNumBitsDifferent(const FeatureDescriptorRefBase<PointerType, AccessorLevel>&
-                                      descriptor1,
-                                  const FeatureDescriptorRefBase<PointerType, AccessorLevel>&
-                                      descriptor2) {
+inline size_t GetNumBitsDifferent(
+    const FeatureDescriptorRefBase<PointerType, AccessorLevel>& descriptor1,
+    const FeatureDescriptorRefBase<PointerType, AccessorLevel>& descriptor2) {
   const uint32_t descriptor_size = descriptor1.size();
   const uint32_t descriptor2_size = descriptor2.size();
   CHECK_EQ(descriptor_size, descriptor2_size) << "Cannot compare descriptors of unequal size.";
@@ -158,6 +158,7 @@ inline void DescriptorMean(
     FeatureDescriptorRef* mean);
 
 }  // namespace common
+}  // namespace aslam
 
 #include "./feature-descriptor-ref-inl.h"
 #endif  // ASLAM_COMMON_FEATURE_DESCRIPTOR_REF_H_
