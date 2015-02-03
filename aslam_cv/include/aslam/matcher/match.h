@@ -84,18 +84,18 @@ inline size_t countRigMatches(const std::vector<std::vector<MatchType>>& rig_mat
 
 /// Select and return N random matches for each camera in the rig.
 template<typename MatchesType>
-std::vector<MatchesType> pickNRandomRigMatches(size_t N_per_camera,
-                                            const std::vector<MatchesType>& rig_matches) {
-  CHECK_GT(N_per_camera, 0u);
-  size_t num_camera = rig_matches.size();
-  std::vector<MatchesType> subsampled_rig_matches(num_camera);
+std::vector<MatchesType> pickNRandomRigMatches(size_t n_per_camera,
+                                               const std::vector<MatchesType>& rig_matches) {
+  CHECK_GT(n_per_camera, 0u);
+  size_t num_cameras = rig_matches.size();
+  std::vector<MatchesType> subsampled_rig_matches(num_cameras);
 
-  for (size_t cam_idx = 0; cam_idx < num_camera; ++cam_idx) {
+  for (size_t cam_idx = 0; cam_idx < num_cameras; ++cam_idx) {
     MatchesType camera_matches = rig_matches[cam_idx];
-    if (camera_matches.size() <= N_per_camera) {
+    if (camera_matches.size() <= n_per_camera) {
       subsampled_rig_matches[cam_idx] = camera_matches;
     } else {
-      subsampled_rig_matches[cam_idx] = common::drawNRandomElements(N_per_camera, camera_matches);
+      subsampled_rig_matches[cam_idx] = common::drawNRandomElements(n_per_camera, camera_matches);
     }
   }
   CHECK_EQ(rig_matches.size(), subsampled_rig_matches.size());
