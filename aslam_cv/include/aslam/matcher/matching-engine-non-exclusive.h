@@ -22,6 +22,7 @@ namespace aslam {
 template<typename MatchingProblem>
 class MatchingEngineNonExclusive : public MatchingEngine<MatchingProblem> {
  public:
+  using MatchingEngine<MatchingProblem>::match;
   ASLAM_POINTER_TYPEDEFS(MatchingEngineNonExclusive);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngineNonExclusive);
 
