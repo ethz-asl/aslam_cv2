@@ -5,6 +5,7 @@
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/cameras/distortion-fisheye.h>
+#include <aslam/cameras/distortion-null.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/common/yaml-serialization-eigen.h>
 
@@ -20,7 +21,7 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
   Distortion::UniquePtr distortion;
   switch(distortion_type) {
     case Distortion::Type::kNoDistortion:
-      distortion = nullptr;
+      distortion.reset(new NullDistortion());
       break;
     case Distortion::Type::kEquidistant:
       distortion.reset(new EquidistantDistortion(distortion_parameters));
@@ -36,11 +37,9 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
         << static_cast<std::underlying_type<Distortion::Type>::type>(
             distortion_type);
   }
-  if (distortion != nullptr) {
-    CHECK(distortion->distortionParametersValid(distortion_parameters))
-        << "Invalid distortion parameters: "
-        << distortion_parameters.transpose();
-  }
+  CHECK(distortion->distortionParametersValid(distortion_parameters))
+    << "Invalid distortion parameters: "
+    << distortion_parameters.transpose();
 
   Camera::Ptr camera;
   switch(camera_type) {

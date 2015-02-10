@@ -33,14 +33,10 @@ const ProjectionResult PinholeCamera::project3Functional(
   keypoint[1] = point_3d[1] * rz;
 
   // Distort the point (if a distortion model is set)
-  if (distortion_) {
-    const DistortionType& distortion =
-        static_cast<const DistortionType&>(*distortion_);
-    Eigen::Matrix<ScalarType, 2, 1> out_keypoint;
-    distortion.distortUsingExternalCoefficients(
-        distortion_coefficients_external, keypoint, &out_keypoint);
-    keypoint = out_keypoint;
-  }
+  const DistortionType& distortion =
+      static_cast<const DistortionType&>(*distortion_);
+  distortion.distortUsingExternalCoefficients(
+      distortion_coefficients_external, keypoint, &keypoint);
 
   (*out_keypoint)[0] = fu * keypoint[0] + cu;
   (*out_keypoint)[1] = fv * keypoint[1] + cv;

@@ -22,7 +22,7 @@ namespace aslam {
     return CHECK_NOTNULL(frame->getTrackIdsMutable());
   }
 
-  void SimpleTrackManager::applyMatchesToFrames(const Matches& matches,
+  void SimpleTrackManager::applyMatchesToFrames(const MatchesWithScore& matches_A_B,
                                                 VisualFrame* apple_frame,
                                                 VisualFrame* banana_frame) {
     CHECK_NOTNULL(apple_frame);
@@ -38,12 +38,14 @@ namespace aslam {
     std::unordered_set<int> consumed_apples;
     std::unordered_set<int> consumed_bananas;
 
-    for (const Match& match : matches) {
+    for (const MatchWithScore& match : matches_A_B) {
       int index_apple = match.getIndexApple();
-      CHECK_LT(index_apple, num_apple_track_ids);
+      CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
+      CHECK_GE(index_apple, 0);
 
       int index_banana = match.getIndexBanana();
-      CHECK_LT(index_banana, num_banana_track_ids);
+      CHECK_LT(index_banana, static_cast<int>(num_banana_track_ids));
+      CHECK_GE(index_banana, 0);
 
       addToSetsAndCheckExclusiveness(index_apple,
                                      index_banana,
@@ -51,7 +53,7 @@ namespace aslam {
                                      &consumed_bananas);
 
       int track_id_apple = apple_track_ids(index_apple);
-      int track_id_banana= banana_track_ids(index_banana);
+      int track_id_banana = banana_track_ids(index_banana);
 
       if ((track_id_apple) < 0 && (track_id_banana < 0)) {
         // Both track ids are < 0. Start a new track.
@@ -79,7 +81,7 @@ namespace aslam {
     }
   }
 
-  void UniformTrackManager::applyMatchesToFrames(const Matches& matches,
+  void UniformTrackManager::applyMatchesToFrames(const MatchesWithScore& matches_A_B,
                                                  VisualFrame* apple_frame,
                                                  VisualFrame* banana_frame) {
     CHECK_NOTNULL(apple_frame);
@@ -118,18 +120,18 @@ namespace aslam {
                                 number_of_tracking_buckets_root_ +
                               static_cast<int>(std::floor(bin_x)));
 
-          CHECK_LT(bin_index, static_cast<int>(buckets.size()));
+          CHECK_LT(bin_index, buckets.size());
           return bin_index;
         };
 
-    std::set<Match, std::greater<Match> > candidates_for_new_tracks;
+    std::set<MatchWithScore, std::greater<MatchWithScore> > candidates_for_new_tracks;
 
-    for (const Match& match : matches) {
+    for (const MatchWithScore& match : matches_A_B) {
       int index_apple = match.getIndexApple();
-      CHECK_LT(index_apple, num_apple_track_ids);
+      CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
 
       int index_banana = match.getIndexBanana();
-      CHECK_LT(index_banana, num_banana_track_ids);
+      CHECK_LT(index_banana, static_cast<int>(num_banana_track_ids));
 
       addToSetsAndCheckExclusiveness(index_apple,
                                      index_banana,
@@ -175,10 +177,10 @@ namespace aslam {
           match_score_very_strong_new_tracks_threshold_) break;
 
       int index_apple = iterator_matches_fo_new_tracks->getIndexApple();
-      CHECK_LT(index_apple, num_apple_track_ids);
+      CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
 
       int index_banana = iterator_matches_fo_new_tracks->getIndexBanana();
-      CHECK_LT(index_banana, num_banana_track_ids);
+      CHECK_LT(index_banana, static_cast<int>(num_banana_track_ids));
 
       // Increment the corresponding bucket.
       const Eigen::Vector2d& keypoint =
@@ -196,10 +198,10 @@ namespace aslam {
     for (; iterator_matches_fo_new_tracks != candidates_for_new_tracks.end();
         ++iterator_matches_fo_new_tracks) {
       int index_apple = iterator_matches_fo_new_tracks->getIndexApple();
-      CHECK_LT(index_apple, num_apple_track_ids);
+      CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
 
       int index_banana = iterator_matches_fo_new_tracks->getIndexBanana();
-      CHECK_LT(index_banana, num_banana_track_ids);
+      CHECK_LT(index_banana, static_cast<int>(num_banana_track_ids));
 
       // Get the bucket index and check if there is still space left.
       const Eigen::Vector2d& keypoint =

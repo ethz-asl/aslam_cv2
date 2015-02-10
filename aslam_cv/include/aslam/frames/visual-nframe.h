@@ -24,6 +24,7 @@ class VisualNFrame {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef std::vector<VisualNFrame::Ptr> PtrVector;
+  typedef std::vector<VisualNFrame::ConstPtr> ConstPtrVector;
 
  protected:
   /// \brief Creates an empty visual VisualNFrame.
@@ -127,6 +128,8 @@ class VisualNFrame {
 
   /// \brief Get the min. timestamp over all frames in nanoseconds.
   int64_t getMinTimestampNanoseconds() const;
+  /// \brief Get the max. timestamp over all frames in nanoseconds.
+  int64_t getMaxTimestampNanoseconds() const;
 
   /// \brief Binary equality.
   bool operator==(const VisualNFrame& other) const;

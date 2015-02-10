@@ -26,7 +26,7 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
     // Parse the id.
     aslam::NCameraId ncam_id;
     std::string id_string;
-    if (!YAML::safeGet<std::string>(node, "id", &id_string)) {
+    if (!node["id"] || !YAML::safeGet<std::string>(node, "id", &id_string)) {
       LOG(WARNING) << "Unable to get the id for the ncamera. Generating new random id.";
       ncam_id.randomize();
     } else {
@@ -46,7 +46,7 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
       return true;
     }
 
-    aslam::TransformationVector T_c_bs;
+    aslam::TransformationVector T_Ci_B;
     std::vector<aslam::Camera::Ptr> cameras;
     for (size_t camera_index = 0; camera_index < num_cameras; ++camera_index) {
       // Decode the camera
@@ -76,28 +76,30 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
         return true;
       }
 
-      Eigen::Vector3d t_b_c;
-      if (!YAML::safeGet(extrinsics_node, "t_b_c", &t_b_c)) {
-        LOG(ERROR) << "Unable to get extrinsic position t_b_c for camera " << camera_index;
+      // The vector from the origin of B to the origin of C expressed in B
+      Eigen::Vector3d p_B_C;
+      if (!YAML::safeGet(extrinsics_node, "p_B_C", &p_B_C)) {
+        LOG(ERROR) << "Unable to get extrinsic position p_B_C for camera " << camera_index;
         return true;
       }
 
-      Eigen::Matrix3d C_b_c_raw;
-      if (!YAML::safeGet(extrinsics_node, "C_b_c", &C_b_c_raw)) {
-        LOG(ERROR) << "Unable to get extrinsic rotation q_B_C for camera " << camera_index;
+      // Get the quaternion. Hamiltonian, scalar first.
+      Eigen::Matrix3d R_B_C_raw;
+      if (!YAML::safeGet(extrinsics_node, "R_B_C", &R_B_C_raw)) {
+        LOG(ERROR) << "Unable to get extrinsic rotation R_B_C for camera " << camera_index;
         return true;
       }
-      aslam::Quaternion q_b_c(C_b_c_raw);
+      aslam::Quaternion q_B_C = aslam::Quaternion::constructAndRenormalize(R_B_C_raw);
 
-      aslam::Transformation T_b_c(q_b_c, t_b_c);
+      aslam::Transformation T_B_C(q_B_C, p_B_C);
 
       // Fill in the data in the ncamera.
       cameras.push_back(camera);
-      T_c_bs.push_back(T_b_c.inverted());
+      T_Ci_B.push_back(T_B_C.inverted());
     }
 
     // Create the ncamera and fill in all the data.
-    ncamera.reset(new aslam::NCamera(ncam_id, T_c_bs, cameras, label));
+    ncamera.reset(new aslam::NCamera(ncam_id, T_Ci_B, cameras, label));
 
   } catch(const std::exception& e) {
     LOG(ERROR) << "Yaml exception during parsing: " << e.what();
@@ -124,13 +126,14 @@ Node convert<std::shared_ptr<aslam::NCamera> >::encode(
 
     camera_node["camera"]  = ncamera->getCameraShared(camera_index);
 
-    Eigen::Vector3d t_b_c = ncamera->get_T_C_B(camera_index).inverted().getPosition();
-    Eigen::Matrix3d C_b_c =
-        ncamera->get_T_C_B(camera_index).inverted().getRotation().getRotationMatrix();
+    Eigen::Vector3d p_B_C = ncamera->get_T_C_B(camera_index).inverted().getPosition();
+    Eigen::Matrix3d R_B_C =
+        ncamera->get_T_C_B(camera_index).inverted().getRotationMatrix();
 
     Node extrinsics;
-    extrinsics["t_b_c"] = t_b_c;
-    extrinsics["C_b_c"] = C_b_c;
+    // The vector from the origin of B to the origin of C expressed in B
+    extrinsics["p_B_C"] = p_B_C;
+    extrinsics["R_B_C"] = R_B_C;
 
     camera_node["extrinsics"] = extrinsics;
 
