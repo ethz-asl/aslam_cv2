@@ -28,13 +28,15 @@ inline std::ostream& operator<<(std::ostream& out, const FeatureTrack& track) {
 
 inline std::ostream& operator<<(std::ostream& out, const FeatureTracks& tracks) {
   out << std::setiosflags(std::ios::fixed)
-         << std::setw(10) << "track id"
-         << std::setw(10) << "camera idx"
-         << std::setw(10) << "length";
+      << std::setfill (' ')
+      << std::setw(10) << "track id"
+      << std::setw(10) << "camera idx"
+      << std::setw(10) << "length" << std::endl;
 
   if (!tracks.empty()) {
     for (const FeatureTrack& track : tracks) {
         out << std::setiosflags(std::ios::fixed)
+            << std::setfill (' ')
             << std::setprecision(3)
             << std::setw(10) << track.getTrackId()
             << std::setw(10) << track.getFirstKeypointIdentifier().getFrameIndex()
@@ -42,6 +44,16 @@ inline std::ostream& operator<<(std::ostream& out, const FeatureTracks& tracks) 
     }
   } else {
     out << "No tracks!";
+  }
+  return out;
+}
+
+inline std::ostream& operator<<(std::ostream& out,
+                                const std::vector<aslam::FeatureTracks>& rig_tracks) {
+  size_t cam_idx = 0;
+  for(const aslam::FeatureTracks& camera_tracks : rig_tracks) {
+    out << "Camera: " << cam_idx++ << ":\n";
+    out << camera_tracks << "\n";
   }
   return out;
 }
