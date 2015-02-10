@@ -21,6 +21,24 @@ class FeatureTrack {
     keypoint_identifiers_.reserve(num_reserve_keypoints);
   }
 
+  inline double getDiagonalSqOfDisparityBoundingBox() const {
+    double u_min = std::numeric_limits<double>::max();
+    double u_max = std::numeric_limits<double>::min();
+    double v_min = std::numeric_limits<double>::max();
+    double v_max = std::numeric_limits<double>::min();
+
+    for (const KeypointIdentifier& kid : getKeypointIdentifiers()) {
+      const Eigen::Block<Eigen::Matrix2Xd, 2, 1> keypoint = kid.getKeypointMeasurement();
+      if (keypoint(0) <  u_min) u_min = keypoint(0);
+      if (keypoint(0) >= u_max) u_max = keypoint(0);
+      if (keypoint(1) <  v_min) v_min = keypoint(1);
+      if (keypoint(1) >= v_max) v_max = keypoint(1);
+    }
+    CHECK_GE(u_max, u_min);
+    CHECK_GE(v_max, v_min);
+    return (Eigen::Vector2d(u_min, v_min) - Eigen::Vector2d(u_max, v_max)).squaredNorm();
+  }
+
   inline size_t getTrackId() const {
     return track_id_;
   }

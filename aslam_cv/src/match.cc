@@ -32,20 +32,22 @@ size_t extractMatchesFromTrackIdChannel(const aslam::VisualFrame& frame_kp1,
   TrackIdKeypointIdxMap track_id_kp1_keypoint_idx_kp1_map;
   for (int keypoint_idx_kp1 = 0; keypoint_idx_kp1 < track_ids_kp1.rows(); ++keypoint_idx_kp1) {
     int track_id_kp1 = track_ids_kp1(keypoint_idx_kp1);
-    CHECK_NE(track_id_kp1, -1) << "There should be no unassociated keypoints for simulated data.";
+    // Skip unassociated keypoints.
+    if(track_id_kp1 < 0)
+      continue;
     track_id_kp1_keypoint_idx_kp1_map.insert(std::make_pair(track_id_kp1, keypoint_idx_kp1));
   }
-  CHECK_EQ(track_id_kp1_keypoint_idx_kp1_map.size(), frame_kp1.getNumKeypointMeasurements());
+  CHECK_LE(track_id_kp1_keypoint_idx_kp1_map.size(), frame_kp1.getNumKeypointMeasurements());
 
   // Create indices matche vector using the lookup table.
   matches_kp1_kp->clear();
   for (int keypoint_idx_k = 0; keypoint_idx_k < track_ids_k.rows(); ++keypoint_idx_k) {
     int track_id_k = track_ids_k(keypoint_idx_k);
-
+    if(track_id_k < 0)
+      continue;
     TrackIdKeypointIdxMap::const_iterator it = track_id_kp1_keypoint_idx_kp1_map.find(track_id_k);
     if (it != track_id_kp1_keypoint_idx_kp1_map.end()) {
       size_t keypoint_idx_kp1 = it->second;
-      CHECK_NE(keypoint_idx_k, -1);
       matches_kp1_kp->emplace_back(keypoint_idx_kp1, keypoint_idx_k);
     }
   }
