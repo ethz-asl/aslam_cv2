@@ -19,4 +19,15 @@ bool Camera::isKeypointVisible(const Eigen::Matrix<Scalar, 2, 1>& keypoint) cons
       && keypoint[1] < static_cast<Scalar>(imageHeight());
 }
 
+inline std::ostream& operator<<(std::ostream& out, const Camera::Type& value) {
+  static std::map<Camera::Type, std::string> names;
+  if (names.size() == 0) {
+    #define INSERT_ELEMENT(type, val) names[type::val] = #val
+    INSERT_ELEMENT(Camera::Type, kPinhole);
+    INSERT_ELEMENT(Camera::Type, kUnifiedProjection);
+    #undef INSERT_ELEMENT
+  }
+  return out << names[value];
+}
+
 }  // namespace aslam
