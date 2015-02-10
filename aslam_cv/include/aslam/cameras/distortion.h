@@ -189,4 +189,5 @@ class Distortion {
   Type distortion_type_;
 };
 }  // namespace aslam
+#include "distortion-inl.h"
 #endif  // ASLAM_CAMERAS_DISTORTION_H_
