@@ -155,7 +155,7 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
     return; // Point remains unchanged.
 
   int i;
-  for (i = 0; i < n; i++) {
+  for (i = 0; i < n; ++i) {
     y_tmp = ybar;
     distortUsingExternalCoefficients(&dist_coeffs, &y_tmp, &F);
     Eigen::Vector2d e(y - y_tmp);
