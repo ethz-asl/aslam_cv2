@@ -69,15 +69,9 @@ bool PinholeCamera::operator==(const Camera& other) const {
   if (!Camera::operator==(other))
     return false;
 
-  // Check if only one camera defines a distortion.
-  if ((distortion_ && !rhs->distortion_) || (!distortion_ && rhs->distortion_))
-    return false;
-
   // Compare the distortion model (if distortion is set for both).
-  if (distortion_ && rhs->distortion_) {
-    if ( !(*(this->distortion_) == *(rhs->distortion_)) )
-      return false;
-  }
+  if ( !(*(this->distortion_) == *(rhs->distortion_)) )
+    return false;
 
   return true;
 }
@@ -90,8 +84,7 @@ bool PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
   kp[0] = (kp[0] - cu()) / fu();
   kp[1] = (kp[1] - cv()) / fv();
 
-  if(distortion_)
-    distortion_->undistort(&kp);
+  distortion_->undistort(&kp);
 
   (*out_point_3d)[0] = kp[0];
   (*out_point_3d)[1] = kp[1];
@@ -120,8 +113,8 @@ const ProjectionResult PinholeCamera::project3Functional(
   CHECK_EQ(intrinsics->size(), kNumOfParams) << "intrinsics: invalid size!";
 
   const Eigen::VectorXd* distortion_coefficients;
-  if(!distortion_coefficients_external && distortion_) {
-    distortion_coefficients = &getDistortion()->getParameters();
+  if(!distortion_coefficients_external) {
+    distortion_coefficients = &getDistortion().getParameters();
   } else {
     distortion_coefficients = distortion_coefficients_external;
   }
@@ -142,28 +135,26 @@ const ProjectionResult PinholeCamera::project3Functional(
 
   // Distort the point and get the Jacobian wrt. keypoint.
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
-  if(distortion_) {
-    if(out_jacobian_distortion) {
-      // Calculate the Jacobian w.r.t to the distortion parameters,
-      // if requested (and distortion set).
-      distortion_->distortParameterJacobian(distortion_coefficients,
-                                            *out_keypoint,
-                                            out_jacobian_distortion);
-      out_jacobian_distortion->row(0) *= fu;
-      out_jacobian_distortion->row(1) *= fv;
-    }
+  if(out_jacobian_distortion) {
+    // Calculate the Jacobian w.r.t to the distortion parameters,
+    // if requested (and distortion set).
+    distortion_->distortParameterJacobian(distortion_coefficients,
+                                          *out_keypoint,
+                                          out_jacobian_distortion);
+    out_jacobian_distortion->row(0) *= fu;
+    out_jacobian_distortion->row(1) *= fv;
+  }
 
-    if(out_jacobian_point) {
-      // Distortion active and we want the Jacobian.
-      distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                    out_keypoint,
-                                                    &J_distortion);
-    } else {
-      // Distortion active but Jacobian NOT wanted.
-      distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                    out_keypoint,
-                                                    nullptr);
-    }
+  if(out_jacobian_point) {
+    // Distortion active and we want the Jacobian.
+    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
+                                                  out_keypoint,
+                                                  &J_distortion);
+  } else {
+    // Distortion active but Jacobian NOT wanted.
+    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
+                                                  out_keypoint,
+                                                  nullptr);
   }
 
   if(out_jacobian_point) {
@@ -256,17 +247,15 @@ std::unique_ptr<MappedUndistorter> PinholeCamera::createMappedUndistorter(
   CHECK_GE(alpha, 0.0); CHECK_LE(alpha, 1.0);
   CHECK_GT(scale, 0.0);
 
-  // Only remove distortion effects.
-  const bool undistort_to_pinhole = false;
-
   // Create a copy of the input camera (=this)
   PinholeCamera::Ptr input_camera(dynamic_cast<PinholeCamera*>(this->clone()));
   CHECK(input_camera);
 
   // Create the scaled output camera with removed distortion.
+  const bool kUndistortToPinhole = true;
   Eigen::Matrix3d output_camera_matrix = common::getOptimalNewCameraMatrix(*input_camera, alpha,
                                                                            scale,
-                                                                           undistort_to_pinhole);
+                                                                           kUndistortToPinhole);
 
   Eigen::Vector4d intrinsics;
   intrinsics <<  output_camera_matrix(0, 0), output_camera_matrix(1, 1),
@@ -279,8 +268,7 @@ std::unique_ptr<MappedUndistorter> PinholeCamera::createMappedUndistorter(
   CHECK(output_camera);
 
   cv::Mat map_u, map_v;
-  aslam::common::buildUndistortMap(*input_camera, *output_camera, undistort_to_pinhole, CV_16SC2,
-                                   map_u, map_v);
+  aslam::common::buildUndistortMap(*input_camera, *output_camera, CV_16SC2, map_u, map_v);
 
   return std::unique_ptr<MappedUndistorter>(
       new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
@@ -305,10 +293,8 @@ void PinholeCamera::printParameters(std::ostream& out, const std::string& text) 
   out << "  optical center (cols,rows): "
       << cu() << ", " << cv() << std::endl;
 
-  if(distortion_) {
-    out << "  distortion: ";
-    distortion_->printParameters(out, text);
-  }
+  out << "  distortion: ";
+  distortion_->printParameters(out, text);
 }
 const double PinholeCamera::kMinimumDepth = 1e-10;
 }  // namespace aslam

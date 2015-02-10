@@ -28,6 +28,7 @@ namespace aslam {
 template<typename MatchingProblem>
 class MatchingEngineExclusive : public MatchingEngine<MatchingProblem> {
  public:
+  using MatchingEngine<MatchingProblem>::match;
   FRIEND_TEST(PriorityMatchingTest, TestAssignBest);
 
   ASLAM_POINTER_TYPEDEFS(MatchingEngineExclusive);
@@ -36,7 +37,7 @@ class MatchingEngineExclusive : public MatchingEngine<MatchingProblem> {
   MatchingEngineExclusive() {};
   virtual ~MatchingEngineExclusive() {};
 
-  virtual bool match(MatchingProblem* problem, typename aslam::Matches* matches);
+  virtual bool match(MatchingProblem* problem, typename aslam::MatchesWithScore* matches_A_B);
 
 private:
   /// \brief Recursively assigns the next best apple to the given banana.
@@ -90,10 +91,10 @@ private:
 
 template<typename MatchingProblem>
 bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
-                                                     aslam::Matches* matches) {
+                                                     aslam::MatchesWithScore* matches_A_B) {
   CHECK_NOTNULL(problem);
-  CHECK_NOTNULL(matches);
-  matches->clear();
+  CHECK_NOTNULL(matches_A_B);
+  matches_A_B->clear();
 
   if (problem->doSetup()) {
     size_t num_bananas = problem->numBananas();
@@ -126,15 +127,15 @@ bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
     // Assign the exclusive matches to the match vector.
     for (const typename MatchingProblem::Candidate& candidate : temporary_matches_)  {
       if (candidate.index_apple >= 0) {
-        CHECK_LT(candidate.index_apple, num_apples);
+        CHECK_LT(candidate.index_apple, static_cast<int>(num_apples));
         CHECK_GE(candidate.index_banana, 0);
-        CHECK_LT(candidate.index_banana, num_bananas);
+        CHECK_LT(candidate.index_banana, static_cast<int>(num_bananas));
 
-        matches->emplace_back(candidate.index_apple, candidate.index_banana, candidate.score);
+        matches_A_B->emplace_back(candidate.index_apple, candidate.index_banana, candidate.score);
       }
     }
 
-    VLOG(10) << "Matched " << matches->size() << " keypoints.";
+    VLOG(10) << "Matched " << matches_A_B->size() << " keypoints.";
     return true;
   } else {
     LOG(ERROR) << "Setting up the matching problem (.doSetup()) failed.";

@@ -4,6 +4,7 @@
 #include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/cameras/distortion-fisheye.h>
+#include <aslam/cameras/distortion-null.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/common/yaml-serialization.h>
 
@@ -28,7 +29,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
       if(YAML::safeGet(distortion_config, "type", &distortion_type) &&
          YAML::safeGet(distortion_config, "parameters", &distortion_parameters)) {
         if(distortion_type == "none") {
-            distortion = nullptr;
+            distortion.reset(new aslam::NullDistortion());
         } else if(distortion_type == "equidistant") {
           if (aslam::EquidistantDistortion::areParametersValid(distortion_parameters)) {
             distortion.reset(new aslam::EquidistantDistortion(distortion_parameters));
@@ -64,8 +65,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
                 << "Valid values are {none, equidistant, fisheye, radial-tangential}.";
             return true;
         }
-        if (distortion != nullptr &&
-            !distortion->distortionParametersValid(distortion_parameters)) {
+        if (!distortion->distortionParametersValid(distortion_parameters)) {
           LOG(ERROR) << "Invalid distortion parameters: " << distortion_parameters.transpose();
           return true;
         }
@@ -75,6 +75,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
         return true;
       }
     } else {
+      distortion.reset(new aslam::NullDistortion());
       LOG(INFO) << "Found a camera with no distortion.";
     }
 
@@ -119,18 +120,19 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
       return true;
     }
     // ID
+    aslam::CameraId id;
     if(node["id"]) {
-      aslam::CameraId id;
       std::string id_string = node["id"].as<std::string>();
-      if(id.fromHexString(id_string)) {
-        camera->setId(id);
-      } else {
+      if(!id.fromHexString(id_string)) {
         LOG(ERROR) << "Unable to parse \"" << id_string << "\" as a hex string.";
         camera.reset();
         return true;
       }
+    } else {
+      LOG(WARNING) << "Unable to get the id for the camera. Generating new random id.";
+      id.randomize();
     }
-
+    camera->setId(id);
     if(node["line-delay-nanoseconds"]) {
       uint64_t line_delay_nanoseconds = camera->getLineDelayNanoSeconds();
       if(YAML::safeGet(node, "line-delay-nanoseconds", &line_delay_nanoseconds)){
@@ -146,7 +148,6 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
       camera->setLabel(node["label"].as<std::string>());
     }
   } catch(const std::exception& e) {
-    camera = nullptr;
     LOG(ERROR) << "Yaml exception during parsing: " << e.what();
     camera.reset();
     return true;
@@ -179,10 +180,10 @@ Node convert<std::shared_ptr<aslam::Camera> >::encode(
   }
   camera_node["intrinsics"] = camera->getParameters();
 
-  const aslam::Distortion* distortion = camera->getDistortion();
-  if(distortion && distortion->getType() != aslam::Distortion::Type::kNoDistortion) {
+  const aslam::Distortion& distortion = camera->getDistortion();
+  if(distortion.getType() != aslam::Distortion::Type::kNoDistortion) {
     Node distortion_node;
-    switch(distortion->getType()) {
+    switch(distortion.getType()) {
       case aslam::Distortion::Type::kEquidistant:
         distortion_node["type"] = "equidistant";
         break;
@@ -195,9 +196,9 @@ Node convert<std::shared_ptr<aslam::Camera> >::encode(
       default:
         LOG(ERROR) << "Unknown distortion model: "
           << static_cast<std::underlying_type<aslam::Distortion::Type>::type>(
-              distortion->getType());
+              distortion.getType());
     }
-    distortion_node["parameters"] = distortion->getParameters();
+    distortion_node["parameters"] = distortion.getParameters();
     camera_node["distortion"] = distortion_node;
   }
   return camera_node;

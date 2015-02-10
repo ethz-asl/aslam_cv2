@@ -16,7 +16,7 @@ typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
 
 void fillObservations(
     size_t n_observations,
-    const aslam::Transformation& T_B_C,
+    const aslam::Transformation& T_I_C,
     Eigen::Matrix3Xd* C_bearing_vectors,
     aslam::Aligned<std::vector, aslam::Transformation>::type* T_G_I) {
   CHECK_NOTNULL(C_bearing_vectors);
@@ -34,20 +34,20 @@ void fillObservations(
     aslam::Transformation T_G_I_current(test_pos, Eigen::Quaterniond::Identity());
     T_G_I->push_back(T_G_I_current);
 
-    aslam::Transformation T_C_W = (T_G_I_current * T_B_C).inverted();
-    C_bearing_vectors->block<3, 1>(0, i) = T_C_W.transform(kGPoint);
+    aslam::Transformation T_C_G = (T_G_I_current * T_I_C).inverted();
+    C_bearing_vectors->block<3, 1>(0, i) = T_C_G.transform(kGPoint);
   }
 }
 
 void fillObservations(
     size_t n_observations,
-    const aslam::Transformation& T_B_C,
+    const aslam::Transformation& T_I_C,
     aslam::Aligned<std::vector, Eigen::Vector2d>::type* measurements,
     aslam::Aligned<std::vector, aslam::Transformation>::type* T_G_I) {
   CHECK_NOTNULL(measurements);
   CHECK_NOTNULL(T_G_I);
   Eigen::Matrix3Xd C_bearing_vectors;
-  fillObservations(n_observations, T_B_C, &C_bearing_vectors, T_G_I);
+  fillObservations(n_observations, T_I_C, &C_bearing_vectors, T_G_I);
   measurements->resize(C_bearing_vectors.cols());
   for (int i = 0; i < C_bearing_vectors.cols(); ++i) {
     (*measurements)[i] = C_bearing_vectors.block<2, 1>(0, i) / C_bearing_vectors(2, i);
@@ -58,12 +58,12 @@ template <typename MeasurementsType>
 class TriangulationFixture : public testing::Test {
  protected:
   virtual void SetUp() {
-    T_B_C_.setIdentity();
+    T_I_C_.setIdentity();
   }
 
   void fillMeasurements(
       size_t n_observations) {
-    fillObservations(n_observations, T_B_C_, &measurements_, &T_G_I_);
+    fillObservations(n_observations, T_I_C_, &measurements_, &T_G_I_);
   }
 
   aslam::TriangulationResult triangulate(Eigen::Vector3d* result) const;
@@ -73,15 +73,15 @@ class TriangulationFixture : public testing::Test {
     T_G_I_.resize(n);
   }
 
-  void setLandmark(const Eigen::Vector3d& p_W) {
-    p_W_ = p_W;
+  void setLandmark(const Eigen::Vector3d& p_G) {
+    p_G_ = p_G;
   }
 
   void inferMeasurements(double angle_noise = 0.) {
     for (size_t i = 0; i < T_G_I_.size(); ++i) {
       // Ignoring IMU to camera transformation (set to identity in SetUp()).
       C_bearing_measurements_.block<3, 1>(0, i) =
-          T_G_I_[i].inverted().transform(p_W_);
+          T_G_I_[i].inverted().transform(p_G_);
       if (angle_noise > 0.) {
         aslam::Transformation perturbation;
         perturbation.setRandom(0., angle_noise);
@@ -95,21 +95,21 @@ class TriangulationFixture : public testing::Test {
   void setMeasurements(const Eigen::Matrix3Xd& measurements);
 
   void expectSuccess() {
-    Eigen::Vector3d p_W_estimate;
-    EXPECT_TRUE(triangulate(&p_W_estimate).wasTriangulationSuccessful());
-    EXPECT_TRUE(EIGEN_MATRIX_NEAR(p_W_, p_W_estimate, kDoubleTolerance));
+    Eigen::Vector3d p_G_estimate;
+    EXPECT_TRUE(triangulate(&p_G_estimate).wasTriangulationSuccessful());
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(p_G_, p_G_estimate, kDoubleTolerance));
   }
 
   void expectFailue() {
-    Eigen::Vector3d p_W_estimate;
-    EXPECT_FALSE(triangulate(&p_W_estimate).wasTriangulationSuccessful());
+    Eigen::Vector3d p_G_estimate;
+    EXPECT_FALSE(triangulate(&p_G_estimate).wasTriangulationSuccessful());
   }
 
-  aslam::Transformation T_B_C_;
+  aslam::Transformation T_I_C_;
   MeasurementsType measurements_;
   Eigen::Matrix3Xd C_bearing_measurements_;
   aslam::Aligned<std::vector, aslam::Transformation>::type T_G_I_;
-  Eigen::Vector3d p_W_;
+  Eigen::Vector3d p_G_;
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -118,7 +118,7 @@ class TriangulationFixture : public testing::Test {
 template<>
 aslam::TriangulationResult TriangulationFixture<Vector2dList>::triangulate(
     Eigen::Vector3d* result) const {
-  return aslam::linearTriangulateFromNViews(measurements_, T_G_I_, T_B_C_, result);
+  return aslam::linearTriangulateFromNViews(measurements_, T_G_I_, T_I_C_, result);
 }
 
 template<>
@@ -128,8 +128,8 @@ aslam::TriangulationResult TriangulationFixture<Eigen::Matrix3Xd>::triangulate(
       p_G_C(3, measurements_.cols());
   for (int i = 0; i < measurements_.cols(); ++i) {
     G_measurements.block<3, 1>(0, i) = T_G_I_[i].getRotationMatrix() *
-        T_B_C_.getRotationMatrix() * measurements_.block<3, 1>(0, i);
-    p_G_C.block<3, 1>(0, i) = T_G_I_[i] * T_B_C_.getPosition();
+        T_I_C_.getRotationMatrix() * measurements_.block<3, 1>(0, i);
+    p_G_C.block<3, 1>(0, i) = T_G_I_[i] * T_I_C_.getPosition();
   }
   return aslam::linearTriangulateFromNViews(G_measurements, p_G_C, result);
 }

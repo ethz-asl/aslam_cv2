@@ -7,6 +7,7 @@
 #include <aslam/common/memory.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/cameras/distortion-fisheye.h>
+#include <aslam/cameras/distortion-null.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/common/numdiff-jacobian-tester.h>
@@ -17,7 +18,12 @@
 using testing::Types;
 typedef Types<aslam::RadTanDistortion,
               aslam::FisheyeDistortion,
-              aslam::EquidistantDistortion> Implementations;
+              aslam::EquidistantDistortion> ImplementationsNoNull;
+
+typedef Types<aslam::RadTanDistortion,
+              aslam::FisheyeDistortion,
+              aslam::EquidistantDistortion,
+              aslam::NullDistortion> Implementations;
 
 ///////////////////////////////////////////////
 // Test fixture
@@ -30,32 +36,54 @@ class TestDistortions : public testing::Test {
   typename DistortionType::Ptr distortion_;
 };
 
+template <class DistortionType>
+class TestDistortionsNotNull : public TestDistortions<DistortionType> { };
+
 TYPED_TEST_CASE(TestDistortions, Implementations);
+TYPED_TEST_CASE(TestDistortionsNotNull, ImplementationsNoNull);
 
 ///////////////////////////////////////////////
 // Test cases
 ///////////////////////////////////////////////
 TYPED_TEST(TestDistortions, DistortAndUndistortUsingInternalParameters) {
-  Eigen::Vector2d keypoint(0.5, -0.4);
-  Eigen::Vector2d keypoint2 = keypoint;
-  this->distortion_->distort(&keypoint2);
-  this->distortion_->undistort(&keypoint2);
+  // Box on the normalized image plane corresponds to
+  // a pinhole camera with a resolution of 2000x2000, f=200 and c=1000.
+  static constexpr double box_side = 5.0;
+  static constexpr double step_size = 0.1;
 
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-12));
+  for (double u = -box_side / 2.0; u < box_side / 2.0; u += step_size) {
+    for (double v = -box_side / 2.0; v < box_side / 2.0; v += step_size) {
+      Eigen::Vector2d keypoint(u, v);
+      Eigen::Vector2d keypoint2 = keypoint;
+      this->distortion_->distort(&keypoint2);
+      this->distortion_->undistort(&keypoint2);
+
+      EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-9));
+    }
+  }
 }
 
 TYPED_TEST(TestDistortions, DistortAndUndistortUsingExternalParameters) {
-  Eigen::Vector2d keypoint(0.8, -0.2);
-  Eigen::Vector2d keypoint2 = keypoint;
-
   // Set new parameters.
   Eigen::VectorXd dist_coeff = this->distortion_->getParameters();
   this->distortion_->setParameters(dist_coeff / 2.0);
 
-  this->distortion_->distortUsingExternalCoefficients(&dist_coeff, &keypoint2, nullptr);
-  this->distortion_->undistortUsingExternalCoefficients(dist_coeff, &keypoint2);
+  // Box on the normalized image plane corresponds to
+  // a pinhole camera with a resolution of 2000x2000, f=200 and c=1000.
+  static constexpr double box_side = 5.0;
+  static constexpr double step_size = 0.1;
 
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-12));
+  for (double u = -box_side / 2.0; u < box_side / 2.0; u += step_size) {
+    for (double v = -box_side / 2.0; v < box_side / 2.0; v += step_size) {
+      Eigen::Vector2d keypoint(u, v);
+      Eigen::Vector2d keypoint2 = keypoint;
+
+      this->distortion_->distortUsingExternalCoefficients(&dist_coeff, &keypoint2, nullptr);
+      this->distortion_->undistortUsingExternalCoefficients(dist_coeff, &keypoint2);
+
+      EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-9));
+    }
+  }
 }
 
 TYPED_TEST(TestDistortions, DistortAndUndistortImageCenter) {
@@ -147,7 +175,7 @@ struct DistortionJacobianFunctor : public aslam::common::NumDiffFunctor<2, numDi
   const Eigen::Vector2d keypoint_;
 };
 
-TYPED_TEST(TestDistortions, JacobianWrtDistortion) {
+TYPED_TEST(TestDistortionsNotNull, JacobianWrtDistortion) {
   Eigen::Vector2d keypoint(0.3, -0.2);
   Eigen::VectorXd dist_coeffs = this->distortion_->getParameters();
 
@@ -181,11 +209,8 @@ TEST(TestParameter, testFisheyeDistortionParameters) {
   //Eigen::Matrix<double, 1, 1> invalid3 = Eigen::Matrix<double, 1, 1>::Zero();
   //EXPECT_FALSE(aslam::FisheyeDistortion::areParametersValid(invalid3));
 
-  Eigen::Matrix<double, 1, 1> invalid4 = Eigen::Matrix<double, 1, 1>::Zero();
-  aslam::FisheyeDistortion fisheye_distortion(invalid4);
-  double min_w = fisheye_distortion.getMinValidW();
-  double max_w = fisheye_distortion.getMaxValidW();
-
+  const double min_w = FisheyeDistortion::getMinValidW();
+  const double max_w = FisheyeDistortion::getMaxValidW();
   double invalid_w_5 = min_w - 1e-6;
   double invalid_w_6 = max_w + 1e-6;
 

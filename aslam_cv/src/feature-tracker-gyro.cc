@@ -46,9 +46,10 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   // Check that the required data is available in the frame
   CHECK(current_frame.hasDescriptors());
-  CHECK_EQ(static_cast<size_t>(current_frame.getDescriptors().rows()),
-           current_frame.getDescriptorSizeBytes());
-  CHECK_EQ(current_frame.getNumKeypointMeasurements(), current_frame.getDescriptors().cols());
+  CHECK_EQ(current_frame.getDescriptors().rows(),
+           static_cast<int>(current_frame.getDescriptorSizeBytes()));
+  CHECK_EQ(current_frame.getDescriptors().cols(),
+           static_cast<int>(current_frame.getNumKeypointMeasurements()));
 
   // Match the keypoints in the current frame to the previous one.
   std::vector<FeatureMatch> matches_prev_current;

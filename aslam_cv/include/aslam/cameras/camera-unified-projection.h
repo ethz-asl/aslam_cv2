@@ -31,6 +31,14 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  enum Parameters {
+    kXi = 0,
+    kFu = 1,
+    kFv = 2,
+    kCu = 3,
+    kCv = 4
+  };
+
   // TODO(slynen) Enable commented out PropertyTree support
   // UnifiedProjectionCamera(const sm::PropertyTree& config);
 
@@ -44,10 +52,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
  public:
   /// Copy constructor for clone operation.
-  UnifiedProjectionCamera(const UnifiedProjectionCamera& other) : Base(other) {
-    if (other.distortion_) // Clone distortion if model is set.
-      distortion_.reset(other.distortion_->clone());
-  };
+  UnifiedProjectionCamera(const UnifiedProjectionCamera& other) = default;
 
   void operator=(const UnifiedProjectionCamera&) = delete;
 
@@ -254,15 +259,15 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   }
 
   /// \brief The horizontal focal length in pixels.
-  double xi() const { return intrinsics_[0]; };
+  double xi() const { return intrinsics_[Parameters::kXi]; };
   /// \brief The horizontal focal length in pixels.
-  double fu() const { return intrinsics_[1]; };
+  double fu() const { return intrinsics_[Parameters::kFu]; };
   /// \brief The vertical focal length in pixels.
-  double fv() const { return intrinsics_[2]; };
+  double fv() const { return intrinsics_[Parameters::kFv]; };
   /// \brief The horizontal image center in pixels.
-  double cu() const { return intrinsics_[3]; };
+  double cu() const { return intrinsics_[Parameters::kCu]; };
   /// \brief The vertical image center in pixels.
-  double cv() const { return intrinsics_[4]; };
+  double cv() const { return intrinsics_[Parameters::kCv]; };
   /// \brief Returns the fov parameter.
   double fov_parameter(double xi) const { return (xi <= 1.0) ? xi : (1 / xi); };
 

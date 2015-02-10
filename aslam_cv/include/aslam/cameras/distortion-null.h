@@ -1,36 +1,30 @@
-#ifndef ASLAM_RADTAN_DISTORTION_H_
-#define ASLAM_RADTAN_DISTORTION_H_
-
-#include <Eigen/Core>
-#include <glog/logging.h>
+#ifndef ASLAM_NULL_DISTORTION_H_
+#define ASLAM_NULL_DISTORTION_H_
 
 #include <aslam/common/crtp-clone.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
+#include <Eigen/Core>
+#include <glog/logging.h>
 
 namespace aslam {
 
-/// \class RadTanDistortion
-/// \brief An implementation of the standard radial tangential distortion model for pinhole cameras.
-///        Two radial (k1, k2) and tangential (p1, p2) parameters are used in this implementation.
-///        The ordering of the parameter vector is: k1 k2 p1 p2
-///        NOTE: The inverse transformation (undistort) in this case is not available in
-///        closed form and so it is computed iteratively!
-class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
+/// \class NullDistortion
+/// \brief An implementation of the Null distortion model does nothing.
+class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
  public:
   /** \brief Number of parameters used for this distortion model. */
-  enum { kNumOfParams = 4 };
+  enum { kNumOfParams = 0 };
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
-  ASLAM_POINTER_TYPEDEFS(RadTanDistortion);
+  ASLAM_POINTER_TYPEDEFS(NullDistortion);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
   /// @{
 
-  /// \brief RadTanDistortion Ctor.
-  /// @param[in] distortionParams Vector containing the distortion parameter. (dim=4: k1, k2, p1, p2)
-  explicit RadTanDistortion(const Eigen::VectorXd& distortionParams);
+  /// \brief NullDistortion Ctor.
+  NullDistortion() : Base(Eigen::VectorXd(), Distortion::Type::kNoDistortion) { }
 
   /// \brief Convenience function to print the state using streams.
   std::ostream& operator<<(std::ostream& out) {
@@ -40,8 +34,8 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
 
  public:
   /// Copy constructor for clone operation.
-  RadTanDistortion(const RadTanDistortion&) = default;
-  void operator=(const RadTanDistortion&) = delete;
+  NullDistortion(const NullDistortion&) = default;
+  void operator=(const NullDistortion&) = delete;
 
   /// @}
 
@@ -59,9 +53,24 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
   /// @param[out]    out_jacobian The Jacobian of the distortion function with respect to small
   ///                             changes in the input point. If NULL is passed, the Jacobian
   ///                             calculation is skipped.
-  virtual void distortUsingExternalCoefficients(const Eigen::VectorXd* dist_coeffs,
-                                                Eigen::Vector2d* point,
-                                                Eigen::Matrix2d* out_jacobian) const;
+  virtual void distortUsingExternalCoefficients(const Eigen::VectorXd* /* dist_coeffs */,
+                                                Eigen::Vector2d* /* point */,
+                                                Eigen::Matrix2d* out_jacobian) const {
+    if(out_jacobian){ out_jacobian->setIdentity(); }
+  }
+
+  /// \brief Template version of the distortExternalCoeffs function.
+  /// @param[in]  dist_coeffs Vector containing the coefficients for the distortion model.
+  /// @param[in]  point       The point in the normalized image plane. After the function, this
+  ///                         point is distorted.
+  /// @param[out] out_point   The distorted point.
+  template <typename ScalarType, typename MDistortion>
+  void distortUsingExternalCoefficients(const Eigen::MatrixBase<MDistortion>& /* dist_coeffs */,
+                                        const Eigen::Matrix<ScalarType, 2, 1>& point,
+                                        Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
+    CHECK_NOTNULL(out_point);
+    *out_point = point;
+  }
 
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
@@ -70,9 +79,11 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
   /// @param[in]  point        The point in the normalized image plane.
   /// @param[out] out_jacobian The Jacobian of the distortion with respect to small changes in
   ///                          the distortion parameters.
-  virtual void distortParameterJacobian(const Eigen::VectorXd* dist_coeffs,
-                                        const Eigen::Vector2d& point,
-                                        Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const;
+  virtual void distortParameterJacobian(const Eigen::VectorXd* /* dist_coeffs */,
+                                        const Eigen::Vector2d& /* point */,
+                                        Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+    if(out_jacobian){ out_jacobian->resize(2,0); }
+  }
 
   /// @}
 
@@ -86,8 +97,9 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
   /// @param[in]      dist_coeffs  Vector containing the coefficients for the distortion model.
   /// @param[in,out]  point        The distorted point. After the function, this point is in the
   ///                              normalized image plane.
-  virtual void undistortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
-                                                  Eigen::Vector2d* point) const;
+  virtual void undistortUsingExternalCoefficients(
+      const Eigen::VectorXd& /*dist_coeffs*/,
+      Eigen::Vector2d* /* point */) const { }
 
   /// @}
 
@@ -96,9 +108,8 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
   /// @{
 
   /// \brief Create a test distortion object for unit testing.
-  static RadTanDistortion::UniquePtr createTestDistortion() {
-    Eigen::VectorXd params(4); params << -0.28,  0.08, -0.00026, -0.00024;
-    return RadTanDistortion::UniquePtr(new RadTanDistortion(params));
+  static NullDistortion::UniquePtr createTestDistortion() {
+    return NullDistortion::UniquePtr(new NullDistortion());
   }
 
   /// @}
@@ -108,17 +119,21 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
   /// @{
 
   /// Static function that checks whether the given intrinsic parameters are valid for this model.
-  static bool areParametersValid(const Eigen::VectorXd& parameters);
+  static bool areParametersValid(const Eigen::VectorXd& parameters) {
+    return parameters.rows() == kNumOfParams;
+  }
 
   /// \brief Check the validity of distortion parameters.
   /// @param[in] dist_coeffs Vector containing the coefficients.
   ///            Parameters will NOT be stored.
   /// @return If the distortion parameters are valid.
-  virtual bool distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const;
+  virtual bool distortionParametersValid(const Eigen::VectorXd& dist_coeffs) const {
+    return dist_coeffs.rows() == kNumOfParams;
+  }
 
   /// \brief Returns the number of parameters used in this distortion model.
   inline static constexpr size_t parameterCount() {
-      return kNumOfParams;
+    return kNumOfParams;
   }
 
   /// \brief Returns the number of parameters used in the distortion model.
@@ -130,11 +145,12 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
   /// \brief Print the internal parameters of the distortion in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras.
-  virtual void printParameters(std::ostream& out, const std::string& text) const;
-
+  virtual void printParameters(std::ostream& out, const std::string& text) const {
+    out << text;
+  }
   /// @}
-
 };
+
 } // namespace aslam
 
-#endif /* ASLAM_RADTAN_DISTORTION_H_ */
+#endif  // ASLAM_NULL_DISTORTION_H_

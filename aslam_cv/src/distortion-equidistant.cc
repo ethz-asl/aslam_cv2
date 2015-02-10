@@ -84,10 +84,10 @@ void EquidistantDistortion::distortUsingExternalCoefficients(
 
     const double dvf_dv = theta * 1.0 / r * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0)
     + y * theta * 1.0 / r * ((k2 * y * theta3 * 1.0 / r * 4.0)
-        / (x2 + y2 + 1.0)+ (k3 * y * theta5* 1.0 / r * 6.0)
-        / (x2 + y2 + 1.0)+ (k4 * y * theta7* 1.0 / r * 8.0)
-        / (x2 + y2 + 1.0)+ (k1 * y * theta * 1.0 / r * 2.0)
-        / (x2 + y2 + 1.0))+ ((y2)
+        / (x2 + y2 + 1.0) + (k3 * y * theta5* 1.0 / r * 6.0)
+        / (x2 + y2 + 1.0) + (k4 * y * theta7* 1.0 / r * 8.0)
+        / (x2 + y2 + 1.0) + (k1 * y * theta * 1.0 / r * 2.0)
+        / (x2 + y2 + 1.0)) + ((y2)
         * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0))
     / ((x2 + y2) * (x2 + y2 + 1.0))
     - (y2) * theta * 1.0 / pow(x2 + y2, 3.0 / 2.0)
@@ -142,36 +142,31 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
   CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
   CHECK_NOTNULL(point);
 
-  const int num_max_iterations = 30;
+  const int n = 30;  // Max. number of iterations
+  const double tolerance = 1e-10; // Abort tolerance for iteration
 
-  const double& k1 = dist_coeffs(0);
-  const double& k2 = dist_coeffs(1);
-  const double& k3 = dist_coeffs(2);
-  const double& k4 = dist_coeffs(3);
-
-  double& x = (*point)(0);
-  double& y = (*point)(1);
-
-  double theta, theta2, theta4, theta6, theta8, thetad, scaling;
-
-  thetad = point->norm();
+  Eigen::Vector2d& y = *point;
+  Eigen::Vector2d ybar = y;
+  Eigen::Matrix2d F;
+  Eigen::Vector2d y_tmp;
 
   // Handle special case around image center.
-  if (thetad < 1e-10)
+  if (y.squaredNorm() < 1e-15)
     return; // Point remains unchanged.
 
-  theta = thetad;  // Initial guess.
-  for (int i = num_max_iterations; i > 0; i--) {
-    theta2 = theta * theta;
-    theta4 = theta2 * theta2;
-    theta6 = theta4 * theta2;
-    theta8 = theta4 * theta4;
-    theta = thetad / (1 + k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8);
+  int i;
+  for (i = 0; i < n; ++i) {
+    y_tmp = ybar;
+    distortUsingExternalCoefficients(&dist_coeffs, &y_tmp, &F);
+    Eigen::Vector2d e(y - y_tmp);
+    Eigen::Vector2d du = (F.transpose() * F).inverse() * F.transpose() * e;
+    ybar += du;
+    if (e.dot(e) <= tolerance)
+      break;
   }
+  LOG_IF(WARNING, i >= n) << "Did not converge with max. iterations.";
 
-  scaling = tan(theta) / thetad;
-  x *= scaling;
-  y *= scaling;
+  y = ybar;
 }
 
 bool EquidistantDistortion::areParametersValid(const Eigen::VectorXd& parameters) {

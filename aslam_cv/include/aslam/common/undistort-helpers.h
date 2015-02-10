@@ -36,6 +36,7 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
       Eigen::Vector2d keypoint(x * input_camera.imageWidth()/ (N - 1),
                                y * input_camera.imageHeight() / (N - 1));
 
+      // Transform keypoint from image to normalized image plane. (incl. projection effects)
       Eigen::Vector2d keypoint_normalized;
       if (undistort_to_pinhole) {
         // Transform keypoint from image to normalized image plane. (incl. projection effects)
@@ -51,8 +52,7 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
         keypoint_normalized[0] = 1.0 / camera_matrix(0,0) * (keypoint[0] - camera_matrix(0,2));
         keypoint_normalized[1] = 1.0 / camera_matrix(1,1) * (keypoint[1] - camera_matrix(1,2));
 
-        if (input_camera.getDistortion())
-          input_camera.getDistortion()->undistort(&keypoint_normalized);
+        input_camera.getDistortion().undistort(&keypoint_normalized);
       }
 
       pts[k++] = cvPoint2D32f((float) keypoint_normalized[0], (float) keypoint_normalized[1]);
@@ -140,9 +140,8 @@ Eigen::Matrix3d getOptimalNewCameraMatrix(const DerivedCameraType& input_camera,
 /// @param[out] map_v Map that transforms v-coordinates from distorted to undistorted image plane.
 template<typename InputDerivedCameraType, typename OutputDerivedCameraType>
 void buildUndistortMap(const InputDerivedCameraType& input_camera,
-                       const OutputDerivedCameraType& output_camera, bool undistort_to_pinhole,
-                       int map_type, cv::OutputArray map_u, cv::OutputArray map_v) {
-
+                       const OutputDerivedCameraType& output_camera, int map_type,
+                       cv::OutputArray map_u, cv::OutputArray map_v) {
   // Output image size
   cv::Size output_size(output_camera.imageWidth(), output_camera.imageHeight());
 
@@ -167,30 +166,10 @@ void buildUndistortMap(const InputDerivedCameraType& input_camera,
       // Convert point on normalized image plane to keypoints. (projection and distortion)
       const Eigen::Vector2d keypoint(j, i);
       Eigen::Vector2d keypoint_dist;
-
-      if (undistort_to_pinhole) {
-        Eigen::Vector3d point_3d;
-        output_camera.backProject3(keypoint, &point_3d);
-        point_3d /= point_3d[2];
-
-        input_camera.project3(point_3d, &keypoint_dist);
-      } else {
-        Eigen::Matrix3d input_matrix = input_camera.getCameraMatrix();
-        Eigen::Matrix3d output_matrix = output_camera.getCameraMatrix();
-
-        // Transform to normalized image plane assuming pinhole projection
-        Eigen::Vector2d keypoint_normalized;
-        keypoint_normalized[0] = 1.0 / output_matrix(0,0) * (keypoint[0] - output_matrix(0,2));
-        keypoint_normalized[1] = 1.0 / output_matrix(1,1) * (keypoint[1] - output_matrix(1,2));
-
-        // Transform to input camera incl. distortion
-        if (input_camera.getDistortion())
-          input_camera.getDistortion()->distort(&keypoint_normalized);
-
-        // Transform to input camera plane
-        keypoint_dist[0] = input_matrix(0,0) * keypoint_normalized[0] + input_matrix(0,2);
-        keypoint_dist[1] = input_matrix(1,1) * keypoint_normalized[1] + input_matrix(1,2);
-      }
+      Eigen::Vector3d point_3d;
+      output_camera.backProject3(keypoint, &point_3d);
+      point_3d /= point_3d[2];
+      input_camera.project3(point_3d, &keypoint_dist);
 
       const double& u = keypoint_dist[0];
       const double& v = keypoint_dist[1];
