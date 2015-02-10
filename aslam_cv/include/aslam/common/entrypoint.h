@@ -12,6 +12,8 @@
   google::ParseCommandLineFlags(&argc, &argv, false);\
   google::InstallFailureSignalHandler();\
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";\
+  FLAGS_alsologtostderr = true; \
+  FLAGS_colorlogtostderr = true; \
   return RUN_ALL_TESTS();\
 }
 
