@@ -29,10 +29,10 @@ class FeatureTrack {
 
     for (const KeypointIdentifier& kid : getKeypointIdentifiers()) {
       const Eigen::Block<Eigen::Matrix2Xd, 2, 1> keypoint = kid.getKeypointMeasurement();
-      if (keypoint(0) <  u_min) u_min = keypoint(0);
-      if (keypoint(0) >= u_max) u_max = keypoint(0);
-      if (keypoint(1) <  v_min) v_min = keypoint(1);
-      if (keypoint(1) >= v_max) v_max = keypoint(1);
+      u_min = std::min(u_min, keypoint(0));
+      u_max = std::max(u_max, keypoint(0));
+      v_min = std::min(v_min, keypoint(1));
+      v_max = std::max(v_max, keypoint(1));
     }
     CHECK_GE(u_max, u_min);
     CHECK_GE(v_max, v_min);
