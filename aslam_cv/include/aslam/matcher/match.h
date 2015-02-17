@@ -91,7 +91,7 @@ std::vector<MatchesType> pickNRandomRigMatches(size_t n_per_camera,
   std::vector<MatchesType> subsampled_rig_matches(num_cameras);
 
   for (size_t cam_idx = 0; cam_idx < num_cameras; ++cam_idx) {
-    MatchesType camera_matches = rig_matches[cam_idx];
+    const MatchesType& camera_matches = rig_matches[cam_idx];
     if (camera_matches.size() <= n_per_camera) {
       subsampled_rig_matches[cam_idx] = camera_matches;
     } else {

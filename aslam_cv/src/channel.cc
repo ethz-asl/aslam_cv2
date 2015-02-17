@@ -15,6 +15,7 @@ bool Channel<cv::Mat>::operator==(const Channel<cv::Mat>& other) {
 ChannelGroup cloneChannelGroup(const ChannelGroup& channels) {
   ChannelGroup cloned_channels;
   for (const ChannelGroup::value_type& channel : channels) {
+    CHECK(channel.second);
     cloned_channels.emplace(channel.first,
                             std::shared_ptr<ChannelBase>(channel.second->clone()));
   }
@@ -30,7 +31,7 @@ bool isChannelGroupEqual(const ChannelGroup& left_channels, const ChannelGroup& 
     if (it_right == right_channels.end()) {
       return false;
     }
-    if (!it_right->second->compare(*left_channel_pair.second)) {
+    if (!CHECK_NOTNULL(it_right->second.get())->compare(*left_channel_pair.second)) {
       return false;
     }
   }

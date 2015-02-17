@@ -34,13 +34,18 @@ VisualNFrame::VisualNFrame(std::shared_ptr<NCamera> ncamera)
   frames_.resize(ncamera->getNumCameras());
 }
 
-VisualNFrame::VisualNFrame(const VisualNFrame& other)
-    : id_(other.id_),
-      camera_rig_(other.camera_rig_) {
+VisualNFrame::VisualNFrame(const VisualNFrame& other) {
+  *this = other;
+}
+
+VisualNFrame& VisualNFrame::operator=(const VisualNFrame& other) {
+  id_ = other.id_;
+  camera_rig_ = other.camera_rig_;
   frames_.reserve(other.frames_.size());
-  for(const VisualFrame::Ptr& other_frame : other.frames_) {
+  for (const VisualFrame::Ptr& other_frame : other.frames_) {
     frames_.emplace_back(new VisualFrame(*CHECK_NOTNULL(other_frame.get())));
   }
+  return *this;
 }
 
 const NCamera& VisualNFrame::getNCamera() const {
