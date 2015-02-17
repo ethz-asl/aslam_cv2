@@ -26,7 +26,7 @@ class Cloneable : public BaseType {
 
   /// Method to clone this instance
   virtual BaseType* clone() const {
-    return new DerivedType(static_cast<DerivedType const&>(*this));
+    return new DerivedType(static_cast<const DerivedType&>(*this));
   };
 
   virtual ~Cloneable() {};

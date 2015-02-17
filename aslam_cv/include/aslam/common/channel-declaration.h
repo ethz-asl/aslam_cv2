@@ -8,45 +8,47 @@
 #include <aslam/common/channel.h>
 #include <aslam/common/macros.h>
 
-#define DECLARE_CHANNEL_IMPL(NAME, TYPE)                     \
-namespace aslam {                                            \
-namespace channels {                                         \
-struct NAME : Channel<GET_TYPE(TYPE)> {                      \
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;                           \
-  typedef typename GET_TYPE(TYPE) Type;                      \
-  virtual std::string name() const { return #NAME; }         \
-};                                                           \
-                                                             \
-const std::string NAME##_CHANNEL = #NAME;                    \
-typedef GET_TYPE(TYPE) NAME##_ChannelType;                   \
-                                                             \
-NAME##_ChannelType& get_##NAME##_Data(const ChannelGroup& channels) { \
-  ChannelGroup::const_iterator it = channels.find(NAME##_CHANNEL); \
-  CHECK(it != channels.end()) << "Channelgroup does not "    \
-      "contain channel " << NAME##_CHANNEL;                  \
-  std::shared_ptr<NAME> derived =                            \
-     std::dynamic_pointer_cast<NAME>(it->second);            \
-  CHECK(derived) << "Channel cast to derived failed " <<     \
-     "channel: " << NAME##_CHANNEL;                          \
-  return derived->value_;                                    \
-}                                                            \
-                                                             \
-NAME##_ChannelType& add_##NAME##_Channel(ChannelGroup* channels) { \
-  CHECK_NOTNULL(channels);                                   \
-  ChannelGroup::iterator it = channels->find(NAME##_CHANNEL);\
-  CHECK(it == channels->end()) << "Channelgroup already "    \
-      "contains channel " << NAME##_CHANNEL;                 \
-  std::shared_ptr<NAME> derived(new NAME);                   \
-  (*channels)[NAME##_CHANNEL] = derived;                     \
-  return derived->value_;                                    \
-}                                                            \
-                                                             \
-bool has_##NAME##_Channel(const ChannelGroup& channels) {    \
-  ChannelGroup::const_iterator it = channels.find(NAME##_CHANNEL); \
-  return it != channels.end();                               \
-}                                                            \
-}                                                            \
-}                                                            \
+#define DECLARE_CHANNEL_IMPL(NAME, TYPE)                                   \
+namespace aslam {                                                          \
+namespace channels {                                                       \
+                                                                           \
+struct NAME : Channel<GET_TYPE(TYPE)> {                                    \
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;                                         \
+  typedef typename GET_TYPE(TYPE) Type;                                    \
+  virtual std::string name() const { return #NAME; }                       \
+};                                                                         \
+                                                                           \
+const std::string NAME##_CHANNEL = #NAME;                                  \
+typedef GET_TYPE(TYPE) NAME##_ChannelValueType;                            \
+typedef Channel<NAME##_ChannelValueType> NAME##_ChannelType;               \
+                                                                           \
+NAME##_ChannelValueType& get_##NAME##_Data(const ChannelGroup& channels) { \
+  ChannelGroup::const_iterator it = channels.find(NAME##_CHANNEL);         \
+  CHECK(it != channels.end()) << "Channelgroup does not "                  \
+      "contain channel " << NAME##_CHANNEL;                                \
+  std::shared_ptr<NAME##_ChannelType> derived =                            \
+     std::dynamic_pointer_cast<NAME##_ChannelType>(it->second);            \
+  CHECK(derived) << "Channel cast to derived failed " <<                   \
+     "channel: " << NAME##_CHANNEL;                                        \
+  return derived->value_;                                                  \
+}                                                                          \
+                                                                           \
+NAME##_ChannelValueType& add_##NAME##_Channel(ChannelGroup* channels) {    \
+  CHECK_NOTNULL(channels);                                                 \
+  ChannelGroup::iterator it = channels->find(NAME##_CHANNEL);              \
+  CHECK(it == channels->end()) << "Channelgroup already "                  \
+      "contains channel " << NAME##_CHANNEL;                               \
+  std::shared_ptr<NAME##_ChannelType> derived(new NAME##_ChannelType);     \
+  (*channels)[NAME##_CHANNEL] = derived;                                   \
+  return derived->value_;                                                  \
+}                                                                          \
+                                                                           \
+bool has_##NAME##_Channel(const ChannelGroup& channels) {                  \
+  ChannelGroup::const_iterator it = channels.find(NAME##_CHANNEL);         \
+  return it != channels.end();                                             \
+}                                                                          \
+}                                                                          \
+}                                                                          \
 
 // Wrap types that contain commas inside braces.
 #define DECLARE_CHANNEL(x, ...) DECLARE_CHANNEL_IMPL(x, (__VA_ARGS__))

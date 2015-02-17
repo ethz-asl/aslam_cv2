@@ -9,13 +9,22 @@ VisualFrame::VisualFrame()
       hardware_timestamp_(time::getInvalidTime()),
       system_timestamp_nanoseconds_(time::getInvalidTime()) {}
 
+VisualFrame::VisualFrame(const VisualFrame& other)
+    : timestamp_nanoseconds_(other.timestamp_nanoseconds_),
+      hardware_timestamp_(other.hardware_timestamp_),
+      system_timestamp_nanoseconds_(other.system_timestamp_nanoseconds_),
+      id_(other.id_),
+      camera_geometry_(other.camera_geometry_),
+      raw_camera_geometry_(other.raw_camera_geometry_) {
+  channels_ = channels::cloneChannelGroup(other.channels_);
+}
+
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
-  // TODO(slynen): Better iterate over channels and compare data instead of pointers.
   same &= timestamp_nanoseconds_ == other.timestamp_nanoseconds_;
   same &= hardware_timestamp_ == other.hardware_timestamp_;
   same &= system_timestamp_nanoseconds_ == other.system_timestamp_nanoseconds_;
-  same &= channels_ == other.channels_;
+  same &= channels::isChannelGroupEqual(channels_, other.channels_);
   same &= static_cast<bool>(camera_geometry_) ==
       static_cast<bool>(other.camera_geometry_);
   if (static_cast<bool>(camera_geometry_) &&
