@@ -57,7 +57,7 @@ class VisualFrame  {
 
   /// Copy constructor for clone operation. (Cameras are not cloned!)
   VisualFrame(const VisualFrame& other);
-  void operator=(const VisualFrame&) = delete;
+  VisualFrame& operator=(const VisualFrame& other);
 
   virtual bool operator==(const VisualFrame& other) const;
   /// @}

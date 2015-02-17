@@ -9,14 +9,20 @@ VisualFrame::VisualFrame()
       hardware_timestamp_(time::getInvalidTime()),
       system_timestamp_nanoseconds_(time::getInvalidTime()) {}
 
-VisualFrame::VisualFrame(const VisualFrame& other)
-    : timestamp_nanoseconds_(other.timestamp_nanoseconds_),
-      hardware_timestamp_(other.hardware_timestamp_),
-      system_timestamp_nanoseconds_(other.system_timestamp_nanoseconds_),
-      id_(other.id_),
-      camera_geometry_(other.camera_geometry_),
-      raw_camera_geometry_(other.raw_camera_geometry_) {
+VisualFrame::VisualFrame(const VisualFrame& other) {
+  *this = other;
+}
+
+VisualFrame& VisualFrame::operator=(const VisualFrame& other) {
+  timestamp_nanoseconds_ = other.timestamp_nanoseconds_;
+  hardware_timestamp_ = other.hardware_timestamp_;
+  system_timestamp_nanoseconds_ = other.system_timestamp_nanoseconds_;
+  id_ = other.id_;
+  camera_geometry_ = other.camera_geometry_;
+  raw_camera_geometry_ = other.raw_camera_geometry_;
+
   channels_ = channels::cloneChannelGroup(other.channels_);
+  return *this;
 }
 
 bool VisualFrame::operator==(const VisualFrame& other) const {
