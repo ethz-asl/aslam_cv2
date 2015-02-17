@@ -18,11 +18,32 @@
 #include <string>
 #include <unordered_map>
 
-#include <aslam/common/macros.h>
 #include <aslam/common/channel-serialization.h>
+#include <aslam/common/crtp-clone.h>
+#include <aslam/common/macros.h>
+#include <aslam/common/meta.h>
 
 namespace aslam {
 namespace channels {
+
+namespace internal {
+// TODO(schneith): Pointer ValueTypes are not cloned but only the pointers get copied. Make a
+//                 proper clone.
+template<typename ValueType, typename ValueTypeClonable>
+struct ChannelValueClonerImpl {};
+template<typename ValueType>
+struct ChannelValueClonerImpl<ValueType, std::false_type> {
+  static ValueType clone(const ValueType& value) { return value; }
+};
+template<typename ValueType>
+struct ChannelValueClonerImpl<ValueType, std::true_type> {
+  static ValueType clone(const ValueType& value) { return value.clone(); }
+};
+template<typename ValueType>
+struct ChannelValueCloner :
+    public ChannelValueClonerImpl<ValueType, typename is_cloneable<ValueType>::type> {};
+}
+
 class ChannelBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -34,18 +55,28 @@ class ChannelBase {
   virtual bool serializeToBuffer(char** buffer, size_t* size) const = 0;
   virtual bool deSerializeFromBuffer(const char* const buffer, size_t size) = 0;
   virtual std::string name() const = 0;
+  virtual ChannelBase* clone() const = 0;
+  virtual bool compare(const ChannelBase& right) = 0;
 };
 
 template<typename TYPE>
-class Channel : public ChannelBase{
+class Channel : public aslam::Cloneable<ChannelBase, Channel<TYPE>> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  ASLAM_POINTER_TYPEDEFS(Channel);
+
   typedef TYPE Type;
   Channel() {}
   virtual ~Channel() {}
   virtual std::string name() const { return "unnamed"; }
-  bool operator==(const Channel<TYPE>& other) {
-    return value_ == other.value_;
+  bool operator==(const Channel<TYPE>& other);
+
+  Channel(const Channel<TYPE>& other) {
+    value_ = internal::ChannelValueCloner<TYPE>::clone(other.value_);
+  }
+  void operator=(const Channel<TYPE>&) = delete;
+  virtual bool compare(const ChannelBase& other) {
+    return *this == *CHECK_NOTNULL(dynamic_cast<const Channel<TYPE>*>(&other));
   }
   bool serializeToString(std::string* string) const {
     return aslam::internal::serializeToString(value_, string);
@@ -60,9 +91,33 @@ class Channel : public ChannelBase{
     return aslam::internal::deSerializeFromBuffer(buffer, size, &value_);
   }
   TYPE value_;
+
+ private:
+  bool equal_to(const Channel<TYPE>& other, std::true_type /*is_not_pointer */) {
+    return value_ == other.value_;
+  }
+  bool equal_to(const Channel<TYPE>& other, std::false_type /*is_not_pointer */) {
+    if (other == nullptr && value_ == nullptr) {
+      return true;
+    } else if (other.value_ != nullptr && value_ != nullptr) {
+      return *value_ == *other.value_;
+    } else {
+      return false;
+    }
+  }
 };
 
+template<> bool Channel<cv::Mat>::operator==(const Channel<cv::Mat>& other);
+template<typename TYPE>
+bool Channel<TYPE>::operator==(const Channel<TYPE>& other) {
+  return equal_to(other, typename is_not_pointer<TYPE>::type());
+}
+
 typedef std::unordered_map<std::string, std::shared_ptr<ChannelBase> > ChannelGroup;
+
+ChannelGroup cloneChannelGroup(const ChannelGroup& channels);
+bool isChannelGroupEqual(const ChannelGroup& left, const ChannelGroup& right);
+
 }  // namespace channels
 }  // namespace aslam
 #endif  // ASLAM_CV_COMMON_CHANNEL_H_
