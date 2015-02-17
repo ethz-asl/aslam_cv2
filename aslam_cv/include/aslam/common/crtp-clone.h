@@ -1,6 +1,5 @@
 #ifndef ASLAM_CV_CRTP_CLONE_H_
 #define ASLAM_CV_CRTP_CLONE_H_
-#include <iostream>
 
 namespace aslam {
 

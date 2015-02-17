@@ -1,6 +1,7 @@
 #include <eigen-checks/gtest.h>
 #include <gtest/gtest.h>
 
+#include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/opencv-predicates.h>
@@ -146,6 +147,63 @@ TEST(Frame, SetGetImage) {
   frame.setRawImage(data);
   const cv::Mat& data_2 = frame.getRawImage();
   EXPECT_TRUE(gtest_catkin::ImagesEqual(data, data_2));
+}
+
+TEST(Frame, CopyConstructor) {
+  aslam::Camera::Ptr camera = aslam::PinholeCamera::createTestCamera();
+  aslam::VisualFrame frame;
+  frame.setCameraGeometry(camera);
+
+  // Set timestamps.
+  constexpr int64_t kTimestamp = 100;
+  frame.setTimestampNanoseconds(kTimestamp);
+  constexpr int64_t kTimestampHardware = 200;
+  frame.setHardwareTimestamp(kTimestampHardware);
+  constexpr int64_t kTimestampSystem = 300;
+  frame.setSystemTimestamp(kTimestampSystem);
+
+  // Set some random Data.
+  constexpr size_t kNumRandomValues = 10;
+  Eigen::Matrix2Xd keypoints = Eigen::Matrix2Xd::Random(2, kNumRandomValues);
+  frame.setKeypointMeasurements(keypoints);
+  Eigen::VectorXd uncertainties = Eigen::VectorXd::Random(1, kNumRandomValues);
+  frame.setKeypointMeasurementUncertainties(uncertainties);
+  Eigen::VectorXd orientations = Eigen::VectorXd::Random(1, kNumRandomValues);
+  frame.setKeypointOrientations(orientations);
+  Eigen::VectorXd scores = Eigen::VectorXd::Random(1, kNumRandomValues);
+  frame.setKeypointScores(scores);
+  Eigen::VectorXd scales = Eigen::VectorXd::Random(1, kNumRandomValues);
+  frame.setKeypointScales(scales);
+  aslam::VisualFrame::DescriptorsT descriptors =
+      aslam::VisualFrame::DescriptorsT::Random(384, kNumRandomValues);
+  frame.setDescriptors(descriptors);
+  Eigen::VectorXi track_ids = Eigen::VectorXi::Random(1, 10);
+  frame.setTrackIds(track_ids);
+
+  // Set image.
+  cv::Mat image = cv::Mat(3, 2, CV_8UC1);
+  cv::randu(image, cv::Scalar::all(0), cv::Scalar::all(255));
+  frame.setRawImage(image);
+
+  // Clone and compare.
+  aslam::VisualFrame frame_cloned(frame);
+  EXPECT_EQ(camera.get(), frame_cloned.getCameraGeometry().get());
+
+  EXPECT_EQ(kTimestamp, frame_cloned.getTimestampNanoseconds());
+  EXPECT_EQ(kTimestampHardware, frame_cloned.getHardwareTimestamp());
+  EXPECT_EQ(kTimestampSystem, frame_cloned.getSystemTimestampNanoseconds());
+
+  EIGEN_MATRIX_EQUAL(keypoints, frame_cloned.getKeypointMeasurements());
+  EIGEN_MATRIX_EQUAL(uncertainties, frame_cloned.getKeypointMeasurementUncertainties());
+  EIGEN_MATRIX_EQUAL(orientations, frame_cloned.getKeypointOrientations());
+  EIGEN_MATRIX_EQUAL(scores, frame_cloned.getKeypointScores());
+  EIGEN_MATRIX_EQUAL(scales, frame_cloned.getKeypointScales());
+  EIGEN_MATRIX_EQUAL(descriptors, frame_cloned.getDescriptors());
+  EIGEN_MATRIX_EQUAL(track_ids, frame_cloned.getTrackIds());
+
+  EXPECT_NEAR_OPENCV(image, frame_cloned.getRawImage(), 0);
+
+  EXPECT_TRUE(frame == frame_cloned);
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
