@@ -25,16 +25,16 @@ bool isChannelGroupEqual(const ChannelGroup& left_channels, const ChannelGroup& 
   if (left_channels.size() != right_channels.size()) {
     return false;
   }
-
-  bool same = true;
   for (const ChannelGroup::value_type& left_channel_pair : left_channels) {
     ChannelGroup::const_iterator it_right = right_channels.find(left_channel_pair.first);
     if (it_right == right_channels.end()) {
       return false;
     }
-    same &= it_right->second->compare(*left_channel_pair.second);
+    if (!it_right->second->compare(*left_channel_pair.second)) {
+      return false;
+    }
   }
-  return same;
+  return true;
 }
 
 }  // namespace channels

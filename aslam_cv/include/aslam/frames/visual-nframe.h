@@ -60,7 +60,7 @@ class VisualNFrame {
 
   virtual ~VisualNFrame() {}
 
-  /// Copy constructor for clone operation. (Camera rig is not cloned!)
+  /// Copy constructor for clone operation. (NCamera is not cloned!)
   VisualNFrame(const VisualNFrame& other);
   void operator=(const VisualNFrame&) = delete;
 
