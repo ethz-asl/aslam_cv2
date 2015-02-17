@@ -58,9 +58,6 @@ TEST(NFrame, CopyConstructor) {
   aslam::VisualNFrame nframe_cloned(nframe);
   EXPECT_EQ(nframe.getNumCameras(), nframe_cloned.getNumCameras());
   EXPECT_EQ(nframe.getNCameraShared().get(), nframe_cloned.getNCameraShared().get());
-
-  std::cout << nframe.getFrame(0).getKeypointMeasurements() << std::endl;
-  std::cout << nframe_cloned.getFrame(0).getKeypointMeasurements() << std::endl;
   EIGEN_MATRIX_EQUAL(nframe.getFrame(0).getKeypointMeasurements(),
                      nframe_cloned.getFrame(0).getKeypointMeasurements());
   EXPECT_NEAR_OPENCV(nframe.getFrame(1).getRawImage(), nframe_cloned.getFrame(1).getRawImage(), 0);
