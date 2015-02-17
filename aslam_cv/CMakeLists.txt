@@ -13,6 +13,7 @@ cs_add_library(${PROJECT_NAME}
                                src/camera-pinhole.cc
                                src/camera-unified-projection.cc
                                src/camera-yaml-serialization.cc
+                               src/channel.cc
                                src/channel-serialization.cc
                                src/distortion.cc
                                src/distortion-equidistant.cc

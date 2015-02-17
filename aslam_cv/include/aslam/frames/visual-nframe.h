@@ -20,7 +20,6 @@ class VisualFrame;
 class VisualNFrame {
  public:
   ASLAM_POINTER_TYPEDEFS(VisualNFrame);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   typedef std::vector<VisualNFrame::Ptr> PtrVector;
@@ -60,6 +59,10 @@ class VisualNFrame {
   VisualNFrame(std::shared_ptr<NCamera> ncameras);
 
   virtual ~VisualNFrame() {}
+
+  /// Copy constructor for clone operation. (Camera rig is not cloned!)
+  VisualNFrame(const VisualNFrame& other);
+  void operator=(const VisualNFrame&) = delete;
 
   /// \brief Get the multiframe id.
   inline const aslam::NFramesId& getId() const { return id_; }
