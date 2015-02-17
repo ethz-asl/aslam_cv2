@@ -41,6 +41,7 @@ VisualNFrame::VisualNFrame(const VisualNFrame& other) {
 VisualNFrame& VisualNFrame::operator=(const VisualNFrame& other) {
   id_ = other.id_;
   camera_rig_ = other.camera_rig_;
+  frames_.clear();
   frames_.reserve(other.frames_.size());
   for (const VisualFrame::Ptr& other_frame : other.frames_) {
     frames_.emplace_back(new VisualFrame(*CHECK_NOTNULL(other_frame.get())));
