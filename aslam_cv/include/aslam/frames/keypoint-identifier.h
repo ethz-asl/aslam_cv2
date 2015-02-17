@@ -65,7 +65,7 @@ class KeypointIdentifier {
   }
 
  private:
-  /// Frame index in in the VisualFrame. Corresponds to the NCamerea index.
+  /// Frame index in in the VisualFrame. Corresponds to the NCamera index.
   size_t frame_index_;
   /// Keypoint index in in the VisualFrame.
   size_t keypoint_index_;
