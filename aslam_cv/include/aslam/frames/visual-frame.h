@@ -47,76 +47,82 @@ class VisualFrame  {
   typedef Eigen::VectorXd KeypointScoresT;
 
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualFrame);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  //////////////////////////////////////////////////////////////
+  /// \name Constructors/destructors and operators
+  /// @{
   VisualFrame();
-
   virtual ~VisualFrame() {};
 
+  /// Copy constructor for clone operation. (Cameras are not cloned!)
+  VisualFrame(const VisualFrame& other);
+  void operator=(const VisualFrame&) = delete;
+
   virtual bool operator==(const VisualFrame& other) const;
+  /// @}
 
   template<typename CHANNEL_DATA_TYPE>
   void addChannel(const std::string& channel) {
     aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
   }
 
-  /// \brief Are there keypoint measurements stored in this frame?
+  /// Are there keypoint measurements stored in this frame?
   bool hasKeypointMeasurements() const;
 
-  /// \brief Are there keypoint measurement uncertainties stored in this frame?
+  /// Are there keypoint measurement uncertainties stored in this frame?
   bool hasKeypointMeasurementUncertainties() const;
 
-  /// \brief Are there keypoint orientations stored in this frame?
+  /// Are there keypoint orientations stored in this frame?
   bool hasKeypointOrientations() const;
 
-  /// \brief Are there keypoint scores stored in this frame?
+  /// Are there keypoint scores stored in this frame?
   bool hasKeypointScores() const;
 
-  /// \brief Are there keypoint scales stored in this frame?
+  /// Are there keypoint scales stored in this frame?
   bool hasKeypointScales() const;
 
-  /// \brief Are there descriptors stored in this frame?
+  /// Are there descriptors stored in this frame?
   bool hasDescriptors() const;
 
-  /// \brief Are there track ids stored in this frame?
+  /// Are there track ids stored in this frame?
   bool hasTrackIds() const;
 
-  /// \brief Is there a raw image stored in this frame?
+  /// Is there a raw image stored in this frame?
   bool hasRawImage() const;
 
-  /// \brief Is a certain channel stored in this frame?
+  /// Is a certain channel stored in this frame?
   bool hasChannel(const std::string& channel) const {
     return aslam::channels::hasChannel(channel, channels_);
   }
 
-  /// \brief The keypoint measurements stored in a frame.
+  /// The keypoint measurements stored in a frame.
   const Eigen::Matrix2Xd& getKeypointMeasurements() const;
 
-  /// \brief Get the number of keypoints measurements stored in this frame.
+  /// Get the number of keypoints measurements stored in this frame.
   inline size_t getNumKeypointMeasurements() const {
     return static_cast<size_t>(getKeypointMeasurements().cols());
   }
 
-  /// \brief The keypoint measurement uncertainties stored in a frame.
+  /// The keypoint measurement uncertainties stored in a frame.
   const Eigen::VectorXd& getKeypointMeasurementUncertainties() const;
 
-  /// \brief The keypoint orientations stored in a frame.
+  /// The keypoint orientations stored in a frame.
   const Eigen::VectorXd& getKeypointOrientations() const;
 
-  /// \brief The keypoint scores stored in a frame.
+  /// The keypoint scores stored in a frame.
   const Eigen::VectorXd& getKeypointScores() const;
 
-  /// \brief The keypoint scales stored in a frame.
+  /// The keypoint scales stored in a frame.
   const Eigen::VectorXd& getKeypointScales() const;
 
-  /// \brief The descriptors stored in a frame.
+  /// The descriptors stored in a frame.
   const DescriptorsT& getDescriptors() const;
 
-  /// \brief The track ids stored in this frame.
+  /// The track ids stored in this frame.
   const Eigen::VectorXi& getTrackIds() const;
 
-  /// \brief The raw image stored in a frame.
+  /// The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
 
   template<typename CHANNEL_DATA_TYPE>
@@ -124,28 +130,28 @@ class VisualFrame  {
     return aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);
   }
 
-  /// \brief A pointer to the keypoint measurements, can be used to swap in new data.
+  /// A pointer to the keypoint measurements, can be used to swap in new data.
   Eigen::Matrix2Xd* getKeypointMeasurementsMutable();
 
-  /// \brief A pointer to the keypoint measurement uncertainties, can be used to swap in new data.
+  /// A pointer to the keypoint measurement uncertainties, can be used to swap in new data.
   Eigen::VectorXd* getKeypointMeasurementUncertaintiesMutable();
 
-  /// \brief A pointer to the keypoint orientations, can be used to swap in new data.
+  /// A pointer to the keypoint orientations, can be used to swap in new data.
   Eigen::VectorXd* getKeypointOrientationsMutable();
 
-  /// \brief A pointer to the keypoint scores, can be used to swap in new data.
+  /// A pointer to the keypoint scores, can be used to swap in new data.
   Eigen::VectorXd* getKeypointScoresMutable();
 
-  /// \brief A pointer to the keypoint scales, can be used to swap in new data.
+  /// A pointer to the keypoint scales, can be used to swap in new data.
   Eigen::VectorXd* getKeypointScalesMutable();
 
-  /// \brief A pointer to the descriptors, can be used to swap in new data.
+  /// A pointer to the descriptors, can be used to swap in new data.
   DescriptorsT* getDescriptorsMutable();
 
-  /// \brief A pointer to the track ids, can be used to swap in new data.
+  /// A pointer to the track ids, can be used to swap in new data.
   Eigen::VectorXi* getTrackIdsMutable();
 
-  /// \brief A pointer to the raw image, can be used to swap in new data.
+  /// A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
 
   template<typename CHANNEL_DATA_TYPE>
@@ -156,53 +162,53 @@ class VisualFrame  {
     return &data;
   }
 
-  /// \brief Return block expression of the keypoint measurement pointed to by index.
+  /// Return block expression of the keypoint measurement pointed to by index.
   const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(size_t index) const;
 
-  /// \brief Return the keypoint measurement uncertainty index.
+  /// Return the keypoint measurement uncertainty index.
   double getKeypointMeasurementUncertainty(size_t index) const;
 
-  /// \brief Return the keypoint orientation at index.
+  /// Return the keypoint orientation at index.
   double getKeypointOrientation(size_t index) const;
 
-  /// \brief Return the keypoint score at index.
+  /// Return the keypoint score at index.
   double getKeypointScore(size_t index) const;
 
-  /// \brief Return the keypoint scale at index.
+  /// Return the keypoint scale at index.
   double getKeypointScale(size_t index) const;
 
-  /// \brief Return pointer location of the descriptor pointed to by index.
+  /// Return pointer location of the descriptor pointed to by index.
   const unsigned char* getDescriptor(size_t index) const;
 
-  /// \brief Return the track id at index. (-1: not tracked)
+  /// Return the track id at index. (-1: not tracked)
   int getTrackId(size_t index) const;
 
-  /// \brief Replace (copy) the internal keypoint measurements by the passed ones.
+  /// Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
 
-  /// \brief Replace (copy) the internal keypoint measurement uncertainties
+  /// Replace (copy) the internal keypoint measurement uncertainties
   ///        by the passed ones.
   void setKeypointMeasurementUncertainties(const Eigen::VectorXd& uncertainties);
 
-  /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
+  /// Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointOrientations(const Eigen::VectorXd& orientations);
 
-  /// \brief Replace (copy) the internal keypoint scores by the passed ones.
+  /// Replace (copy) the internal keypoint scores by the passed ones.
   void setKeypointScores(const Eigen::VectorXd& scores);
 
-  /// \brief Replace (copy) the internal keypoint orientations by the passed ones.
+  /// Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointScales(const Eigen::VectorXd& scales);
 
-  /// \brief Replace (copy) the internal descriptors by the passed ones.
+  /// Replace (copy) the internal descriptors by the passed ones.
   void setDescriptors(const DescriptorsT& descriptors);
 
-  /// \brief Replace (copy) the internal descriptors by the passed ones.
+  /// Replace (copy) the internal descriptors by the passed ones.
   void setDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
 
-  /// \brief Replace (copy) the internal track ids by the passed ones.
+  /// Replace (copy) the internal track ids by the passed ones.
   void setTrackIds(const Eigen::VectorXi& track_ids);
 
-  /// \brief Replace (copy) the internal raw image by the passed ones.
+  /// Replace (copy) the internal raw image by the passed ones.
   ///        This is a shallow copy by default. Please clone the image if it
   ///        should be owned by the VisualFrame.
   void setRawImage(const cv::Mat& image);
@@ -218,31 +224,31 @@ class VisualFrame  {
     data = data_new;
   }
 
-  /// \brief Replace (swap) the internal keypoint measurements by the passed ones.
-  ///        This method creates the channel if it doesn't exist
+  /// Replace (swap) the internal keypoint measurements by the passed ones.
+  /// This method creates the channel if it doesn't exist
   void swapKeypointMeasurements(Eigen::Matrix2Xd* keypoints);
 
-  /// \brief Replace (swap) the internal keypoint measurement uncertainties
-  ///        by the passed ones.
+  /// Replace (swap) the internal keypoint measurement uncertainties
+  /// by the passed ones.
   void swapKeypointMeasurementUncertainties(Eigen::VectorXd* uncertainties);
 
-  /// \brief Replace (swap) the internal keypoint orientations by the passed ones.
+  /// Replace (swap) the internal keypoint orientations by the passed ones.
   void swapKeypointOrientations(Eigen::VectorXd* orientations);
 
-  /// \brief Replace (swap) the internal keypoint scores by the passed ones.
+  /// Replace (swap) the internal keypoint scores by the passed ones.
   void swapKeypointScores(Eigen::VectorXd* scores);
 
-  /// \brief Replace (swap) the internal keypoint orientations by the passed ones.
+  /// Replace (swap) the internal keypoint orientations by the passed ones.
   void swapKeypointScales(Eigen::VectorXd* scales);
 
-  /// \brief Replace (swap) the internal descriptors by the passed ones.
+  /// Replace (swap) the internal descriptors by the passed ones.
   void swapDescriptors(DescriptorsT* descriptors);
 
-  /// \brief Replace (swap) the internal track ids by the passed ones.
+  /// Replace (swap) the internal track ids by the passed ones.
   void swapTrackIds(Eigen::VectorXi* track_ids);
 
-  /// \brief Swap channel data with the data passed in. This will only work
-  ///        if the channel data type has a swap() method.
+  /// Swap channel data with the data passed in. This will only work
+  /// if the channel data type has a swap() method.
   template<typename CHANNEL_DATA_TYPE>
   void swapChannelData(const std::string& channel,
                        CHANNEL_DATA_TYPE* data_new) {
@@ -255,16 +261,16 @@ class VisualFrame  {
     data.swap(*data_new);
   }
 
-  /// \brief The camera geometry.
+  /// The camera geometry.
   const Camera::ConstPtr getCameraGeometry() const;
 
-  /// \brief Set the camera geometry.
+  /// Set the camera geometry.
   void setCameraGeometry(const Camera::ConstPtr& camera);
 
-  /// \brief The camera geometry.
+  /// The camera geometry.
   const Camera::ConstPtr getRawCameraGeometry() const;
 
-  /// \brief Set the camera geometry.
+  /// Set the camera geometry.
   void setRawCameraGeometry(const Camera::ConstPtr& camera);
 
   /// \brief Return keypoint measurement pointed to by index in raw image coordinates.
@@ -298,37 +304,37 @@ class VisualFrame  {
                                        Eigen::Matrix2Xd* out_image_coordinates,
                                        std::vector<aslam::ProjectionResult>* results) const;
 
-  /// \brief get the frame id.
+  /// Get the frame id.
   inline const aslam::FrameId& getId() const { return id_; }
 
-  /// \brief set the frame id.
+  /// Set the frame id.
   inline void setId(const aslam::FrameId& id) { id_ = id; }
 
-  /// \brief get the timestamp.
+  /// Get the timestamp.
   inline int64_t getTimestampNanoseconds() const { return timestamp_nanoseconds_; }
   
-  /// \brief set the timestamp.
+  /// Set the timestamp.
   inline void setTimestampNanoseconds(int64_t timestamp_nanoseconds){
     timestamp_nanoseconds_ = timestamp_nanoseconds; }
   
-  /// \brief get the hardware timestamp.
+  /// Get the hardware timestamp.
   inline int64_t getHardwareTimestamp() const { return hardware_timestamp_; }
 
-  /// \brief set the hardware timestamp.
+  /// Set the hardware timestamp.
   inline void setHardwareTimestamp(int64_t hardware_timestamp) {
     hardware_timestamp_ = hardware_timestamp; }
 
-  /// \brief get the system (host computer) timestamp.
+  /// Get the system (host computer) timestamp.
   inline int64_t getSystemTimestampNanoseconds() const { return system_timestamp_nanoseconds_; }
 
-  /// \brief set the system (host computer) timestamp.
+  /// Set the system (host computer) timestamp.
   inline void setSystemTimestamp(int64_t system_timestamp_nanoseconds) {
     system_timestamp_nanoseconds_ = system_timestamp_nanoseconds; }
 
-  /// \brief Set the size of the descriptor in bytes.
+  /// Set the size of the descriptor in bytes.
   size_t getDescriptorSizeBytes() const;
 
-  /// \brief print out a human-readable version of this frame
+  /// Print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
 
   /// \brief Creates an empty frame. The following channels are added without any data attached:
@@ -339,11 +345,11 @@ class VisualFrame  {
   static VisualFrame::Ptr createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camera,
                                                      int64_t timestamp_nanoseconds);
  private:
-  /// \brief integer nanoseconds since epoch.
+  /// Timestamp in nanoseconds since epoch.
   int64_t timestamp_nanoseconds_;
-  /// hardware timestamp. The scale and offset will be different for every device.
+  /// Hardware timestamp. The scale and offset will be different for every device.
   int64_t hardware_timestamp_;
-  /// \brief host system timestamp in integer nanoseconds since epoch.
+  /// Host system timestamp in integer nanoseconds since epoch.
   int64_t system_timestamp_nanoseconds_;
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;

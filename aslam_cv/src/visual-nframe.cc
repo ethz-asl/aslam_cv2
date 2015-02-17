@@ -34,6 +34,15 @@ VisualNFrame::VisualNFrame(std::shared_ptr<NCamera> ncamera)
   frames_.resize(ncamera->getNumCameras());
 }
 
+VisualNFrame::VisualNFrame(const VisualNFrame& other)
+    : id_(other.id_),
+      camera_rig_(other.camera_rig_) {
+  frames_.reserve(other.frames_.size());
+  for(const VisualFrame::Ptr& other_frame : other.frames_) {
+    frames_.emplace_back(new VisualFrame(*CHECK_NOTNULL(other_frame.get())));
+  }
+}
+
 const NCamera& VisualNFrame::getNCamera() const {
   CHECK_NOTNULL(camera_rig_.get());
   return *camera_rig_;
@@ -162,13 +171,12 @@ int64_t VisualNFrame::getMaxTimestampNanoseconds() const {
 
 bool VisualNFrame::operator==(const VisualNFrame& other) const {
   bool same = true;
-
   same &= id_ == other.id_;
   same &= aslam::checkSharedEqual(camera_rig_, other.camera_rig_);
   same &= frames_.size() == other.frames_.size();
   if(same) {
     for(size_t i = 0; i < frames_.size(); ++i) {
-      same &= aslam::checkSharedEqual(frames_[i], other.frames_[i]);
+      same &= *CHECK_NOTNULL(frames_[i].get()) == *CHECK_NOTNULL(other.frames_[i].get());
     }
   }
   return same;
