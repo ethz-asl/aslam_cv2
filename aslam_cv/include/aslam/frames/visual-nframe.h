@@ -62,7 +62,7 @@ class VisualNFrame {
 
   /// Copy constructor for clone operation. (NCamera is not cloned!)
   VisualNFrame(const VisualNFrame& other);
-  void operator=(const VisualNFrame&) = delete;
+  VisualNFrame& operator=(const VisualNFrame& other);
 
   /// \brief Get the multiframe id.
   inline const aslam::NFramesId& getId() const { return id_; }
