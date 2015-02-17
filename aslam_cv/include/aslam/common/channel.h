@@ -27,6 +27,8 @@ namespace aslam {
 namespace channels {
 
 namespace internal {
+// TODO(schneith): Pointer ValueTypes are not cloned but only the pointers get copied. Make a
+//                 proper clone.
 template<typename ValueType, typename ValueTypeClonable>
 struct ChannelValueClonerImpl {};
 template<typename ValueType>
@@ -67,7 +69,7 @@ class Channel : public aslam::Cloneable<ChannelBase, Channel<TYPE>> {
   Channel() {}
   virtual ~Channel() {}
   virtual std::string name() const { return "unnamed"; }
-  bool operator==(const Channel& other);
+  bool operator==(const Channel<TYPE>& other);
 
   Channel(const Channel<TYPE>& other) {
     value_ = internal::ChannelValueCloner<TYPE>::clone(other.value_);
@@ -89,13 +91,26 @@ class Channel : public aslam::Cloneable<ChannelBase, Channel<TYPE>> {
     return aslam::internal::deSerializeFromBuffer(buffer, size, &value_);
   }
   TYPE value_;
+
+ private:
+  bool equal_to(const Channel<TYPE>& other, std::true_type /*is_not_pointer */) {
+    return value_ == other.value_;
+  }
+  bool equal_to(const Channel<TYPE>& other, std::false_type /*is_not_pointer */) {
+    if (other == nullptr && value_ == nullptr) {
+      return true;
+    } else if (other.value_ != nullptr && value_ != nullptr) {
+      return *value_ == *other.value_;
+    } else {
+      return false;
+    }
+  }
 };
 
 template<> bool Channel<cv::Mat>::operator==(const Channel<cv::Mat>& other);
 template<typename TYPE>
 bool Channel<TYPE>::operator==(const Channel<TYPE>& other) {
-  static_assert(is_not_pointer<TYPE>::value, "Can't be pointer!");
-  return value_ == other.value_;
+  return equal_to(other, typename is_not_pointer<TYPE>::type());
 }
 
 typedef std::unordered_map<std::string, std::shared_ptr<ChannelBase> > ChannelGroup;
