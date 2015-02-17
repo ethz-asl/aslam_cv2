@@ -65,11 +65,11 @@ class KeypointIdentifier {
   }
 
  private:
-  /// Keypoint index in in the VisualFrame
+  /// Frame index in in the VisualFrame. Corresponds to the NCamera index.
   size_t frame_index_;
-  /// Keypoint index in in the VisualFrame
+  /// Keypoint index in in the VisualFrame.
   size_t keypoint_index_;
-  /// Pointer to the VisualNFrame containing the keypoint.
+  /// Pointer to the VisualNFrame that contains the keypoint.
   std::shared_ptr<const aslam::VisualNFrame> nframe_;
 };
 
