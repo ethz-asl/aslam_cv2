@@ -12,6 +12,12 @@
 namespace aslam {                                                          \
 namespace channels {                                                       \
                                                                            \
+struct NAME : Channel<GET_TYPE(TYPE)> {                                    \
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;                                         \
+  typedef typename GET_TYPE(TYPE) Type;                                    \
+  virtual std::string name() const { return #NAME; }                       \
+};                                                                         \
+                                                                           \
 const std::string NAME##_CHANNEL = #NAME;                                  \
 typedef GET_TYPE(TYPE) NAME##_ChannelValueType;                            \
 typedef Channel<NAME##_ChannelValueType> NAME##_ChannelType;               \
