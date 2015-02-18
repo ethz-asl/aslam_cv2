@@ -188,6 +188,19 @@ bool VisualNFrame::operator==(const VisualNFrame& other) const {
   return same;
 }
 
+bool VisualNFrame::compareWithoutCameraSystem(const VisualNFrame& other) const {
+  bool same = true;
+  same &= id_ == other.id_;
+  same &= frames_.size() == other.frames_.size();
+  if(same) {
+    for(size_t i = 0; i < frames_.size(); ++i) {
+      same &= CHECK_NOTNULL(frames_[i].get())->compareWithoutCameraGeometry(
+          *CHECK_NOTNULL(other.frames_[i].get()));
+    }
+  }
+  return same;
+}
+
 VisualNFrame::Ptr VisualNFrame::createEmptyTestVisualNFrame(const NCamera::Ptr& ncamera,
                                                             int64_t timestamp_nanoseconds) {
   CHECK(ncamera);

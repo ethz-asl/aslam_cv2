@@ -62,6 +62,8 @@ class VisualFrame  {
   virtual bool operator==(const VisualFrame& other) const;
   /// @}
 
+  virtual bool compareWithoutCameraGeometry(const VisualFrame& other) const;
+
   template<typename CHANNEL_DATA_TYPE>
   void addChannel(const std::string& channel) {
     aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
