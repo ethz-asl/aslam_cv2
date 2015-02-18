@@ -40,6 +40,15 @@ bool VisualFrame::operator==(const VisualFrame& other) const {
   return same;
 }
 
+bool VisualFrame::compareWithoutCameraGeometry(const VisualFrame& other) const {
+  bool same = true;
+  same &= timestamp_nanoseconds_ == other.timestamp_nanoseconds_;
+  same &= hardware_timestamp_ == other.hardware_timestamp_;
+  same &= system_timestamp_nanoseconds_ == other.system_timestamp_nanoseconds_;
+  same &= channels::isChannelGroupEqual(channels_, other.channels_);
+  return same;
+}
+
 bool VisualFrame::hasKeypointMeasurements() const {
   return aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENTS_Channel(channels_);
 }
