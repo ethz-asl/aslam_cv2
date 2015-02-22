@@ -137,6 +137,9 @@ class VisualNFrame {
   /// \brief Binary equality.
   bool operator==(const VisualNFrame& other) const;
 
+  /// \brief Binary equality excluding the camera system.
+  bool compareWithoutCameraSystem(const VisualNFrame& other) const;
+
   /// \brief Creates an empty visual nframe with the given ncamera system.
   /// @param[in] ncamera                NCamera.
   /// @param[in] timestamp_nanoseconds  Timestamp of the individual frames in the nframe. [ns]
