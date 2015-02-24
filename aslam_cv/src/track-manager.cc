@@ -90,6 +90,8 @@ namespace aslam {
     //  Get the track ID channels.
     Eigen::VectorXi& apple_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(apple_frame));
     Eigen::VectorXi& banana_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(banana_frame));
+    CHECK(apple_frame->hasKeypointScores());
+    CHECK(banana_frame->hasKeypointScores());
 
     size_t num_apple_track_ids = static_cast<size_t>(apple_track_ids.rows());
     size_t num_banana_track_ids = static_cast<size_t>(banana_track_ids.rows());
@@ -143,7 +145,14 @@ namespace aslam {
 
       if ((track_id_apple) < 0 && (track_id_banana < 0)) {
         // Both track ids are < 0. Candidate for a new track.
-        candidates_for_new_tracks.insert(match);
+        MatchWithScore match_scored_by_keypoint_strenght = match;
+        double apple_keypoint_score =
+            apple_frame->getKeypointScores()(index_apple);
+        double banana_keypoint_score =
+            banana_frame->getKeypointScores()(index_banana);
+        match_scored_by_keypoint_strenght.score =
+            0.5 * (apple_keypoint_score + banana_keypoint_score);
+        candidates_for_new_tracks.insert(match_scored_by_keypoint_strenght);
       } else {
         // Either one of the track ids is >= 0.
         if (track_id_apple != track_id_banana) {
@@ -161,6 +170,11 @@ namespace aslam {
             banana_track_ids(index_banana) = track_id_apple;
           }
         }
+        // Push this match into the buckets.
+        const Eigen::Vector2d& keypoint =
+            apple_frame->getKeypointMeasurement(index_apple);
+        int bin_index = compute_bin_index(keypoint);
+        ++buckets[bin_index];
       }
     }
     // Push some number of very strong new track candidates.
