@@ -229,18 +229,18 @@ inline const ProjectionResult UnifiedProjectionCamera::evaluateProjectionResult(
 }
 
 inline bool UnifiedProjectionCamera::isUndistortedKeypointValid(const double& rho2_d,
-                                                   const double& xi) const {
+                                                                const double& xi) const {
   return xi <= 1.0 || rho2_d <= (1.0 / (xi * xi - 1));
 }
 
 bool UnifiedProjectionCamera::isLiftable(const Eigen::Vector2d& keypoint) const {
   Eigen::Vector2d y;
-  y[0] = 1.0/fu() * (keypoint[0] - cu());
-  y[1] = 1.0/fv() * (keypoint[1] - cv());
+  y[0] = 1.0 / fu() * (keypoint[0] - cu());
+  y[1] = 1.0 / fv() * (keypoint[1] - cv());
 
   distortion_->undistort(&y);
 
-  // Now check if it is on the sensor
+  // Now check if it is on the sensor.
   double rho2_d = y[0] * y[0] + y[1] * y[1];
   return isUndistortedKeypointValid(rho2_d, xi());
 }
