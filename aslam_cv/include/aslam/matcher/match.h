@@ -117,6 +117,13 @@ double getMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
                                     const aslam::VisualNFrame& nframe_k,
                                     const std::vector<aslam::Matches>& matches_kp1_kp);
 
+/// Return the normalized bearing vectors for a list of single camera matches.
+void getBearingVectorsFromMatches(
+    const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
+    const aslam::Matches& matches_kp1_k,
+    Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_kp1,
+    Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_k);
+
 }  // namespace aslam
 
 #endif // ASLAM_MATCH_H_
