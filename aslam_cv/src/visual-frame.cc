@@ -403,6 +403,32 @@ size_t VisualFrame::getDescriptorSizeBytes() const {
   return getDescriptors().rows() * sizeof(DescriptorsT::Scalar);
 }
 
+Eigen::Matrix3Xd VisualFrame::getNormalizedBearingVectors(
+    const std::vector<size_t>& keypoint_indices, std::vector<bool>* backprojection_success) const {
+  CHECK_NOTNULL(backprojection_success);
+  if (keypoint_indices.empty()) {
+    backprojection_success->clear();
+    return Eigen::Matrix3Xd(3, 0);
+  }
+
+  const aslam::Camera& camera = *CHECK_NOTNULL(getCameraGeometry().get());
+  const Eigen::Matrix2Xd& keypoints = getKeypointMeasurements();
+  const size_t num_keypoints = getNumKeypointMeasurements();
+
+  Eigen::Matrix2Xd keypoints_reduced;
+  keypoints_reduced.resize(Eigen::NoChange, keypoint_indices.size());
+
+  size_t list_idx = 0;
+  for (const size_t keypoint_idx : keypoint_indices) {
+    CHECK_LE(keypoint_idx, num_keypoints);
+    keypoints_reduced.col(list_idx++) = keypoints.col(keypoint_idx);
+  }
+
+  Eigen::Matrix3Xd points_3d;
+  camera.backProject3Vectorized(keypoints_reduced, &points_3d, backprojection_success);
+  return points_3d.colwise().normalized();
+}
+
 VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camera,
                                                          int64_t timestamp_nanoseconds) {
   aslam::VisualFrame::Ptr frame(new aslam::VisualFrame);

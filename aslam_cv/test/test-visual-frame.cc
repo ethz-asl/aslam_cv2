@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <aslam/cameras/camera-pinhole.h>
+#include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/opencv-predicates.h>
@@ -204,6 +205,50 @@ TEST(Frame, CopyConstructor) {
   EXPECT_NEAR_OPENCV(image, frame_cloned.getRawImage(), 0);
 
   EXPECT_TRUE(frame == frame_cloned);
+}
+
+TEST(Frame, getNormalizedBearingVectors) {
+  // Create a test nframe with some keypoints.
+  aslam::UnifiedProjectionCamera::Ptr camera = aslam::UnifiedProjectionCamera::createTestCamera();
+  aslam::VisualFrame::Ptr frame = aslam::VisualFrame::createEmptyTestVisualFrame(camera, 0);
+
+  const size_t kNumKeypoints = 10;
+  Eigen::Matrix2Xd keypoints;
+  keypoints.resize(Eigen::NoChange, kNumKeypoints);
+  for (size_t idx = 0; idx < kNumKeypoints - 1; ++idx) {
+    keypoints.col(idx) = camera->createRandomKeypoint();
+  }
+  keypoints.col(kNumKeypoints - 1) = Eigen::Vector2d(1e8, 1e8); // Add one invalid keypoint.
+  frame->setKeypointMeasurements(keypoints);
+
+  // Get bearing vectors.
+  std::vector<size_t> keypoint_indices;
+  keypoint_indices.emplace_back(1);
+  keypoint_indices.emplace_back(3);
+  keypoint_indices.emplace_back(2);
+  keypoint_indices.emplace_back(4);
+  keypoint_indices.emplace_back(kNumKeypoints - 1);  // This is the invalid keypoint.
+
+  std::vector<bool> projection_success;
+  Eigen::Matrix3Xd bearing_vectors = frame->getNormalizedBearingVectors(keypoint_indices,
+                                                                        &projection_success);
+
+  // Check by manually calculating the normalized bearing vectors.
+  const size_t num_bearing_vectors = static_cast<size_t>(bearing_vectors.cols());
+  ASSERT_EQ(num_bearing_vectors, keypoint_indices.size());
+  ASSERT_EQ(num_bearing_vectors, projection_success.size());
+
+  for (size_t bearing_idx = 0; bearing_idx < num_bearing_vectors; ++bearing_idx) {
+    // Manually backproject.
+    Eigen::Vector3d point_3d;
+    bool success_manual = camera->backProject3(keypoints.col(keypoint_indices[bearing_idx]),
+                                               &point_3d);
+    Eigen::Vector3d bearing_vector_manual = point_3d.normalized();
+
+    Eigen::Vector3d bearing_vector = bearing_vectors.col(bearing_idx);
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(bearing_vector, bearing_vector_manual, 1e-12));
+    EXPECT_EQ(success_manual, projection_success[bearing_idx]);
+  }
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
