@@ -161,7 +161,6 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
 
   VLOG(4) << "Added " << num_very_strong_candidates_pushed << " very strong candidates.";
 
-  int bucket_full = 0;  // todo(schneith): this seems unused. remove?
   int num_strong_candidates_pushed = 0;
   // Now push as many strong points as there is space in the buckets.
   int num_pts_per_bucket = kNumberOfKeyPointsUseStrong / buckets.size();
@@ -187,7 +186,6 @@ void GyroTracker::addFrame(VisualFrame::Ptr current_frame_ptr,
       aslam::statistics::DebugStatsCollector stats_strong_acc("GyroTracker Strong accepted");
       stats_strong_acc.AddSample(keypoint_score);
     } else {
-      ++bucket_full;
       aslam::statistics::DebugStatsCollector stats_bucket_too_full("GyroTracker Bucket full");
       stats_bucket_too_full.AddSample(keypoint_score);
     }
