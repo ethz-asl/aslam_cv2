@@ -98,5 +98,31 @@ double getMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
   return aslam::common::median(disparity_px.begin(), disparity_px.end());
 }
 
+void getBearingVectorsFromMatches(
+    const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
+    const aslam::Matches& matches_kp1_k,
+    Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_kp1,
+    Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_k) {
+  CHECK_NOTNULL(bearing_vectors_kp1);
+  CHECK_NOTNULL(bearing_vectors_k);
+
+  const size_t num_matches = matches_kp1_k.size();
+  std::vector<size_t> keypoint_indices_kp1;
+  keypoint_indices_kp1.reserve(num_matches);
+  std::vector<size_t> keypoint_indices_k;
+  keypoint_indices_k.reserve(num_matches);
+
+  for (const aslam::Match& match_kp1_k : matches_kp1_k) {
+    keypoint_indices_kp1.emplace_back(match_kp1_k.first);
+    keypoint_indices_k.emplace_back(match_kp1_k.second);
+  }
+
+  std::vector<bool> success;
+  aslam::common::convertEigenToStlVector(frame_kp1.getNormalizedBearingVectors(
+      keypoint_indices_kp1, &success), bearing_vectors_kp1);
+  aslam::common::convertEigenToStlVector(frame_k.getNormalizedBearingVectors(
+            keypoint_indices_k, &success), bearing_vectors_k);
+}
+
 }  // namespace aslam
 
