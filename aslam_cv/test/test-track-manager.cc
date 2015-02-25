@@ -167,13 +167,20 @@ TEST(TrackManagerTests, TestApplyMatchesUniformly) {
   apple_frame->swapTrackIds(&apple_tracks);
 
   /// matches_A_B: {(0,0), (1,1), (2,2), (3,3), (4,4), ...}
+  Eigen::VectorXd banana_scores = Eigen::VectorXd::Constant(kNumKeypoints, 0);
+  Eigen::VectorXd apple_scores = Eigen::VectorXd::Constant(kNumKeypoints, 0);
   aslam::MatchesWithScore matches_A_B;
   matches_A_B.reserve(kNumKeypoints);
   for (size_t match_idx = 0; match_idx < kNumKeypoints; ++match_idx) {
     double score = 1.0 - (static_cast<double>(match_idx) /
         static_cast<double>(kNumKeypoints));
     matches_A_B.emplace_back(match_idx, match_idx, score);
+
+    apple_scores(match_idx) = score;
+    banana_scores(match_idx) = score;
   }
+  banana_frame->swapKeypointScores(&banana_scores);
+  apple_frame->swapKeypointScores(&apple_scores);
 
   const size_t kBucketCapacity = 5u;
   const size_t kNumStrongToPush = 20u;
@@ -199,7 +206,7 @@ TEST(TrackManagerTests, TestApplyMatchesUniformly) {
 
   int track_id = 0;
   CHECK_LT(kNumStrongToPush, kNumKeypoints);
-  // The first kNumStrongToPush matches will get assinged anyways, even though
+  // The first kNumStrongToPush matches will get assigned anyways, even though
   // it overflows buckets 0. They all live in bucket 0.
   for (size_t idx = 0; idx < kNumStrongToPush; ++idx) {
     expected_banana_tracks(idx) = track_id;
@@ -242,11 +249,17 @@ TEST(TrackManagerTests, TestApplyMatchesUniformEmpty) {
   Eigen::VectorXi banana_tracks = Eigen::VectorXi::Constant(5, -1);
   Eigen::VectorXi apple_tracks = Eigen::VectorXi::Constant(5, -1);
 
+  Eigen::VectorXd banana_scores = Eigen::VectorXd::Constant(5, 100);
+  Eigen::VectorXd apple_scores = Eigen::VectorXd::Constant(5, 100);
+
   banana_frame->swapKeypointMeasurements(&banana_keypoints);
   apple_frame->swapKeypointMeasurements(&apple_keypoints);
 
   banana_frame->swapTrackIds(&banana_tracks);
   apple_frame->swapTrackIds(&apple_tracks);
+
+  banana_frame->swapKeypointScores(&banana_scores);
+  apple_frame->swapKeypointScores(&apple_scores);
 
   aslam::MatchesWithScore matches_A_B;
 
