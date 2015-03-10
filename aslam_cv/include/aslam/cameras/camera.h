@@ -160,6 +160,11 @@ class Camera {
   /// \brief Clones the camera instance and returns a pointer to the copy.
   virtual aslam::Camera* clone() const = 0;
 
+  /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
+  static std::shared_ptr<Camera> loadFromYaml(const std::string& yaml_file);
+  /// Save this ncamera to a yaml file.
+  void saveToYaml(const std::string& yaml_file) const;
+
  protected:
   /// Copy constructor for clone operation.
   Camera(const Camera& other) :

@@ -20,6 +20,12 @@ struct convert<std::shared_ptr<aslam::Camera>> {
   static Node encode(const std::shared_ptr<aslam::Camera>& camera);
 };
 
+template<>
+struct convert<aslam::Camera> {
+  static bool decode(const Node& node, aslam::Camera& camera);
+  static Node encode(const aslam::Camera& camera);
+};
+
 }  // namespace YAML
 
 #endif // ASLAM_CV_CAMERA_YAML_SERIALIZATION_H
