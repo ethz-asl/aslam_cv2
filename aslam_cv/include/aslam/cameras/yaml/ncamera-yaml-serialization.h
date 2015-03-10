@@ -4,9 +4,7 @@
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 
-namespace aslam {
-class NCamera;
-}  // namespace aslam
+#include <aslam/cameras/ncamera.h>
 
 namespace YAML {
 
@@ -18,6 +16,12 @@ struct convert<std::shared_ptr<aslam::NCamera>> {
   /// returns true, but when it fails, the shared pointer will be null.
   static bool decode(const Node& node, std::shared_ptr<aslam::NCamera>& ncamera);
   static Node encode(const std::shared_ptr<aslam::NCamera>& ncamera);
+};
+
+template<>
+struct convert<aslam::NCamera> {
+  static bool decode(const Node& node, aslam::NCamera& ncamera);
+  static Node encode(const aslam::NCamera& ncamera);
 };
 
 }  // namespace YAML

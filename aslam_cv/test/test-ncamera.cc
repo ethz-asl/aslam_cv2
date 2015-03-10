@@ -21,9 +21,9 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
   aslam::NCamera::Ptr ncamera_loaded;
 
   std::string filename = "test_ncamera.yaml";
-  YAML::Save(ncamera, filename);
+  ncamera->saveToYaml(filename);
 
-  YAML::Load(filename, &ncamera_loaded);
+  ncamera_loaded = aslam::NCamera::loadFromYaml(filename);
   ASSERT_TRUE(ncamera_loaded.get() != nullptr);
 
   EXPECT_EQ(ncamera_loaded->getLabel(), ncamera->getLabel());
@@ -43,7 +43,9 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
     EXPECT_TRUE(EIGEN_MATRIX_NEAR(ncamera->get_T_C_B(cam_idx).getTransformationMatrix(),
                                   ncamera_loaded->get_T_C_B(cam_idx).getTransformationMatrix(),
                                   1e-8));
+    EXPECT_TRUE(camera_loaded == camera_gt);
   }
+  EXPECT_TRUE(*ncamera == *ncamera_loaded);
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
