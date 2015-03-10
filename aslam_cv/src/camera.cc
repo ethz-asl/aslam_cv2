@@ -3,8 +3,8 @@
 #include <glog/logging.h>
 
 #include <aslam/cameras/camera.h>
-#include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/cameras/distortion-null.h>
+#include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/common/yaml-serialization.h>
 
 // TODO(slynen) Enable commented out PropertyTree support

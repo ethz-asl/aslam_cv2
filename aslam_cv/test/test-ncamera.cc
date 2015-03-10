@@ -18,12 +18,12 @@ TEST(TestNCameraYamlSerialization, testEmptyYaml) {
 
 TEST(TestNCameraYamlSerialization, testSerialization) {
   aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(4u);
-  aslam::NCamera::Ptr ncamera_loaded;
+  ASSERT_TRUE(ncamera.get() != nullptr);
 
   std::string filename = "test_ncamera.yaml";
   ncamera->saveToYaml(filename);
 
-  ncamera_loaded = aslam::NCamera::loadFromYaml(filename);
+  aslam::NCamera::Ptr ncamera_loaded = aslam::NCamera::loadFromYaml(filename);
   ASSERT_TRUE(ncamera_loaded.get() != nullptr);
 
   EXPECT_EQ(ncamera_loaded->getLabel(), ncamera->getLabel());
