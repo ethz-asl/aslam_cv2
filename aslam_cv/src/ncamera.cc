@@ -6,9 +6,11 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/ncamera.h>
+#include <aslam/cameras/yaml/ncamera-yaml-serialization.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/predicates.h>
 #include <aslam/common/unique-id.h>
+#include <aslam/common/yaml-serialization.h>
 
 namespace aslam {
 
@@ -25,6 +27,27 @@ NCamera::NCamera(const NCameraId& id, const TransformationVector& T_C_B,
 NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
   // TODO(PTF): fill in
   CHECK(false) << "Not implemented";
+}
+
+NCamera::Ptr NCamera::loadFromYaml(const std::string& yaml_file) {
+  try {
+    YAML::Node doc = YAML::LoadFile(yaml_file.c_str());
+    return doc.as<aslam::NCamera::Ptr>();
+  } catch (const std::exception& ex) {
+    LOG(ERROR) << "Failed to load NCamera from file " << yaml_file << " with the error: \n"
+               << ex.what();
+  }
+  // Return nullptr in the failure case.
+  return NCamera::Ptr();
+}
+
+void NCamera::saveToYaml(const std::string& yaml_file) const {
+  try {
+    YAML::Save(*this, yaml_file);
+  } catch (const std::exception& ex) {
+    LOG(ERROR) << "Failed to save NCamera to file " << yaml_file << " with the error: \n"
+               << ex.what();
+  }
 }
 
 void NCamera::initInternal() {
@@ -204,7 +227,8 @@ bool NCamera::operator==(const NCamera& other) const {
   if (same) {
     for (size_t i = 0; i < getNumCameras(); ++i) {
       same &= aslam::checkSharedEqual(cameras_[i], other.cameras_[i]);
-      same &= T_C_B_[i] == other.T_C_B_[i];
+      same &= ((T_C_B_[i].getTransformationMatrix() - other.T_C_B_[i].getTransformationMatrix())
+          .cwiseAbs().maxCoeff() < 1e-16);
     }
   }
   return same;

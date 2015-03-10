@@ -33,7 +33,7 @@ class NCamera {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 protected:
-  /// \brief default constructor builds an empty camera rig
+  /// Default constructor builds an empty camera rig.
   NCamera() = default;
 
 public:
@@ -51,13 +51,14 @@ public:
       const std::vector<std::shared_ptr<Camera>>& cameras,
       const std::string& label);
 
-  /// \brief initialize from a property tree
+  /// Initialize from a property tree.
   NCamera(const sm::PropertyTree& propertyTree);
-  ~NCamera() = default;
+  ~NCamera() {}
 
   /// Copy constructor for clone.
   NCamera(const NCamera&) = default;
   void operator=(const NCamera&) = delete;
+  bool operator==(const NCamera& other) const;
 
   /// Method to clone this instance (Make sure the Camera and NCamera ID's are
   /// set to your requirement after cloning!)
@@ -65,96 +66,98 @@ public:
     return new NCamera(static_cast<NCamera const&>(*this));
   };
 
-  /// \brief get the number of cameras
+  /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
+  static std::shared_ptr<NCamera> loadFromYaml(const std::string& yaml_file);
+  /// Save this ncamera to a yaml file.
+  void saveToYaml(const std::string& yaml_file) const;
+
+  /// Get the number of cameras.
   size_t getNumCameras() const;
 
-  /// \brief get the pose of body frame with respect to the camera i
+  /// Get the pose of body frame with respect to the camera i.
   const Transformation& get_T_C_B(size_t camera_index) const;
 
-  /// \brief get the pose of body frame with respect to the camera i
+  /// Get the pose of body frame with respect to the camera i.
   Transformation& get_T_C_B_Mutable(size_t camera_index);
 
-  /// \brief get the pose of body frame with respect to the camera with a camera id
+  /// Get the pose of body frame with respect to the camera with a camera id.
   /// The method will assert that the camera is not in the rig!
   const Transformation& get_T_C_B(const CameraId& camera_id) const;
 
-  /// \brief get the pose of body frame with respect to the camera with a camera id
+  /// Get the pose of body frame with respect to the camera with a camera id.
   /// The method will assert that the camera is not in the rig!
   Transformation& get_T_C_B_Mutable(const CameraId& camera_id);
 
-  /// \brief set the pose of body frame with respect to the camera i
+  /// Set the pose of body frame with respect to the camera i.
   void set_T_C_B(size_t camera_index, const Transformation& T_Ci_B);
 
-  /// \brief get all transformations
+  /// Get all transformations.
   const TransformationVector& getTransformationVector() const;
 
-  /// \brief get the geometry object for camera i
+  /// Get the geometry object for camera i.
   const Camera& getCamera(size_t camera_index) const;
 
-  /// \brief get the geometry object for camera i
+  /// Get the geometry object for camera i.
   Camera& getCameraMutable(size_t camera_index);
 
-  /// \brief get the geometry object for camera i
+  /// Get the geometry object for camera i.
   std::shared_ptr<Camera> getCameraShared(size_t camera_index);
 
-  /// \brief get the geometry object for camera i
+  /// Get the geometry object for camera i.
   std::shared_ptr<const Camera> getCameraShared(size_t camera_index) const;
 
-  /// \brief get the geometry object for camera i
+  /// Get the geometry object for camera i.
   void setCamera(size_t camera_index, std::shared_ptr<Camera> camera);
 
-  /// \brief how many cameras does this system have?
+  /// How many cameras does this system have?
   size_t numCameras() const;
 
-  /// \brief get all cameras
+  /// Get all cameras.
   const std::vector<std::shared_ptr<Camera>>& getCameraVector() const;
 
-  /// \brief gets the id for the camera at index i
+  /// Gets the id for the camera at index i.
   const CameraId& getCameraId(size_t camera_index) const;
 
-  /// \brief does this rig have a camera with this id
+  /// Does this rig have a camera with this id.
   bool hasCameraWithId(const CameraId& id) const;
 
-  /// \brief get the index of the camera with the id
-  /// @returns -1 if the rig doesn't have a camera with this id
+  /// \brief Get the index of the camera with the id.
+  /// @returns -1 if the rig doesn't have a camera with this id.
   int getCameraIndex(const CameraId& id) const;
 
-  /// \brief get the camera id.
+  /// Get the camera id.
   inline const aslam::NCameraId& getId() const {return id_;}
 
-  /// \brief set the camera id.
+  /// Set the camera id.
   inline void setId(const aslam::NCameraId& id) {id_ = id;}
 
-  /// \brief equality
-  bool operator==(const NCamera& other) const;
-
-  /// \brief get a label for the camera
+  /// Get a label for the camera.
   inline const std::string& getLabel() const {return label_;}
 
-  /// \brief set a label for the camera
+  /// Set a label for the camera.
   inline void setLabel(const std::string& label) {label_ = label;}
 
-  /// \brief Create a test NCamera object for unit testing.
+  /// Create a test NCamera object for unit testing.
   static NCamera::Ptr createTestNCamera(size_t num_cameras);
 
-  /// \brief Creates an artificial 4-camera rig in a plane with a camera pointing in
+  /// Creates an artificial 4-camera rig in a plane with a camera pointing in
   /// each direction. (similar to the V-Charge or JanETH camera system)
   static aslam::NCamera::Ptr createSurroundViewTestNCamera();
 
 private:
-  /// \brief internal consistency checks and initialization
+  /// Internal consistency checks and initialization.
   void initInternal();
 
-  /// \brief A unique id for this camera system
+  /// A unique id for this camera system.
   NCameraId id_;
 
-  /// \brief The mounting transformations
+  /// The mounting transformations.
   TransformationVector T_C_B_;
 
-  /// \brief The camera geometries
+  /// The camera geometries.
   std::vector<std::shared_ptr<Camera>> cameras_;
 
-  /// \brief a map from camera id to index
+  /// Map from camera id to index.
   std::unordered_map<CameraId, size_t> id_to_index_;
 
   /// A label for this camera rig, a name.

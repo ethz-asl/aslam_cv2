@@ -4,6 +4,8 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion-null.h>
+#include <aslam/cameras/yaml/camera-yaml-serialization.h>
+#include <aslam/common/yaml-serialization.h>
 
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
@@ -48,6 +50,27 @@ bool Camera::operator==(const Camera& other) const {
          (this->line_delay_nano_seconds_ == other.line_delay_nano_seconds_) &&
          (this->image_width_ == other.image_width_) &&
          (this->image_height_ == other.image_height_);
+}
+
+Camera::Ptr Camera::loadFromYaml(const std::string& yaml_file) {
+  try {
+    YAML::Node doc = YAML::LoadFile(yaml_file.c_str());
+    return doc.as<aslam::Camera::Ptr>();
+  } catch (const std::exception& ex) {
+    LOG(ERROR) << "Failed to load Camera from file " << yaml_file << " with the error: \n"
+               << ex.what();
+  }
+  // Return nullptr in the failure case.
+  return Camera::Ptr();
+}
+
+void Camera::saveToYaml(const std::string& yaml_file) const {
+  try {
+    YAML::Save(*this, yaml_file);
+  } catch (const std::exception& ex) {
+    LOG(ERROR) << "Failed to save camera to file " << yaml_file << " with the error: \n"
+               << ex.what();
+  }
 }
 
 const ProjectionResult Camera::project3(const Eigen::Vector3d& point_3d,

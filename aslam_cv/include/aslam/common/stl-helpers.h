@@ -75,4 +75,3 @@ inline void convertEigenToStlVector(
 }  // namespace aslam
 
 #endif  // ASLAM_STL_HELPERS_H_
-
