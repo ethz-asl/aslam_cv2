@@ -10,8 +10,8 @@
 
 namespace YAML {
 
-bool convert<std::shared_ptr<aslam::Camera> >::decode(
-    const Node& node, std::shared_ptr<aslam::Camera>& camera) {
+bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
+                                                      aslam::Camera::Ptr& camera) {
   camera.reset();
   try {
     if(!node.IsMap()) {
@@ -76,7 +76,6 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
       }
     } else {
       distortion.reset(new aslam::NullDistortion());
-      LOG(INFO) << "Found a camera with no distortion.";
     }
 
     std::string camera_type;
@@ -155,19 +154,26 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(
   return true;
 }
 
-Node convert<std::shared_ptr<aslam::Camera> >::encode(
-    const std::shared_ptr<aslam::Camera>& camera) {
-  CHECK_NOTNULL(camera.get());
+Node convert<aslam::Camera::Ptr>::encode(const aslam::Camera::Ptr& camera) {
+  return convert<aslam::Camera>::encode(*CHECK_NOTNULL(camera.get()));
+}
+
+bool convert<aslam::Camera>::decode(const Node& /*node*/, aslam::Camera& /*camera*/) {
+  LOG(FATAL) << "Not implemented!";
+  return false;
+}
+
+Node convert<aslam::Camera>::encode(const aslam::Camera& camera) {
   Node camera_node;
 
-  camera_node["label"] = camera->getLabel();
-  if(camera->getId().isValid()) {
-    camera_node["id"] = camera->getId().hexString();
+  camera_node["label"] = camera.getLabel();
+  if(camera.getId().isValid()) {
+    camera_node["id"] = camera.getId().hexString();
   }
-  camera_node["line-delay-nanoseconds"] = camera->getLineDelayNanoSeconds();
-  camera_node["image_height"] = camera->imageHeight();
-  camera_node["image_width"] = camera->imageWidth();
-  switch(camera->getType()) {
+  camera_node["line-delay-nanoseconds"] = camera.getLineDelayNanoSeconds();
+  camera_node["image_height"] = camera.imageHeight();
+  camera_node["image_width"] = camera.imageWidth();
+  switch(camera.getType()) {
     case aslam::Camera::Type::kPinhole:
       camera_node["type"] = "pinhole";
       break;
@@ -176,11 +182,11 @@ Node convert<std::shared_ptr<aslam::Camera> >::encode(
       break;
     default:
       LOG(ERROR) << "Unknown camera model: "
-        << static_cast<std::underlying_type<aslam::Camera::Type>::type>(camera->getType());
+        << static_cast<std::underlying_type<aslam::Camera::Type>::type>(camera.getType());
   }
-  camera_node["intrinsics"] = camera->getParameters();
+  camera_node["intrinsics"] = camera.getParameters();
 
-  const aslam::Distortion& distortion = camera->getDistortion();
+  const aslam::Distortion& distortion = camera.getDistortion();
   if(distortion.getType() != aslam::Distortion::Type::kNoDistortion) {
     Node distortion_node;
     switch(distortion.getType()) {
@@ -203,7 +209,6 @@ Node convert<std::shared_ptr<aslam::Camera> >::encode(
   }
   return camera_node;
 }
-
 
 }  // namespace YAML
 

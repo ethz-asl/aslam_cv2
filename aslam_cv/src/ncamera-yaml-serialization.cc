@@ -111,30 +111,35 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
 
 Node convert<std::shared_ptr<aslam::NCamera> >::encode(
     const std::shared_ptr<aslam::NCamera>& ncamera) {
-  CHECK_NOTNULL(ncamera.get());
+  return convert<aslam::NCamera>::encode(*CHECK_NOTNULL(ncamera.get()));
+}
+
+bool convert<aslam::NCamera>::decode(const Node& /*node*/, aslam::NCamera& /*ncamera*/) {
+  LOG(FATAL) << "Not implemented!";
+  return false;
+}
+
+Node convert<aslam::NCamera>::encode(const aslam::NCamera& ncamera) {
   Node ncamera_node;
 
-  ncamera_node["label"] = ncamera->getLabel();
-  if(ncamera->getId().isValid()) {
-    ncamera_node["id"] = ncamera->getId().hexString();
+  ncamera_node["label"] = ncamera.getLabel();
+  if(ncamera.getId().isValid()) {
+    ncamera_node["id"] = ncamera.getId().hexString();
   }
 
   Node cameras_node;
-  size_t num_cameras = ncamera->numCameras();
+  size_t num_cameras = ncamera.numCameras();
   for (size_t camera_index = 0; camera_index < num_cameras; ++camera_index) {
     Node camera_node;
+    camera_node["camera"] = ncamera.getCamera(camera_index);
 
-    camera_node["camera"]  = ncamera->getCameraShared(camera_index);
+    Eigen::Vector3d p_B_C = ncamera.get_T_C_B(camera_index).inverted().getPosition();
+    Eigen::Matrix3d R_B_C = ncamera.get_T_C_B(camera_index).inverted().getRotationMatrix();
 
-    Eigen::Vector3d p_B_C = ncamera->get_T_C_B(camera_index).inverted().getPosition();
-    Eigen::Matrix3d R_B_C =
-        ncamera->get_T_C_B(camera_index).inverted().getRotationMatrix();
-
-    Node extrinsics;
     // The vector from the origin of B to the origin of C expressed in B
+    Node extrinsics;
     extrinsics["p_B_C"] = p_B_C;
     extrinsics["R_B_C"] = R_B_C;
-
     camera_node["extrinsics"] = extrinsics;
 
     cameras_node.push_back(camera_node);
