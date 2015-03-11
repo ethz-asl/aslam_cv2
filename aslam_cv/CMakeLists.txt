@@ -26,7 +26,7 @@ cs_add_library(${PROJECT_NAME}
                                src/ncamera.cc
                                src/ncamera-yaml-serialization.cc
                                src/statistics.cc
-                               src/thread-pool.cc                              
+                               src/thread-pool.cc
                                src/track-manager.cc
                                src/triangulation.cc
                                src/undistorter.cc

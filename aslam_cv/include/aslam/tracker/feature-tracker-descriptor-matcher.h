@@ -22,9 +22,11 @@ class FeatureTrackerDescriptorMatching : public FeatureTracker {
   virtual ~FeatureTrackerDescriptorMatching() {
   }
 
-  /// \brief Main tracker
-  /// @param[in,out] frame_k Frame at time step k.
+  /// \brief Tracker that matches brisk descriptors in a small search window that is predicted
+  ///        using the given rotation.
   /// @param[in,out] frame_kp1 Frame at time step k+1.
+  /// @param[in,out] frame_k Frame at time step k.
+  /// @param[in] q_Ckp1_Ck Rotation taking points from the Ck frame to the Ckp1 frame.
   /// @param[out] matches_with_score_kp1_k Detected matches from frame k to frame k+1.
   virtual void track(const std::shared_ptr<aslam::VisualFrame>& frame_kp1,
                      const std::shared_ptr<aslam::VisualFrame>& frame_k,
