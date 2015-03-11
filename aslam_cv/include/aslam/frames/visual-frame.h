@@ -98,6 +98,10 @@ class VisualFrame  {
     return aslam::channels::hasChannel(channel, channels_);
   }
 
+  /// Clears the following channels: KeypointMeasurements, KeypointMeasurementUncertainties,
+  /// KeypointOrientations, KeypointScores, KeypointScales, Descriptors, TrackIds
+  void clearKeypointChannels();
+
   /// The keypoint measurements stored in a frame.
   const Eigen::Matrix2Xd& getKeypointMeasurements() const;
 
