@@ -76,22 +76,16 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
         return true;
       }
 
-      // The vector from the origin of B to the origin of C expressed in B
-      Eigen::Vector3d p_B_C;
-      if (!YAML::safeGet(extrinsics_node, "p_B_C", &p_B_C)) {
-        LOG(ERROR) << "Unable to get extrinsic position p_B_C for camera " << camera_index;
+      // Get the transformation matrix T_B_C (takes points from the frame C to frame B).
+      Eigen::Matrix4d T_B_C_raw;
+      if (!YAML::safeGet(extrinsics_node, "T_B_C", &T_B_C_raw)) {
+        LOG(ERROR) << "Unable to get extrinsic transformation T_B_C for camera " << camera_index;
         return true;
       }
-
-      // Get the quaternion. Hamiltonian, scalar first.
-      Eigen::Matrix3d R_B_C_raw;
-      if (!YAML::safeGet(extrinsics_node, "R_B_C", &R_B_C_raw)) {
-        LOG(ERROR) << "Unable to get extrinsic rotation R_B_C for camera " << camera_index;
-        return true;
-      }
-      aslam::Quaternion q_B_C = aslam::Quaternion::constructAndRenormalize(R_B_C_raw);
-
-      aslam::Transformation T_B_C(q_B_C, p_B_C);
+      // This call will fail hard if the matrix is not a rotation matrix.
+      aslam::Quaternion q_B_C = aslam::Quaternion(
+          static_cast<Eigen::Matrix3d>(T_B_C_raw.block<3,3>(0,0)));
+      aslam::Transformation T_B_C(q_B_C, T_B_C_raw.block<3,1>(0,3));
 
       // Fill in the data in the ncamera.
       cameras.push_back(camera);
