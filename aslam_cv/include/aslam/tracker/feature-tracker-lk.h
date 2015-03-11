@@ -22,8 +22,9 @@ class FeatureTrackerLk : public FeatureTracker {
   }
 
   /// \brief Main Lk-tracker routine.
-  /// @param[in] frame_k Frame at time step k.
-  /// @param[in] frame_kp1 Frame at time step k+1.
+  /// @param[in,out] frame_kp1 Frame at time step k+1.
+  /// @param[in,out] frame_k Frame at time step k.
+  /// @param[in] q_Ckp1_Ck Rotation taking points from the Ck frame to the Ckp1 frame.
   /// @param[out] matches_with_score_kp1_k Detected matches from frame k to frame k+1.
   virtual void track(const std::shared_ptr<aslam::VisualFrame>& frame_kp1,
                      const std::shared_ptr<aslam::VisualFrame>& frame_k,
