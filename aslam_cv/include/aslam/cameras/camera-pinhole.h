@@ -116,7 +116,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   ///        for the general case.
   /// @param[in]  keypoint     Keypoint in image coordinates.
   /// @param[out] out_point_3d Bearing vector in euclidean coordinates
-  virtual bool backProject3(const Eigen::Vector2d& keypoint,
+  virtual bool backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                             Eigen::Vector3d* out_point_3d) const;
 
   /// \brief Checks the success of a projection operation and returns the result in a
@@ -166,7 +166,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// @return Contains information about the success of the projection. Check
   ///         \ref ProjectionResult for more information.
   virtual const ProjectionResult project3Functional(
-      const Eigen::Vector3d& point_3d,
+      const Eigen::Ref<const Eigen::Vector3d>& point_3d,
       const Eigen::VectorXd* intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,
       Eigen::Vector2d* out_keypoint,
@@ -269,7 +269,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// Function to check whether the given intrinic parameters are valid for this model.
   virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
 
-  /// \brief Print the internal parameters of the camera in a human-readable form
+  /// Print the internal parameters of the camera in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras
   virtual void printParameters(std::ostream& out, const std::string& text) const;
