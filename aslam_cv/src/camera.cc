@@ -73,7 +73,7 @@ void Camera::saveToYaml(const std::string& yaml_file) const {
   }
 }
 
-const ProjectionResult Camera::project3(const Eigen::Vector3d& point_3d,
+const ProjectionResult Camera::project3(const Eigen::Ref<const Eigen::Vector3d>& point_3d,
                                         Eigen::Vector2d* out_keypoint) const {
   CHECK_NOTNULL(out_keypoint);
   return project3Functional(point_3d,
@@ -85,7 +85,7 @@ const ProjectionResult Camera::project3(const Eigen::Vector3d& point_3d,
                             nullptr);     // J_distortion not needed.
 }
 
-const ProjectionResult Camera::project3(const Eigen::Vector3d& point_3d,
+const ProjectionResult Camera::project3(const Eigen::Ref<const Eigen::Vector3d>& point_3d,
                                         Eigen::Vector2d* out_keypoint,
                                         Eigen::Matrix<double, 2, 3>* out_jacobian) const {
   CHECK_NOTNULL(out_keypoint);
@@ -99,7 +99,7 @@ const ProjectionResult Camera::project3(const Eigen::Vector3d& point_3d,
 }
 
 const ProjectionResult Camera::project3Functional(
-    const Eigen::Vector3d& point_3d,
+    const Eigen::Ref<const Eigen::Vector3d>& point_3d,
     const Eigen::VectorXd* intrinsics_external,
     const Eigen::VectorXd* distortion_coefficients_external,
     Eigen::Vector2d* out_keypoint) const {
@@ -114,7 +114,7 @@ const ProjectionResult Camera::project3Functional(
                             nullptr);
 }
 
-const ProjectionResult Camera::project4(const Eigen::Vector4d& point_4d,
+const ProjectionResult Camera::project4(const Eigen::Ref<const Eigen::Vector4d>& point_4d,
                                         Eigen::Vector2d* out_keypoint) const {
   CHECK_NOTNULL(out_keypoint);
 
@@ -127,7 +127,7 @@ const ProjectionResult Camera::project4(const Eigen::Vector4d& point_4d,
   return project3(point_3d, out_keypoint);
 }
 
-const ProjectionResult Camera::project4(const Eigen::Vector4d& point_4d,
+const ProjectionResult Camera::project4(const Eigen::Ref<const Eigen::Vector4d>& point_4d,
                                         Eigen::Vector2d* out_keypoint,
                                         Eigen::Matrix<double, 2, 4>* out_jacobian) const {
   CHECK_NOTNULL(out_keypoint);
@@ -146,7 +146,7 @@ const ProjectionResult Camera::project4(const Eigen::Vector4d& point_4d,
   return ret;
 }
 
-bool Camera::backProject4(const Eigen::Vector2d& keypoint,
+bool Camera::backProject4(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                           Eigen::Vector4d* out_point4d) const {
   CHECK_NOTNULL(out_point4d);
 
@@ -157,20 +157,20 @@ bool Camera::backProject4(const Eigen::Vector2d& keypoint,
   return success;
 }
 
-bool Camera::isProjectable3(const Eigen::Vector3d& p) const {
+bool Camera::isProjectable3(const Eigen::Ref<const Eigen::Vector3d>& p) const {
   Eigen::Vector2d k;
   const ProjectionResult& ret = project3(p, &k);
   return ret.isKeypointVisible();
 }
 
-bool Camera::isProjectable4(const Eigen::Vector4d& ph) const {
+bool Camera::isProjectable4(const Eigen::Ref<const Eigen::Vector4d>& ph) const {
   Eigen::Vector2d k;
   const ProjectionResult& ret = project4(ph, &k);
   return ret.isKeypointVisible();
 }
 
 void Camera::project3Vectorized(
-    const Eigen::Matrix3Xd& points_3d, Eigen::Matrix2Xd* out_keypoints,
+    const Eigen::Ref<const Eigen::Matrix3Xd>& points_3d, Eigen::Matrix2Xd* out_keypoints,
     std::vector<ProjectionResult>* out_results) const {
   CHECK_NOTNULL(out_keypoints);
   CHECK_NOTNULL(out_results);
@@ -183,7 +183,7 @@ void Camera::project3Vectorized(
   }
 }
 
-void Camera::backProject3Vectorized(const Eigen::Matrix2Xd& keypoints,
+void Camera::backProject3Vectorized(const Eigen::Ref<const Eigen::Matrix2Xd>& keypoints,
                                     Eigen::Matrix3Xd* out_points_3d,
                                     std::vector<bool>* out_success) const {
   CHECK_NOTNULL(out_points_3d);

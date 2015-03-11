@@ -76,7 +76,7 @@ bool PinholeCamera::operator==(const Camera& other) const {
   return true;
 }
 
-bool PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
+bool PinholeCamera::backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                                  Eigen::Vector3d* out_point_3d) const {
   CHECK_NOTNULL(out_point_3d);
 
@@ -95,7 +95,7 @@ bool PinholeCamera::backProject3(const Eigen::Vector2d& keypoint,
 }
 
 const ProjectionResult PinholeCamera::project3Functional(
-    const Eigen::Vector3d& point_3d,
+    const Eigen::Ref<const Eigen::Vector3d>& point_3d,
     const Eigen::VectorXd* intrinsics_external,
     const Eigen::VectorXd* distortion_coefficients_external,
     Eigen::Vector2d* out_keypoint,
