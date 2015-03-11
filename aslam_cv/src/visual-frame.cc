@@ -322,6 +322,21 @@ void VisualFrame::swapTrackIds(Eigen::VectorXi* track_ids_new) {
   track_ids.swap(*track_ids_new);
 }
 
+void VisualFrame::clearKeypointChannels() {
+  Eigen::Matrix2Xd zero_keypoints;
+  setKeypointMeasurements(zero_keypoints);
+
+  Eigen::VectorXi zero_vector_int = Eigen::VectorXi::Zero(zero_keypoints.cols());
+  setTrackIds(zero_vector_int);
+
+  Eigen::VectorXd zero_vector_double = Eigen::VectorXd::Zero(zero_keypoints.cols());
+  setKeypointMeasurementUncertainties(zero_vector_double);
+  setKeypointOrientations(zero_vector_double);
+  setKeypointScores(zero_vector_double);
+  setKeypointScales(zero_vector_double);
+  setDescriptors(aslam::VisualFrame::DescriptorsT());
+}
+
 const Camera::ConstPtr VisualFrame::getCameraGeometry() const {
   return camera_geometry_;
 }
