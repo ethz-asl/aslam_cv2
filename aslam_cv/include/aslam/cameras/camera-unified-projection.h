@@ -120,14 +120,15 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   ///        for the general case.
   /// @param[in]  keypoint     Keypoint in image coordinates.
   /// @param[out] out_point_3d Bearing vector in euclidean coordinates
-  virtual bool backProject3(const Eigen::Vector2d& keypoint, Eigen::Vector3d* out_point_3d) const;
+  virtual bool backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
+                            Eigen::Vector3d* out_point_3d) const;
 
   /// \brief Checks the success of a projection operation and returns the result in a
   ///        ProjectionResult object.
   /// @param[in] keypoint Keypoint in image coordinates.
   /// @param[in] point_3d Projected point in euclidean.
   /// @return The ProjectionResult object contains details about the success of the projection.
-  const ProjectionResult evaluateProjectionResult(const Eigen::Vector2d& keypoint,
+  const ProjectionResult evaluateProjectionResult(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                                                   const Eigen::Vector3d& point_3d) const;
 
 
@@ -138,7 +139,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
   /// \brief Checks whether a keypoint is liftable to the unit sphere.
   /// @param[in] keypoint Keypoint in image coordinates.
-  bool isLiftable(const Eigen::Vector2d& keypoint) const;
+  bool isLiftable(const Eigen::Ref<const Eigen::Vector2d>& keypoint) const;
 
   /// @}
 
@@ -168,7 +169,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   /// @return Contains information about the success of the projection. Check
   ///         \ref ProjectionResult for more information.
   virtual const ProjectionResult project3Functional(
-      const Eigen::Vector3d& point_3d,
+      const Eigen::Ref<const Eigen::Vector3d>& point_3d,
       const Eigen::VectorXd* intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,
       Eigen::Vector2d* out_keypoint,
@@ -287,7 +288,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
     return kNumOfParams;
   }
 
-  /// \brief Print the internal parameters of the camera in a human-readable form
+  /// Print the internal parameters of the camera in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras
   virtual void printParameters(std::ostream& out, const std::string& text) const;

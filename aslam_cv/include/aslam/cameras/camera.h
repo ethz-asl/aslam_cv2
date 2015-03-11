@@ -230,7 +230,7 @@ class Camera {
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @return Contains information about the success of the projection. Check
   ///         \ref ProjectionResult for more information.
-  const ProjectionResult project3(const Eigen::Vector3d& point_3d,
+  const ProjectionResult project3(const Eigen::Ref<const Eigen::Vector3d>& point_3d,
                                   Eigen::Vector2d* out_keypoint) const;
 
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
@@ -240,7 +240,7 @@ class Camera {
   /// @param[out] out_jacobian The Jacobian wrt. to changes in the euclidean point.
   /// @return Contains information about the success of the projection. Check
   ///         \ref ProjectionResult for more information.
-  const ProjectionResult project3(const Eigen::Vector3d& point_3d,
+  const ProjectionResult project3(const Eigen::Ref<const Eigen::Vector3d>& point_3d,
                                   Eigen::Vector2d* out_keypoint,
                                   Eigen::Matrix<double, 2, 3>* out_jacobian) const;
 
@@ -254,7 +254,7 @@ class Camera {
   /// @param[out] out_results   Contains information about the success of the
   ///                           projections. Check \ref ProjectionResult for
   ///                           more information.
-  virtual void project3Vectorized(const Eigen::Matrix3Xd& points_3d,
+  virtual void project3Vectorized(const Eigen::Ref<const Eigen::Matrix3Xd>& points_3d,
                                   Eigen::Matrix2Xd* out_keypoints,
                                   std::vector<ProjectionResult>* out_results) const;
 
@@ -265,7 +265,7 @@ class Camera {
   /// @param[in]  keypoint     Keypoint in image coordinates.
   /// @param[out] out_point_3d Bearing vector in euclidean coordinates
   /// @return Was the projection successful?
-  virtual bool backProject3(const Eigen::Vector2d& keypoint,
+  virtual bool backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                             Eigen::Vector3d* out_point_3d) const = 0;
 
   /// \brief Compute the 3d bearing vectors in euclidean coordinates given a list of
@@ -277,7 +277,7 @@ class Camera {
   /// @param[in]  keypoints     Keypoints in image coordinates.
   /// @param[out] out_point_3ds Bearing vectors in euclidean coordinates (with z=1 -> non-normalized).
   /// @param[out] out_success   Were the projections successful?
-  virtual void backProject3Vectorized(const Eigen::Matrix2Xd& keypoints,
+  virtual void backProject3Vectorized(const Eigen::Ref<const Eigen::Matrix2Xd>& keypoints,
                                       Eigen::Matrix3Xd* out_points_3d,
                                       std::vector<bool>* out_success) const;
   /// @}
@@ -292,7 +292,7 @@ class Camera {
   /// @param[out] out_keypoint The keypoint in image coordinates.
   /// @return Contains information about the success of the projection. Check
   ///         \ref ProjectionResult for more information.
-  const ProjectionResult project4(const Eigen::Vector4d& point_4d,
+  const ProjectionResult project4(const Eigen::Ref<const Eigen::Vector4d>& point_4d,
                                   Eigen::Vector2d* out_keypoint) const;
 
   /// \brief Projects a euclidean point to a 2d image measurement. Applies the
@@ -302,7 +302,7 @@ class Camera {
   /// @param[out] out_jacobian The Jacobian wrt. to changes in the homogeneous point.
   /// @return Contains information about the success of the projection. Check \ref
   ///         ProjectionResult for more information.
-  const ProjectionResult project4(const Eigen::Vector4d& point_4d,
+  const ProjectionResult project4(const Eigen::Ref<const Eigen::Vector4d>& point_4d,
                                   Eigen::Vector2d* out_keypoint,
                                   Eigen::Matrix<double, 2, 4>* out_jacobian) const;
 
@@ -311,7 +311,7 @@ class Camera {
   /// @param[in]  keypoint     Keypoint in image coordinates.
   /// @param[out] out_point_3d Bearing vector in homogeneous coordinates.
   /// @return Was the projection successful?
-  bool backProject4(const Eigen::Vector2d& keypoint,
+  bool backProject4(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                     Eigen::Vector4d* out_point_4d) const;
 
   /// @}
@@ -333,7 +333,7 @@ class Camera {
   /// @return Contains information about the success of the projection. Check \ref
   ///         ProjectionResult for more information.
   const ProjectionResult project3Functional(
-      const Eigen::Vector3d& point_3d,
+      const Eigen::Ref<const Eigen::Vector3d>& point_3d,
       const Eigen::VectorXd* intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,
       Eigen::Vector2d* out_keypoint) const;
@@ -357,7 +357,7 @@ class Camera {
   /// @return Contains information about the success of the projection. Check \ref
   ///         ProjectionResult for more information.
   virtual const ProjectionResult project3Functional(
-      const Eigen::Vector3d& point_3d,
+      const Eigen::Ref<const Eigen::Vector3d>& point_3d,
       const Eigen::VectorXd* intrinsics_external,
       const Eigen::VectorXd* distortion_coefficients_external,
       Eigen::Vector2d* out_keypoint,
@@ -429,16 +429,17 @@ class Camera {
   /// \brief Can the projection function be run on this point? This doesn't test if
   ///        the projected point is visible, only if the projection function can be run
   ///        without numerical errors or singularities.
-  bool isProjectable3(const Eigen::Vector3d& point) const;
+  bool isProjectable3(const Eigen::Ref<const Eigen::Vector3d>& point) const;
 
   /// \brief  Can the projection function be run on this point? This doesn't test
   ///         if the projected point is visible, only if the projection function
   ///         can be run without numerical errors or singularities.
-  bool isProjectable4(const Eigen::Vector4d& point) const;
+  bool isProjectable4(const Eigen::Ref<const Eigen::Vector4d>& point) const;
 
   /// \brief  Check if a given keypoint is inside the imaging box of the camera.
   template<typename Scalar>
   bool isKeypointVisible(const Eigen::Matrix<Scalar, 2, 1>& keypoint) const;
+  inline bool isKeypointVisible(const Eigen::Ref<const Eigen::Vector2d>& keypoint) const;
 
   /// @}
 
@@ -509,7 +510,7 @@ class Camera {
   bool hasMask() const;
 
   /// Check if the keypoint is masked.
-  inline bool isMasked(const Eigen::Vector2d& keypoint) const {
+  inline bool isMasked(const Eigen::Ref<const Eigen::Vector2d>& keypoint) const {
     return keypoint[0] < 0.0 || keypoint[0] >= static_cast<double>(image_width_) ||
         keypoint[1] < 0.0 || keypoint[1] >= static_cast<double>(image_height_) ||
         (!mask_.empty() && mask_.at<uint8_t>(static_cast<int>(keypoint[1]),
