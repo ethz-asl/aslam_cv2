@@ -63,7 +63,7 @@ bool UnifiedProjectionCamera::operator==(const Camera& other) const {
   return true;
 }
 
-bool UnifiedProjectionCamera::backProject3(const Eigen::Vector2d& keypoint,
+bool UnifiedProjectionCamera::backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                                            Eigen::Vector3d* out_point_3d) const {
   CHECK_NOTNULL(out_point_3d);
 
@@ -84,7 +84,7 @@ bool UnifiedProjectionCamera::backProject3(const Eigen::Vector2d& keypoint,
 }
 
 const ProjectionResult UnifiedProjectionCamera::project3Functional(
-    const Eigen::Vector3d& point_3d,
+    const Eigen::Ref<const Eigen::Vector3d>& point_3d,
     const Eigen::VectorXd* intrinsics_external,
     const Eigen::VectorXd* distortion_coefficients_external,
     Eigen::Vector2d* out_keypoint,
@@ -210,7 +210,7 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
 }
 
 inline const ProjectionResult UnifiedProjectionCamera::evaluateProjectionResult(
-    const Eigen::Vector2d& keypoint,
+    const Eigen::Ref<const Eigen::Vector2d>& keypoint,
     const Eigen::Vector3d& point_3d) const {
 
   const bool visibility = isKeypointVisible(keypoint);
@@ -233,7 +233,7 @@ inline bool UnifiedProjectionCamera::isUndistortedKeypointValid(const double& rh
   return xi <= 1.0 || rho2_d <= (1.0 / (xi * xi - 1));
 }
 
-bool UnifiedProjectionCamera::isLiftable(const Eigen::Vector2d& keypoint) const {
+bool UnifiedProjectionCamera::isLiftable(const Eigen::Ref<const Eigen::Vector2d>& keypoint) const {
   Eigen::Vector2d y;
   y[0] = 1.0 / fu() * (keypoint[0] - cu());
   y[1] = 1.0 / fv() * (keypoint[1] - cv());
