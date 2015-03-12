@@ -17,7 +17,7 @@ class FeatureTrackerLk : public FeatureTracker {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
 
-  FeatureTrackerLk();
+  FeatureTrackerLk(const aslam::Camera& camera);
   virtual ~FeatureTrackerLk() {
   }
 
@@ -70,10 +70,6 @@ class FeatureTrackerLk : public FeatureTracker {
 
   /// Minimum possible euclidean distance between the returned corners.
   static constexpr double kGoodFeaturesToTrackMinDistancePixel = 10.0;
-
-  /// Optional region of interest. If the image is not empty (it needs to have the type CV_8UC1
-  /// and the same size as image), it specifies the region in which the corners are detected.
-  const cv::Mat kGoodFeaturesToTrackMask = cv::Mat();
 
   /// Maximum number of corners to return. If there are more corners than are found,
   /// the strongest of them is returned.
@@ -131,7 +127,13 @@ class FeatureTrackerLk : public FeatureTracker {
 
   /// Size of the search window at each pyramid level.
   const cv::Size kWindowSize = cv::Size(21, 21);
+
+  /// Enforce a minimal distance of all keypoints to the image border.
+  const size_t kMinDistanceToImageBorderPx = 30u;
   /// @}
+
+  /// Mask the area where no tracks should be spawned.
+  cv::Mat detection_mask_;
 
   /// Was the first frame processed?
   bool first_frame_processed_;
