@@ -66,19 +66,9 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
         return true;
       }
 
-      const Node& extrinsics_node = camera_node["extrinsics"];
-      if (!extrinsics_node) {
-        LOG(ERROR) << "No extrinsics node for camera " << camera_index;
-        return true;
-      }
-      if (!extrinsics_node.IsMap()) {
-        LOG(ERROR) << "Extrinsics node for camera " << camera_index << " is not a map.";
-        return true;
-      }
-
       // Get the transformation matrix T_B_C (takes points from the frame C to frame B).
       Eigen::Matrix4d T_B_C_raw;
-      if (!YAML::safeGet(extrinsics_node, "T_B_C", &T_B_C_raw)) {
+      if (!YAML::safeGet(camera_node, "T_B_C", &T_B_C_raw)) {
         LOG(ERROR) << "Unable to get extrinsic transformation T_B_C for camera " << camera_index;
         return true;
       }
@@ -94,9 +84,8 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
 
     // Create the ncamera and fill in all the data.
     ncamera.reset(new aslam::NCamera(ncam_id, T_Ci_B, cameras, label));
-
-  } catch(const std::exception& e) {
-    LOG(ERROR) << "Yaml exception during parsing: " << e.what();
+  } catch (const std::exception& ex) {
+    LOG(ERROR) << "Yaml exception during parsing: " << ex.what();
     ncamera.reset();
     return true;
   }
@@ -126,16 +115,7 @@ Node convert<aslam::NCamera>::encode(const aslam::NCamera& ncamera) {
   for (size_t camera_index = 0; camera_index < num_cameras; ++camera_index) {
     Node camera_node;
     camera_node["camera"] = ncamera.getCamera(camera_index);
-
-    Eigen::Vector3d p_B_C = ncamera.get_T_C_B(camera_index).inverted().getPosition();
-    Eigen::Matrix3d R_B_C = ncamera.get_T_C_B(camera_index).inverted().getRotationMatrix();
-
-    // The vector from the origin of B to the origin of C expressed in B
-    Node extrinsics;
-    extrinsics["p_B_C"] = p_B_C;
-    extrinsics["R_B_C"] = R_B_C;
-    camera_node["extrinsics"] = extrinsics;
-
+    camera_node["T_B_C"] = ncamera.get_T_C_B(camera_index).inverted().getTransformationMatrix();
     cameras_node.push_back(camera_node);
   }
 

@@ -64,13 +64,15 @@ Camera::Ptr Camera::loadFromYaml(const std::string& yaml_file) {
   return Camera::Ptr();
 }
 
-void Camera::saveToYaml(const std::string& yaml_file) const {
+bool Camera::saveToYaml(const std::string& yaml_file) const {
   try {
     YAML::Save(*this, yaml_file);
   } catch (const std::exception& ex) {
     LOG(ERROR) << "Failed to save camera to file " << yaml_file << " with the error: \n"
                << ex.what();
+    return false;
   }
+  return true;
 }
 
 const ProjectionResult Camera::project3(const Eigen::Ref<const Eigen::Vector3d>& point_3d,
