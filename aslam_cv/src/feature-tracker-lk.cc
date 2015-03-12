@@ -8,7 +8,7 @@ FeatureTrackerLk::FeatureTrackerLk()
 
 void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
                              const aslam::VisualFrame::Ptr& frame_k,
-                             const aslam::Quaternion& /*q_Ckp1_Ck*/,
+                             const aslam::Quaternion& q_Ckp1_Ck,
                              aslam::MatchesWithScore* matches_with_score_kp1_k) {
   CHECK(frame_k);
   CHECK(frame_kp1);
@@ -54,6 +54,30 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
 
     std::vector<cv::Point2f> keypoints_k, keypoints_kp1;
     getKeypointsfromFrame(frame_k, &keypoints_k);
+
+    // use the rotation to predict keypoints in the next frame
+    Eigen::Matrix3Xd rays;
+    Eigen::Matrix2Xd predicted_keypoints;
+    std::vector<bool> projection_successfull;
+    std::vector<ProjectionResult> projection_result;
+    frame_k->getCameraGeometry()->backProject3Vectorized(
+        frame_k->getKeypointMeasurements(), &rays, &projection_successfull);
+    rays = q_Ckp1_Ck.getRotationMatrix() * rays;
+    frame_kp1->getCameraGeometry()->project3Vectorized(rays,
+                                                       &predicted_keypoints,
+                                                       &projection_result);
+    keypoints_kp1.reserve(keypoints_k.size());
+    for (int i = 0; i < predicted_keypoints.cols(); ++i) {
+      if (projection_successfull[i]
+          && projection_result[i].isKeypointVisible()) {
+        keypoints_kp1.emplace_back(predicted_keypoints.col(i)(0),
+                                   predicted_keypoints.col(i)(1));
+      } else {
+        // default to no motion for prediction
+        keypoints_kp1.emplace_back(keypoints_k[i]);
+      }
+    }
+
     cv::calcOpticalFlowPyrLK(frame_k->getRawImage(), frame_kp1->getRawImage(),
                              keypoints_k, keypoints_kp1, tracking_successful, tracking_error,
                              kWindowSize, kMaxPyramidLevel, kTerminationCriteria, kOperationFlag,
