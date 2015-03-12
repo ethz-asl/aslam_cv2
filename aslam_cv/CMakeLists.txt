@@ -19,8 +19,8 @@ cs_add_library(${PROJECT_NAME}
                                src/distortion-equidistant.cc
                                src/distortion-fisheye.cc
                                src/distortion-radtan.cc
-                               src/feature-tracker-gyro.cc
-                               src/feature-tracker.cc
+                               src/feature-tracker-lk.cc
+                               src/feature-tracker-descriptor-matcher.cc
                                src/match.cc
                                src/matching-problem-frame-to-frame.cc
                                src/ncamera.cc
