@@ -41,13 +41,15 @@ NCamera::Ptr NCamera::loadFromYaml(const std::string& yaml_file) {
   return NCamera::Ptr();
 }
 
-void NCamera::saveToYaml(const std::string& yaml_file) const {
+bool NCamera::saveToYaml(const std::string& yaml_file) const {
   try {
     YAML::Save(*this, yaml_file);
   } catch (const std::exception& ex) {
     LOG(ERROR) << "Failed to save NCamera to file " << yaml_file << " with the error: \n"
                << ex.what();
+    return false;
   }
+  return true;
 }
 
 void NCamera::initInternal() {

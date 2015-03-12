@@ -69,7 +69,7 @@ public:
   /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
   static std::shared_ptr<NCamera> loadFromYaml(const std::string& yaml_file);
   /// Save this ncamera to a yaml file.
-  void saveToYaml(const std::string& yaml_file) const;
+  bool saveToYaml(const std::string& yaml_file) const;
 
   /// Get the number of cameras.
   size_t getNumCameras() const;
