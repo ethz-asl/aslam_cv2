@@ -118,10 +118,10 @@ class FeatureTrackerLk : public FeatureTracker {
   /// 0-based maximal pyramid level number. If set to 0, pyramids are not used (single level),
   /// if set to 1, two levels are used, and so on; if pyramids are passed to input then algorithm
   /// will use as many levels as pyramids have but no more than maxLevel.
-  static constexpr size_t kMaxPyramidLevel = 4u;
+  static constexpr size_t kMaxPyramidLevel = 2u;
 
   /// Operation flag. See opencv documentation for details.
-  static constexpr size_t kOperationFlag = 0;
+  static constexpr size_t kOperationFlag = cv::OPTFLOW_USE_INITIAL_FLOW;
 
   /// Parameter specifying the termination criteria of the iterative search algorithm
   /// (after the specified maximum number of iterations criteria.maxCount or when the search
