@@ -1,10 +1,18 @@
 #include <aslam/frames/visual-frame.h>
 #include <aslam/tracker/feature-tracker-lk.h>
 
+#include <opencv/highgui.h>
 namespace aslam {
 
-FeatureTrackerLk::FeatureTrackerLk()
-    : first_frame_processed_(true) {}
+FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
+    : first_frame_processed_(true) {
+  // Create the detection mask.
+  detection_mask_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
+  cv::Mat roi(detection_mask_, cv::Rect(kMinDistanceToImageBorderPx, kMinDistanceToImageBorderPx,
+                                        camera.imageWidth() - 2 * kMinDistanceToImageBorderPx,
+                                        camera.imageHeight() - 2 * kMinDistanceToImageBorderPx));
+  roi = cv::Scalar(255);
+}
 
 void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
                              const aslam::VisualFrame::Ptr& frame_k,
@@ -86,8 +94,10 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
     CHECK_EQ(keypoints_k.size(), keypoints_kp1.size());
     size_t k = 0;
     for (size_t i = 0; i < keypoints_k.size(); ++i) {
-      if (keypoints_kp1[i].x < 0 || keypoints_kp1[i].x >= frame_k->getRawImage().cols ||
-          keypoints_kp1[i].y < 0 || keypoints_kp1[i].y >= frame_k->getRawImage().rows ||
+      if (keypoints_kp1[i].x < kMinDistanceToImageBorderPx ||
+          keypoints_kp1[i].x >= (frame_k->getRawImage().cols - kMinDistanceToImageBorderPx) ||
+          keypoints_kp1[i].y < kMinDistanceToImageBorderPx ||
+          keypoints_kp1[i].y >= (frame_k->getRawImage().rows - kMinDistanceToImageBorderPx) ||
           !tracking_successful[i]) {
         continue;
       }
@@ -99,7 +109,6 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
       matches_with_score_kp1_k->emplace_back(k, i, kUnusedScore);
       CHECK_LT(k, keypoints_kp1.size());
       CHECK_LT(i, keypoints_k.size());
-
       ++k;
     }
   }
@@ -137,7 +146,7 @@ void FeatureTrackerLk::detectGfttCorners(const cv::Mat& image, Vector2dList* det
   std::vector<cv::Point2f> detected_keypoints_cv;
   cv::goodFeaturesToTrack(image, detected_keypoints_cv, kMaxFeatureCount,
                           kGoodFeaturesToTrackQualityLevel, kGoodFeaturesToTrackMinDistancePixel,
-                          kGoodFeaturesToTrackMask);
+                          detection_mask_);
 
   // Subpixel refinement of detected corners.
   cv::cornerSubPix(image, detected_keypoints_cv, kSubPixelWinSize, kSubPixelZeroZone,
@@ -146,6 +155,12 @@ void FeatureTrackerLk::detectGfttCorners(const cv::Mat& image, Vector2dList* det
   // Simple type conversion.
   detected_keypoints->clear();
   for (size_t i = 0; i < detected_keypoints_cv.size(); ++i) {
+    if (detected_keypoints_cv[i].x < kMinDistanceToImageBorderPx ||
+        detected_keypoints_cv[i].x >= (detection_mask_.cols - kMinDistanceToImageBorderPx) ||
+        detected_keypoints_cv[i].y < kMinDistanceToImageBorderPx ||
+        detected_keypoints_cv[i].y >= (detection_mask_.rows - kMinDistanceToImageBorderPx)) {
+      continue;
+    }
     detected_keypoints->emplace_back(detected_keypoints_cv[i].x, detected_keypoints_cv[i].y);
   }
 }
@@ -163,63 +178,40 @@ void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_
     new_keypoints.col(i) = new_keypoint_list[i];
   }
 
-  static constexpr size_t kDummyDescriptorSize = 1;
+  const double kKeypointUncertaintyPx = 0.8;
   if (frame->hasKeypointMeasurements()) {
     CHECK(frame->hasTrackIds());
 
     // Resize the existing structures.
     Eigen::Matrix2Xd* keypoints = CHECK_NOTNULL(frame->getKeypointMeasurementsMutable());
     Eigen::VectorXi* track_ids = CHECK_NOTNULL(frame->getTrackIdsMutable());
+    Eigen::VectorXd* uncertainties =
+        CHECK_NOTNULL(frame->getKeypointMeasurementUncertaintiesMutable());
     CHECK_EQ(keypoints->cols(), track_ids->rows());
 
     keypoints->conservativeResize(Eigen::NoChange, extended_size);
     track_ids->conservativeResize(extended_size);
+    uncertainties->conservativeResize(extended_size);
 
     // Add the new values.
     keypoints->block(0, old_size, 2, num_new_keypoints) = new_keypoints;
     track_ids->segment(old_size, num_new_keypoints).setConstant(-1);
-
-    // Extend the dummy values.
-    aslam::VisualFrame::DescriptorsT* descriptors = CHECK_NOTNULL(frame->getDescriptorsMutable());
-    Eigen::VectorXd* uncertainties =
-        CHECK_NOTNULL(frame->getKeypointMeasurementUncertaintiesMutable());
-    Eigen::VectorXd* orientations = CHECK_NOTNULL(frame->getKeypointOrientationsMutable());
-    Eigen::VectorXd* scales = CHECK_NOTNULL(frame->getKeypointScalesMutable());
-    Eigen::VectorXd* scores = CHECK_NOTNULL(frame->getKeypointScoresMutable());
-
-    descriptors->conservativeResize(kDummyDescriptorSize, extended_size);
-    uncertainties->conservativeResize(extended_size);
-    orientations->conservativeResize(extended_size);
-    scales->conservativeResize(extended_size);
-    scores->conservativeResize(extended_size);
-
-    descriptors->block(0, old_size, kDummyDescriptorSize, num_new_keypoints).setZero();
-    uncertainties->segment(old_size, num_new_keypoints).setZero();
-    orientations->segment(old_size, num_new_keypoints).setZero();
-    scales->segment(old_size, num_new_keypoints).setZero();
-    scores->segment(old_size, num_new_keypoints).setZero();
+    uncertainties->segment(old_size, num_new_keypoints).setConstant(kKeypointUncertaintyPx);
   } else {
-    // Just swap in the keypoints.
+    // Just swap in the keypoints, set invalid track ids and a constant measurement uncertainty.
     frame->setKeypointMeasurements(new_keypoints);
 
     Eigen::VectorXi track_ids(num_new_keypoints);
     track_ids.setConstant(-1);
     frame->swapTrackIds(&track_ids);
 
-    // Remove remainings from the BRISK pipeline.
-    CHECK_NOTNULL(frame->getDescriptorsMutable())->resize(kDummyDescriptorSize, extended_size);
-    CHECK_NOTNULL(frame->getKeypointMeasurementUncertaintiesMutable())->resize(extended_size);
-    CHECK_NOTNULL(frame->getKeypointOrientationsMutable())->resize(extended_size);
-    CHECK_NOTNULL(frame->getKeypointScalesMutable())->resize(extended_size);
-    CHECK_NOTNULL(frame->getKeypointScoresMutable())->resize(extended_size);
-
-    CHECK_NOTNULL(frame->getDescriptorsMutable())->setZero();
-    CHECK_NOTNULL(frame->getKeypointMeasurementUncertaintiesMutable())->setZero();
-    CHECK_NOTNULL(frame->getKeypointOrientationsMutable())->setZero();
-    CHECK_NOTNULL(frame->getKeypointScalesMutable())->setZero();
-    CHECK_NOTNULL(frame->getKeypointScoresMutable())->setZero();
+    Eigen::VectorXd uncertainties(num_new_keypoints);
+    uncertainties.setConstant(kKeypointUncertaintyPx);
+    frame->swapKeypointMeasurementUncertainties(&uncertainties);
   }
-  CHECK_EQ(frame->getKeypointMeasurements().cols(), frame->getTrackIds().rows());
+  CHECK_EQ(static_cast<int>(extended_size), frame->getKeypointMeasurements().cols());
+  CHECK_EQ(static_cast<int>(extended_size), frame->getKeypointMeasurementUncertainties().rows());
+  CHECK_EQ(static_cast<int>(extended_size), frame->getTrackIds().rows());
 }
 
 void FeatureTrackerLk::getKeypointsfromFrame(const aslam::VisualFrame::Ptr frame,
