@@ -90,10 +90,25 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
                              keypoints_k, keypoints_kp1, tracking_successful, tracking_error,
                              kWindowSize, kMaxPyramidLevel, kTerminationCriteria, kOperationFlag,
                              kMinEigenThreshold);
+
+    // sort indicies by tracking error
+    std::vector<size_t> ind(tracking_error.size());
+    for (size_t i = 0; i < ind.size(); ++i) ind[i] = i;
+    std::sort(ind.begin(), ind.end(), [&tracking_error](size_t i1, size_t i2) {
+      return tracking_error[i1] < tracking_error[i2];
+    });
+
+    Eigen::Matrix<size_t, kGridCellResolution, kGridCellResolution> occupancy_grid;
+    occupancy_grid.setZero();
+    const size_t image_width = frame_k->getRawImage().cols;
+    const size_t image_height = frame_k->getRawImage().rows;
+
     matches_with_score_kp1_k->clear();
     CHECK_EQ(keypoints_k.size(), keypoints_kp1.size());
     size_t k = 0;
-    for (size_t i = 0; i < keypoints_k.size(); ++i) {
+    for (size_t j = 0; j < keypoints_k.size(); ++j) {
+      size_t i = ind[j]; // get sorted index
+
       if (keypoints_kp1[i].x < kMinDistanceToImageBorderPx ||
           keypoints_kp1[i].x >= (frame_k->getRawImage().cols - kMinDistanceToImageBorderPx) ||
           keypoints_kp1[i].y < kMinDistanceToImageBorderPx ||
@@ -101,12 +116,23 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
           !tracking_successful[i]) {
         continue;
       }
+
+      if (true || kUseOccupancyGrid) {
+        size_t grid_x = std::floor(keypoints_kp1[i].x * kGridCellResolution / image_width );
+        size_t grid_y = std::floor(keypoints_kp1[i].y * kGridCellResolution / image_height );
+
+        if (occupancy_grid(grid_x, grid_y) >= kMaxLandmarksPerCell) {
+          // don't use the track if there are too many landmarks in this cell
+          continue;
+        }
+        occupancy_grid(grid_x,grid_y) += 1;
+       }
+
       new_keypoints.emplace_back(keypoints_kp1[i].x, keypoints_kp1[i].y);
 
       // Create the matches.
-      const double kUnusedScore = 1.0;
       // Index k corresponds to current frame kp1, index i corresponds to previous frame k.
-      matches_with_score_kp1_k->emplace_back(k, i, kUnusedScore);
+      matches_with_score_kp1_k->emplace_back(k, i, -tracking_error[i]);
       CHECK_LT(k, keypoints_kp1.size());
       CHECK_LT(i, keypoints_k.size());
       ++k;
