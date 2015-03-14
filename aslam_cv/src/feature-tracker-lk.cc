@@ -63,7 +63,7 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
     std::vector<cv::Point2f> keypoints_k, keypoints_kp1;
     getKeypointsfromFrame(frame_k, &keypoints_k);
 
-    // use the rotation to predict keypoints in the next frame
+    // Use the rotation to predict keypoints in the next frame.
     Eigen::Matrix3Xd rays;
     Eigen::Matrix2Xd predicted_keypoints;
     std::vector<bool> projection_successfull;
@@ -81,7 +81,7 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
         keypoints_kp1.emplace_back(predicted_keypoints.col(i)(0),
                                    predicted_keypoints.col(i)(1));
       } else {
-        // default to no motion for prediction
+        // Default to no motion for prediction.
         keypoints_kp1.emplace_back(keypoints_k[i]);
       }
     }
@@ -91,7 +91,7 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
                              kWindowSize, kMaxPyramidLevel, kTerminationCriteria, kOperationFlag,
                              kMinEigenThreshold);
 
-    // sort indicies by tracking error
+    // Sort indices by tracking error.
     std::vector<size_t> ind(tracking_error.size());
     for (size_t i = 0; i < ind.size(); ++i) ind[i] = i;
     std::sort(ind.begin(), ind.end(), [&tracking_error](size_t i1, size_t i2) {
@@ -107,7 +107,7 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
     CHECK_EQ(keypoints_k.size(), keypoints_kp1.size());
     size_t k = 0;
     for (size_t j = 0; j < keypoints_k.size(); ++j) {
-      size_t i = ind[j]; // get sorted index
+      size_t i = ind[j]; // Get sorted index.
 
       if (keypoints_kp1[i].x < kMinDistanceToImageBorderPx ||
           keypoints_kp1[i].x >= (frame_k->getRawImage().cols - kMinDistanceToImageBorderPx) ||
@@ -117,15 +117,15 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
         continue;
       }
 
-      if (true || kUseOccupancyGrid) {
+      {
         size_t grid_x = std::floor(keypoints_kp1[i].x * kGridCellResolution / image_width );
         size_t grid_y = std::floor(keypoints_kp1[i].y * kGridCellResolution / image_height );
 
         if (occupancy_grid(grid_x, grid_y) >= kMaxLandmarksPerCell) {
-          // don't use the track if there are too many landmarks in this cell
+          // Don't use the track if there are too many landmarks in this cell.
           continue;
         }
-        occupancy_grid(grid_x,grid_y) += 1;
+        ++occupancy_grid(grid_x, grid_y);
        }
 
       new_keypoints.emplace_back(keypoints_kp1[i].x, keypoints_kp1[i].y);
