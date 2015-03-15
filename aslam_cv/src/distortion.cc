@@ -6,6 +6,11 @@
 //#include <sm/PropertyTree.hpp>
 
 namespace aslam {
+std::ostream& operator<<(std::ostream& out, const Distortion& distortion) {
+  distortion.printParameters(out, std::string(""));
+  return out;
+};
+
 Distortion::Distortion(const Eigen::VectorXd& dist_coeffs,
                        Type distortion_type)
     : distortion_coefficients_(dist_coeffs),
