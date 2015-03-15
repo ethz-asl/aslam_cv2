@@ -166,7 +166,7 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
   // Step size.
   const double kGamma = 1.0;
   // Regularization parameter.
-  const double kLambda = 0.00;
+  const double kLambda = 0.0;
 
   // Initialize minimization variables.
   double alpha = 0.0;
@@ -263,7 +263,7 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
   } // Iteration loop.
 
   // Coordinate of feature in global frame.
-  *G_point = 1 / (rho) * R_Cn_G.transpose() * Eigen::Vector3d(alpha, beta, 1) + p_G_Cn;
+  *G_point = 1.0 / (rho) * R_Cn_G.transpose() * Eigen::Vector3d(alpha, beta, 1.0) + p_G_Cn;
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
