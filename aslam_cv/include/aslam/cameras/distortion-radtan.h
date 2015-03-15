@@ -33,10 +33,7 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
   explicit RadTanDistortion(const Eigen::VectorXd& distortionParams);
 
   /// \brief Convenience function to print the state using streams.
-  std::ostream& operator<<(std::ostream& out) {
-    this->printParameters(out, std::string(""));
-    return out;
-  };
+  friend std::ostream& operator<<(std::ostream& out, const RadTanDistortion& distortion);
 
  public:
   /// Copy constructor for clone operation.

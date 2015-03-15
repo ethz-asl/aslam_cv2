@@ -29,10 +29,7 @@ class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion>
   explicit FisheyeDistortion(const Eigen::VectorXd& distortionParams);
 
   /// \brief Convenience function to print the state using streams.
-  std::ostream& operator<<(std::ostream& out) {
-    this->printParameters(out, std::string(""));
-    return out;
-  };
+  friend std::ostream& operator<<(std::ostream& out, const FisheyeDistortion& distortion);
 
  public:
   /// Copy constructor for clone operation.

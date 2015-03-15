@@ -54,10 +54,7 @@ class Distortion {
   virtual bool operator==(const Distortion& rhs) const;
 
   /// \brief Convenience function to print the state using streams.
-  std::ostream& operator<<(std::ostream& out) {
-    this->printParameters(out, std::string(""));
-    return out;
-  };
+  friend std::ostream& operator<<(std::ostream& out, const Distortion& distortion);
 
  protected:
   /// Copy constructor for clone operation.
