@@ -215,7 +215,7 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
       const Eigen::Vector2d& h_meas = measurements_normalized[i];
 
       // Predicted measurement.
-      const Eigen::Vector3d h_i = R_Ci_Cn * Eigen::Vector3d(alpha, beta, 1) + rho * p_Ci_Cn;
+      const Eigen::Vector3d h_i = R_Ci_Cn * Eigen::Vector3d(alpha, beta, 1.0) + rho * p_Ci_Cn;
       // Normalized predicted measurement.
       Eigen::Vector2d h;
       h(0) = h_i(0) / h_i(2);
