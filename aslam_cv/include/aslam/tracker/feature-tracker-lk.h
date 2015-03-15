@@ -98,7 +98,7 @@ class FeatureTrackerLk : public FeatureTracker {
 
   /// Either use occupancy grid and SimpleTrackManager or
   /// do not use occupancy grid and do use UniformTrackManager!
-  static const bool kUseOccupancyGrid = false;
+  static const bool kUseOccupancyGrid = true;
   /// @}
 
   //////////////////////////////////////////////////////////////
