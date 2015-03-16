@@ -11,6 +11,21 @@
 //#include <sm/PropertyTree.hpp>
 namespace aslam {
 
+std::ostream& operator<< (std::ostream& out, const ProjectionResult& state) {
+  std::string enum_str;
+  typedef ProjectionResult::Status Status;
+  switch (state.status_){
+    case Status::KEYPOINT_VISIBLE:            enum_str = "KEYPOINT_VISIBLE"; break;
+    case Status::KEYPOINT_OUTSIDE_IMAGE_BOX:  enum_str = "KEYPOINT_OUTSIDE_IMAGE_BOX"; break;
+    case Status::POINT_BEHIND_CAMERA:         enum_str = "POINT_BEHIND_CAMERA"; break;
+    case Status::PROJECTION_INVALID:          enum_str = "PROJECTION_INVALID"; break;
+    default:
+      case Status::UNINITIALIZED:             enum_str = "UNINITIALIZED"; break;
+  }
+  out << "ProjectionResult: " << enum_str << std::endl;
+  return out;
+}
+
 /// Camera constructor with distortion
 Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
                uint32_t image_width, uint32_t image_height, Type camera_type)

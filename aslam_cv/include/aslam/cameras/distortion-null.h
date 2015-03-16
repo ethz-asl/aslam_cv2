@@ -27,10 +27,7 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   NullDistortion() : Base(Eigen::VectorXd(), Distortion::Type::kNoDistortion) { }
 
   /// \brief Convenience function to print the state using streams.
-  std::ostream& operator<<(std::ostream& out) {
-    this->printParameters(out, std::string(""));
-    return out;
-  };
+  friend std::ostream& operator<<(std::ostream& out, const NullDistortion& distortion);
 
  public:
   /// Copy constructor for clone operation.
@@ -149,6 +146,11 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
     out << text;
   }
   /// @}
+};
+
+inline std::ostream& operator<<(std::ostream& out, const NullDistortion& distortion) {
+  distortion.printParameters(out, std::string(""));
+  return out;
 };
 
 } // namespace aslam

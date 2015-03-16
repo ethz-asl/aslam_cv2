@@ -12,6 +12,11 @@
 //#include <sm/PropertyTree.hpp>
 
 namespace aslam {
+std::ostream& operator<<(std::ostream& out, const PinholeCamera& camera) {
+  camera.printParameters(out, std::string(""));
+  return out;
+};
+
 // TODO(slynen) Enable commented out PropertyTree support
 //PinholeCamera::PinholeCamera(
 //    const sm::PropertyTree & config)

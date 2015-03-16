@@ -34,10 +34,7 @@ class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDis
   explicit EquidistantDistortion(const Eigen::VectorXd& distortionParams);
 
   /// \brief Convenience function to print the state using streams.
-  std::ostream& operator<<(std::ostream& out) {
-    this->printParameters(out, std::string(""));
-    return out;
-  };
+  friend std::ostream& operator<<(std::ostream& out, const EquidistantDistortion& distortion);
 
  public:
   /// Copy constructor for clone operation.

@@ -99,10 +99,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   virtual bool operator==(const Camera& other) const;
 
   /// \brief Convenience function to print the state using streams.
-  std::ostream& operator<<(std::ostream& out) {
-    this->printParameters(out, std::string(""));
-    return out;
-  };
+  friend std::ostream& operator<<(std::ostream& out, const PinholeCamera& camera);
 
   /// @}
 
