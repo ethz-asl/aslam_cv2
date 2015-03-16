@@ -68,20 +68,7 @@ struct ProjectionResult {
   bool operator==(const ProjectionResult::Status& other) const { return status_ == other; };
 
   /// \brief Convenience function to print the state using streams.
-  friend std::ostream& operator<< (std::ostream& out, const ProjectionResult& state)
-  {
-    std::string enum_str;
-    switch (state.status_){
-      case Status::KEYPOINT_VISIBLE:            enum_str = "KEYPOINT_VISIBLE"; break;
-      case Status::KEYPOINT_OUTSIDE_IMAGE_BOX:  enum_str = "KEYPOINT_OUTSIDE_IMAGE_BOX"; break;
-      case Status::POINT_BEHIND_CAMERA:         enum_str = "POINT_BEHIND_CAMERA"; break;
-      case Status::PROJECTION_INVALID:          enum_str = "PROJECTION_INVALID"; break;
-      default:
-        case Status::UNINITIALIZED:             enum_str = "UNINITIALIZED"; break;
-    }
-    out << "ProjectionResult: " << enum_str << std::endl;
-    return out;
-  }
+  friend std::ostream& operator<< (std::ostream& out, const ProjectionResult& state);
 
   /// \brief Check whether the projection was successful and the point is visible in the image.
   bool isKeypointVisible() const { return (status_ == Status::KEYPOINT_VISIBLE); };
