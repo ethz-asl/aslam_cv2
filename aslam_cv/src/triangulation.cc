@@ -197,12 +197,9 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
   // Loop while delta residual too large or number of maximum iterations reached.
   size_t iter = 0;
   while (residual_norm_last - residual_norm > kPrecision && iter < kIterMax) {
-    int idx = 0;
-
     const size_t num_measurements = 2 * measurements_normalized.size();
     Eigen::VectorXd residuals(num_measurements);
     Eigen::MatrixXd jacobian(num_measurements, 3);
-
     residuals.setZero(num_measurements);
     jacobian.setZero(num_measurements, 3);
 
@@ -217,8 +214,8 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
       // Normalized predicted measurement.
       const Eigen::Vector2d h  = h_i.head<2>() / h_i(2);
 
-      // Residual: residuals = [idx * 2], idx = 0,1,...
-      residuals.segment<2>(idx * 2) = h_meas - h;
+      // Calculate residuals.
+      residuals.segment<2>(i * 2) = h_meas - h;
 
       // Calculate jacobians.
       Eigen::Matrix<double, 2, 3> jacobian_perspective;
@@ -235,17 +232,15 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
       const Eigen::Matrix<double, 2, 1> jacobian_B = jacobian_perspective * jacobian_beta;
       const Eigen::Matrix<double, 2, 1> jacobian_C = jacobian_perspective * jacobian_rho;
 
-      jacobian.block<1, 3>(idx * 2, 0) =
+      jacobian.block<1, 3>(i * 2, 0) =
           (Eigen::Matrix<double, 1, 3>() << jacobian_A(0), jacobian_B(0), jacobian_C(0)).finished();
-      jacobian.block<1, 3>(idx * 2 + 1, 0) =
+      jacobian.block<1, 3>(i * 2 + 1, 0) =
           (Eigen::Matrix<double, 1, 3>() << jacobian_A(1), jacobian_B(1), jacobian_C(1)).finished();
-
-      idx += 1;
     }  // Measurement loop.
 
     // Calculate update using LDLT decomposition.
-    Eigen::Vector3d delta = (jacobian.transpose() * jacobian).ldlt().solve
-        (Eigen::Matrix3d::Identity()) * jacobian.transpose() * residuals;
+    Eigen::Vector3d delta = (jacobian.transpose() * jacobian)
+	.ldlt().solve(jacobian.transpose() * residuals);
 
     alpha = alpha - delta(0);
     beta = beta - delta(1);
