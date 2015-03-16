@@ -50,6 +50,38 @@ TEST_F(TriangulationMultiviewTest, linearTriangulateFromNViewsMultiCam) {
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(kGPoint, G_point, kDoubleTolerance));
 }
 
+TEST_F(TriangulationMultiviewTest, iterativeGaussNewtonTriangulateFromNViews) {
+  aslam::Aligned<std::vector, Eigen::Vector2d>::type measurements;
+  aslam::Aligned<std::vector, aslam::Transformation>::type T_G_B;
+  aslam::Aligned<std::vector, aslam::Transformation>::type T_B_C;
+  std::vector<size_t> measurement_camera_indices;
+  Eigen::Vector3d G_point;
+
+  // To make the test simple to write, create 1 camera and fill observations,
+  // then simply append the vectors together.
+  const unsigned int num_cameras = 1;
+  T_B_C.resize(num_cameras);
+
+  for (size_t i = 0; i < T_B_C.size(); ++i) {
+    T_B_C[i].setRandom(0.2, 0.1);
+    aslam::Aligned<std::vector, Eigen::Vector2d>::type cam_measurements;
+    aslam::Aligned<std::vector, aslam::Transformation>::type cam_T_G_B;
+    fillObservations(kNumObservations, T_B_C[i], &cam_measurements, &cam_T_G_B);
+
+    // Append to the end of the vectors.
+    measurements.insert(measurements.end(), cam_measurements.begin(),
+                        cam_measurements.end());
+    T_G_B.insert(T_G_B.end(), cam_T_G_B.begin(), cam_T_G_B.end());
+
+    // Fill in the correct size of camera indices also.
+    measurement_camera_indices.resize(measurements.size(), i);
+  }
+
+  aslam::iterativeGaussNewtonTriangulateFromNViews(measurements, T_G_B, T_B_C[0], &G_point);
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(kGPoint, G_point, kDoubleTolerance));
+}
+
 TYPED_TEST(TriangulationFixture, RandomPoses) {
   constexpr size_t kNumCameraPoses = 5;
   this->setNMeasurements(kNumCameraPoses);

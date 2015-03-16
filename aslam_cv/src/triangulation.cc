@@ -147,5 +147,115 @@ TriangulationResult linearTriangulateFromNViewsMultiCam(
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
+// [1]  A. I. Mourikis and S. I. Roumeliotis, “A multi-state constraint kalman filter
+// "for vision-aided inertial navigation,” in Proc. IEEE Int. Conf. on Robotics
+// and Automation, pp. 10–14, 2007.
+// [2] T. Hinzmann, "Robust Vision-Based Navigation for Micro Air Vehicles", 2014.
+TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
+    const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
+    const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
+    const aslam::Transformation& T_B_C, Eigen::Vector3d* G_point) {
+  CHECK_NOTNULL(G_point);
+  CHECK_EQ(measurements_normalized.size(), T_G_B.size());
+  if (measurements_normalized.size() < 2u) {
+    return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
+  }
+
+  const double kPrecision = 1.0e-5;
+  const size_t kIterMax = 10;
+
+  // Initialize minimization variables.
+  double alpha = 0.0;
+  double beta = 0.0;
+  double rho = 0.0;
+
+  double residual_norm_last = 1000.0;
+  double residual_norm = 100.0;
+
+  // Camera frame n: camera frame in which feature was observed for the first time.
+  const size_t n = 0;
+
+  // Rotation and position of n-th camera in i-th camera frame.
+  const aslam::Transformation T_Cn_G = T_B_C.inverted() * T_G_B[n].inverted();
+  const Eigen::Matrix3d& R_Cn_G = T_Cn_G.getRotationMatrix();
+  const Eigen::Vector3d& p_G_Cn = T_Cn_G.getPosition();
+
+  // Cache matrices that are constant for every iteration.
+  Aligned<std::vector, Eigen::Matrix3d>::type R_Ci_Cn;
+  Aligned<std::vector, Eigen::Vector3d>::type p_Ci_Cn;
+  for (size_t i = 0; i < measurements_normalized.size(); ++i) {
+    const aslam::Transformation T_Ci_G = T_B_C.inverted() * T_G_B[i].inverted();
+    // Rotation from first camera to current camera.
+    const Eigen::Matrix3d R_Ci_G = T_Ci_G.getRotationMatrix();
+    R_Ci_Cn.emplace_back(R_Ci_G * R_Cn_G.transpose());
+    // Translation from first camera to current camera.
+    const Eigen::Vector3d p_G_Ci = T_Ci_G.inverted().getPosition();
+    p_Ci_Cn.emplace_back(R_Ci_G * p_G_Cn - R_Ci_G * p_G_Ci);
+  }
+
+  // [1.] Loop over iterations.
+  // Loop while delta residual too large or number of maximum iterations reached.
+  size_t iter = 0;
+  while (residual_norm_last - residual_norm > kPrecision && iter < kIterMax) {
+    const size_t num_measurements = 2 * measurements_normalized.size();
+    Eigen::VectorXd residuals(num_measurements);
+    Eigen::MatrixXd jacobian(num_measurements, 3);
+    residuals.setZero(num_measurements);
+    jacobian.setZero(num_measurements, 3);
+
+    // [2.] Loop over camera frames / measurements.
+    for (size_t i = 0; i < measurements_normalized.size(); ++i) {
+      // Current measurement.
+      const Eigen::Vector2d& h_meas = measurements_normalized[i];
+
+      // Predicted measurement.
+      const Eigen::Vector3d h_i = R_Ci_Cn[i] *
+	  (Eigen::Matrix<double, 3, 1>() << alpha, beta, 1.0).finished() + rho * p_Ci_Cn[i];
+      // Normalized predicted measurement.
+      const Eigen::Vector2d h  = h_i.head<2>() / h_i(2);
+
+      // Calculate residuals.
+      residuals.segment<2>(i * 2) = h_meas - h;
+
+      // Calculate jacobians.
+      Eigen::Matrix<double, 2, 3> jacobian_perspective;
+      jacobian_perspective << -1.0 / h_i(2), 0.0, h_i(0) / (h_i(2) * h_i(2)),
+          0.0, -1.0 / h_i(2), h_i(1) / (h_i(2) * h_i(2));
+
+      const Eigen::Matrix<double, 3, 1> jacobian_alpha =
+          R_Ci_Cn[i] * (Eigen::Matrix<double, 3, 1>() << 1.0, 0.0, 0.0).finished();
+      const Eigen::Matrix<double, 3, 1> jacobian_beta =
+          R_Ci_Cn[i] * (Eigen::Matrix<double, 3, 1>() << 0.0, 1.0, 0.0).finished();
+      const Eigen::Matrix<double, 3, 1> jacobian_rho = p_Ci_Cn[i];
+
+      const Eigen::Matrix<double, 2, 1> jacobian_A = jacobian_perspective * jacobian_alpha;
+      const Eigen::Matrix<double, 2, 1> jacobian_B = jacobian_perspective * jacobian_beta;
+      const Eigen::Matrix<double, 2, 1> jacobian_C = jacobian_perspective * jacobian_rho;
+
+      jacobian.block<1, 3>(i * 2, 0) =
+          (Eigen::Matrix<double, 1, 3>() << jacobian_A(0), jacobian_B(0), jacobian_C(0)).finished();
+      jacobian.block<1, 3>(i * 2 + 1, 0) =
+          (Eigen::Matrix<double, 1, 3>() << jacobian_A(1), jacobian_B(1), jacobian_C(1)).finished();
+    }  // Measurement loop.
+
+    // Calculate update using LDLT decomposition.
+    Eigen::Vector3d delta = (jacobian.transpose() * jacobian)
+	.ldlt().solve(jacobian.transpose() * residuals);
+
+    alpha = alpha - delta(0);
+    beta = beta - delta(1);
+    rho = rho - delta(2);
+
+    residual_norm_last = residual_norm;
+    residual_norm = residuals.squaredNorm();
+    ++iter;
+  } // Iteration loop.
+
+  // Coordinate of feature in global frame.
+  *G_point = 1.0 / rho * R_Cn_G.transpose() *
+      (Eigen::Matrix<double, 3, 1>() << alpha, beta, 1.0).finished() + p_G_Cn;
+  return TriangulationResult(TriangulationResult::SUCCESSFUL);
+}
+
 }  // namespace aslam
 
