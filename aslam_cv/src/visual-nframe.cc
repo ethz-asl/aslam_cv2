@@ -145,7 +145,7 @@ size_t VisualNFrame::getCameraIndex(const CameraId& id) const {
 
 void VisualNFrame::setFrame(size_t frame_index, VisualFrame::Ptr frame) {
   CHECK_LT(frame_index, frames_.size());
-  CHECK(frame);
+  CHECK(frame != nullptr);
   if (camera_rig_ != nullptr) {
     CHECK_EQ(&camera_rig_->getCamera(frame_index), frame->getCameraGeometry().get());
   }
