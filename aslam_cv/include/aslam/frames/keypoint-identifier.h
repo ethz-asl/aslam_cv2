@@ -37,6 +37,7 @@ class KeypointIdentifier {
   : frame_index_(frame_index), keypoint_index_(keypoint_index), nframe_(nframe) {
     CHECK(nframe);
     CHECK_LT(frame_index, nframe->getNumFrames());
+    CHECK(nframe->isFrameSet(frame_index));
     CHECK_LT(keypoint_index, nframe->getFrame(frame_index).getNumKeypointMeasurements());
   }
 
