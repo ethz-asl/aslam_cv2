@@ -91,18 +91,17 @@ void VisualNFrame::setNCameras(NCamera::Ptr ncamera) {
 }
 
 const VisualFrame& VisualNFrame::getFrame(size_t frame_index) const {
-  CHECK_LT(frame_index, frames_.size());
-  CHECK_NOTNULL(frames_[frame_index].get());
+  CHECK(isFrameSet(frame_index));
   return *frames_[frame_index];
 }
 
 VisualFrame::Ptr VisualNFrame::getFrameShared(size_t frame_index) {
-  CHECK_LT(frame_index, frames_.size());
+  CHECK(isFrameSet(frame_index));
   return frames_[frame_index];
 }
 
 VisualFrame::ConstPtr VisualNFrame::getFrameShared(size_t frame_index) const {
-  CHECK_LT(frame_index, frames_.size());
+  CHECK(isFrameSet(frame_index));
   return frames_[frame_index];
 }
 
@@ -162,9 +161,11 @@ bool VisualNFrame::isFrameSet(size_t frame_index) const {
 int64_t VisualNFrame::getMinTimestampNanoseconds() const {
   int64_t min_timestamp_nanoseconds = std::numeric_limits<int64_t>::max();
   for (size_t camera_idx = 0; camera_idx < getNumCameras(); ++camera_idx) {
-    const int64_t timestamp_frame_nanoseconds = getFrame(camera_idx).getTimestampNanoseconds();
-    if (timestamp_frame_nanoseconds < min_timestamp_nanoseconds)
-      min_timestamp_nanoseconds = timestamp_frame_nanoseconds;
+    if(isFrameSet(camera_idx)){
+      const int64_t timestamp_frame_nanoseconds = getFrame(camera_idx).getTimestampNanoseconds();
+      if (timestamp_frame_nanoseconds < min_timestamp_nanoseconds)
+        min_timestamp_nanoseconds = timestamp_frame_nanoseconds;
+    }
   }
   CHECK(aslam::time::isValidTime(min_timestamp_nanoseconds));
   return min_timestamp_nanoseconds;
@@ -173,9 +174,11 @@ int64_t VisualNFrame::getMinTimestampNanoseconds() const {
 int64_t VisualNFrame::getMaxTimestampNanoseconds() const {
   int64_t max_timestamp_nanoseconds = aslam::time::getInvalidTime();
   for (size_t camera_idx = 0; camera_idx < getNumCameras(); ++camera_idx) {
-    const int64_t timestamp_frame_nanoseconds = getFrame(camera_idx).getTimestampNanoseconds();
-    if (timestamp_frame_nanoseconds > max_timestamp_nanoseconds)
-      max_timestamp_nanoseconds = timestamp_frame_nanoseconds;
+    if(isFrameSet(camera_idx)){
+      const int64_t timestamp_frame_nanoseconds = getFrame(camera_idx).getTimestampNanoseconds();
+      if (timestamp_frame_nanoseconds > max_timestamp_nanoseconds)
+        max_timestamp_nanoseconds = timestamp_frame_nanoseconds;
+    }
   }
   CHECK(aslam::time::isValidTime(max_timestamp_nanoseconds));
   return max_timestamp_nanoseconds;
