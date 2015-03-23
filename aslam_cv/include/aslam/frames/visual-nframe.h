@@ -107,6 +107,9 @@ class VisualNFrame {
   /// first time.
   void setFrame(size_t frame_index, std::shared_ptr<VisualFrame> frame);
 
+  /// \brief Replace the frame at the index with a nullptr.
+  void unSetFrame(size_t frame_index);
+
   /// \brief The number of frames.
   size_t getNumFrames() const;
 
