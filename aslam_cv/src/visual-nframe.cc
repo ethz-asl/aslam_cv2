@@ -44,7 +44,11 @@ VisualNFrame& VisualNFrame::operator=(const VisualNFrame& other) {
   frames_.clear();
   frames_.reserve(other.frames_.size());
   for (const VisualFrame::Ptr& other_frame : other.frames_) {
-    frames_.emplace_back(new VisualFrame(*CHECK_NOTNULL(other_frame.get())));
+    if(other_frame){
+      frames_.emplace_back(new VisualFrame(*other_frame.get()));
+    }else{
+      frames_.emplace_back(nullptr);
+    }
   }
   return *this;
 }
@@ -96,12 +100,12 @@ const VisualFrame& VisualNFrame::getFrame(size_t frame_index) const {
 }
 
 VisualFrame::Ptr VisualNFrame::getFrameShared(size_t frame_index) {
-  CHECK(isFrameSet(frame_index));
+  CHECK_LT(frame_index, frames_.size());
   return frames_[frame_index];
 }
 
 VisualFrame::ConstPtr VisualNFrame::getFrameShared(size_t frame_index) const {
-  CHECK(isFrameSet(frame_index));
+  CHECK_LT(frame_index, frames_.size());
   return frames_[frame_index];
 }
 
