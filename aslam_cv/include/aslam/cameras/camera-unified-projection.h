@@ -73,8 +73,8 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
   /// \brief Construct a camera with distortion.
   /// @param[in] xi               mirror parameter
-  /// @param[in] focallength_cols focallength in pixels; cols (width-direction)
-  /// @param[in] focallength_rows focallength in pixels; rows (height-direction)
+  /// @param[in] focallength_cols focal length in pixels; cols (width-direction)
+  /// @param[in] focallength_rows focal length in pixels; rows (height-direction)
   /// @param[in] imagecenter_cols image center in pixels; cols (width-direction)
   /// @param[in] imagecenter_rows image center in pixels; rows (height-direction)
   /// @param[in] image_width      image width in pixels
@@ -87,8 +87,8 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
   /// \brief Construct a camera without distortion.
   /// @param[in] xi               mirror parameter
-  /// @param[in] focallength_cols focallength in pixels; cols (width-direction)
-  /// @param[in] focallength_rows focallength in pixels; rows (height-direction)
+  /// @param[in] focallength_cols focal length in pixels; cols (width-direction)
+  /// @param[in] focallength_rows focal length in pixels; rows (height-direction)
   /// @param[in] imagecenter_cols image center in pixels; cols (width-direction)
   /// @param[in] imagecenter_rows image center in pixels; rows (height-direction)
   /// @param[in] image_width      image width in pixels
@@ -131,7 +131,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
 
   /// \brief Checks whether an undistorted keypoint lies in the valid range.
-  /// @param[in] keypoint Squarred norm of the normalized undistorted keypoint.
+  /// @param[in] keypoint Squared norm of the normalized undistorted keypoint.
   /// @param[in] xi       Mirror parameter
   bool isUndistortedKeypointValid(const double& rho2_d, const double& xi) const;
 
