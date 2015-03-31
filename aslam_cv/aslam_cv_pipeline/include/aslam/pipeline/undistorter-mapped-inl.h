@@ -26,17 +26,21 @@ std::unique_ptr<MappedUndistorter> createMappedUndistorter(
   Eigen::Matrix3d output_camera_matrix = aslam::common::getOptimalNewCameraMatrix(
       *input_camera, alpha, scale, kUndistortToPinhole);
 
-  Eigen::Matrix<double, camera_ptr->parameterCount(), 1> intrinsics;
-
+  Eigen::Matrix<double, CameraType::parameterCount(), 1> intrinsics;
   switch(camera_ptr->getType()) {
     case Camera::Type::kPinhole:
       intrinsics << output_camera_matrix(0, 0), output_camera_matrix(1, 1),
                     output_camera_matrix(0, 2), output_camera_matrix(1, 2);
       break;
-    case Camera::Type::kUnifiedProjection:
-      intrinsics << camera_ptr->xi(),
+    case Camera::Type::kUnifiedProjection: {
+      aslam::UnifiedProjectionCamera::Ptr unified_proj_cam_ptr =
+          std::dynamic_pointer_cast<aslam::UnifiedProjectionCamera>(camera_ptr);
+      CHECK(unified_proj_cam_ptr != nullptr)
+        << "Cast to unified projection camera failed.";
+      intrinsics << unified_proj_cam_ptr->xi(),
                     output_camera_matrix(0, 0), output_camera_matrix(1, 1),
                     output_camera_matrix(0, 2), output_camera_matrix(1, 2);
+    }
       break;
     default:
       LOG(FATAL) << "Unknown camera model: "

@@ -12,7 +12,6 @@
   <depend>aslam_cv_cameras</depend>
   <depend>aslam_cv_common</depend>
   <depend>aslam_cv_frames</depend>
-  <depend>brisk</depend>
   <depend>doxygen_catkin</depend>
   <depend>eigen_catkin</depend>
   <depend>eigen_checks</depend>
@@ -20,7 +19,6 @@
   <depend>glog_catkin</depend>
   <depend>minkindr</depend> 
   <depend>opencv2_catkin</depend>
-  <depend>opengv</depend>
   <depend>sm_common</depend>
   <depend>yaml_cpp_catkin</depend>
 </package>

@@ -6,7 +6,6 @@
 ///
 /// @}
 
-#include <Eigen/Core>
 #include <map>
 #include <memory>
 #include <vector>
@@ -14,6 +13,7 @@
 #include <aslam/common/macros.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/feature-descriptor-ref.h>
+#include <Eigen/Core>
 
 #include "aslam/matcher/matching-problem.h"
 #include "match.h"
