@@ -6,7 +6,6 @@
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/common/types.h>
 #include <aslam/common/undistort-helpers.h>
-//#include <aslam/pipeline/undistorter-mapped.h>
 
 // TODO(slynen) Enable commented out PropertyTree support
 //#include <sm/PropertyTree.hpp>
