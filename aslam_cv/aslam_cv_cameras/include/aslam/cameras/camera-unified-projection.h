@@ -226,8 +226,8 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   /// @param[in] scale Output image size scaling parameter wrt. to input image size.
   /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
   /// @return Pointer to the created mapped undistorter.
-  virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
-      aslam::InterpolationMethod interpolation_type) const;
+//  virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
+//      aslam::InterpolationMethod interpolation_type) const;
 
   /// \brief Factory method to create a mapped undistorter for this camera geometry to undistorts
   ///        the image to a pinhole view.
@@ -239,8 +239,8 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   /// @param[in] scale Output image size scaling parameter wrt. to input image size.
   /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
   /// @return Pointer to the created mapped undistorter.
-  std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(float alpha, float scale,
-      aslam::InterpolationMethod interpolation_type) const;
+//  std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(float alpha, float scale,
+//      aslam::InterpolationMethod interpolation_type) const;
 
   /// @}
 
