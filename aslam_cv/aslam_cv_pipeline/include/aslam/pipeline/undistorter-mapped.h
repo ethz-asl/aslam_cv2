@@ -5,9 +5,38 @@
 
 #include <aslam/common/types.h>
 #include <aslam/cameras/camera.h>
+#include <aslam/cameras/camera-pinhole.h>
+#include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/pipeline/undistorter.h>
 
 namespace aslam {
+
+/// \brief Factory method to create a mapped undistorter for this camera geometry.
+///        NOTE: The undistorter stores a copy of this camera and changes to the original geometry
+///              are not connected with the undistorter!
+/// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
+///                  will be valid) and 1 (when all the source image pixels will be retained in the
+///                  undistorted image)
+/// @param[in] scale Output image size scaling parameter wrt. to input image size.
+/// @param[in] interpolation_type Check \ref InterpolationMethod to see the available types.
+/// @return Pointer to the created mapped undistorter.
+std::unique_ptr<MappedUndistorter> createMappedUndistorter(
+    const aslam::PinholeCamera::Ptr& camera_ptr, float alpha, float scale,
+    aslam::InterpolationMethod interpolation_type);
+
+/// \brief Factory method to create a mapped undistorter for this camera geometry to undistorts
+///        the image to a pinhole view.
+///        NOTE: The undistorter stores a copy of this camera and changes to this geometry
+///              are not connected with the undistorter!
+/// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
+///                  will be valid) and 1 (when all the source image pixels will be retained in the
+///                  undistorted image)
+/// @param[in] scale Output image size scaling parameter wrt. to input image size.
+/// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
+/// @return Pointer to the created mapped undistorter.
+std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
+    const aslam::UnifiedProjectionCamera::Ptr& unified_proj_camera_ptr,
+    float alpha, float scale, aslam::InterpolationMethod interpolation_type);
 
 /// \class MappedUndistorter
 /// \brief A class that encapsulates image undistortion for building frames from images.

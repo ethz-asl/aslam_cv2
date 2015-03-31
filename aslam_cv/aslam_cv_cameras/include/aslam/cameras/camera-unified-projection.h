@@ -212,38 +212,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
 
   /// @}
 
-  //////////////////////////////////////////////////////////////
-  /// \name Methods to create an undistorter for this camera.
-  /// @{
-
  public:
-  /// \brief Factory method to create a mapped undistorter for this camera geometry.
-  ///        NOTE: The undistorter stores a copy of this camera and changes to this geometry
-  ///              are not connected with the undistorter!
-  /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
-  ///                  will be valid) and 1 (when all the source image pixels will be retained in the
-  ///                  undistorted image)
-  /// @param[in] scale Output image size scaling parameter wrt. to input image size.
-  /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
-  /// @return Pointer to the created mapped undistorter.
-//  virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
-//      aslam::InterpolationMethod interpolation_type) const;
-
-  /// \brief Factory method to create a mapped undistorter for this camera geometry to undistorts
-  ///        the image to a pinhole view.
-  ///        NOTE: The undistorter stores a copy of this camera and changes to this geometry
-  ///              are not connected with the undistorter!
-  /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
-  ///                  will be valid) and 1 (when all the source image pixels will be retained in the
-  ///                  undistorted image)
-  /// @param[in] scale Output image size scaling parameter wrt. to input image size.
-  /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
-  /// @return Pointer to the created mapped undistorter.
-//  std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(float alpha, float scale,
-//      aslam::InterpolationMethod interpolation_type) const;
-
-  /// @}
-
   //////////////////////////////////////////////////////////////
   /// \name Methods to access intrinsics.
   /// @{
