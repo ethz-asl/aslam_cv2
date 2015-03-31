@@ -14,8 +14,8 @@
 #include <aslam/cameras/distortion-null.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/common/entrypoint.h>
-#include <aslam/pipeline/undistorter-mapped.h>
 #include <aslam/common/memory.h>
+#include <aslam/pipeline/undistorter-mapped.h>
 
 ///////////////////////////////////////////////
 // Types to test
@@ -66,8 +66,9 @@ TYPED_TEST_CASE(TestUndistortersNoPinhole, ImplementationsNoPinhole);
 // Generic test cases (run for all models)
 ///////////////////////////////////////////////
 TYPED_TEST(TestUndistorters, TestMappedUndistorter) {
-  std::unique_ptr<aslam::MappedUndistorter> undistorter = this->camera_->createMappedUndistorter(
-      1.0, 1.0, aslam::InterpolationMethod::Linear);
+  std::unique_ptr<aslam::MappedUndistorter> undistorter =
+      aslam::createMappedUndistorter(this->camera_, 1.0, 1.0,
+                                     aslam::InterpolationMethod::Linear);
   ASSERT_EQ(undistorter->getOutputCamera().getType(), undistorter->getInputCamera().getType());
   ASSERT_EQ(undistorter->getOutputCamera().getDistortion().getType(),
             aslam::Distortion::Type::kNoDistortion);
@@ -117,8 +118,9 @@ TEST(TestUndistortersNoPinhole, TestMappedUndistorterUpcToPinhole) {
   aslam::UnifiedProjectionCamera::Ptr camera = aslam::UnifiedProjectionCamera::createTestCamera<
       aslam::RadTanDistortion>();
 
-  std::unique_ptr<aslam::MappedUndistorter> undistorter = camera->createMappedUndistorterToPinhole(
-      1.0, 1.0, aslam::InterpolationMethod::Linear);
+  std::unique_ptr<aslam::MappedUndistorter> undistorter =
+      aslam::createMappedUndistorterToPinhole(camera, 1.0, 1.0,
+                                              aslam::InterpolationMethod::Linear);
   ASSERT_EQ(undistorter->getOutputCamera().getType(), aslam::Camera::Type::kPinhole);
   ASSERT_EQ(undistorter->getOutputCamera().getDistortion().getType(),
             aslam::Distortion::Type::kNoDistortion);

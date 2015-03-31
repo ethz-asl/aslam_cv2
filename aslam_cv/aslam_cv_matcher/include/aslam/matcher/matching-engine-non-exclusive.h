@@ -1,12 +1,12 @@
 #ifndef ASLAM_CV_MATCHINGENGINE_NON_EXCLUSIVE_H_
 #define ASLAM_CV_MATCHINGENGINE_NON_EXCLUSIVE_H_
 
-#include <glog/logging.h>
 #include <set>
 #include <vector>
 
 #include <aslam/common/macros.h>
 #include <aslam/matcher/match.h>
+#include <glog/logging.h>
 
 #include "aslam/matcher/matching-engine.h"
 
