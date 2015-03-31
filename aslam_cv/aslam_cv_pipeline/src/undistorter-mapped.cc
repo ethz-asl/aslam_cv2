@@ -8,45 +8,6 @@
 
 namespace aslam {
 
-//std::unique_ptr<MappedUndistorter> createMappedUndistorter(
-//    const aslam::PinholeCamera::Ptr& camera_ptr, float alpha, float scale,
-//    aslam::InterpolationMethod interpolation_type) {
-//  CHECK(camera_ptr != nullptr);
-//
-//  CHECK_GE(alpha, 0.0); CHECK_LE(alpha, 1.0);
-//  CHECK_GT(scale, 0.0);
-//
-//  // Create a copy of the input camera (=this).
-//  PinholeCamera::Ptr input_camera(dynamic_cast<Camera*>(camera_ptr->clone()));
-//  CHECK(input_camera);
-//
-//  // Create the scaled output camera with removed distortion.
-//  const bool kUndistortToPinhole = false;
-//  Eigen::Matrix3d output_camera_matrix = aslam::common::getOptimalNewCameraMatrix(*input_camera, alpha,
-//                                                                           scale,
-//                                                                           kUndistortToPinhole);
-//
-//  Eigen::Matrix<double, Eigen::Dynamic, 1> intrinsics;
-//  intrinsics.resize(camera_ptr->getParameterSize());
-//  intrinsics << xi(), output_camera_matrix(0, 0), output_camera_matrix(1, 1),
-//                      output_camera_matrix(0, 2), output_camera_matrix(1, 2);
-//
-//  const int output_width = static_cast<int>(scale * camera_ptr->imageWidth());
-//  const int output_height = static_cast<int>(scale * camera_ptr->imageHeight());
-//
-//
-//
-//  Camera::Ptr output_camera = aslam::createCamera<aslam::UnifiedProjectionCamera>(
-//      intrinsics, output_width, output_height);
-//  CHECK(output_camera);
-//
-//  cv::Mat map_u, map_v;
-//  aslam::common::buildUndistortMap(*input_camera, *output_camera, CV_16SC2, map_u, map_v);
-//
-//  return std::unique_ptr<MappedUndistorter>(
-//      new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
-//}
-
 std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
     const aslam::UnifiedProjectionCamera::Ptr& unified_proj_camera_ptr,
     float alpha, float scale, aslam::InterpolationMethod interpolation_type) {
