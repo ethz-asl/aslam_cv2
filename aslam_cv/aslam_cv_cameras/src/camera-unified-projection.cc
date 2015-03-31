@@ -6,7 +6,6 @@
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/types.h>
 #include <aslam/common/undistort-helpers.h>
-//#include <aslam/pipeline/undistorter-mapped.h>
 
 namespace aslam {
 std::ostream& operator<<(std::ostream& out,
