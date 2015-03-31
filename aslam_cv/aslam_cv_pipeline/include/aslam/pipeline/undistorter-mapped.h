@@ -1,5 +1,5 @@
-#ifndef ASLAM_MAPPED_UNDISTORTER_H_
-#define ASLAM_MAPPED_UNDISTORTER_H_
+#ifndef ASLAM_PIPELINE_MAPPED_UNDISTORTER_H_
+#define ASLAM_PIPELINE_MAPPED_UNDISTORTER_H_
 
 #include <opencv2/core/core.hpp>
 
@@ -14,20 +14,25 @@ namespace aslam {
 /// \brief Factory method to create a mapped undistorter for this camera geometry.
 ///        NOTE: The undistorter stores a copy of this camera and changes to the original geometry
 ///              are not connected with the undistorter!
+/// @param[in] camera_ptr Shared pointer to the camera object a mapped undistorter should be
+///                       created for. Currently the method supports pinhole and unified projection
+///                       cameras. Any other type of camera will result in the hard failure.
 /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
 ///                  will be valid) and 1 (when all the source image pixels will be retained in the
 ///                  undistorted image)
 /// @param[in] scale Output image size scaling parameter wrt. to input image size.
 /// @param[in] interpolation_type Check \ref InterpolationMethod to see the available types.
 /// @return Pointer to the created mapped undistorter.
+template <typename CameraType>
 std::unique_ptr<MappedUndistorter> createMappedUndistorter(
-    const aslam::PinholeCamera::Ptr& camera_ptr, float alpha, float scale,
+    const std::shared_ptr<CameraType>& camera_ptr, float alpha, float scale,
     aslam::InterpolationMethod interpolation_type);
 
 /// \brief Factory method to create a mapped undistorter for this camera geometry to undistorts
 ///        the image to a pinhole view.
-///        NOTE: The undistorter stores a copy of this camera and changes to this geometry
-///              are not connected with the undistorter!
+///        NOTE: The undistorter stores a copy of the input camera and changes to the original
+///              geometry are not connected with the undistorter!
+/// @param[in] unified_proj_camera_ptr Shared pointer to the unified projection camera object.
 /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
 ///                  will be valid) and 1 (when all the source image pixels will be retained in the
 ///                  undistorted image)
@@ -87,4 +92,7 @@ private:
 };
 
 }  // namespace aslam
-#endif // ASLAM_MAPPED_UNDISTORTER_H_
+
+#include "aslam/pipeline/undistorter-mapped-inl.h"
+
+#endif // ASLAM_PIPELINE_MAPPED_UNDISTORTER_H_
