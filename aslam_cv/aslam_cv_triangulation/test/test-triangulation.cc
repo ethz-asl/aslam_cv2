@@ -4,7 +4,7 @@
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
 #include <aslam/common/pose-types.h>
-#include <aslam/test/triangulation-fixture.h>
+#include <aslam/triangulation/test/triangulation-fixture.h>
 
 constexpr size_t kNumObservations = 20;
 

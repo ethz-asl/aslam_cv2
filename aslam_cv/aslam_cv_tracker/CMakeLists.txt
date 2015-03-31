@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(aslam_cv)
+project(aslam_cv_tracker)
 
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
@@ -8,40 +8,10 @@ catkin_simple(ALL_DEPS_REQUIRED)
 # LIBRARIES #
 #############
 cs_add_library(${PROJECT_NAME} 
-                               src/camera.cc
-                               src/camera-factory.cc
-                               src/camera-pinhole.cc
-                               src/camera-unified-projection.cc
-                               src/camera-yaml-serialization.cc
-                               src/channel.cc
-                               src/channel-serialization.cc
-                               src/distortion.cc
-                               src/distortion-equidistant.cc
-                               src/distortion-fisheye.cc
-                               src/distortion-radtan.cc
                                src/feature-tracker-lk.cc
                                src/feature-tracker-descriptor-matcher.cc
-                               src/match.cc
-                               src/matching-problem-frame-to-frame.cc
-                               src/ncamera.cc
-                               src/ncamera-yaml-serialization.cc
-                               src/statistics.cc
-                               src/thread-pool.cc
                                src/track-manager.cc
-                               src/triangulation.cc
-                               src/undistorter.cc
-                               src/undistorter-mapped.cc
-                               src/visual-frame.cc
-                               src/visual-nframe.cc
-                               src/visual-npipeline.cc
-                               src/visual-pipeline-brisk.cc
-                               src/visual-pipeline-null.cc
-                               src/visual-pipeline.cc
 )
-
-# TODO(tcies) reenable once sm timing fixed in tango
-# cs_add_executable(triangulation-benchmark benchmark/triangulation-benchmark.cc)
-# target_link_libraries(triangulation-benchmark ${PROJECT_NAME} gtest pthread)
 
 add_doxygen(NOT_AUTOMATIC)
 
@@ -54,85 +24,10 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_cameras
-    test/test-cameras.cc
-)
-target_link_libraries(test_cameras ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_channel-serialization
-    test/test-channel-serialization.cc
-)
-target_link_libraries(test_channel-serialization ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_channels
-    test/test-channels.cc
-)
-target_link_libraries(test_channels ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_distortions
-    test/test-distortions.cc
-)
-target_link_libraries(test_distortions ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_matcher
-    test/test-matcher.cc
-)
-target_link_libraries(test_matcher ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_matcher_non_exclusive
-    test/test-matcher-non-exclusive.cc
-)
-target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
-
-catkin_add_gtest(test_ncamera
-  test/test-ncamera.cc
-)
-target_link_libraries(test_ncamera ${PROJECT_NAME})
-
 catkin_add_gtest(test_track_manager
     test/test-track-manager.cc
 )
 target_link_libraries(test_track_manager ${PROJECT_NAME})
-
-catkin_add_gtest(test_triangulation
-    test/test-triangulation.cc
-)
-target_link_libraries(test_triangulation ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_thread-pool
-    test/test-thread-pool.cc
-)
-target_link_libraries(test_thread-pool ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_time
-    test/test-time.cc
-)
-target_link_libraries(test_time ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_undistorters
-    test/test-undistorters.cc
-)
-target_link_libraries(test_undistorters ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_visual-frame
-    test/test-visual-frame.cc
-)
-target_link_libraries(test_visual-frame ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_visual-nframe
-    test/test-visual-nframe.cc
-)
-target_link_libraries(test_visual-nframe ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_visual-npipeline
-    test/test-visual-npipeline.cc
-)
-target_link_libraries(test_visual-npipeline ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_eigen-yaml-serialization
-    test/test-eigen-yaml-serialization.cc
-)
-target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME}) 
 
 ##########
 # EXPORT #

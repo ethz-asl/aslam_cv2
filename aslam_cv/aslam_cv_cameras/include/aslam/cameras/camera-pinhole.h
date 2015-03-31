@@ -223,8 +223,8 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// @param[in] scale Output image size scaling parameter wrt. to input image size.
   /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
   /// @return Pointer to the created mapped undistorter.
-  virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
-      aslam::InterpolationMethod interpolation_type) const;
+//  virtual std::unique_ptr<MappedUndistorter> createMappedUndistorter(float alpha, float scale,
+//      aslam::InterpolationMethod interpolation_type) const;
 
   /// @}
 
