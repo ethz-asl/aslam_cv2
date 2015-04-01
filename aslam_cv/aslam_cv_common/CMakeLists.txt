@@ -43,4 +43,4 @@ target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME})
 # EXPORT #
 ##########
 cs_install()
-cs_export()
+cs_export(CFG_EXTRAS export_flags.cmake)
