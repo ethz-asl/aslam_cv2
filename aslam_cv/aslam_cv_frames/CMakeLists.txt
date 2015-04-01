@@ -23,14 +23,10 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_visual-frame
-    test/test-visual-frame.cc
-)
+catkin_add_gtest(test_visual-frame test/test-visual-frame.cc)
 target_link_libraries(test_visual-frame ${PROJECT_NAME}) 
 
-catkin_add_gtest(test_visual-nframe
-    test/test-visual-nframe.cc
-)
+catkin_add_gtest(test_visual-nframe test/test-visual-nframe.cc)
 target_link_libraries(test_visual-nframe ${PROJECT_NAME}) 
 
 ##########
