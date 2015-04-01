@@ -11,6 +11,10 @@
 
 namespace aslam {
 
+std::unique_ptr<MappedUndistorter> createMappedUndistorter(
+    const aslam::Camera::Ptr& camera_ptr, float alpha, float scale,
+    aslam::InterpolationMethod interpolation_type);
+
 /// \brief Factory method to create a mapped undistorter for this camera geometry.
 ///        NOTE: The undistorter stores a copy of this camera and changes to the original geometry
 ///              are not connected with the undistorter!
