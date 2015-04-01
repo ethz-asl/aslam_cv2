@@ -5,7 +5,7 @@
   <description>aslam_cv_frames</description>
   <maintainer email="schneith@ethz.ch">schneith</maintainer>
   <maintainer email="simon.lynen@gmail.com">simonlynen</maintainer>
-  <license>BSD</license>
+  <license>closed</license>
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>
 

@@ -25,28 +25,20 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_channel-serialization
-    test/test-channel-serialization.cc
-)
+catkin_add_gtest(test_channel-serialization test/test-channel-serialization.cc)
 target_link_libraries(test_channel-serialization ${PROJECT_NAME}) 
 
-catkin_add_gtest(test_channels
-    test/test-channels.cc
-)
+catkin_add_gtest(test_channels test/test-channels.cc)
 target_link_libraries(test_channels ${PROJECT_NAME}) 
 
-catkin_add_gtest(test_thread-pool
-    test/test-thread-pool.cc
-)
+catkin_add_gtest(test_thread-pool test/test-thread-pool.cc)
 target_link_libraries(test_thread-pool ${PROJECT_NAME}) 
 
-catkin_add_gtest(test_time
-    test/test-time.cc
-)
+catkin_add_gtest(test_time test/test-time.cc)
 target_link_libraries(test_time ${PROJECT_NAME}) 
 
-catkin_add_gtest(test_eigen-yaml-serialization
-    test/test-eigen-yaml-serialization.cc
+catkin_add_gtest(test_eigen-yaml-serialization 
+  test/test-eigen-yaml-serialization.cc
 )
 target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME}) 
 
