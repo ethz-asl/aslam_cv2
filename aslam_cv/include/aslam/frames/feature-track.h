@@ -61,6 +61,10 @@ class FeatureTrack {
     return keypoint_identifiers_.back();
   }
 
+  inline void popLastKeypointIdentifier() {
+    keypoint_identifiers_.pop_back();
+  }
+
   inline void addKeypointObservationAtBack(const std::shared_ptr<const aslam::VisualNFrame> nframe,
                                            const size_t frame_idx, const size_t keypoint_index) {
     keypoint_identifiers_.push_back(KeypointIdentifier::create(nframe, frame_idx, keypoint_index));
