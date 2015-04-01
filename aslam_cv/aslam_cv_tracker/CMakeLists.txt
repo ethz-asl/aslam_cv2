@@ -24,9 +24,7 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_track_manager
-    test/test-track-manager.cc
-)
+catkin_add_gtest(test_track_manager test/test-track-manager.cc)
 target_link_libraries(test_track_manager ${PROJECT_NAME})
 
 ##########

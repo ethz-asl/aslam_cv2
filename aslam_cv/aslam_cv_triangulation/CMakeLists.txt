@@ -7,8 +7,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-cs_add_library(${PROJECT_NAME} 
-                               src/triangulation.cc
+cs_add_library(${PROJECT_NAME} src/triangulation.cc
 )
 
 # TODO(tcies) reenable once sm timing fixed in tango
@@ -26,8 +25,7 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_triangulation
-    test/test-triangulation.cc
+catkin_add_gtest(test_triangulation test/test-triangulation.cc
 )
 target_link_libraries(test_triangulation ${PROJECT_NAME}) 
 

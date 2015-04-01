@@ -27,14 +27,10 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_undistorters
-    test/test-undistorters.cc
-)
+catkin_add_gtest(test_undistorters test/test-undistorters.cc)
 target_link_libraries(test_undistorters ${PROJECT_NAME}) 
 
-catkin_add_gtest(test_visual-npipeline
-    test/test-visual-npipeline.cc
-)
+catkin_add_gtest(test_visual-npipeline test/test-visual-npipeline.cc)
 target_link_libraries(test_visual-npipeline ${PROJECT_NAME}) 
 
 ##########

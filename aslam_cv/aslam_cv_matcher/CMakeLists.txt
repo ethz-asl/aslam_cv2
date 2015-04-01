@@ -23,14 +23,10 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_matcher
-    test/test-matcher.cc
-)
+catkin_add_gtest(test_matcher test/test-matcher.cc)
 target_link_libraries(test_matcher ${PROJECT_NAME}) 
 
-catkin_add_gtest(test_matcher_non_exclusive
-    test/test-matcher-non-exclusive.cc
-)
+catkin_add_gtest(test_matcher_non_exclusive test/test-matcher-non-exclusive.cc)
 target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
 
 ##########
