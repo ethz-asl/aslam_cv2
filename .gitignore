@@ -26,3 +26,6 @@
 .cproject
 .settings
 *~
+
+# MacOS Desktop Services Store
+.DS_Store
