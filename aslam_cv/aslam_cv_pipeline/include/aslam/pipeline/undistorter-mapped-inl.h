@@ -21,7 +21,6 @@ std::unique_ptr<MappedUndistorter> createMappedUndistorter(
       return createMappedUndistorter(unified_projection_cam, alpha, scale,
                                      interpolation_type);
     }
-      break;
     case Camera::Type::kPinhole: {
       aslam::PinholeCamera::Ptr pinhole_cam =
           std::dynamic_pointer_cast<aslam::PinholeCamera>(camera_ptr);
@@ -29,12 +28,12 @@ std::unique_ptr<MappedUndistorter> createMappedUndistorter(
       return createMappedUndistorter(pinhole_cam, alpha, scale,
                                      interpolation_type);
     }
-      break;
-    default:
+    default: {
       LOG(FATAL) << "Unknown camera model: "
         << static_cast<std::underlying_type<Camera::Type>::type>(
             camera_ptr->getType());
       return nullptr;
+    }
   }
 }
 
