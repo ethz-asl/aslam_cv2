@@ -7,6 +7,36 @@
 
 namespace aslam {
 
+template <>
+std::unique_ptr<MappedUndistorter> createMappedUndistorter(
+    const aslam::Camera::Ptr& camera_ptr, float alpha, float scale,
+    aslam::InterpolationMethod interpolation_type) {
+  CHECK(camera_ptr != nullptr);
+
+  switch(camera_ptr->getType()) {
+    case Camera::Type::kUnifiedProjection: {
+      aslam::UnifiedProjectionCamera::Ptr unified_projection_cam =
+          std::dynamic_pointer_cast<aslam::UnifiedProjectionCamera>(camera_ptr);
+      CHECK(unified_projection_cam != nullptr);
+      return createMappedUndistorter(unified_projection_cam, alpha, scale,
+                                     interpolation_type);
+    }
+    case Camera::Type::kPinhole: {
+      aslam::PinholeCamera::Ptr pinhole_cam =
+          std::dynamic_pointer_cast<aslam::PinholeCamera>(camera_ptr);
+      CHECK(pinhole_cam != nullptr);
+      return createMappedUndistorter(pinhole_cam, alpha, scale,
+                                     interpolation_type);
+    }
+    default: {
+      LOG(FATAL) << "Unknown camera model: "
+        << static_cast<std::underlying_type<Camera::Type>::type>(
+            camera_ptr->getType());
+      return nullptr;
+    }
+  }
+}
+
 template <typename CameraType>
 std::unique_ptr<MappedUndistorter> createMappedUndistorter(
     const std::shared_ptr<CameraType>& camera_ptr, float alpha, float scale,
