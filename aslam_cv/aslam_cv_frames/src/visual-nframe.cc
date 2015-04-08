@@ -44,9 +44,9 @@ VisualNFrame& VisualNFrame::operator=(const VisualNFrame& other) {
   frames_.clear();
   frames_.reserve(other.frames_.size());
   for (const VisualFrame::Ptr& other_frame : other.frames_) {
-    if(other_frame){
+    if (other_frame) {
       frames_.emplace_back(new VisualFrame(*other_frame.get()));
-    }else{
+    } else {
       frames_.emplace_back(nullptr);
     }
   }
@@ -165,7 +165,7 @@ bool VisualNFrame::isFrameSet(size_t frame_index) const {
 int64_t VisualNFrame::getMinTimestampNanoseconds() const {
   int64_t min_timestamp_nanoseconds = std::numeric_limits<int64_t>::max();
   for (size_t camera_idx = 0; camera_idx < getNumCameras(); ++camera_idx) {
-    if(isFrameSet(camera_idx)){
+    if (isFrameSet(camera_idx)) {
       const int64_t timestamp_frame_nanoseconds = getFrame(camera_idx).getTimestampNanoseconds();
       if (timestamp_frame_nanoseconds < min_timestamp_nanoseconds)
         min_timestamp_nanoseconds = timestamp_frame_nanoseconds;
@@ -178,7 +178,7 @@ int64_t VisualNFrame::getMinTimestampNanoseconds() const {
 int64_t VisualNFrame::getMaxTimestampNanoseconds() const {
   int64_t max_timestamp_nanoseconds = aslam::time::getInvalidTime();
   for (size_t camera_idx = 0; camera_idx < getNumCameras(); ++camera_idx) {
-    if(isFrameSet(camera_idx)){
+    if (isFrameSet(camera_idx)) {
       const int64_t timestamp_frame_nanoseconds = getFrame(camera_idx).getTimestampNanoseconds();
       if (timestamp_frame_nanoseconds > max_timestamp_nanoseconds)
         max_timestamp_nanoseconds = timestamp_frame_nanoseconds;
