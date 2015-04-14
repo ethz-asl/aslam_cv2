@@ -5,7 +5,7 @@
 namespace aslam {
 
 FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
-    : first_frame_processed_(true) {
+    : first_frame_processed_(false) {
   // Create the detection mask.
   detection_mask_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
   cv::Mat roi(detection_mask_, cv::Rect(kMinDistanceToImageBorderPx, kMinDistanceToImageBorderPx,
@@ -148,7 +148,7 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
   // If the number of tracked features drops below threshold, then add
   // new features to the current frame. They will be tracked in next
   // time step.
-  if (frame_k->getNumKeypointMeasurements() < kMinFeatureCount) {
+  if (frame_kp1->getNumKeypointMeasurements() < kMinFeatureCount) {
     // Detect new features.
     Vector2dList detected_keypoints;
     detectGfttCorners(frame_kp1->getRawImage(), &detected_keypoints);
