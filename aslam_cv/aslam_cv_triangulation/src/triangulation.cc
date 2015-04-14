@@ -42,7 +42,6 @@ TriangulationResult linearTriangulateFromNViews(
     A.block<3, 3>(3 * i, 0) = Eigen::Matrix3d::Identity();
     A.block<3, 1>(3 * i, 3 + i) = -R_G_B * R_B_C * v;
     b.segment<3>(3 * i) = p_G_B + R_G_B * T_B_C.getPosition();
-
   }
 
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr = A.colPivHouseholderQr();
@@ -262,9 +261,10 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
-TriangulationResult triangulateFeatureTrack(const aslam::FeatureTrack& track,
-                             const aslam::TransformationVector& T_W_Bs,
-                             Eigen::Vector3d* W_landmark) {
+TriangulationResult triangulateFeatureTrack(
+    const aslam::FeatureTrack& track,
+    const aslam::TransformationVector& T_W_Bs,
+    Eigen::Vector3d* W_landmark) {
   CHECK_NOTNULL(W_landmark);
   size_t track_length = track.getTrackLength();
   CHECK_GT(track_length, 1u);
