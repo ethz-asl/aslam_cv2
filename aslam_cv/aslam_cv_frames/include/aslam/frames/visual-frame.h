@@ -344,6 +344,13 @@ class VisualFrame  {
   /// Set the size of the descriptor in bytes.
   size_t getDescriptorSizeBytes() const;
 
+  /// Set the validity flag to true.
+  void validate() { is_valid_ = true; }
+  /// Set the validity flag to false.
+  void invalidate(){ is_valid_ = false; }
+  /// Check the validity flag.
+  bool isValid() const { return is_valid_; }
+
   /// Print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
 
@@ -365,6 +372,9 @@ class VisualFrame  {
   aslam::channels::ChannelGroup channels_;
   Camera::ConstPtr camera_geometry_;
   Camera::ConstPtr raw_camera_geometry_;
+
+  /// Validity flag, excludes this frame from certain operations and algorithms.
+  bool is_valid_;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const VisualFrame& rhs) {
