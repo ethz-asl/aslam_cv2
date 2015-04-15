@@ -4,37 +4,32 @@
 
 namespace aslam_cv_visualization {
 
+const size_t kLineWidth = 1u;
+const size_t kCircleRadius = 1u;
+
+
 void FeatureTrackVisualizer::drawContinuousFeatureTracks(
-    aslam::VisualFrame::ConstPtr frame,
+    const aslam::VisualFrame::ConstPtr& frame,
     const aslam::FeatureTracks& terminated_feature_tracks,
     cv::Mat* image) {
-  if (last_frame_) {
-    VLOG(4) << "Last frame hast ID " << last_frame_->getId();
-    // Preprocess the last frame. It has changed in the meantime.
-    typedef aslam::AlignedUnorderedMap<int, size_t>::type TrackIdToIndexMap;
-    TrackIdToIndexMap last_frame_track_id_to_index_map;
+  CHECK_NOTNULL(image);
 
-    const Eigen::VectorXi& last_frame_track_ids = last_frame_->getTrackIds();
-    const size_t last_frame_num_track_ids =
-        static_cast<size_t>(last_frame_track_ids.rows());
-    CHECK_EQ(last_frame_num_track_ids,
-             last_frame_->getNumKeypointMeasurements());
-    for (size_t idx = 0; idx < last_frame_num_track_ids; ++idx) {
-      int track_id = last_frame_track_ids(idx);
-      if (track_id >= 0) {
-        last_frame_track_id_to_index_map.insert(std::make_pair(track_id, idx));
-      }
-    }
+  if (last_frame_) {
+    VLOG(4) << "Last frame has ID " << last_frame_->getId();
+
+    // Preprocess the last frame. It has changed in the meantime.
+    TrackIdToIndexMap last_frame_track_id_to_index_map;
+    preprocessLastFrame(&last_frame_track_id_to_index_map);
 
     VLOG(4) << "Pre-processed " << last_frame_track_id_to_index_map.size()
-        << " valid keypoints in last frame.";
+            << " valid keypoints in last frame.";
 
     const Eigen::VectorXi& track_ids = frame->getTrackIds();
 
     const size_t num_track_ids = static_cast<size_t>(track_ids.rows());
     CHECK_EQ(num_track_ids, frame->getNumKeypointMeasurements());
     for (size_t idx = 0; idx < num_track_ids; ++idx) {
-      int track_id = track_ids(idx);
+      const int track_id = track_ids(idx);
       if (track_id >= 0) {
         // Active track. Look if this is ongoing.
         TrackMap::iterator active_track_it =
@@ -54,7 +49,7 @@ void FeatureTrackVisualizer::drawContinuousFeatureTracks(
           new_track.color = cv::Scalar(rng_.uniform(0, 255),
                                        rng_.uniform(0, 255),
                                        rng_.uniform(0, 255));
-          Eigen::Vector2d measurement =
+          const Eigen::Vector2d measurement =
               last_frame_->getKeypointMeasurement(last_frame_it->second);
           new_track.keypoints.push_back(measurement);
           track_id_to_track_map_.insert(std::make_pair(track_id, new_track));
@@ -62,7 +57,7 @@ void FeatureTrackVisualizer::drawContinuousFeatureTracks(
         }
         CHECK(active_track_it != track_id_to_track_map_.end());
 
-        Eigen::Vector2d measurement = frame->getKeypointMeasurement(idx);
+        const Eigen::Vector2d measurement = frame->getKeypointMeasurement(idx);
         active_track_it->second.keypoints.push_back(measurement);
       }
     }
@@ -75,24 +70,27 @@ void FeatureTrackVisualizer::drawContinuousFeatureTracks(
 
     for (TrackMap::const_iterator track_it = track_id_to_track_map_.begin();
         track_it != track_id_to_track_map_.end(); ++track_it) {
-      CHECK_GT(track_it->second.keypoints.size(), 0);
+      CHECK_GT(track_it->second.keypoints.size(), 0u);
       bool terminated = (terminated_track_ids.count(track_it->first) > 0u);
       aslam::Aligned<std::vector, Eigen::Vector2d>::type::const_iterator
         measurement_it = track_it->second.keypoints.begin();
-      cv::Point p0((*measurement_it)(0), (*measurement_it)(1));
+      cv::Point point_start_line((*measurement_it)(0), (*measurement_it)(1));
       ++measurement_it;
       for (; measurement_it != track_it->second.keypoints.end();
           ++measurement_it) {
-        cv::Point p1((*measurement_it)(0), (*measurement_it)(1));
+        cv::Point point_end_line((*measurement_it)(0), (*measurement_it)(1));
         if (terminated) {
-          cv::line(*image, p0, p1, cv::Scalar(0, 0, 255), 1, CV_AA);
+          cv::line(*image, point_start_line, point_end_line, cv::Scalar(0, 0, 255), kLineWidth,
+                   CV_AA);
         } else {
-          cv::line(*image, p0, p1, track_it->second.color, 1, CV_AA);
+          cv::line(*image, point_start_line, point_end_line, track_it->second.color, kLineWidth,
+                   CV_AA);
         }
-        p0 = p1;
+        point_start_line = point_end_line;
       }
       if (!terminated) {
-        cv::circle(*image, p0, 1, cv::Scalar(0.0, 255.0, 255.0, 20), 1, CV_AA);
+        cv::circle(*image, point_start_line, kCircleRadius, cv::Scalar(0.0, 255.0, 255.0, 20),
+                   kLineWidth, CV_AA);
       }
     }
 
@@ -102,9 +100,25 @@ void FeatureTrackVisualizer::drawContinuousFeatureTracks(
       CHECK(it != track_id_to_track_map_.end());
       track_id_to_track_map_.erase(track_id);
     }
-  } else {
-    VLOG(4) << "First time in visualizer. Asssining last frame and returning.";
   }
   last_frame_ = frame;
+}
+
+void FeatureTrackVisualizer::preprocessLastFrame(
+    TrackIdToIndexMap* last_frame_track_id_to_index_map) {
+  CHECK(last_frame_) << "No last frame available.";
+
+  const Eigen::VectorXi& last_frame_track_ids = last_frame_->getTrackIds();
+  const size_t last_frame_num_track_ids =
+      static_cast<size_t>(last_frame_track_ids.rows());
+  CHECK_EQ(last_frame_num_track_ids,
+           last_frame_->getNumKeypointMeasurements());
+  for (size_t idx = 0; idx < last_frame_num_track_ids; ++idx) {
+    int track_id = last_frame_track_ids(idx);
+    if (track_id >= 0) {
+      last_frame_track_id_to_index_map.insert(std::make_pair(track_id, idx));
+    }
+  }
+
 }
 }  // namespace aslam_cv_visualization

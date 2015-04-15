@@ -13,12 +13,17 @@ namespace aslam_cv_visualization {
 class FeatureTrackVisualizer {
  public:
   FeatureTrackVisualizer() {rng_ = cv::RNG(0xFFFFFFFF);}
-  ~FeatureTrackVisualizer() {}
-  void drawContinuousFeatureTracks(aslam::VisualFrame::ConstPtr frame,
-                           const aslam::FeatureTracks& terminated_feature_tracks,
-                           cv::Mat* image);
+
+  void drawContinuousFeatureTracks(
+      const aslam::VisualFrame::ConstPtr& frame,
+      const aslam::FeatureTracks& terminated_feature_tracks,
+      cv::Mat* image);
 
  private:
+  typedef aslam::AlignedUnorderedMap<int, size_t>::type TrackIdToIndexMap;
+
+  void preprocessLastFrame(TrackIdToIndexMap* track_id_to_keypoint_index_map);
+
   struct Track {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     aslam::Aligned<std::vector, Eigen::Vector2d>::type keypoints;

@@ -24,7 +24,6 @@ void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
                          cv::Mat* image) {
   CHECK_NOTNULL(image);
 
-  std::string optional_text("");
   for (const aslam::Match& match_kp1_k : matches_kp1_k) {
     Eigen::Vector2d keypoint_k;
     Eigen::Vector2d keypoint_kp1;
@@ -41,12 +40,7 @@ void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
 
     cv::circle(*image, cv::Point(keypoint_kp1[0], keypoint_kp1[1]), 4, color_keypoint_kp1);
     cv::line(*image, cv::Point(keypoint_k[0], keypoint_k[1]),
-        cv::Point(keypoint_kp1[0], keypoint_kp1[1]), line_color);
-
-    if (!optional_text.empty()) {
-      cv::putText(*image, optional_text, cv::Point(keypoint_kp1[0], keypoint_kp1[1]),
-          cv::FONT_HERSHEY_SIMPLEX, 0.3, kRed);
-    }
+             cv::Point(keypoint_kp1[0], keypoint_kp1[1]), line_color);
   }
 }
   
