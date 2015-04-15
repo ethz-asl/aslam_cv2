@@ -16,13 +16,15 @@ TriangulationResult::Status TriangulationResult::UNINITIALIZED =
 
 TriangulationResult linearTriangulateFromNViews(
     const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
-    const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
+    const aslam::TransformationVector& T_G_B,
     const aslam::Transformation& T_B_C, Eigen::Vector3d* G_point) {
   CHECK_NOTNULL(G_point);
   CHECK_EQ(measurements_normalized.size(), T_G_B.size());
   if (measurements_normalized.size() < 2u) {
     return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
   }
+
+  VLOG(5) << "Triangulating from " << T_G_B.size() << " views.";
 
   const size_t rows = 3 * measurements_normalized.size();
   const size_t cols = 3 + measurements_normalized.size();
@@ -46,11 +48,13 @@ TriangulationResult linearTriangulateFromNViews(
   static constexpr double kRankLossTolerance = 0.001;
   qr.setThreshold(kRankLossTolerance);
   const size_t rank = qr.rank();
+
   if ((rank - measurements_normalized.size()) < 3) {
     return TriangulationResult(TriangulationResult::UNOBSERVABLE);
   }
 
   *G_point = qr.solve(b).head<3>();
+
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
 }
 
@@ -255,6 +259,56 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
   *G_point = 1.0 / rho * R_Cn_G.transpose() *
       (Eigen::Matrix<double, 3, 1>() << alpha, beta, 1.0).finished() + p_G_Cn;
   return TriangulationResult(TriangulationResult::SUCCESSFUL);
+}
+
+TriangulationResult triangulateFeatureTrack(
+    const aslam::FeatureTrack& track,
+    const aslam::TransformationVector& T_W_Bs,
+    Eigen::Vector3d* W_landmark) {
+  CHECK_NOTNULL(W_landmark);
+  size_t track_length = track.getTrackLength();
+  CHECK_GT(track_length, 1u);
+  CHECK_EQ(track_length, T_W_Bs.size());
+
+  VLOG(4) << "Triangulating track of length " << track_length;
+
+  const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
+  CHECK(camera);
+  const aslam::CameraId track_camera_id = camera->getId();
+  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverted();
+
+  // Get the normalized measurements for all observations on the track.
+  Aligned<std::vector, Eigen::Vector2d>::type normalized_measurements;
+  normalized_measurements.reserve(track_length);
+
+  for (const aslam::KeypointIdentifier& keypoint_on_track : track.getKeypointIdentifiers()) {
+    const aslam::Camera::ConstPtr& camera = keypoint_on_track.getCamera();
+    CHECK(camera) << "Missing camera for keypoint on track with frame index: "
+        << keypoint_on_track.getFrameIndex();
+
+    // Obtain the normalized keypoint measurements.
+    const Eigen::Vector2d& keypoint_measurement = keypoint_on_track.getKeypointMeasurement();
+    Eigen::Vector3d C_ray;
+    camera->backProject3(keypoint_measurement, &C_ray);
+    Eigen::Vector2d normalized_measurement = C_ray.head<2>() / C_ray[2];
+    normalized_measurements.push_back(normalized_measurement);
+  }
+
+  VLOG(6) << "Assembled triangulation data.";
+
+  // Triangulate the landmark.
+  CHECK_EQ(track_length, normalized_measurements.size());
+  CHECK_EQ(track_length, T_W_Bs.size());
+  aslam::TriangulationResult triangulation_result = linearTriangulateFromNViews(
+                                                        normalized_measurements,
+                                                        T_W_Bs,
+                                                        T_B_C,
+                                                        W_landmark);
+
+  VLOG(5) << "Triangulation returned the following result:";
+  VLOG(5) << triangulation_result;
+
+  return triangulation_result;
 }
 
 }  // namespace aslam
