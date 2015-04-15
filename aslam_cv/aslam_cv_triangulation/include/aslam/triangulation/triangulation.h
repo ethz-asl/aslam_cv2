@@ -4,6 +4,7 @@
 
 #include <aslam/common/memory.h>
 #include <aslam/common/pose-types.h>
+#include <aslam/frames/feature-track.h>
 #include <Eigen/Dense>
 
 namespace aslam {
@@ -74,7 +75,7 @@ struct TriangulationResult {
 /// @return Was the triangulation successful?
 TriangulationResult linearTriangulateFromNViews(
     const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
-    const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
+    const aslam::TransformationVector& T_G_B,
     const aslam::Transformation& T_B_C, Eigen::Vector3d* G_point);
 
 /// brief Triangulate a 3d point from a set of n keypoint measurements on the
@@ -120,6 +121,20 @@ TriangulationResult linearTriangulateFromNViewsMultiCam(
     const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
     const Aligned<std::vector, aslam::Transformation>::type& T_B_C,
     Eigen::Vector3d* G_point);
+
+/// breif Triangulates a feature track together with a list of body poses.
+///       Track length and size of T_W_Bs is expected to be equal.
+///
+/// Frames: W: Arbitrary frame which the resulting landmark will be expressed in.
+///         B: Body frame (of the nframe).
+///
+/// @param[in]   track      The feature track to be triangulated.
+/// @param[in]   T_W_Bs     The list of body poses the landmark was seen from.
+/// @param[out]  W_Landmark The triangulated landmark, expressed in frame W.
+TriangulationResult triangulateFeatureTrack(
+    const aslam::FeatureTrack& track,
+    const aslam::TransformationVector& T_W_Bs,
+    Eigen::Vector3d* W_landmark);
 
 }  // namespace aslam
 #endif  // TRIANGULATION_H_
