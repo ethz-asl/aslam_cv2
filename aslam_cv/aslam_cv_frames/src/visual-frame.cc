@@ -39,6 +39,7 @@ bool VisualFrame::operator==(const VisualFrame& other) const {
       static_cast<bool>(other.camera_geometry_)) {
     same &= (*camera_geometry_) == (*other.camera_geometry_);
   }
+  same &= is_valid_ == other.is_valid_;
   return same;
 }
 
@@ -48,6 +49,7 @@ bool VisualFrame::compareWithoutCameraGeometry(const VisualFrame& other) const {
   same &= hardware_timestamp_ == other.hardware_timestamp_;
   same &= system_timestamp_nanoseconds_ == other.system_timestamp_nanoseconds_;
   same &= channels::isChannelGroupEqual(channels_, other.channels_);
+  same &= is_valid_ == other.is_valid_;
   return same;
 }
 
