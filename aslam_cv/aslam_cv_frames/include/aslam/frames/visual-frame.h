@@ -350,6 +350,8 @@ class VisualFrame  {
   void invalidate(){ is_valid_ = false; }
   /// Check the validity flag.
   bool isValid() const { return is_valid_; }
+  /// Set the validity flag.
+  void setValid(bool is_valid) { is_valid_ = is_valid; }
 
   /// Print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
