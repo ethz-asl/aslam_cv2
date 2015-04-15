@@ -375,7 +375,9 @@ class VisualFrame  {
   Camera::ConstPtr camera_geometry_;
   Camera::ConstPtr raw_camera_geometry_;
 
-  /// Validity flag, excludes this frame from certain operations and algorithms.
+  /// Validity flag: can be used by an external algorithm to flag frames that should
+  /// be excluded/included when processing a list of frames. Does not have any internal
+  /// effect on the frame.
   bool is_valid_;
 };
 
