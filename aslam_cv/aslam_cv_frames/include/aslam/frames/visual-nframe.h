@@ -90,6 +90,9 @@ class VisualNFrame {
   /// \brief Is a frame set for this index.
   bool isFrameSet(size_t frame_index) const;
 
+  /// \brief Is the frame at this index valid.
+  bool isFrameValid(size_t frame_index) const;
+
   /// \brief Get one frame.
   const VisualFrame& getFrame(size_t frame_index) const;
 
