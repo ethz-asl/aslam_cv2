@@ -106,6 +106,7 @@ void FeatureTrackVisualizer::drawContinuousFeatureTracks(
 
 void FeatureTrackVisualizer::preprocessLastFrame(
     TrackIdToIndexMap* last_frame_track_id_to_index_map) {
+  CHECK_NOTNULL(last_frame_track_id_to_index_map);
   CHECK(last_frame_) << "No last frame available.";
 
   const Eigen::VectorXi& last_frame_track_ids = last_frame_->getTrackIds();
@@ -116,9 +117,8 @@ void FeatureTrackVisualizer::preprocessLastFrame(
   for (size_t idx = 0; idx < last_frame_num_track_ids; ++idx) {
     int track_id = last_frame_track_ids(idx);
     if (track_id >= 0) {
-      last_frame_track_id_to_index_map.insert(std::make_pair(track_id, idx));
+      last_frame_track_id_to_index_map->insert(std::make_pair(track_id, idx));
     }
   }
-
 }
 }  // namespace aslam_cv_visualization
