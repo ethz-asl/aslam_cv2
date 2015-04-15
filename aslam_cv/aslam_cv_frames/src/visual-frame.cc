@@ -7,7 +7,8 @@ namespace aslam {
 VisualFrame::VisualFrame()
     : timestamp_nanoseconds_(time::getInvalidTime()),
       hardware_timestamp_(time::getInvalidTime()),
-      system_timestamp_nanoseconds_(time::getInvalidTime()) {}
+      system_timestamp_nanoseconds_(time::getInvalidTime()),
+      is_valid_(true){}
 
 VisualFrame::VisualFrame(const VisualFrame& other) {
   *this = other;
@@ -22,6 +23,7 @@ VisualFrame& VisualFrame::operator=(const VisualFrame& other) {
   raw_camera_geometry_ = other.raw_camera_geometry_;
 
   channels_ = channels::cloneChannelGroup(other.channels_);
+  is_valid_ = other.is_valid_;
   return *this;
 }
 
