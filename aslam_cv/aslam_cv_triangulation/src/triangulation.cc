@@ -24,7 +24,7 @@ TriangulationResult linearTriangulateFromNViews(
     return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
   }
 
-  VLOG(4) << "Triangulating from " << T_G_B.size() << " views.";
+  VLOG(5) << "Triangulating from " << T_G_B.size() << " views.";
 
   const size_t rows = 3 * measurements_normalized.size();
   const size_t cols = 3 + measurements_normalized.size();
@@ -282,8 +282,9 @@ TriangulationResult triangulateFeatureTrack(
   normalized_measurements.reserve(track_length);
 
   for (const aslam::KeypointIdentifier& keypoint_on_track : track.getKeypointIdentifiers()) {
-    CHECK_EQ(keypoint_on_track.getCamera()->getId(), track_camera_id)
-        << "Triangulation only supports one camera per track at the moment!";
+    const aslam::Camera::ConstPtr& camera = keypoint_on_track.getCamera();
+    CHECK(camera) << "Missing camera for keypoint on track with frame index: "
+        << keypoint_on_track.getFrameIndex();
 
     // Obtain the normalized keypoint measurements.
     const Eigen::Vector2d& keypoint_measurement = keypoint_on_track.getKeypointMeasurement();
@@ -293,7 +294,7 @@ TriangulationResult triangulateFeatureTrack(
     normalized_measurements.push_back(normalized_measurement);
   }
 
-  VLOG(4) << "Assembled triangulation data.";
+  VLOG(6) << "Assembled triangulation data.";
 
   // Triangulate the landmark.
   CHECK_EQ(track_length, normalized_measurements.size());
@@ -304,8 +305,8 @@ TriangulationResult triangulateFeatureTrack(
                                                         T_B_C,
                                                         W_landmark);
 
-  VLOG(4) << "Triangulation returned the following result:";
-  VLOG(4) << triangulation_result;
+  VLOG(5) << "Triangulation returned the following result:";
+  VLOG(5) << triangulation_result;
 
   return triangulation_result;
 }
