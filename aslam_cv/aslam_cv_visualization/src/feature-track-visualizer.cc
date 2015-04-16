@@ -1,5 +1,6 @@
 #include "aslam/visualization/feature-track-visualizer.h"
 
+#include <aslam/visualization/basic-visualization.h>
 #include <glog/logging.h>
 
 namespace aslam_cv_visualization {
@@ -7,8 +8,7 @@ namespace aslam_cv_visualization {
 const size_t kLineWidth = 1u;
 const size_t kCircleRadius = 1u;
 
-
-void FeatureTrackVisualizer::drawContinuousFeatureTracks(
+void VisualFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
     const aslam::VisualFrame::ConstPtr& frame,
     const aslam::FeatureTracks& terminated_feature_tracks,
     cv::Mat* image) {
@@ -104,7 +104,7 @@ void FeatureTrackVisualizer::drawContinuousFeatureTracks(
   last_frame_ = frame;
 }
 
-void FeatureTrackVisualizer::preprocessLastFrame(
+void VisualFrameFeatureTrackVisualizer::preprocessLastFrame(
     TrackIdToIndexMap* last_frame_track_id_to_index_map) {
   CHECK_NOTNULL(last_frame_track_id_to_index_map);
   CHECK(last_frame_) << "No last frame available.";
@@ -121,4 +121,41 @@ void FeatureTrackVisualizer::preprocessLastFrame(
     }
   }
 }
+
+VisualNFrameFeatureTrackVisualizer::VisualNFrameFeatureTrackVisualizer(const size_t num_frames) {
+  feature_track_visualizers_.resize(num_frames);
+}
+
+void VisualNFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
+    const std::shared_ptr<aslam::VisualNFrame>& nframe,
+    const std::vector<aslam::FeatureTracks>& terminated_feature_tracks,
+    cv::Mat* image) {
+  CHECK(nframe);
+  CHECK_NOTNULL(image);
+
+  const size_t num_frames = nframe->getNumFrames();
+  CHECK_EQ(num_frames, feature_track_visualizers_.size());
+  CHECK_EQ(nframe->getNumCameras(), num_frames);
+
+  cv::Mat& full_image = *image;
+  Offsets offsets;
+  assembleMultiImage(nframe, &full_image, &offsets);
+  CHECK_EQ(offsets.size(), num_frames);
+
+  const size_t image_width = nframe->getCamera(0).imageWidth();
+  const size_t image_height = nframe->getCamera(0).imageHeight();
+
+  for (size_t frame_idx = 0; frame_idx < num_frames; ++frame_idx) {
+    cv::Mat slice = full_image(cv::Rect(offsets[frame_idx].width, offsets[frame_idx].height,
+                                        image_width, image_height));
+
+    feature_track_visualizers_[frame_idx].drawContinuousFeatureTracks(
+        nframe->getFrameShared(frame_idx), terminated_feature_tracks[frame_idx], &slice);
+  }
+}
+
+void VisualNFrameFeatureTrackVisualizer::setNumFrames(const size_t num_frames) {
+  feature_track_visualizers_.resize(num_frames);
+}
+
 }  // namespace aslam_cv_visualization

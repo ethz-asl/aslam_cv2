@@ -10,9 +10,9 @@
 namespace aslam_cv_visualization {
 
 /// Visualization for aslam::FeatureTracks.
-class FeatureTrackVisualizer {
+class VisualFrameFeatureTrackVisualizer {
  public:
-  FeatureTrackVisualizer() {rng_ = cv::RNG(0xFFFFFFFF);}
+  VisualFrameFeatureTrackVisualizer() {rng_ = cv::RNG(0xFFFFFFFF);}
 
   void drawContinuousFeatureTracks(
       const aslam::VisualFrame::ConstPtr& frame,
@@ -35,6 +35,23 @@ class FeatureTrackVisualizer {
   aslam::VisualFrame::ConstPtr last_frame_;
 
   cv::RNG rng_;
+};
+
+class VisualNFrameFeatureTrackVisualizer {
+ public:
+  VisualNFrameFeatureTrackVisualizer() = default;
+  explicit VisualNFrameFeatureTrackVisualizer(const size_t num_frames);
+
+  void drawContinuousFeatureTracks(
+      const std::shared_ptr<aslam::VisualNFrame>& nframe,
+      const std::vector<aslam::FeatureTracks>& terminated_feature_tracks,
+      cv::Mat* image);
+
+  void setNumFrames(const size_t num_frames);
+
+ private:
+  std::vector<VisualFrameFeatureTrackVisualizer> feature_track_visualizers_;
+
 };
 }  // namespace aslam_cv_visualization
 #endif  // VISUALIZATION_FEATURE_TRACK_VISUALIZER_H_

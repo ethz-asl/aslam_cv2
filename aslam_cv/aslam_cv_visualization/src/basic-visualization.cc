@@ -17,6 +17,31 @@ void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image) {
   }
 }
 
+void drawKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::Mat* image_ptr) {
+  CHECK(nframe);
+  CHECK_NOTNULL(image_ptr);
+
+  const size_t num_frames = nframe->getNumFrames();
+  CHECK_EQ(num_frames, 4u);
+  CHECK_EQ(nframe->getNumCameras(), num_frames);
+
+  Offsets offsets;
+  assembleMultiImage(nframe, image_ptr, &offsets);
+  CHECK_EQ(offsets.size(), num_frames);
+
+  const size_t image_width = nframe->getCamera(0).imageWidth();
+  const size_t image_height = nframe->getCamera(0).imageHeight();
+
+  cv::Mat& image = image;
+
+  for (size_t frame_idx = 0; frame_idx < num_frames; ++frame_idx) {
+    cv::Mat slice = image(cv::Rect(offsets[frame_idx].width, offsets[frame_idx].height, image_width,
+                                   image_height));
+
+    aslam_cv_visualization::drawKeypoints(nframe->getFrame(frame_idx), &slice);
+  }
+}
+
 void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
                          const aslam::VisualFrame& frame_k,
                          const aslam::Matches& matches_kp1_k,
@@ -42,6 +67,92 @@ void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
     cv::line(*image, cv::Point(keypoint_k[0], keypoint_k[1]),
              cv::Point(keypoint_kp1[0], keypoint_kp1[1]), line_color);
   }
+}
+
+void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
+                        cv::Mat* full_image_ptr, Offsets* offsets_ptr) {
+  CHECK(nframe);
+  const size_t num_frames = nframe->getNumFrames();
+  CHECK_GT(num_frames, 0u);
+  CHECK_NOTNULL(full_image_ptr);
+  CHECK_NOTNULL(offsets_ptr);
+
+  const size_t image_width =
+      nframe->getFrame(0).getCameraGeometry()->imageWidth();
+  const size_t image_height =
+      nframe->getFrame(0).getCameraGeometry()->imageHeight();
+
+  cv::Mat& full_image = *full_image_ptr;
+
+  size_t num_rows = static_cast<size_t>(std::floor(std::sqrt(static_cast<double>(num_frames))));
+  size_t num_images_per_row = static_cast<size_t>(std::ceil(static_cast<double>(num_frames) /
+                                                            static_cast<double>(num_rows)));
+
+  CHECK_GT(num_rows, 0u);
+  CHECK_GT(num_images_per_row, 0u);
+
+  size_t max_image_height_first_row = 0u;
+
+  Offsets& offsets = *offsets_ptr;
+  offsets.resize(num_frames);
+  std::vector<cv::Mat> individual_images(num_frames);
+
+  size_t row_index = 0u;
+  size_t column_index = 0u;
+  for (size_t frame_idx = 0u; frame_idx < num_frames; ++frame_idx) {
+    cv::cvtColor(nframe->getFrame(frame_idx).getRawImage(), individual_images[frame_idx],
+                 CV_GRAY2BGR);
+
+    CHECK(nframe->getFrame(frame_idx).getCameraGeometry());
+    const size_t image_width =
+        nframe->getFrame(frame_idx).getCameraGeometry()->imageWidth();
+    const size_t image_height =
+        nframe->getFrame(frame_idx).getCameraGeometry()->imageHeight();
+
+    if (image_height > max_image_height_first_row) max_image_height_first_row = image_height;
+
+    offsets[frame_idx].height = row_index;
+    offsets[frame_idx].width = column_index;
+
+    column_index += image_width;
+
+    if ((frame_idx > 0u) && (frame_idx % num_images_per_row) == 0u) {
+      // Time to switch rows.
+      row_index += max_image_height_first_row;
+      max_image_height_first_row = 0u;
+      column_index = 0u;
+    }
+  }
+
+  full_image = cv::Mat(row_index, column_index, CV_8UC3);
+  VLOG(3) << "Reshaped full image to the following dimensions: " << row_index << " x "
+          << column_index;
+
+  for (size_t frame_idx = 0u; frame_idx < num_frames; ++frame_idx) {
+    cv::Mat slice = full_image(cv::Rect(offsets[frame_idx].width, offsets[frame_idx].height,
+                                        image_width, image_height));
+    individual_images[frame_idx].copyTo(slice);
+  }
+}
+
+void drawMatches(const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
+                 const aslam::MatchesWithScore& matches_with_scores, size_t frame_idx,
+                 cv::Mat* image) {
+  CHECK_NOTNULL(image);
+
+  cv::Mat& match_image = *image;
+  cv::cvtColor(frame_kp1.getRawImage(), match_image, CV_GRAY2BGR);
+
+  VLOG(4) << "Converted raw imagr from grayscale to color.";
+
+  aslam::Matches matches;
+  aslam::convertMatches(matches_with_scores, &matches);
+  VLOG(4) << "Converted the matches.";
+
+  CHECK_NOTNULL(match_image.data);
+
+  drawKeypointMatches(frame_kp1, frame_k, matches, cv::Scalar(255, 255, 0), cv::Scalar(255, 0, 255),
+                      &match_image);
 }
   
 }  // namespace aslam_cv_visualization
