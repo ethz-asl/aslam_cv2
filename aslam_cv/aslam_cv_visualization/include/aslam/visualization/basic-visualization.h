@@ -41,10 +41,10 @@ void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
                         cv::Mat* full_image, Offsets* offsets);
 
 void drawMatches(const aslam::VisualFrame& frame_kp1,
-                       const aslam::VisualFrame& frame_k,
-                       const aslam::MatchesWithScore& matches,
-                       size_t frame_idx,
-                       cv::Mat* image);
+                 const aslam::VisualFrame& frame_k,
+                 const aslam::MatchesWithScore& matches,
+                 size_t frame_idx,
+                 cv::Mat* image);
 
 
 }  // namespace aslam_cv_visualization
