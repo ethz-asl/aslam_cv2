@@ -28,23 +28,39 @@ struct Offset {
 };
 typedef aslam::Aligned<std::vector, Offset>::type Offsets;
 
-void drawKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::Mat* image);
+////////////////////////////////////////////////
+/// High-level functions - They render raw images plus some additional visualization.
+////////////////////////////////////////////////
+
+/// Takes an nframe, assembles all frames into one big image, puts in the raw images from the
+/// frames and draws keypoints on them.
+void visualizeKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::Mat* image);
+
+
+/// Takes two frames and list of matches between them and draws the raw images and the matches.
+void visualizeMatches(const aslam::VisualFrame& frame_kp1,
+                      const aslam::VisualFrame& frame_k,
+                      const aslam::MatchesWithScore& matches,
+                      cv::Mat* image);
+
+////////////////////////////////////////////////
+/// Low-Level functions - They only draw some visualization onto an image.
+////////////////////////////////////////////////
+
+/// Takes a frame and draws keypoints on it.
 void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image);
 
+/// Takes two frames and a list of matches between them and draws the matches.
+/// Does not draw the raw image!
 void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
                          const aslam::VisualFrame& frame_k,
                          const aslam::Matches& matches_kp1_k,
                          cv::Scalar color_keypoint_kp1, cv::Scalar line_color,
                          cv::Mat* image);
-  
+
+/// Takes an nframe and creates a single image patching together all raw images of all frames.
 void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
                         cv::Mat* full_image, Offsets* offsets);
-
-void drawMatches(const aslam::VisualFrame& frame_kp1,
-                 const aslam::VisualFrame& frame_k,
-                 const aslam::MatchesWithScore& matches,
-                 size_t frame_idx,
-                 cv::Mat* image);
 
 
 }  // namespace aslam_cv_visualization

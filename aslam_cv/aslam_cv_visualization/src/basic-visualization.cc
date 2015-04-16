@@ -17,7 +17,7 @@ void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image) {
   }
 }
 
-void drawKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::Mat* image_ptr) {
+void visualizeKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::Mat* image_ptr) {
   CHECK(nframe);
   CHECK_NOTNULL(image_ptr);
 
@@ -151,9 +151,8 @@ void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
   }
 }
 
-void drawMatches(const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
-                 const aslam::MatchesWithScore& matches_with_scores, size_t frame_idx,
-                 cv::Mat* image) {
+void visualizeMatches(const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
+                      const aslam::MatchesWithScore& matches_with_scores, cv::Mat* image) {
   CHECK_NOTNULL(image);
 
   cv::Mat& match_image = *image;
