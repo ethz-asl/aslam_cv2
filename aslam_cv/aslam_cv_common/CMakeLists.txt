@@ -7,12 +7,44 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-cs_add_library(${PROJECT_NAME} 
-                               src/channel.cc
-                               src/channel-serialization.cc
-                               src/statistics.cc
-                               src/thread-pool.cc
+set(HEADERS
+  include/aslam/common/channel.h
+  include/aslam/common/channel-declaration.h
+  include/aslam/common/channel-definitions.h
+  include/aslam/common/channel-serialization.h
+  include/aslam/common/crtp-clone.h
+  include/aslam/common/entrypoint.h
+  include/aslam/common/feature-descriptor-ref.h
+  include/aslam/common/feature-descriptor-ref-inl.h
+  include/aslam/common/hamming.h
+  include/aslam/common/hamming-inl.h
+  include/aslam/common/macros.h
+  include/aslam/common/memory.h
+  include/aslam/common/meta.h
+  include/aslam/common/numdiff-jacobian-tester.h
+  include/aslam/common/opencv-predicates.h
+  include/aslam/common/pose-types.h
+  include/aslam/common/predicates.h
+  include/aslam/common/stl-helpers.h
+  include/aslam/common/thread-pool.h
+  include/aslam/common/time.h
+  include/aslam/common/types.h
+  include/aslam/common/undistort-helpers.h
+  include/aslam/common/unique-id.h
+  include/aslam/common/yaml-serialization.h
+  include/aslam/common/yaml-serialization-eigen.h
+  include/aslam/common/statistics/accumulator.h
+  include/aslam/common/statistics/statistics.h
 )
+
+set(SOURCES
+  src/channel.cc
+  src/channel-serialization.cc
+  src/statistics.cc
+  src/thread-pool.cc
+)
+
+cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 
