@@ -22,6 +22,7 @@ set(HEADERS
   include/aslam/common/macros.h
   include/aslam/common/memory.h
   include/aslam/common/meta.h
+  include/aslam/common/neon_helpers.h
   include/aslam/common/numdiff-jacobian-tester.h
   include/aslam/common/opencv-predicates.h
   include/aslam/common/pose-types.h
