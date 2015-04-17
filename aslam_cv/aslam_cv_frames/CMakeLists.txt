@@ -7,10 +7,20 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-cs_add_library(${PROJECT_NAME} 
-                               src/visual-frame.cc
-                               src/visual-nframe.cc
+set(HEADERS
+  include/aslam/frames/feature-track.h
+  include/aslam/frames/feature-track-inl.h
+  include/aslam/frames/keypoint-identifier.h
+  include/aslam/frames/visual-frame.h
+  include/aslam/frames/visual-nframe.h
 )
+
+set(SOURCES
+  src/visual-frame.cc
+  src/visual-nframe.cc
+)
+
+cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 

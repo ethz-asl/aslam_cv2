@@ -7,8 +7,15 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-cs_add_library(${PROJECT_NAME} src/triangulation.cc
+set(HEADERS
+  include/aslam/triangulation/triangulation.h
 )
+
+set(SOURCES
+  src/triangulation.cc
+)
+
+cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 # TODO(tcies) reenable once sm timing fixed in tango
 # cs_add_executable(triangulation-benchmark benchmark/triangulation-benchmark.cc)
@@ -22,7 +29,9 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_triangulation test/test-triangulation.cc
+catkin_add_gtest(test_triangulation
+  test/test-triangulation.cc
+  include/aslam/triangulation/test/triangulation-fixture.h
 )
 target_link_libraries(test_triangulation ${PROJECT_NAME}) 
 
