@@ -30,7 +30,7 @@ TEST(HashIdTest, String) {
   EXPECT_EQ(bs.length(), 32);
 }
 
-TEST(HashIdTest, hashId_deserialize) {
+TEST(HashIdTest, Deserialize) {
   HashId a;
   std::string as(a.hexString());
   HashId b;
@@ -38,7 +38,7 @@ TEST(HashIdTest, hashId_deserialize) {
   EXPECT_EQ(a, b);
 }
 
-TEST(HashIdTest, hashId_stdHash) {
+TEST(HashIdTest, StdHash) {
   std::unordered_set<HashId> hashes;
   HashId needle(HashId::random());
   hashes.insert(needle);
