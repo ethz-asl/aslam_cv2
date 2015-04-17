@@ -7,14 +7,26 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-cs_add_library(${PROJECT_NAME} 
-                               src/undistorter.cc
-                               src/undistorter-mapped.cc
-                               src/visual-npipeline.cc
-                               src/visual-pipeline-brisk.cc
-                               src/visual-pipeline-null.cc
-                               src/visual-pipeline.cc
+set(HEADERS
+  include/aslam/pipeline/undistorter.h
+  include/aslam/pipeline/undistorter-mapped.h
+  include/aslam/pipeline/undistorter-mapped-inl.h
+  include/aslam/pipeline/visual-npipeline.h
+  include/aslam/pipeline/visual-pipeline.h
+  include/aslam/pipeline/visual-pipeline-brisk.h
+  include/aslam/pipeline/visual-pipeline-null.h
 )
+
+set(SOURCES
+  src/undistorter.cc
+  src/undistorter-mapped.cc
+  src/visual-npipeline.cc
+  src/visual-pipeline-brisk.cc
+  src/visual-pipeline-null.cc
+  src/visual-pipeline.cc
+)
+
+cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 
