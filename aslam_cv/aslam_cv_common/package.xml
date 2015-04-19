@@ -16,6 +16,5 @@
   <depend>glog_catkin</depend>
   <depend>minkindr</depend> 
   <depend>opencv2_catkin</depend>
-  <depend>sm_common</depend> 
   <depend>yaml_cpp_catkin</depend>
 </package>
