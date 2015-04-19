@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 
 #include <aslam/common/entrypoint.h>
-#include <aslam/common/hash_id.h>
+#include <aslam/common/hash-id.h>
 
 using namespace aslam;
 
