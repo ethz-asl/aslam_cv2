@@ -42,7 +42,7 @@
 #define ASLAM_COMMON_HAMMING_INL_H_
 
 #ifdef __ARM_NEON__
-#include <aslam/common/neon_helpers.h>
+#include <aslam/common/neon-helpers.h>
 #endif  // __ARM_NEON__
 
 namespace aslam {
