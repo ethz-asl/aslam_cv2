@@ -6,7 +6,6 @@
 
 // Deliberately not including OpenCV here, to avoid the dependency.
 #include <gtest/gtest.h>
-#include <gflags/gflags.h>
 #include <glog/logging.h>
 
 #define EXPECT_NEAR_OPENCV(image_A, image_B, precision) \
