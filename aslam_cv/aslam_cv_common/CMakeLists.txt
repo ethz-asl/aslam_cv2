@@ -18,9 +18,11 @@ set(HEADERS
   include/aslam/common/feature-descriptor-ref-inl.h
   include/aslam/common/hamming.h
   include/aslam/common/hamming-inl.h
+  include/aslam/common/hash_id.h
   include/aslam/common/macros.h
   include/aslam/common/memory.h
   include/aslam/common/meta.h
+  include/aslam/common/neon_helpers.h
   include/aslam/common/numdiff-jacobian-tester.h
   include/aslam/common/opencv-predicates.h
   include/aslam/common/pose-types.h
@@ -40,6 +42,7 @@ set(HEADERS
 set(SOURCES
   src/channel.cc
   src/channel-serialization.cc
+  src/hash_id.cc
   src/statistics.cc
   src/thread-pool.cc
 )
@@ -65,6 +68,9 @@ target_link_libraries(test_thread-pool ${PROJECT_NAME})
 
 catkin_add_gtest(test_time test/test-time.cc)
 target_link_libraries(test_time ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_hash-id test/test-hash-id.cc)
+target_link_libraries(test_hash-id ${PROJECT_NAME})
 
 catkin_add_gtest(test_eigen-yaml-serialization 
   test/test-eigen-yaml-serialization.cc
