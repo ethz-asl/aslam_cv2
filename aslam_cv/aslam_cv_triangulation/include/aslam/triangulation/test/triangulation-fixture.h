@@ -34,7 +34,7 @@ void fillObservations(
     aslam::Transformation T_G_I_current(test_pos, Eigen::Quaterniond::Identity());
     T_G_I->push_back(T_G_I_current);
 
-    aslam::Transformation T_C_G = (T_G_I_current * T_I_C).inverted();
+    aslam::Transformation T_C_G = (T_G_I_current * T_I_C).inverse();
     C_bearing_vectors->block<3, 1>(0, i) = T_C_G.transform(kGPoint);
   }
 }
@@ -81,7 +81,7 @@ class TriangulationFixture : public testing::Test {
     for (size_t i = 0; i < T_G_I_.size(); ++i) {
       // Ignoring IMU to camera transformation (set to identity in SetUp()).
       C_bearing_measurements_.block<3, 1>(0, i) =
-          T_G_I_[i].inverted().transform(p_G_);
+          T_G_I_[i].inverse().transform(p_G_);
       if (angle_noise > 0.) {
         aslam::Transformation perturbation;
         perturbation.setRandom(0., angle_noise);
