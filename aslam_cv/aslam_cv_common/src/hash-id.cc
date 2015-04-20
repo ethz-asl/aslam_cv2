@@ -1,4 +1,4 @@
-#include <aslam/common/hash_id.h>
+#include <aslam/common/hash-id.h>
 
 namespace aslam {
 
