@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <aslam/common/hash_id.h>
+#include <aslam/common/hash-id.h>
 
 namespace aslam {
 #define ASLAM_UNIQUE_ID(IdType)                   \
