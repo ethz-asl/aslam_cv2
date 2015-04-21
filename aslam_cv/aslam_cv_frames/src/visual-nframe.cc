@@ -162,6 +162,12 @@ bool VisualNFrame::isFrameSet(size_t frame_index) const {
   return static_cast<bool>(frames_[frame_index]);
 }
 
+bool VisualNFrame::isFrameValid(size_t frame_index) const {
+  CHECK_LT(frame_index, frames_.size());
+  CHECK(isFrameSet(frame_index));
+  return frames_[frame_index]->isValid();
+}
+
 int64_t VisualNFrame::getMinTimestampNanoseconds() const {
   int64_t min_timestamp_nanoseconds = std::numeric_limits<int64_t>::max();
   for (size_t camera_idx = 0; camera_idx < getNumCameras(); ++camera_idx) {

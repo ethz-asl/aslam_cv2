@@ -7,10 +7,17 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-cs_add_library(${PROJECT_NAME} 
+set(HEADERS
+  include/aslam/visualization/basic-visualization.h
+  include/aslam/visualization/feature-track-visualizer.h
+)
+
+set(SOURCES
   src/feature-track-visualizer.cc
   src/basic-visualization.cc
 )
+
+cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 

@@ -7,10 +7,22 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-cs_add_library(${PROJECT_NAME} 
-                               src/match.cc
-                               src/matching-problem-frame-to-frame.cc
+set(HEADERS
+  include/aslam/matcher/match.h
+  include/aslam/matcher/matching-engine.h
+  include/aslam/matcher/matching-engine-exclusive.h
+  include/aslam/matcher/matching-engine-greedy.h
+  include/aslam/matcher/matching-engine-non-exclusive.h
+  include/aslam/matcher/matching-problem.h
+  include/aslam/matcher/matching-problem-frame-to-frame.h
 )
+
+set(SOURCES
+  src/match.cc
+  src/matching-problem-frame-to-frame.cc
+)
+
+cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 
