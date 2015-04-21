@@ -150,7 +150,5 @@ TriangulationResult fastTriangulateFeatureTrack(
     const aslam::FeatureTrack& track,
     const aslam::TransformationVector& T_W_Bs,
     Eigen::Vector3d* W_landmark);
-
-
 }  // namespace aslam
 #endif  // TRIANGULATION_H_
