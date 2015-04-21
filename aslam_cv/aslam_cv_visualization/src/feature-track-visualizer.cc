@@ -123,6 +123,7 @@ void VisualFrameFeatureTrackVisualizer::preprocessLastFrame(
 }
 
 VisualNFrameFeatureTrackVisualizer::VisualNFrameFeatureTrackVisualizer(const size_t num_frames) {
+  CHECK_GT(num_frames, 0u);
   feature_track_visualizers_.resize(num_frames);
 }
 
@@ -142,10 +143,10 @@ void VisualNFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
   assembleMultiImage(nframe, &full_image, &offsets);
   CHECK_EQ(offsets.size(), num_frames);
 
-  const size_t image_width = nframe->getCamera(0).imageWidth();
-  const size_t image_height = nframe->getCamera(0).imageHeight();
-
   for (size_t frame_idx = 0; frame_idx < num_frames; ++frame_idx) {
+    const size_t image_width = nframe->getCamera(frame_idx).imageWidth();
+    const size_t image_height = nframe->getCamera(frame_idx).imageHeight();
+
     cv::Mat slice = full_image(cv::Rect(offsets[frame_idx].width, offsets[frame_idx].height,
                                         image_width, image_height));
 
@@ -155,6 +156,7 @@ void VisualNFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
 }
 
 void VisualNFrameFeatureTrackVisualizer::setNumFrames(const size_t num_frames) {
+  CHECK_GT(num_frames, 0u);
   feature_track_visualizers_.resize(num_frames);
 }
 
