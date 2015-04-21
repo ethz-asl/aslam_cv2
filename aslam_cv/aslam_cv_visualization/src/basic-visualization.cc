@@ -22,7 +22,6 @@ void visualizeKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::
   CHECK_NOTNULL(image_ptr);
 
   const size_t num_frames = nframe->getNumFrames();
-  CHECK_EQ(num_frames, 4u);
   CHECK_EQ(nframe->getNumCameras(), num_frames);
 
   Offsets offsets;

@@ -1,13 +1,14 @@
 #ifndef ASLAM_VISUALIZATION_BASIC_VISUALIZATION_H_
 #define ASLAM_VISUALIZATION_BASIC_VISUALIZATION_H_
 
+#include <vector>
+
 #include <aslam/common/memory.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/frames/visual-nframe.h>
 #include <aslam/matcher/match.h>
 #include <Eigen/Dense>
 #include <opencv2/core/core.hpp>
-#include <vector>
 
 namespace aslam_cv_visualization {
 
@@ -36,7 +37,6 @@ typedef aslam::Aligned<std::vector, Offset>::type Offsets;
 /// frames and draws keypoints on them.
 void visualizeKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::Mat* image);
 
-
 /// Takes two frames and list of matches between them and draws the raw images and the matches.
 void visualizeMatches(const aslam::VisualFrame& frame_kp1,
                       const aslam::VisualFrame& frame_k,
@@ -61,7 +61,6 @@ void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
 /// Takes an nframe and creates a single image patching together all raw images of all frames.
 void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
                         cv::Mat* full_image, Offsets* offsets);
-
 
 }  // namespace aslam_cv_visualization
 
