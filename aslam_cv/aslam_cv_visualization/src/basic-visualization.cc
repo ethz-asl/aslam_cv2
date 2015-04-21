@@ -106,7 +106,9 @@ void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
       // Time to switch rows.
       row_index += max_image_height_row;
 
-      if (column_index > max_column) max_column = column_index;
+      if (column_index > max_column) {
+        max_column = column_index;s
+      }
       max_image_height_row = 0u;
       column_index = 0u;
     }
@@ -125,7 +127,9 @@ void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
 
     VLOG(4) << "Adding image of dimension " << image_width << " x " << image_height;
 
-    if (image_height > max_image_height_row) max_image_height_row = image_height;
+    if (image_height > max_image_height_row) {
+      max_image_height_row = image_height;
+    }
 
     offsets[frame_idx].height = row_index;
     offsets[frame_idx].width = column_index;

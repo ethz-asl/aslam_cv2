@@ -1,7 +1,8 @@
 #include "aslam/visualization/feature-track-visualizer.h"
 
-#include <aslam/visualization/basic-visualization.h>
 #include <glog/logging.h>
+
+#include "aslam/visualization/basic-visualization.h"
 
 namespace aslam_cv_visualization {
 
@@ -128,7 +129,7 @@ VisualNFrameFeatureTrackVisualizer::VisualNFrameFeatureTrackVisualizer(const siz
 }
 
 void VisualNFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
-    const std::shared_ptr<aslam::VisualNFrame>& nframe,
+    const aslam::VisualNFrame::Ptr& nframe,
     const std::vector<aslam::FeatureTracks>& terminated_feature_tracks,
     cv::Mat* image) {
   CHECK(nframe);
