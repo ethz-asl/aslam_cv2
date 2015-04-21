@@ -7,7 +7,8 @@ namespace aslam {
 VisualFrame::VisualFrame()
     : timestamp_nanoseconds_(time::getInvalidTime()),
       hardware_timestamp_(time::getInvalidTime()),
-      system_timestamp_nanoseconds_(time::getInvalidTime()) {}
+      system_timestamp_nanoseconds_(time::getInvalidTime()),
+      is_valid_(true){}
 
 VisualFrame::VisualFrame(const VisualFrame& other) {
   *this = other;
@@ -22,6 +23,7 @@ VisualFrame& VisualFrame::operator=(const VisualFrame& other) {
   raw_camera_geometry_ = other.raw_camera_geometry_;
 
   channels_ = channels::cloneChannelGroup(other.channels_);
+  is_valid_ = other.is_valid_;
   return *this;
 }
 
@@ -37,6 +39,7 @@ bool VisualFrame::operator==(const VisualFrame& other) const {
       static_cast<bool>(other.camera_geometry_)) {
     same &= (*camera_geometry_) == (*other.camera_geometry_);
   }
+  same &= is_valid_ == other.is_valid_;
   return same;
 }
 
@@ -46,6 +49,7 @@ bool VisualFrame::compareWithoutCameraGeometry(const VisualFrame& other) const {
   same &= hardware_timestamp_ == other.hardware_timestamp_;
   same &= system_timestamp_nanoseconds_ == other.system_timestamp_nanoseconds_;
   same &= channels::isChannelGroupEqual(channels_, other.channels_);
+  same &= is_valid_ == other.is_valid_;
   return same;
 }
 
