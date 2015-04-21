@@ -120,6 +120,9 @@ void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
     const size_t image_height =
         nframe->getFrame(frame_idx).getCameraGeometry()->imageHeight();
 
+    CHECK_EQ(individual_images[frame_idx].rows, static_cast<int>(image_height));
+    CHECK_EQ(individual_images[frame_idx].cols, static_cast<int>(image_width));
+
     VLOG(4) << "Adding image of dimension " << image_width << " x " << image_height;
 
     if (image_height > max_image_height_row) max_image_height_row = image_height;
