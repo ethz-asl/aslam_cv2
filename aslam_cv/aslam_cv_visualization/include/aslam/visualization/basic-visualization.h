@@ -22,12 +22,12 @@ const cv::Scalar kTurquoise(180, 180, 0);
 const cv::Scalar kBlack(0, 0, 0);
 const cv::Scalar kWhite(255, 255, 255);
 
-struct Offset {
+struct ImagePositionOffset {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   size_t width;
   size_t height;
 };
-typedef aslam::Aligned<std::vector, Offset>::type Offsets;
+typedef aslam::Aligned<std::vector, ImagePositionOffset>::type Offsets;
 
 ////////////////////////////////////////////////
 /// High-level functions - They render raw images plus some additional visualization.
