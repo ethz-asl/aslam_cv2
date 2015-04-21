@@ -12,7 +12,7 @@ namespace aslam_cv_visualization {
 /// Visualization for aslam::FeatureTracks.
 class VisualFrameFeatureTrackVisualizer {
  public:
-  VisualFrameFeatureTrackVisualizer() {rng_ = cv::RNG(0xFFFFFFFF);}
+  VisualFrameFeatureTrackVisualizer() : rng_(cv::RNG(0xFFFFFFFF)) {}
 
   void drawContinuousFeatureTracks(
       const aslam::VisualFrame::ConstPtr& frame,
@@ -51,7 +51,6 @@ class VisualNFrameFeatureTrackVisualizer {
 
  private:
   std::vector<VisualFrameFeatureTrackVisualizer> feature_track_visualizers_;
-
 };
 }  // namespace aslam_cv_visualization
 #endif  // VISUALIZATION_FEATURE_TRACK_VISUALIZER_H_

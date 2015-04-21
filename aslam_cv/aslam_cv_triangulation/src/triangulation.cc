@@ -304,10 +304,10 @@ TriangulationResult triangulateFeatureTrack(
                                                         normalized_measurements,
                                                         T_W_Bs,
                                                         T_B_C,
-                                                        W_landmark);;
+                                                        W_landmark);
 
-  VLOG(4) << "Triangulation returned the following result:";
-  VLOG(4) << triangulation_result;
+  VLOG(4) << "Triangulation returned the following result:" << std::endl
+          << triangulation_result;
 
   return triangulation_result;
 }
@@ -357,8 +357,8 @@ TriangulationResult fastTriangulateFeatureTrack(
   aslam::TriangulationResult triangulation_result = linearTriangulateFromNViews(
       G_bearing_vectors, p_G_C_vector, W_landmark);
 
-  VLOG(4) << "Triangulation returned the following result:";
-  VLOG(4) << triangulation_result;
+  VLOG(4) << "Triangulation returned the following result:" << std::endl
+          << triangulation_result;
 
   return triangulation_result;
 }
