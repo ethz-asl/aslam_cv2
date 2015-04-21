@@ -7,11 +7,20 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-cs_add_library(${PROJECT_NAME} 
-                               src/feature-tracker-lk.cc
-                               src/feature-tracker-descriptor-matcher.cc
-                               src/track-manager.cc
+set(HEADERS
+  include/aslam/tracker/feature-tracker.h
+  include/aslam/tracker/feature-tracker-descriptor-matcher.h
+  include/aslam/tracker/feature-tracker-lk.h
+  include/aslam/tracker/track-manager.h
 )
+
+set(SOURCES
+  src/feature-tracker-lk.cc
+  src/feature-tracker-descriptor-matcher.cc
+  src/track-manager.cc
+)
+
+cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 
