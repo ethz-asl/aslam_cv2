@@ -322,24 +322,11 @@ class VisualFrame  {
 
   /// Get the timestamp.
   inline int64_t getTimestampNanoseconds() const { return timestamp_nanoseconds_; }
-  
+
   /// Set the timestamp.
-  inline void setTimestampNanoseconds(int64_t timestamp_nanoseconds){
-    timestamp_nanoseconds_ = timestamp_nanoseconds; }
-  
-  /// Get the hardware timestamp.
-  inline int64_t getHardwareTimestamp() const { return hardware_timestamp_; }
-
-  /// Set the hardware timestamp.
-  inline void setHardwareTimestamp(int64_t hardware_timestamp) {
-    hardware_timestamp_ = hardware_timestamp; }
-
-  /// Get the system (host computer) timestamp.
-  inline int64_t getSystemTimestampNanoseconds() const { return system_timestamp_nanoseconds_; }
-
-  /// Set the system (host computer) timestamp.
-  inline void setSystemTimestamp(int64_t system_timestamp_nanoseconds) {
-    system_timestamp_nanoseconds_ = system_timestamp_nanoseconds; }
+  inline void setTimestampNanoseconds(int64_t timestamp_nanoseconds) {
+    timestamp_nanoseconds_ = timestamp_nanoseconds;
+  }
 
   /// Set the size of the descriptor in bytes.
   size_t getDescriptorSizeBytes() const;
@@ -364,12 +351,9 @@ class VisualFrame  {
   static VisualFrame::Ptr createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camera,
                                                      int64_t timestamp_nanoseconds);
  private:
-  /// Timestamp in nanoseconds since epoch.
+  /// Timestamp in nanoseconds.
   int64_t timestamp_nanoseconds_;
-  /// Hardware timestamp. The scale and offset will be different for every device.
-  int64_t hardware_timestamp_;
-  /// Host system timestamp in integer nanoseconds since epoch.
-  int64_t system_timestamp_nanoseconds_;
+
   aslam::FrameId id_;
   aslam::channels::ChannelGroup channels_;
   Camera::ConstPtr camera_geometry_;

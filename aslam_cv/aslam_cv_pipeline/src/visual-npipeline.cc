@@ -46,10 +46,8 @@ VisualNPipeline::~VisualNPipeline() {
   thread_pool_->stop();
 }
 
-void VisualNPipeline::processImage(size_t camera_index, const cv::Mat& image,
-                                   int64_t system_stamp, int64_t hardware_stamp) {
-  thread_pool_->enqueue(&VisualNPipeline::work, this, camera_index,
-                        image, system_stamp, hardware_stamp);
+void VisualNPipeline::processImage(size_t camera_index, const cv::Mat& image, int64_t timestamp) {
+  thread_pool_->enqueue(&VisualNPipeline::work, this, camera_index, image, timestamp);
 }
 
 size_t VisualNPipeline::getNumFramesComplete() const {
@@ -112,11 +110,10 @@ size_t VisualNPipeline::getNumFramesProcessing() const {
   return processing_.size();
 }
 
-void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
-                           int64_t system_stamp, int64_t hardware_stamp) {
+void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t timestamp) {
   CHECK_LE(camera_index, pipelines_.size());
   std::shared_ptr<VisualFrame> frame;
-  frame = pipelines_[camera_index]->processImage(image, system_stamp, hardware_stamp);
+  frame = pipelines_[camera_index]->processImage(image, timestamp);
 
   /// Create an iterator into the processing queue.
   std::map<int64_t, std::shared_ptr<VisualNFrame>>::iterator proc_it;
