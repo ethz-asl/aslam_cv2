@@ -122,7 +122,7 @@ TriangulationResult linearTriangulateFromNViewsMultiCam(
     const Aligned<std::vector, aslam::Transformation>::type& T_B_C,
     Eigen::Vector3d* G_point);
 
-/// breif Triangulates a feature track together with a list of body poses.
+/// brief Triangulates a feature track together with a list of body poses.
 ///       Track length and size of T_W_Bs is expected to be equal.
 ///
 /// Frames: W: Arbitrary frame which the resulting landmark will be expressed in.
@@ -136,5 +136,19 @@ TriangulationResult triangulateFeatureTrack(
     const aslam::TransformationVector& T_W_Bs,
     Eigen::Vector3d* W_landmark);
 
+/// brief Triangulates a feature track together with a list of body poses.
+///       Track length and size of T_W_Bs is expected to be equal.
+///       Uses the faster linearTriangulateFromNViews(Matrix3d, Matrix3d, Vector3d*).
+///
+/// Frames: W: Arbitrary frame which the resulting landmark will be expressed in.
+///         B: Body frame (of the nframe).
+///
+/// @param[in]   track      The feature track to be triangulated.
+/// @param[in]   T_W_Bs     The list of body poses the landmark was seen from.
+/// @param[out]  W_Landmark The triangulated landmark, expressed in frame W.
+TriangulationResult fastTriangulateFeatureTrack(
+    const aslam::FeatureTrack& track,
+    const aslam::TransformationVector& T_W_Bs,
+    Eigen::Vector3d* W_landmark);
 }  // namespace aslam
 #endif  // TRIANGULATION_H_
