@@ -6,9 +6,7 @@
 namespace aslam {
 VisualFrame::VisualFrame()
     : timestamp_nanoseconds_(time::getInvalidTime()),
-      hardware_timestamp_(time::getInvalidTime()),
-      system_timestamp_nanoseconds_(time::getInvalidTime()),
-      is_valid_(true){}
+      is_valid_(true) {}
 
 VisualFrame::VisualFrame(const VisualFrame& other) {
   *this = other;
@@ -16,8 +14,6 @@ VisualFrame::VisualFrame(const VisualFrame& other) {
 
 VisualFrame& VisualFrame::operator=(const VisualFrame& other) {
   timestamp_nanoseconds_ = other.timestamp_nanoseconds_;
-  hardware_timestamp_ = other.hardware_timestamp_;
-  system_timestamp_nanoseconds_ = other.system_timestamp_nanoseconds_;
   id_ = other.id_;
   camera_geometry_ = other.camera_geometry_;
   raw_camera_geometry_ = other.raw_camera_geometry_;
@@ -30,8 +26,6 @@ VisualFrame& VisualFrame::operator=(const VisualFrame& other) {
 bool VisualFrame::operator==(const VisualFrame& other) const {
   bool same = true;
   same &= timestamp_nanoseconds_ == other.timestamp_nanoseconds_;
-  same &= hardware_timestamp_ == other.hardware_timestamp_;
-  same &= system_timestamp_nanoseconds_ == other.system_timestamp_nanoseconds_;
   same &= channels::isChannelGroupEqual(channels_, other.channels_);
   same &= static_cast<bool>(camera_geometry_) ==
       static_cast<bool>(other.camera_geometry_);
@@ -46,8 +40,6 @@ bool VisualFrame::operator==(const VisualFrame& other) const {
 bool VisualFrame::compareWithoutCameraGeometry(const VisualFrame& other) const {
   bool same = true;
   same &= timestamp_nanoseconds_ == other.timestamp_nanoseconds_;
-  same &= hardware_timestamp_ == other.hardware_timestamp_;
-  same &= system_timestamp_nanoseconds_ == other.system_timestamp_nanoseconds_;
   same &= channels::isChannelGroupEqual(channels_, other.channels_);
   same &= is_valid_ == other.is_valid_;
   return same;
@@ -363,8 +355,6 @@ void VisualFrame::print(std::ostream& out, const std::string& label) const {
   }
   out << "VisualFrame(" << this->id_ << ")" << std::endl;
   out << "  timestamp:          " << this->timestamp_nanoseconds_ << std::endl;
-  out << "  system timestamp:   " << this->system_timestamp_nanoseconds_ << std::endl;
-  out << "  hardware timestamp: " << this->hardware_timestamp_ << std::endl;
   if(camera_geometry_) {
     camera_geometry_->printParameters(out, "  VisualFrame::camera");
   } else {
