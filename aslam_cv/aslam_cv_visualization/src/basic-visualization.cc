@@ -107,7 +107,7 @@ void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
       row_index += max_image_height_row;
 
       if (column_index > max_column) {
-        max_column = column_index;s
+        max_column = column_index;
       }
       max_image_height_row = 0u;
       column_index = 0u;
