@@ -59,11 +59,9 @@ public:
   /// This method constructs a basic frame and passes it on to processFrame().
   ///
   /// \param[in] image          The image data.
-  /// \param[in] system_stamp   The host time in integer nanoseconds since epoch.
-  /// \param[in] hardware_stamp The camera's hardware timestamp. Can be set to "invalid".
+  /// \param[in] timestamp      The time in integer nanoseconds.
   /// \returns                  The visual frame built from the image data.
-  VisualFrame::Ptr processImage(const cv::Mat& image, int64_t system_stamp,
-                                int64_t hardware_stamp) const;
+  VisualFrame::Ptr processImage(const cv::Mat& image, int64_t timestamp) const;
 
   /// \brief Get the input camera that corresponds to the image
   ///        passed in to processImage().
