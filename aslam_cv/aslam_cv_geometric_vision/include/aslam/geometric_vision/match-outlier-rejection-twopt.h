@@ -4,10 +4,11 @@
 #include <Eigen/Dense>
 #include <glog/logging.h>
 
+#include <aslam/common/pose-types.h>
+#include <aslam/matcher/match.h>
+
 namespace aslam {
-class Quaternion;
 class VisualFrame;
-struct MatchesWithScore;
 
 namespace gv {
 /// \brief Runs a 2-pt RANSAC scheme over the specified match list to separate matches into
