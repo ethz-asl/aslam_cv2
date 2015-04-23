@@ -25,12 +25,6 @@ class Camera;
 /// The class also stores a ChannelGroup object that can be used to hold
 /// keypoint data, the raw image, and other associated information.
 ///
-/// The frame stores three timestamps. The stamp_ field stores the current
-/// timestamp that is being used in processing. This can be a derived value
-/// based on timestamp correction. To save the raw data, the class also stores
-/// the hardware timestamp, and the system timestamp (the time the image was
-/// received at the host computer).
-///
 /// The camera geometry stored in the frame and accessible by getCameraGeometry()
 /// may refer to a transformed geometry that includes downsampling and undistortion.
 /// However, we recommend to always store the raw image with the frame so that
