@@ -163,6 +163,9 @@ class VisualNFrame {
   /// \brief The list of individual image frames.
   std::vector<std::shared_ptr<VisualFrame>> frames_;
 };
+
+ASLAM_DEFINE_LOCKABLE(VisualNFrame);
+
 } // namespace aslam
 
 #endif /* ASLAM_VISUAL_MULTI_FRAME_H */
