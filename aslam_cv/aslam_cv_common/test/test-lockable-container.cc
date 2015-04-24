@@ -19,7 +19,8 @@ TEST(TestLockableContainer, BasicAccess) {
   LockableObject::Ptr test_container = LockableObject::create();
 
   // Check death when accessing without locking.
-  EXPECT_DEATH((*test_container)->number(), "^");
+  const std::string kLockedErrorMsg("You must lock the container before accessing it.");
+  EXPECT_DEATH((*test_container)->number(), kLockedErrorMsg);
 
   // Check access with locking.
   test_container->lock();
@@ -36,11 +37,13 @@ TEST(TestLockableContainer, ReleaseObject) {
   ASSERT_TRUE(object.get() != nullptr);
   EXPECT_EQ(object->number(), kTestNumber);
 
+  const std::string kRelasedErrorMsg(
+      "The container does not contain a valid data object. Was it released?");
   // Check death on accessing an empty container.
-  EXPECT_DEATH((*test_container)->number(), "^");
+  EXPECT_DEATH(test_container->lock(), kRelasedErrorMsg);
 
   // Check death on releasing an empty container.
-  EXPECT_DEATH((*test_container)->number(), "^");
+  EXPECT_DEATH(test_container->release(), kRelasedErrorMsg);
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
