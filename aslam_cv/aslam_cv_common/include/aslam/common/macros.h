@@ -7,9 +7,9 @@
   TypeName(const TypeName&) = delete;                  \
   void operator=(const TypeName&) = delete
 
-#define ASLAM_POINTER_TYPEDEFS(TypeName)            \
-  typedef std::unique_ptr<TypeName> UniquePtr;      \
-  typedef std::shared_ptr<TypeName> Ptr;            \
+#define ASLAM_POINTER_TYPEDEFS(TypeName)               \
+  typedef std::unique_ptr<TypeName> UniquePtr;         \
+  typedef std::shared_ptr<TypeName> Ptr;               \
   typedef std::shared_ptr<const TypeName> ConstPtr
 
 /// Extract the type from an expression which wraps a type inside braces. This
