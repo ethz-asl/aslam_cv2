@@ -55,14 +55,22 @@ class LockableContainer {
     return container;
   }
 
+  static std::shared_ptr<LockableContainer> createFromExistingObject(
+      DataTypePtr& existing_object) {
+    LockableContainer::Ptr container(new LockableContainer);
+    CHECK(existing_object.unique()) << "Can only manage objects with a single reference count.";
+    container->data_.swap(existing_object);
+    return container;
+  }
+
   inline DataType* operator->() {
-    assertIsLocked();
+    assertWeOwnLock();
     assertIsSet();
     return data_.get();
   }
 
   inline const DataType* operator->() const {
-    assertIsLocked();
+    assertWeOwnLock();
     assertIsSet();
     return data_.get();
   }
@@ -70,7 +78,8 @@ class LockableContainer {
   inline DataTypePtr release() {
     lock();
     assertIsSet();
-    DataTypePtr released_ptr(data_.release());
+    DataTypePtr released_ptr = data_;
+    data_.reset();
     unlock();
     return released_ptr;
   }
@@ -89,7 +98,7 @@ class LockableContainer {
   }
 
  private:
-  inline void assertIsLocked() const {
+  inline void assertWeOwnLock() const {
     CHECK(!m_data_.try_lock()) << "You must lock the container before accessing it.";
   }
 
@@ -98,7 +107,7 @@ class LockableContainer {
   }
 
  public:
-  DataTypeUniquePtr data_;
+  DataTypePtr data_;
   mutable std::mutex m_data_;
 };
 
