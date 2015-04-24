@@ -79,7 +79,7 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
 
       // Fill in the data in the ncamera.
       cameras.push_back(camera);
-      T_Ci_B.push_back(T_B_C.inverted());
+      T_Ci_B.push_back(T_B_C.inverse());
     }
 
     // Create the ncamera and fill in all the data.
@@ -115,7 +115,7 @@ Node convert<aslam::NCamera>::encode(const aslam::NCamera& ncamera) {
   for (size_t camera_index = 0; camera_index < num_cameras; ++camera_index) {
     Node camera_node;
     camera_node["camera"] = ncamera.getCamera(camera_index);
-    camera_node["T_B_C"] = ncamera.get_T_C_B(camera_index).inverted().getTransformationMatrix();
+    camera_node["T_B_C"] = ncamera.get_T_C_B(camera_index).inverse().getTransformationMatrix();
     cameras_node.push_back(camera_node);
   }
 
