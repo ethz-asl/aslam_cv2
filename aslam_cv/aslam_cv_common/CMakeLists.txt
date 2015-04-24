@@ -19,6 +19,7 @@ set(HEADERS
   include/aslam/common/hamming.h
   include/aslam/common/hamming-inl.h
   include/aslam/common/hash-id.h
+  include/aslam/common/lockable-container.h
   include/aslam/common/macros.h
   include/aslam/common/memory.h
   include/aslam/common/meta.h
@@ -76,6 +77,11 @@ catkin_add_gtest(test_eigen-yaml-serialization
   test/test-eigen-yaml-serialization.cc
 )
 target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_lockable_container 
+  test/test-lockable-container.cc
+)
+target_link_libraries(test_lockable_container ${PROJECT_NAME}) 
 
 ##########
 # EXPORT #
