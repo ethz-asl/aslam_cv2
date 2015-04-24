@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include <aslam/common/lockable-container.h>
 #include <aslam/common/macros.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/unique-id.h>
