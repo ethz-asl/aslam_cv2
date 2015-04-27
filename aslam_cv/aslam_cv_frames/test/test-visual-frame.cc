@@ -158,10 +158,6 @@ TEST(Frame, CopyConstructor) {
   // Set timestamps.
   constexpr int64_t kTimestamp = 100;
   frame.setTimestampNanoseconds(kTimestamp);
-  constexpr int64_t kTimestampHardware = 200;
-  frame.setHardwareTimestamp(kTimestampHardware);
-  constexpr int64_t kTimestampSystem = 300;
-  frame.setSystemTimestamp(kTimestampSystem);
 
   // Set some random Data.
   constexpr size_t kNumRandomValues = 10;
@@ -191,8 +187,6 @@ TEST(Frame, CopyConstructor) {
   EXPECT_EQ(camera.get(), frame_cloned.getCameraGeometry().get());
 
   EXPECT_EQ(kTimestamp, frame_cloned.getTimestampNanoseconds());
-  EXPECT_EQ(kTimestampHardware, frame_cloned.getHardwareTimestamp());
-  EXPECT_EQ(kTimestampSystem, frame_cloned.getSystemTimestampNanoseconds());
 
   EIGEN_MATRIX_EQUAL(keypoints, frame_cloned.getKeypointMeasurements());
   EIGEN_MATRIX_EQUAL(uncertainties, frame_cloned.getKeypointMeasurementUncertainties());

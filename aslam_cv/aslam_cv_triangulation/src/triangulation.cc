@@ -180,7 +180,7 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
   const size_t n = 0;
 
   // Rotation and position of n-th camera in i-th camera frame.
-  const aslam::Transformation T_Cn_G = T_B_C.inverted() * T_G_B[n].inverted();
+  const aslam::Transformation T_Cn_G = T_B_C.inverse() * T_G_B[n].inverse();
   const Eigen::Matrix3d& R_Cn_G = T_Cn_G.getRotationMatrix();
   const Eigen::Vector3d& p_G_Cn = T_Cn_G.getPosition();
 
@@ -188,12 +188,12 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
   Aligned<std::vector, Eigen::Matrix3d>::type R_Ci_Cn;
   Aligned<std::vector, Eigen::Vector3d>::type p_Ci_Cn;
   for (size_t i = 0; i < measurements_normalized.size(); ++i) {
-    const aslam::Transformation T_Ci_G = T_B_C.inverted() * T_G_B[i].inverted();
+    const aslam::Transformation T_Ci_G = T_B_C.inverse() * T_G_B[i].inverse();
     // Rotation from first camera to current camera.
     const Eigen::Matrix3d R_Ci_G = T_Ci_G.getRotationMatrix();
     R_Ci_Cn.emplace_back(R_Ci_G * R_Cn_G.transpose());
     // Translation from first camera to current camera.
-    const Eigen::Vector3d p_G_Ci = T_Ci_G.inverted().getPosition();
+    const Eigen::Vector3d p_G_Ci = T_Ci_G.inverse().getPosition();
     p_Ci_Cn.emplace_back(R_Ci_G * p_G_Cn - R_Ci_G * p_G_Ci);
   }
 
@@ -275,12 +275,13 @@ TriangulationResult triangulateFeatureTrack(
   const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
   CHECK(camera);
   const aslam::CameraId track_camera_id = camera->getId();
-  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverted();
+  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverse();
 
   // Get the normalized measurements for all observations on the track.
   Aligned<std::vector, Eigen::Vector2d>::type normalized_measurements;
   normalized_measurements.reserve(track_length);
 
+  size_t index = 0u;
   for (const aslam::KeypointIdentifier& keypoint_on_track : track.getKeypointIdentifiers()) {
     const aslam::Camera::ConstPtr& camera = keypoint_on_track.getCamera();
     CHECK(camera) << "Missing camera for keypoint on track with frame index: "
@@ -305,8 +306,59 @@ TriangulationResult triangulateFeatureTrack(
                                                         T_B_C,
                                                         W_landmark);
 
-  VLOG(5) << "Triangulation returned the following result:";
-  VLOG(5) << triangulation_result;
+  VLOG(4) << "Triangulation returned the following result:" << std::endl
+          << triangulation_result;
+
+  return triangulation_result;
+}
+
+TriangulationResult fastTriangulateFeatureTrack(
+    const aslam::FeatureTrack& track,
+    const aslam::TransformationVector& T_W_Bs,
+    Eigen::Vector3d* W_landmark) {
+  CHECK_NOTNULL(W_landmark);
+  size_t track_length = track.getTrackLength();
+  CHECK_GT(track_length, 1u);
+  CHECK_EQ(track_length, T_W_Bs.size());
+
+  VLOG(4) << "Triangulating track of length " << track_length;
+
+  const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
+  CHECK(camera);
+  const aslam::CameraId track_camera_id = camera->getId();
+  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverted();
+
+  Eigen::Matrix3Xd G_bearing_vectors;
+  Eigen::Matrix3Xd p_G_C_vector;
+
+  G_bearing_vectors.resize(Eigen::NoChange, track_length);
+  p_G_C_vector.resize(Eigen::NoChange, track_length);
+
+  size_t index = 0u;
+  for (const aslam::KeypointIdentifier& keypoint_on_track : track.getKeypointIdentifiers()) {
+    const aslam::Camera::ConstPtr& camera = keypoint_on_track.getCamera();
+    CHECK(camera) << "Missing camera for keypoint on track with frame index: "
+        << keypoint_on_track.getFrameIndex();
+
+    // Obtain the normalized keypoint measurements.
+    const Eigen::Vector2d& keypoint_measurement = keypoint_on_track.getKeypointMeasurement();
+    Eigen::Vector3d C_ray;
+    camera->backProject3(keypoint_measurement, &C_ray);
+
+    aslam::Transformation T_W_C = T_W_Bs[index] * keypoint_on_track.get_T_C_B().inverted();
+
+    G_bearing_vectors.col(index) = T_W_C.getRotationMatrix() * C_ray;
+    p_G_C_vector.col(index) = T_W_C.getPosition();
+  }
+
+  VLOG(6) << "Assembled triangulation data.";
+
+  // Triangulate the landmark.
+  aslam::TriangulationResult triangulation_result = linearTriangulateFromNViews(
+      G_bearing_vectors, p_G_C_vector, W_landmark);
+
+  VLOG(4) << "Triangulation returned the following result:" << std::endl
+          << triangulation_result;
 
   return triangulation_result;
 }

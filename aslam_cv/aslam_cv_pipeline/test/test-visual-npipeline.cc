@@ -59,19 +59,19 @@ TEST_F(VisualNPipelineTest, buildNFramesOutOfOrder) {
   this->constructNCamera(2, 4, 100);
 
   // Build n frames out of order.
-  pipeline_->processImage(0, getImageFromCamera(0), 0, 0);
+  pipeline_->processImage(0, getImageFromCamera(0), 0);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
 
-  pipeline_->processImage(0, getImageFromCamera(0), 1000, 1000);
+  pipeline_->processImage(0, getImageFromCamera(0), 1000);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
 
-  pipeline_->processImage(1, getImageFromCamera(0), 1, 1);
+  pipeline_->processImage(1, getImageFromCamera(0), 1);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
 
-  pipeline_->processImage(1, getImageFromCamera(0), 1001, 1001);
+  pipeline_->processImage(1, getImageFromCamera(0), 1001);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(2u, pipeline_->getNumFramesComplete());
 
@@ -93,19 +93,19 @@ TEST_F(VisualNPipelineTest, testBuildAndClear) {
   this->constructNCamera(2, 4, 100);
 
   // Check that the clearing of older completed frames works.
-  pipeline_->processImage(0, getImageFromCamera(0), 0, 0);
+  pipeline_->processImage(0, getImageFromCamera(0), 0);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
 
-  pipeline_->processImage(0, getImageFromCamera(0), 1000, 1000);
+  pipeline_->processImage(0, getImageFromCamera(0), 1000);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
 
-  pipeline_->processImage(1, getImageFromCamera(0), 1, 1);
+  pipeline_->processImage(1, getImageFromCamera(0), 1);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
 
-  pipeline_->processImage(1, getImageFromCamera(0), 1001, 1001);
+  pipeline_->processImage(1, getImageFromCamera(0), 1001);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(2u, pipeline_->getNumFramesComplete());
 
@@ -121,11 +121,11 @@ TEST_F(VisualNPipelineTest, testTimestampDiff) {
   this->constructNCamera(2, 4, 100);
 
   // Check that the timestamp tolerance is respected.
-  pipeline_->processImage(0, getImageFromCamera(0), 0, 0);
+  pipeline_->processImage(0, getImageFromCamera(0), 0);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
 
-  pipeline_->processImage(1, getImageFromCamera(1), 100, 100);
+  pipeline_->processImage(1, getImageFromCamera(1), 100);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
   std::shared_ptr<VisualNFrame> nframes = pipeline_->getLatestAndClear();
@@ -134,11 +134,11 @@ TEST_F(VisualNPipelineTest, testTimestampDiff) {
   ASSERT_EQ(100, nframes->getFrame(1).getTimestampNanoseconds());
 
   // Build n frames out of order.
-  pipeline_->processImage(0, getImageFromCamera(0), 0, 0);
+  pipeline_->processImage(0, getImageFromCamera(0), 0);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
 
-  pipeline_->processImage(1, getImageFromCamera(1), 101, 101);
+  pipeline_->processImage(1, getImageFromCamera(1), 101);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
   ASSERT_EQ(2u, pipeline_->getNumFramesProcessing());
@@ -150,13 +150,13 @@ TEST_F(VisualNPipelineTest, testTimestampDiff) {
   ASSERT_EQ(2u, pipeline_->getNumFramesProcessing());
 
   // Add an even later frame
-  pipeline_->processImage(0, getImageFromCamera(0), 401, 401);
+  pipeline_->processImage(0, getImageFromCamera(0), 401);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(3u, pipeline_->getNumFramesProcessing());
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
 
   // Finish the middle frame
-  pipeline_->processImage(0, getImageFromCamera(0), 101, 101);
+  pipeline_->processImage(0, getImageFromCamera(0), 101);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(2u, pipeline_->getNumFramesProcessing());
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
@@ -169,7 +169,7 @@ TEST_F(VisualNPipelineTest, testTimestampDiff) {
   ASSERT_EQ(0u, pipeline_->getNumFramesComplete());
 
   // Finish the last processing frame
-  pipeline_->processImage(1, getImageFromCamera(1), 401, 401);
+  pipeline_->processImage(1, getImageFromCamera(1), 401);
   pipeline_->waitForAllWorkToComplete();
   ASSERT_EQ(0u, pipeline_->getNumFramesProcessing());
   ASSERT_EQ(1u, pipeline_->getNumFramesComplete());
