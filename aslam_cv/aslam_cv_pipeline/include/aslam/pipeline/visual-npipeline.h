@@ -76,11 +76,8 @@ class VisualNPipeline {
   ///
   /// \param[in] camera_index The index of the camera that this image corresponds to
   /// \param[in] image the image data
-  /// \param[in] system_stamp the host time in integer nanoseconds since epoch
-  /// \param[in] hardware_stamp the camera's hardware timestamp. Can be set to "invalid".
-  void processImage(size_t camera_index, const cv::Mat& image, int64_t system_stamp,
-                    int64_t hardware_stamp);
-
+  /// \param[in] timestamp the time in integer nanoseconds.
+  void processImage(size_t camera_index, const cv::Mat& image, int64_t timestamp);
 
   /// \brief How many completed VisualNFrames are waiting to be retrieved?
   size_t getNumFramesComplete() const;
@@ -136,9 +133,8 @@ class VisualNPipeline {
   ///
   /// \param[in] camera_index The index of the camera that this image corresponds to.
   /// \param[in] image The image data.
-  /// \param[in] system_stamp The host time in integer nanoseconds since epoch.
-  /// \param[in] hardware_stamp The camera's hardware timestamp. Can be set to "invalid".
-  void work(size_t camera_index, const cv::Mat& image, int64_t system_stamp, int64_t hardware_stamp);
+  /// \param[in] timestamp The time in integer nanoseconds.
+  void work(size_t camera_index, const cv::Mat& image, int64_t timestamp);
 
   /// \brief One visual pipeline for each camera.
   std::vector<std::shared_ptr<VisualPipeline>> pipelines_;
