@@ -22,12 +22,6 @@ add_definitions(-std=c++11)
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 ##########
-# GTESTS #
-##########
-#catkin_add_gtest(test_cameras test/test-cameras.cc)
-#target_link_libraries(test_cameras ${PROJECT_NAME}) 
-
-##########
 # EXPORT #
 ##########
 cs_install()
