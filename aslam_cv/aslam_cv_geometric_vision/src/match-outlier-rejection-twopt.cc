@@ -12,12 +12,12 @@
 namespace aslam {
 namespace gv {
 bool rejectOutlierKeypointMatchesTwopt(const aslam::VisualFrame& frame_kp1,
-                                         const aslam::VisualFrame& frame_k,
-                                         const aslam::Quaternion& q_Ckp1_Ck,
-                                         const aslam::MatchesWithScore& matches_kp1_k,
-                                         double ransac_threshold, size_t ransac_max_iterations,
-                                         aslam::MatchesWithScore* inlier_matches_kp1_k,
-                                         aslam::MatchesWithScore* outlier_matches_kp1_k) {
+                                       const aslam::VisualFrame& frame_k,
+                                       const aslam::Quaternion& q_Ckp1_Ck,
+                                       const aslam::MatchesWithScore& matches_kp1_k,
+                                       double ransac_threshold, size_t ransac_max_iterations,
+                                       aslam::MatchesWithScore* inlier_matches_kp1_k,
+                                       aslam::MatchesWithScore* outlier_matches_kp1_k) {
   CHECK_GT(ransac_threshold, 0.0);
   CHECK_GT(ransac_max_iterations, 0u);
   inlier_matches_kp1_k->clear();
