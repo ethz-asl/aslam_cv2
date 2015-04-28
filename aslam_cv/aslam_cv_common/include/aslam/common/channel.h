@@ -42,6 +42,11 @@ struct ChannelValueClonerImpl<ValueType, std::true_type> {
 template<typename ValueType>
 struct ChannelValueCloner :
     public ChannelValueClonerImpl<ValueType, typename is_cloneable<ValueType>::type> {};
+
+// Exception for cv::Mat - Images are only shallowcopied.
+template<> struct ChannelValueCloner<cv::Mat> {
+  static cv::Mat clone(const cv::Mat& value) { return value; }
+};
 }
 
 class ChannelBase {
