@@ -14,27 +14,27 @@ FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
   roi = cv::Scalar(255);
 }
 
-void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
-                             const aslam::VisualFrame::Ptr& frame_k,
-                             const aslam::Quaternion& q_Ckp1_Ck,
+void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
+                             const aslam::VisualFrame& frame_k,
+                             aslam::VisualFrame* frame_kp1,
                              aslam::MatchesWithScore* matches_with_score_kp1_k) {
-  CHECK(frame_k);
-  CHECK(frame_kp1);
+  CHECK_NOTNULL(frame_kp1);
   CHECK_NOTNULL(matches_with_score_kp1_k);
 
-  // Remove the possibly available BRISK information in the frames.
-  // TODO(schneith): This can be removed once the VisualPipeline is refactored.
-  frame_kp1->clearKeypointChannels();
+  // Make sure the nframes don't already contain keypoint/tracking information.
+  CHECK(frame_kp1->hasRawImage());
+  CHECK(!frame_kp1->hasKeypointMeasurements());
+  CHECK(!frame_kp1->hasTrackIds());
 
   if (!first_frame_processed_) {
-    frame_k->clearKeypointChannels();
     // Detect new features.
     Vector2dList detected_keypoints;
     detectGfttCorners(frame_kp1->getRawImage(), &detected_keypoints);
-    if (kUseOccupancyGrid) {
+
+    if (kUseOccupancyGrid && frame_k.hasKeypointMeasurements()) {
       // Decide which new features to track based on occupancy grid.
       Vector2dList detected_keypoints_in_grid;
-      occupancyGrid(frame_kp1, detected_keypoints, &detected_keypoints_in_grid);
+      occupancyGrid(frame_k, detected_keypoints, &detected_keypoints_in_grid);
 
       // Add these features to the frame.
       insertAdditionalKeypointsToFrame(detected_keypoints_in_grid, frame_kp1);
@@ -50,7 +50,7 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
   // Track the features in the current frame kp1.
   Vector2dList new_keypoints;
   // Check if there are features to track at all.
-  if (frame_k->getNumKeypointMeasurements() > 0) {
+  if (frame_k.getNumKeypointMeasurements() > 0) {
     // Output status vector (of unsigned chars). Each element of the vector is set to 1 if the flow
     // for the corresponding features has been found, otherwise, it is set to 0.
     std::vector<unsigned char> tracking_successful;
@@ -68,8 +68,8 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
     Eigen::Matrix2Xd predicted_keypoints;
     std::vector<bool> projection_successfull;
     std::vector<ProjectionResult> projection_result;
-    frame_k->getCameraGeometry()->backProject3Vectorized(
-        frame_k->getKeypointMeasurements(), &rays, &projection_successfull);
+    frame_k.getCameraGeometry()->backProject3Vectorized(
+        frame_k.getKeypointMeasurements(), &rays, &projection_successfull);
     rays = q_Ckp1_Ck.getRotationMatrix() * rays;
     frame_kp1->getCameraGeometry()->project3Vectorized(rays,
                                                        &predicted_keypoints,
@@ -86,7 +86,7 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
       }
     }
 
-    cv::calcOpticalFlowPyrLK(frame_k->getRawImage(), frame_kp1->getRawImage(),
+    cv::calcOpticalFlowPyrLK(frame_k.getRawImage(), frame_kp1->getRawImage(),
                              keypoints_k, keypoints_kp1, tracking_successful, tracking_error,
                              kWindowSize, kMaxPyramidLevel, kTerminationCriteria, kOperationFlag,
                              kMinEigenThreshold);
@@ -100,8 +100,8 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
 
     Eigen::Matrix<size_t, kGridCellResolution, kGridCellResolution> occupancy_grid;
     occupancy_grid.setZero();
-    const size_t image_width = frame_k->getRawImage().cols;
-    const size_t image_height = frame_k->getRawImage().rows;
+    const size_t image_width = frame_k.getRawImage().cols;
+    const size_t image_height = frame_k.getRawImage().rows;
 
     matches_with_score_kp1_k->clear();
     CHECK_EQ(keypoints_k.size(), keypoints_kp1.size());
@@ -110,9 +110,9 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
       size_t i = ind[j]; // Get sorted index.
 
       if (keypoints_kp1[i].x < kMinDistanceToImageBorderPx ||
-          keypoints_kp1[i].x >= (frame_k->getRawImage().cols - kMinDistanceToImageBorderPx) ||
+          keypoints_kp1[i].x >= (frame_k.getRawImage().cols - kMinDistanceToImageBorderPx) ||
           keypoints_kp1[i].y < kMinDistanceToImageBorderPx ||
-          keypoints_kp1[i].y >= (frame_k->getRawImage().rows - kMinDistanceToImageBorderPx) ||
+          keypoints_kp1[i].y >= (frame_k.getRawImage().rows - kMinDistanceToImageBorderPx) ||
           !tracking_successful[i]) {
         continue;
       }
@@ -156,7 +156,7 @@ void FeatureTrackerLk::track(const aslam::VisualFrame::Ptr& frame_kp1,
     if (kUseOccupancyGrid) {
       // Decide which new features to track based on occupancy grid.
       Vector2dList detected_keypoints_in_grid;
-      occupancyGrid(frame_kp1, detected_keypoints, &detected_keypoints_in_grid);
+      occupancyGrid(*frame_kp1, detected_keypoints, &detected_keypoints_in_grid);
 
       // Add these features to the frame.
       insertAdditionalKeypointsToFrame(detected_keypoints_in_grid, frame_kp1);
@@ -193,12 +193,10 @@ void FeatureTrackerLk::detectGfttCorners(const cv::Mat& image, Vector2dList* det
 
 // TODO(hitimo): Simplify as soon as new visual pipeline is ready.
 void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_keypoint_list,
-                                                        aslam::VisualFrame::Ptr frame) {
-  CHECK(frame);
-  size_t old_size = frame->getNumKeypointMeasurements();
-  size_t num_new_keypoints = new_keypoint_list.size();
-  size_t extended_size = old_size + num_new_keypoints;
+                                                        aslam::VisualFrame* frame) {
+  CHECK_NOTNULL(frame);
 
+  size_t num_new_keypoints = new_keypoint_list.size();
   Eigen::Matrix2Xd new_keypoints(2, num_new_keypoints);
   for (size_t i = 0; i < num_new_keypoints; ++i) {
     new_keypoints.col(i) = new_keypoint_list[i];
@@ -207,6 +205,9 @@ void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_
   const double kKeypointUncertaintyPx = 0.8;
   if (frame->hasKeypointMeasurements()) {
     CHECK(frame->hasTrackIds());
+    CHECK(frame->hasKeypointMeasurementUncertainties());
+    size_t old_size = frame->getNumKeypointMeasurements();
+    size_t extended_size = old_size + num_new_keypoints;
 
     // Resize the existing structures.
     Eigen::Matrix2Xd* keypoints = CHECK_NOTNULL(frame->getKeypointMeasurementsMutable());
@@ -223,6 +224,10 @@ void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_
     keypoints->block(0, old_size, 2, num_new_keypoints) = new_keypoints;
     track_ids->segment(old_size, num_new_keypoints).setConstant(-1);
     uncertainties->segment(old_size, num_new_keypoints).setConstant(kKeypointUncertaintyPx);
+
+    CHECK_EQ(static_cast<int>(extended_size), frame->getKeypointMeasurements().cols());
+    CHECK_EQ(static_cast<int>(extended_size), frame->getKeypointMeasurementUncertainties().rows());
+    CHECK_EQ(static_cast<int>(extended_size), frame->getTrackIds().rows());
   } else {
     // Just swap in the keypoints, set invalid track ids and a constant measurement uncertainty.
     frame->setKeypointMeasurements(new_keypoints);
@@ -235,36 +240,31 @@ void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_
     uncertainties.setConstant(kKeypointUncertaintyPx);
     frame->swapKeypointMeasurementUncertainties(&uncertainties);
   }
-  CHECK_EQ(static_cast<int>(extended_size), frame->getKeypointMeasurements().cols());
-  CHECK_EQ(static_cast<int>(extended_size), frame->getKeypointMeasurementUncertainties().rows());
-  CHECK_EQ(static_cast<int>(extended_size), frame->getTrackIds().rows());
 }
 
-void FeatureTrackerLk::getKeypointsfromFrame(const aslam::VisualFrame::Ptr frame,
-                                      std::vector<cv::Point2f>* keypoints_out) {
-  CHECK(frame);
+void FeatureTrackerLk::getKeypointsfromFrame(const aslam::VisualFrame& frame,
+                                             std::vector<cv::Point2f>* keypoints_out) {
   CHECK_NOTNULL(keypoints_out);
-  const Eigen::Matrix2Xd& keypoints = frame->getKeypointMeasurements();
+  const Eigen::Matrix2Xd& keypoints = frame.getKeypointMeasurements();
   for (size_t i = 0u; i < static_cast<size_t>(keypoints.cols()); ++i) {
     keypoints_out->emplace_back(keypoints.col(i)(0), keypoints.col(i)(1));
   }
 }
 
-void FeatureTrackerLk::occupancyGrid(const aslam::VisualFrame::Ptr frame,
+void FeatureTrackerLk::occupancyGrid(const aslam::VisualFrame& frame,
                                      const Vector2dList& detected_keypoints,
                                      Vector2dList* detected_keypoints_in_grid) {
-  CHECK(frame);
   CHECK_NOTNULL(detected_keypoints_in_grid);
   Eigen::Matrix<size_t, kGridCellResolution, kGridCellResolution> occupancy_grid;
   occupancy_grid.setZero();
-  const size_t image_width = frame->getRawImage().cols;
-  const size_t image_height = frame->getRawImage().rows;
+  const size_t image_width = frame.getRawImage().cols;
+  const size_t image_height = frame.getRawImage().rows;
 
   size_t num_previous_keypoints;
   Eigen::Matrix2Xd previous_keypoints;
-  if (frame->hasKeypointMeasurements()) {
-    previous_keypoints = frame->getKeypointMeasurements();
-    num_previous_keypoints = frame->getNumKeypointMeasurements();
+  if (frame.hasKeypointMeasurements()) {
+    previous_keypoints = frame.getKeypointMeasurements();
+    num_previous_keypoints = frame.getNumKeypointMeasurements();
   } else {
     num_previous_keypoints = 0;
   }

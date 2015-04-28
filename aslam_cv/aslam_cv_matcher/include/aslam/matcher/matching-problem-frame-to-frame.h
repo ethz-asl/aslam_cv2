@@ -22,9 +22,7 @@ namespace aslam {
 class VisualFrame;
 
 /// \class MatchingProblem
-///
 /// \brief Defines the specifics of a matching problem.
-///
 /// The problem is assumed to have two visual frames (apple_frame and banana_frame) filled with
 /// keypoints and binary descriptors and a rotation matrix taking vectors from the banana frame into
 /// the apple frame. The problem matches banana features against apple features.
@@ -42,8 +40,8 @@ public:
 
   /// \brief Constructor for a frame-to-frame matching problem.
   ///
-  /// @param[in]  apple_frame                                 Shared ptr to the apple frame.
-  /// @param[in]  banana_frame                                Shared ptr to the banana frame.
+  /// @param[in]  apple_frame                                 Apple frame.
+  /// @param[in]  banana_frame                                Banana frame.
   /// @param[in]  q_A_B                                       Quaternion taking vectors from
   ///                                                         the banana frame into the
   ///                                                         apple frame.
@@ -51,8 +49,8 @@ public:
   ///                                                         two pairs to become match candidates.
   /// @param[in]  hamming_distance_threshold                  Max hamming distance for two pairs
   ///                                                         to become candidates.
-  MatchingProblemFrameToFrame(const std::shared_ptr<VisualFrame>& apple_frame,
-                              const std::shared_ptr<VisualFrame>& banana_frame,
+  MatchingProblemFrameToFrame(const VisualFrame& apple_frame,
+                              const VisualFrame& banana_frame,
                               const aslam::Quaternion& q_A_B,
                               double image_space_distance_threshold_pixels,
                               int hamming_distance_threshold);
@@ -108,50 +106,44 @@ public:
   virtual bool doSetup();
 
 private:
-  /// \brief The apple frame.
-  std::shared_ptr<VisualFrame> apple_frame_;
-  /// \brief The banana frame.
-  std::shared_ptr<VisualFrame> banana_frame_;
-  /// \brief Rotation matrix taking vectors from the banana frame into the apple frame.
+  /// The apple frame.
+  const VisualFrame& apple_frame_;
+  /// The banana frame.
+  const VisualFrame& banana_frame_;
+  /// Rotation matrix taking vectors from the banana frame into the apple frame.
   aslam::Quaternion q_A_B_;
-  /// \brief Map mapping y coordinates in the image plane onto keypoint indices of apple keypoints.
+  /// Map mapping y coordinates in the image plane onto keypoint indices of apple keypoints.
   std::multimap<size_t, size_t> y_coordinate_to_apple_keypoint_index_map_;
 
-  /// \brief Index marking apples as valid or invalid.
+  /// Index marking apples as valid or invalid.
   std::vector<bool> valid_apples_;
-  /// \brief Index marking bananas as valid or invalid.
+  /// Index marking bananas as valid or invalid.
   std::vector<bool> valid_bananas_;
 
-  /// \brief The apple keypoints expressed in the apple frame.
-  Eigen::Matrix2Xd* A_keypoints_apple_;
-
-  /// \brief Pointer to the track ids of the apple frame. Null, if none available.
-  Eigen::VectorXi* apple_track_ids_;
-
-  /// \brief The banana keypoints projected into the apple frame, expressed in the apple frame.
+  /// The banana keypoints projected into the apple frame, expressed in the apple frame.
   aslam::Aligned<std::vector, Eigen::Vector2d>::type A_projected_keypoints_banana_;
 
-  /// \brief The apple descriptors.
+  /// The apple descriptors.
   std::vector<common::FeatureDescriptorConstRef> apple_descriptors_;
 
-  /// \brief The banana descriptors.
+  /// The banana descriptors.
   std::vector<common::FeatureDescriptorConstRef> banana_descriptors_;
 
-  /// \brief Descriptor size in bytes.
+  /// Descriptor size in bytes.
   size_t descriptor_size_byes_;
 
-  /// \brief Half width of the vertical band used for match lookup in pixels.
+  /// Half width of the vertical band used for match lookup in pixels.
   int vertical_band_halfwidth_pixels_;
 
-  /// \brief Pairs with image space distance >= image_space_distance_threshold_pixels_ are
-  ///        excluded from matches.
+  /// Pairs with image space distance >= image_space_distance_threshold_pixels_ are
+  /// excluded from matches.
   double squared_image_space_distance_threshold_pixels_squared_;
 
-  /// \brief Pairs with descriptor distance >= hamming_distance_threshold_ are
-  ///        excluded from matches.
+  /// Pairs with descriptor distance >= hamming_distance_threshold_ are
+  /// excluded from matches.
   int hamming_distance_threshold_;
 
-  /// \brief The heigh of the apple frame.
+  /// The heigh of the apple frame.
   size_t image_height_apple_frame_;
 };
 }
