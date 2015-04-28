@@ -326,7 +326,7 @@ TriangulationResult fastTriangulateFeatureTrack(
   const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
   CHECK(camera);
   const aslam::CameraId track_camera_id = camera->getId();
-  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverted();
+  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverse();
 
   Eigen::Matrix3Xd G_bearing_vectors;
   Eigen::Matrix3Xd p_G_C_vector;
@@ -345,7 +345,7 @@ TriangulationResult fastTriangulateFeatureTrack(
     Eigen::Vector3d C_ray;
     camera->backProject3(keypoint_measurement, &C_ray);
 
-    aslam::Transformation T_W_C = T_W_Bs[index] * keypoint_on_track.get_T_C_B().inverted();
+    aslam::Transformation T_W_C = T_W_Bs[index] * keypoint_on_track.get_T_C_B().inverse();
 
     G_bearing_vectors.col(index) = T_W_C.getRotationMatrix() * C_ray;
     p_G_C_vector.col(index) = T_W_C.getPosition();
