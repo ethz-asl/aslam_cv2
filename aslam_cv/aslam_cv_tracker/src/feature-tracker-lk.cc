@@ -206,8 +206,8 @@ void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_
   if (frame->hasKeypointMeasurements()) {
     CHECK(frame->hasTrackIds());
     CHECK(frame->hasKeypointMeasurementUncertainties());
-    size_t old_size = frame->getNumKeypointMeasurements();
-    size_t extended_size = old_size + num_new_keypoints;
+    const size_t old_size = frame->getNumKeypointMeasurements();
+    const size_t extended_size = old_size + num_new_keypoints;
 
     // Resize the existing structures.
     Eigen::Matrix2Xd* keypoints = CHECK_NOTNULL(frame->getKeypointMeasurementsMutable());
