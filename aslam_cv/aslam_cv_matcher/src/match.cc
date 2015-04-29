@@ -8,8 +8,7 @@
 namespace aslam {
 
 void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B) {
-  CHECK_NOTNULL(matches_A_B);
-  matches_A_B->clear();
+  CHECK_NOTNULL(matches_A_B)->clear();
   for (const aslam::MatchWithScore& match : matches_with_score_A_B) {
     CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
     CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
@@ -17,6 +16,18 @@ void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* mat
                               static_cast<size_t> (match.getIndexBanana()));
   }
   CHECK_EQ(matches_with_score_A_B.size(), matches_A_B->size());
+}
+
+void convertMatches(const MatchesWithScore& matches_with_score_A_B, OpenCvMatches* matches_A_B) {
+  CHECK_NOTNULL(matches_A_B)->clear();
+  int index_A = 0;
+  int index_B = 0;
+  float distance = 0.0;
+  for (MatchWithScore match : matches_with_score_A_B) {
+    CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
+    CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
+    matches_A_B->push_back(cv::DMatch(match.getIndexApple(), match.getIndexBanana(), static_cast<float>(match.getScore())));
+  }
 }
 
 size_t extractMatchesFromTrackIdChannel(const aslam::VisualFrame& frame_kp1,
