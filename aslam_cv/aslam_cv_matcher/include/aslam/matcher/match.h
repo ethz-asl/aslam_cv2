@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <aslam/common/stl-helpers.h>
+#include <opencv2/features2d/features2d.hpp>
 
 namespace aslam {
 class VisualFrame;
@@ -68,9 +69,13 @@ struct MatchWithScore {
 typedef std::vector<MatchWithScore> MatchesWithScore;
 typedef std::pair<size_t, size_t> Match;
 typedef std::vector<Match> Matches;
+typedef std::vector<cv::DMatch> OpenCvMatches;
 
 /// Convert MatchesWithScore to Matches.
 void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);
+
+/// Convert MatchesWithScore to cv::DMatches.
+void convertMatches(const MatchesWithScore& matches_with_score_A_B, OpenCvMatches* matches_A_B);
 
 /// Get number of matches for a rig match list. (outer vector = cameras, inner vector = match list)
 template<typename MatchType>
