@@ -6,44 +6,34 @@
 
 namespace aslam {
 
-MatchingProblemFrameToFrame::MatchingProblemFrameToFrame(
-                                         const std::shared_ptr<VisualFrame>& apple_frame,
-                                         const std::shared_ptr<VisualFrame>& banana_frame,
-                                         const aslam::Quaternion& q_A_B,
-                                         double image_space_distance_threshold,
-                                         int hamming_distance_threshold)
+MatchingProblemFrameToFrame::MatchingProblemFrameToFrame(const VisualFrame& apple_frame,
+                                                         const VisualFrame& banana_frame,
+                                                         const aslam::Quaternion& q_A_B,
+                                                         double image_space_distance_threshold,
+                                                         int hamming_distance_threshold)
   : apple_frame_(apple_frame),
     banana_frame_(banana_frame),
     q_A_B_(q_A_B),
-    A_keypoints_apple_(nullptr),
-    apple_track_ids_(nullptr),
     squared_image_space_distance_threshold_pixels_squared_(image_space_distance_threshold *
                                                            image_space_distance_threshold),
     hamming_distance_threshold_(hamming_distance_threshold) {
-  CHECK(apple_frame) << "The given apple frame is NULL.";
-  CHECK(banana_frame) << "The given banana frame is NULL.";
   CHECK_GE(hamming_distance_threshold, 0) << "Descriptor distance needs to be positive.";
   CHECK_GE(image_space_distance_threshold, 0.0) << "Image space distance needs to be positive.";
 
-  descriptor_size_byes_ = apple_frame->getDescriptorSizeBytes();
-  CHECK_EQ(descriptor_size_byes_, banana_frame->getDescriptorSizeBytes()) << "Apple and banana "
+  descriptor_size_byes_ = apple_frame.getDescriptorSizeBytes();
+  CHECK_EQ(descriptor_size_byes_, banana_frame.getDescriptorSizeBytes()) << "Apple and banana "
       "frames have different descriptor lengths.";
 
   // The vertical search band must be at least twice the image space distance.
   vertical_band_halfwidth_pixels_ = static_cast<int>(std::ceil(image_space_distance_threshold));
 
-  CHECK(apple_frame->getCameraGeometry()) << "The iCam is NULL.";
-  image_height_apple_frame_ = apple_frame->getCameraGeometry()->imageHeight();
+  CHECK(apple_frame.getCameraGeometry()) << "The iCam is NULL.";
+  image_height_apple_frame_ = apple_frame.getCameraGeometry()->imageHeight();
   CHECK_GT(image_height_apple_frame_, 0u) << "The apple frame has zero image rows.";
 }
 
 bool MatchingProblemFrameToFrame::doSetup() {
-  CHECK(apple_frame_);
-  CHECK(banana_frame_);
   CHECK_GT(image_height_apple_frame_, 0u) << "The apple frame has zero image rows.";
-
-  A_keypoints_apple_ = apple_frame_->getKeypointMeasurementsMutable();
-  CHECK_NOTNULL(A_keypoints_apple_);
 
   size_t num_apple_keypoints = numApples();
   size_t num_banana_keypoints = numBananas();
@@ -52,10 +42,10 @@ bool MatchingProblemFrameToFrame::doSetup() {
 
   // First, create descriptor wrappers for all descriptors.
   const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& apple_descriptors =
-      apple_frame_->getDescriptors();
+      apple_frame_.getDescriptors();
 
   const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& banana_descriptors =
-      banana_frame_->getDescriptors();
+      banana_frame_.getDescriptors();
 
   size_t num_apple_descriptors = static_cast<size_t>(apple_descriptors.cols());
   size_t num_banana_descriptors = static_cast<size_t>(banana_descriptors.cols());
@@ -68,12 +58,6 @@ bool MatchingProblemFrameToFrame::doSetup() {
   banana_descriptors_.clear();
   apple_descriptors_.reserve(num_apple_descriptors);
   banana_descriptors_.reserve(num_banana_descriptors);
-
-  if (apple_frame_->hasTrackIds()) {
-    apple_track_ids_ = apple_frame_->getTrackIdsMutable();
-  } else {
-    apple_track_ids_ = nullptr;
-  }
 
   // This creates a descriptor wrapper for the given descriptor and allows computing the hamming
   // distance between two descriptors. todo(mbuerki): Think of ways to generalize this for
@@ -91,16 +75,17 @@ bool MatchingProblemFrameToFrame::doSetup() {
   }
 
   // Then, create a LUT mapping y coordinates to apple keypoint indices.
-  CHECK_EQ(static_cast<int>(num_apple_keypoints), A_keypoints_apple_->cols())
+  const Eigen::Matrix2Xd& A_keypoints_apple = apple_frame_.getKeypointMeasurements();
+  CHECK_EQ(static_cast<int>(num_apple_keypoints), A_keypoints_apple.cols())
     << "The number of apple keypoints does not match the number of columns in the "
     << "apple keypoint matrix.";
 
-  Camera::ConstPtr apple_camera = apple_frame_->getCameraGeometry();
+  Camera::ConstPtr apple_camera = apple_frame_.getCameraGeometry();
   CHECK(apple_camera);
 
   for (size_t apple_idx = 0; apple_idx < num_apple_keypoints; ++apple_idx) {
     // Check if the apple is valid.
-    const Eigen::Vector2d& apple_keypoint = A_keypoints_apple_->col(apple_idx);
+    const Eigen::Vector2d& apple_keypoint = A_keypoints_apple.col(apple_idx);
     if (apple_camera->isMasked(apple_keypoint)) {
       // This keypoint is masked out and hence not valid.
       valid_apples_[apple_idx] = false;
@@ -116,11 +101,11 @@ bool MatchingProblemFrameToFrame::doSetup() {
   VLOG(20) << "Built LUT for valid apples.";
 
   // Then, project all banana keypoints into the apple frame.
-  const Eigen::Matrix2Xd& banana_keypoints = banana_frame_->getKeypointMeasurements();
+  const Eigen::Matrix2Xd& banana_keypoints = banana_frame_.getKeypointMeasurements();
   CHECK_EQ(static_cast<int>(num_banana_keypoints), banana_keypoints.cols()) << "The number of "
       "banana keypoints  and the number of columns in the banana keypoint matrix is different.";
 
-  Camera::ConstPtr banana_camera = banana_frame_->getCameraGeometry();
+  Camera::ConstPtr banana_camera = banana_frame_.getCameraGeometry();
   CHECK(banana_camera);
 
   Eigen::Matrix3Xd B_rays_banana = Eigen::Matrix3Xd::Zero(3, num_banana_keypoints);
@@ -169,7 +154,6 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
                                                               Candidates* candidates) {
   // Get list of apple keypoint indices within some defined distance around the projected banana
   // keypoint and within some defined descriptor distance.
-  CHECK(apple_frame_) << "The apple frame is NULL.";
   CHECK_EQ(numApples(), y_coordinate_to_apple_keypoint_index_map_.size()) << "The number of apples"
       " and the number of apples in the apple LUT differs. This can happen if 1. the apple frame "
       "was altered between calling setup() and getAppleCandidatesForBanana(...) or 2. if the "
@@ -189,6 +173,14 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
   CHECK_LT(banana_index, static_cast<int>(A_projected_keypoints_banana_.size()))
     << "There is no projected banana keypoint for the given banana index.";
   CHECK_GT(image_height_apple_frame_, 0u) << "The image height of the apple frame is zero.";
+
+  const Eigen::Matrix2Xd& A_keypoints_apple = apple_frame_.getKeypointMeasurements();
+  const Eigen::VectorXi* apple_track_ids;
+  if (apple_frame_.hasTrackIds()) {
+    apple_track_ids = &apple_frame_.getTrackIds();
+  } else {
+    apple_track_ids = nullptr;
+  }
 
   if (valid_bananas_[banana_index]) {
     const Eigen::Vector2d& A_keypoint_banana = A_projected_keypoints_banana_[banana_index];
@@ -226,8 +218,8 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
       // Go over all the apple keyponts and compute image space distance to the projected banana
       // keypoint.
       size_t apple_index = it->second;
-      CHECK_LT(static_cast<int>(apple_index), A_keypoints_apple_->cols());
-      const Eigen::Vector2d& apple_keypoint = A_keypoints_apple_->col(apple_index);
+      CHECK_LT(static_cast<int>(apple_index), A_keypoints_apple.cols());
+      const Eigen::Vector2d& apple_keypoint = A_keypoints_apple.col(apple_index);
 
       double squared_image_space_distance = (apple_keypoint - A_keypoint_banana).squaredNorm();
 
@@ -238,9 +230,9 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
         if (hamming_distance < hamming_distance_threshold_) {
           CHECK_GE(hamming_distance, 0);
           int priority = 0;
-          if (apple_track_ids_ != nullptr) {
-            CHECK_LT(static_cast<int>(apple_index), apple_track_ids_->rows());
-            if ((*apple_track_ids_)(apple_index) >= 0) priority = 1;
+          if (apple_track_ids != nullptr) {
+            CHECK_LT(static_cast<int>(apple_index), apple_track_ids->rows());
+            if ((*apple_track_ids)(apple_index) >= 0) priority = 1;
           }
           candidates->emplace_back(apple_index,
                                    banana_index,
@@ -255,13 +247,11 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
 }
 
 size_t MatchingProblemFrameToFrame::numApples() const {
-  CHECK(apple_frame_);
-  return static_cast<size_t>(apple_frame_->getNumKeypointMeasurements());
+  return static_cast<size_t>(apple_frame_.getNumKeypointMeasurements());
 }
 
 size_t MatchingProblemFrameToFrame::numBananas() const {
-  CHECK(banana_frame_);
-  return static_cast<size_t>(banana_frame_->getNumKeypointMeasurements());
+  return static_cast<size_t>(banana_frame_.getNumKeypointMeasurements());
 }
 
 }  // namespace aslam

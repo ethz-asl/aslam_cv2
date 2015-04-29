@@ -28,7 +28,7 @@ namespace aslam {
     CHECK_NOTNULL(apple_frame);
     CHECK_NOTNULL(banana_frame);
 
-    //  Get the track ID channels.
+    // Get the track ID channels.
     Eigen::VectorXi& apple_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(apple_frame));
     Eigen::VectorXi& banana_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(banana_frame));
 
@@ -87,7 +87,7 @@ namespace aslam {
     CHECK_NOTNULL(apple_frame);
     CHECK_NOTNULL(banana_frame);
 
-    //  Get the track ID channels.
+    // Get the track ID channels.
     Eigen::VectorXi& apple_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(apple_frame));
     Eigen::VectorXi& banana_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(banana_frame));
     CHECK(apple_frame->hasKeypointScores());

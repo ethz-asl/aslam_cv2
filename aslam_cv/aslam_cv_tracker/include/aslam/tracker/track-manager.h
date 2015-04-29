@@ -22,8 +22,7 @@ namespace aslam {
     /// @param[in]  apple_frame   Pointer to the apple frame.
     /// @param[in]  banana_frame  Pointer to the banana frame.
     virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches_A_B,
-                                      VisualFrame* apple_frame,
-                                      VisualFrame* banana_frame) = 0;
+                                      VisualFrame* apple_frame, VisualFrame* banana_frame) = 0;
 
     /// \brief Returns a pointer to the track id channel. If no track id channel is present for the
     ///        given frame, a new track id channel will be created with num_keypoints many track
@@ -55,8 +54,7 @@ namespace aslam {
     ///        applied) or < 0, in which case the valid id (>=0) is copied over.
     ///        Matches are expected to be exclusive.
     virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches,
-                                      VisualFrame* apple_frame,
-                                      VisualFrame* banana_frame);
+                                      VisualFrame* apple_frame, VisualFrame* banana_frame);
   };
 
   /// \brief Track manager using buckets to uniformly distribute weak new
@@ -118,8 +116,7 @@ namespace aslam {
     ///        full or all matches have been accepted.
     ///        The matches are expected to be exclusive.
     virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches_A_B,
-                                      VisualFrame* apple_frame,
-                                      VisualFrame* banana_frame);
+                                      VisualFrame* apple_frame, VisualFrame* banana_frame);
    private:
     /// \brief Square root of the number of tracking buckets. The image space
     ///        gets devided into number_of_tracking_buckets_root_^2 buckets.
