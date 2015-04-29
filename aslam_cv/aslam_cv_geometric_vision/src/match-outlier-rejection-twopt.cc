@@ -2,7 +2,7 @@
 #include <vector>
 
 #include <aslam/common/pose-types.h>
-#include <aslam/frames/visual-nframe.h>
+#include <aslam/frames/visual-frame.h>
 #include <aslam/matcher/match.h>
 #include <opengv/relative_pose/CentralRelativeAdapter.hpp>
 #include <opengv/relative_pose/methods.hpp>
