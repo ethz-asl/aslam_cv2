@@ -25,12 +25,12 @@ class FeatureTracker {
  public:
   virtual ~FeatureTracker() {};
 
-  /// Track features and return the matches. The matches are not written to the trackid channels
+  /// Track features and return the matches. The matches are not written to the TrackId channels
   /// and should be written to the track id channels using a TrackManager (after e.g. outlier
   /// filtering).
-  virtual void track(const std::shared_ptr<aslam::VisualFrame>& frame_kp1,
-                     const std::shared_ptr<aslam::VisualFrame>& frame_k,
-                     const aslam::Quaternion& q_Ckp1_Ck,
+  virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
+                     const aslam::VisualFrame& frame_k,
+                     aslam::VisualFrame* frame_kp1,
                      aslam::MatchesWithScore* matches_with_score_kp1_k) = 0;
 };
 

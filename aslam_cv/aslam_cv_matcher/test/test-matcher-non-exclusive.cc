@@ -41,12 +41,10 @@ TEST_F(MatcherTest, EmptyMatch) {
   aslam::Quaternion q_A_B;
   q_A_B.setIdentity();
 
-  aslam::MatchingProblemFrameToFrame::Ptr matching_problem =
-      aslam::aligned_shared<aslam::MatchingProblemFrameToFrame>(apple_frame_,
-                                                   banana_frame_,
-                                                   q_A_B,
-                                                   image_space_distance_threshold_,
-                                                   hamming_distance_threshold_);
+  aslam::MatchingProblemFrameToFrame::Ptr matching_problem = aslam::aligned_shared<
+      aslam::MatchingProblemFrameToFrame>(*apple_frame_, *banana_frame_, q_A_B,
+                                          image_space_distance_threshold_,
+                                          hamming_distance_threshold_);
   aslam::MatchesWithScore matches_A_B;
   matching_engine_.match(matching_problem.get(), &matches_A_B);
 
@@ -71,12 +69,10 @@ TEST_F(MatcherTest, MatchIdentity) {
   aslam::Quaternion q_A_B;
   q_A_B.setIdentity();
 
-  aslam::MatchingProblemFrameToFrame::Ptr matching_problem =
-      aslam::aligned_shared<aslam::MatchingProblemFrameToFrame>(apple_frame_,
-                                                   banana_frame_,
-                                                   q_A_B,
-                                                   image_space_distance_threshold_,
-                                                   hamming_distance_threshold_);
+  aslam::MatchingProblemFrameToFrame::Ptr matching_problem = aslam::aligned_shared<
+      aslam::MatchingProblemFrameToFrame>(*apple_frame_, *banana_frame_, q_A_B,
+                                          image_space_distance_threshold_,
+                                          hamming_distance_threshold_);
 
   aslam::MatchesWithScore matches_A_B;
   matching_engine_.match(matching_problem.get(), &matches_A_B);
@@ -124,12 +120,10 @@ TEST_F(MatcherTest, MatchRotation) {
   banana_frame_->setKeypointMeasurements(banana_keypoints);
   banana_frame_->setDescriptors(banana_descriptors);
 
-  aslam::MatchingProblemFrameToFrame::Ptr matching_problem =
-      aslam::aligned_shared<aslam::MatchingProblemFrameToFrame>(apple_frame_,
-                                                   banana_frame_,
-                                                   q_apple_banana,
-                                                   image_space_distance_threshold_,
-                                                   hamming_distance_threshold_);
+  aslam::MatchingProblemFrameToFrame::Ptr matching_problem = aslam::aligned_shared<
+      aslam::MatchingProblemFrameToFrame>(*apple_frame_, *banana_frame_, q_apple_banana,
+                                          image_space_distance_threshold_,
+                                          hamming_distance_threshold_);
 
   aslam::MatchesWithScore matches_A_B;
   matching_engine_.match(matching_problem.get(), &matches_A_B);
@@ -161,7 +155,7 @@ TEST_F(MatcherTest, TestImageSpaceBorderOut) {
   q_A_B.setIdentity();
 
   aslam::MatchingProblemFrameToFrame::Ptr matching_problem = aslam::aligned_shared<
-      aslam::MatchingProblemFrameToFrame>(apple_frame_, banana_frame_, q_A_B,
+      aslam::MatchingProblemFrameToFrame>(*apple_frame_, *banana_frame_, q_A_B,
                                           image_space_distance_threshold_,
                                           hamming_distance_threshold_);
   aslam::MatchesWithScore matches_A_B;
@@ -189,12 +183,10 @@ TEST_F(MatcherTest, TestImageSpaceBorderIn) {
   aslam::Quaternion q_A_B;
   q_A_B.setIdentity();
 
-  aslam::MatchingProblemFrameToFrame::Ptr matching_problem =
-      aslam::aligned_shared<aslam::MatchingProblemFrameToFrame>(apple_frame_,
-                                                   banana_frame_,
-                                                   q_A_B,
-                                                   image_space_distance_threshold_,
-                                                   hamming_distance_threshold_);
+  aslam::MatchingProblemFrameToFrame::Ptr matching_problem = aslam::aligned_shared<
+      aslam::MatchingProblemFrameToFrame>(*apple_frame_, *banana_frame_, q_A_B,
+                                          image_space_distance_threshold_,
+                                          hamming_distance_threshold_);
 
   aslam::MatchesWithScore matches_A_B;
   matching_engine_.match(matching_problem.get(), &matches_A_B);
@@ -263,12 +255,10 @@ TEST_F(MatcherTest, TestComplex) {
   banana_frame_->setKeypointMeasurements(banana_keypoints);
   banana_frame_->setDescriptors(banana_descriptors);
 
-  aslam::MatchingProblemFrameToFrame::Ptr matching_problem =
-      aslam::aligned_shared<aslam::MatchingProblemFrameToFrame>(apple_frame_,
-                                                   banana_frame_,
-                                                   q_apple_banana,
-                                                   image_space_distance_threshold_,
-                                                   hamming_distance_threshold_);
+  aslam::MatchingProblemFrameToFrame::Ptr matching_problem = aslam::aligned_shared<
+      aslam::MatchingProblemFrameToFrame>(*apple_frame_, *banana_frame_, q_apple_banana,
+                                          image_space_distance_threshold_,
+                                          hamming_distance_threshold_);
 
   aslam::MatchesWithScore matches_A_B;
   matching_engine_.match(matching_problem.get(), &matches_A_B);
