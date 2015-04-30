@@ -18,17 +18,16 @@ class FeatureTrackerLk : public FeatureTracker {
   typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
 
   FeatureTrackerLk(const aslam::Camera& camera);
-  virtual ~FeatureTrackerLk() {
-  }
+  virtual ~FeatureTrackerLk() {}
 
   /// \brief Main Lk-tracker routine.
-  /// @param[in,out] frame_kp1 Frame at time step k+1.
-  /// @param[in,out] frame_k Frame at time step k.
   /// @param[in] q_Ckp1_Ck Rotation taking points from the Ck frame to the Ckp1 frame.
+  /// @param[in] frame_k Frame at time step k.
+  /// @param[in,out] frame_kp1 Frame at time step k+1.
   /// @param[out] matches_with_score_kp1_k Detected matches from frame k to frame k+1.
-  virtual void track(const std::shared_ptr<aslam::VisualFrame>& frame_kp1,
-                     const std::shared_ptr<aslam::VisualFrame>& frame_k,
-                     const aslam::Quaternion& q_Ckp1_Ck,
+  virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
+                     const aslam::VisualFrame& frame_k,
+                     aslam::VisualFrame* frame_kp1,
                      aslam::MatchesWithScore* matches_with_score_kp1_k);
 
  private:
@@ -39,14 +38,14 @@ class FeatureTrackerLk : public FeatureTracker {
 
   /// \brief Apply keypoints of type Eigen::Vector2d to frame.
   /// @param[in] new_keypoints Keypoints_new to be applied to the frame.
-  /// @param[in] frame_kp1 Frame to which the new keypoints should be applied.
+  /// @param[in,out] frame_kp1 Frame to which the new keypoints should be applied.
   void insertAdditionalKeypointsToFrame(const Vector2dList& new_keypoints,
-                                        const aslam::VisualFrame::Ptr frame_kp1);
+                                        aslam::VisualFrame* frame_kp1);
 
   /// \brief Get keypoints of type cv::Point2f from frame.
   /// @param[in] frame Frame from which the keypoints should be extracted.
   /// @param[out] keypoints_out Keypoints extracted from frame.
-  void getKeypointsfromFrame(const aslam::VisualFrame::Ptr frame,
+  void getKeypointsfromFrame(const aslam::VisualFrame& frame,
                              std::vector<cv::Point2f>* keypoints_out);
 
   /// \brief Build up an occupancy grid and only add new features to empty cells.
@@ -54,7 +53,7 @@ class FeatureTrackerLk : public FeatureTracker {
   /// then inserted into the occupancy grid.
   /// @param[in] detected_keypoints Points we want to add to the occupancy grid.
   /// @param[out] detected_keypoints_in_grid Points actually added based on occupancy grid.
-  void occupancyGrid(const aslam::VisualFrame::Ptr frame, const Vector2dList& detected_keypoints,
+  void occupancyGrid(const aslam::VisualFrame& frame, const Vector2dList& detected_keypoints,
                      Vector2dList* detected_keypoints_in_grid);
 
   //////////////////////////////////////////////////////////////
