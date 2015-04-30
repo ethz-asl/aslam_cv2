@@ -410,6 +410,14 @@ class Camera {
   bool isKeypointVisible(const Eigen::Matrix<Scalar, 2, 1>& keypoint) const;
   inline bool isKeypointVisible(const Eigen::Ref<const Eigen::Vector2d>& keypoint) const;
 
+  /// \brief  Check if a given keypoint is within the specified margin to the
+  ///         boundary of the imaging box of the camera.
+  template<typename Scalar>
+  bool isKeypointVisibleWithMargin(const Eigen::Matrix<Scalar, 2, 1>& keypoint,
+                                   Scalar margin) const;
+  inline bool isKeypointVisibleWithMargin(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
+                                          double margin) const;
+
   /// @}
 
   //////////////////////////////////////////////////////////////

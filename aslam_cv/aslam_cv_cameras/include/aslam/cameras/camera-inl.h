@@ -26,6 +26,23 @@ inline bool Camera::isKeypointVisible(const Eigen::Ref<const Eigen::Vector2d>& k
       && keypoint[1] < imageHeight();
 }
 
+template<typename Scalar>
+bool Camera::isKeypointVisibleWithMargin(const Eigen::Matrix<Scalar, 2, 1>& keypoint,
+                                         Scalar margin) const {
+  return keypoint[0] >= margin
+      && keypoint[1] >= margin
+      && keypoint[0] < (static_cast<Scalar>(imageWidth())-margin)
+      && keypoint[1] < (static_cast<Scalar>(imageHeight()-margin));
+}
+
+inline bool Camera::isKeypointVisibleWithMargin(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
+                                                double margin) const {
+  return keypoint[0] >= margin
+      && keypoint[1] >= margin
+      && keypoint[0] < (imageWidth()-margin)
+      && keypoint[1] < (imageHeight()-margin);
+}
+
 inline std::ostream& operator<<(std::ostream& out, const Camera::Type& value) {
   static std::map<Camera::Type, std::string> names;
   if (names.size() == 0) {
