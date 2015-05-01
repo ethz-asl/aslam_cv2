@@ -67,6 +67,9 @@ class VisualNPipeline {
 
   ~VisualNPipeline();
 
+  /// Shutdown the thread pool and release blocking waiters.
+  void shutdown();
+
   /// \brief Add an image to the visual pipeline
   ///
   /// This function is called by a user when an image is received.
@@ -79,6 +82,20 @@ class VisualNPipeline {
   /// \param[in] timestamp the time in integer nanoseconds.
   void processImage(size_t camera_index, const cv::Mat& image, int64_t timestamp);
 
+  /// \brief Same as \ref processImage with the difference that the function call blocks if the
+  ///        output queue exceeds the specified limit.
+  ///
+  /// \param[in] camera_index The index of the camera that this image corresponds to
+  /// \param[in] image the image data
+  /// \param[in] timestamp the time in integer nanoseconds.
+  /// \param[in] max_output_queue_size the max. size of the output queue. The function call will
+  ///            block once this limit has been reached. As the frames are processed in a thread
+  ///            pool it is possible that the real queue size will exceed the defined size by the
+  ///            numbre of currently processed nframes.
+  /// @return    Returns false if the queue is shuting down.
+  bool processImageBlockingIfFull(size_t camera_index, const cv::Mat& image, int64_t timestamp,
+                                  size_t max_output_queue_size);
+
   /// How many completed VisualNFrames are waiting to be retrieved?
   size_t getNumFramesComplete() const;
 
@@ -90,8 +107,9 @@ class VisualNPipeline {
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
   std::shared_ptr<VisualNFrame> getNext();
 
-  ///  Get the next available set of processed frames
-  std::shared_ptr<VisualNFrame> getNextBlocking();
+  /// Get the next available set of processed frames
+  /// @return Returns true on success and false if the queue is shutting down.
+  bool getNextBlocking(std::shared_ptr<VisualNFrame>* nframe);
 
   /// Get the latest available data and clear anything older.
   ///
@@ -137,9 +155,12 @@ class VisualNPipeline {
 
   /// A mutex to protect the processing and completed queues.
   mutable std::mutex mutex_;
-
-  /// Condition variable signaling a new VisualNFrame for processing.
-  std::condition_variable cv_new_nframe_;
+  /// Condition variable signaling that the output queue is not full.
+  std::condition_variable condition_not_full_;
+  /// Condition variable signaling that the output queue is not empty.
+  std::condition_variable condition_not_empty_;
+  /// A flag indicating a system shutdown.
+  std::atomic<bool> shutdown_;
 
   /// The frames that are in progress.
   std::map<int64_t, std::shared_ptr<VisualNFrame>> processing_;
