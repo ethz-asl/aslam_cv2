@@ -1,7 +1,6 @@
 #ifndef VISUAL_NPIPELINE_H_
 #define VISUAL_NPIPELINE_H_
 
-#include <atomic>
 #include <condition_variable>
 #include <map>
 #include <memory>
