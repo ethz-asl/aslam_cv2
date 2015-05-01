@@ -18,7 +18,6 @@ VisualNPipeline::VisualNPipeline(
     const std::shared_ptr<NCamera>& input_camera_system,
     const std::shared_ptr<NCamera>& output_camera_system, int64_t timestamp_tolerance_ns) :
       pipelines_(pipelines),
-      new_frame_(false),
       input_camera_system_(input_camera_system), output_camera_system_(output_camera_system),
       timestamp_tolerance_ns_(timestamp_tolerance_ns)  {
   // Defensive programming ninjitsu.
@@ -60,7 +59,7 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getNext() {
   std::shared_ptr<VisualNFrame> rval;
   std::unique_lock<std::mutex> lock(mutex_);
   if(!completed_.empty()) {
-    /// Get the oldest frame.
+    // Get the oldest frame.
     auto it = completed_.begin();
     rval = it->second;
     completed_.erase(it);
@@ -68,15 +67,17 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getNext() {
   return rval;
 }
 
-void VisualNPipeline::waitForNewFrame() {
-  if(getNumFramesComplete() > 0u)
-    return;
-
+std::shared_ptr<VisualNFrame> VisualNPipeline::getNextBlocking() {
   std::unique_lock<std::mutex> lock(mutex_);
-  while (!new_frame_) {
-    cv_new_frame_.wait(lock);
+  while (completed_.empty()) {
+    cv_new_nframe_.wait(lock);
   }
-  new_frame_ = false;
+
+  // Get the oldest frame.
+  auto it = completed_.begin();
+  aslam::VisualNFrame::Ptr nframe = it->second;
+  completed_.erase(it);
+  return nframe;
 }
 
 std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
@@ -173,10 +174,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
     if(all_received) {
       completed_.insert(*proc_it);
       processing_.erase(proc_it);
-
-      // Notify the blocking waiter method.
-      new_frame_ = true;
-      cv_new_frame_.notify_all();
+      cv_new_nframe_.notify_all();
     }
   }
 }
