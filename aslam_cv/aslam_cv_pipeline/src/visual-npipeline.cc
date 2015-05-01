@@ -213,7 +213,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
         condition_not_empty_.notify_all();
       } else {
         // As we are iterating over the map in chronological order we have to abort once an nframe
-        // is not yet finished processing to keep chornological ordering in the destination queue.
+        // is not yet finished processing to keep chronological ordering in the destination queue.
         break;
       }
     }
