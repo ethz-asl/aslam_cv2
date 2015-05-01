@@ -85,13 +85,13 @@ class VisualNPipeline {
   /// \brief Same as \ref processImage with the difference that the function call blocks if the
   ///        output queue exceeds the specified limit.
   ///
-  /// \param[in] camera_index The index of the camera that this image corresponds to
-  /// \param[in] image the image data
+  /// \param[in] camera_index The index of the camera that this image corresponds to.
+  /// \param[in] image the image data.
   /// \param[in] timestamp the time in integer nanoseconds.
   /// \param[in] max_output_queue_size the max. size of the output queue. The function call will
   ///            block once this limit has been reached. As the frames are processed in a thread
   ///            pool it is possible that the real queue size will exceed the defined size by the
-  ///            numbre of currently processed nframes.
+  ///            number of currently processed nframes.
   /// @return    Returns false if the queue is shuting down.
   bool processImageBlockingIfFull(size_t camera_index, const cv::Mat& image, int64_t timestamp,
                                   size_t max_output_queue_size);
@@ -99,20 +99,19 @@ class VisualNPipeline {
   /// How many completed VisualNFrames are waiting to be retrieved?
   size_t getNumFramesComplete() const;
 
-  /// Get the number of frames being processed
+  /// Get the number of frames being processed.
   size_t getNumFramesProcessing() const;
 
-  /// Get the next available set of processed frames
+  /// Get the next available set of processed frames.
   /// This may not be the latest data, it is simply the next in a FIFO queue.
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
   std::shared_ptr<VisualNFrame> getNext();
 
-  /// Get the next available set of processed frames
+  /// Get the next available set of processed frames.
   /// @return Returns true on success and false if the queue is shutting down.
   bool getNextBlocking(std::shared_ptr<VisualNFrame>* nframe);
 
   /// Get the latest available data and clear anything older.
-  ///
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
   std::shared_ptr<VisualNFrame> getLatestAndClear();
 
