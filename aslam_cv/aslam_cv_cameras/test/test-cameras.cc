@@ -230,8 +230,34 @@ TYPED_TEST(TestCameras, isVisible) {
   Eigen::Vector2d keypoint5(-1, -1);
   EXPECT_FALSE(this->camera_->isKeypointVisible(keypoint5)) << "Keypoint5: " << keypoint5;
 
-  Eigen::Vector2d keypoint6(ru, rv);
-  EXPECT_FALSE(this->camera_->isKeypointVisible(keypoint6)) << "Keypoint6: " << keypoint6;
+  Eigen::Vector3d keypoint6(ru, rv, 1);
+  EXPECT_FALSE(this->camera_->isKeypointVisible(keypoint6.head<2>())) << "Keypoint6: " << keypoint6;
+}
+
+TYPED_TEST(TestCameras, isVisibleWithMargin) {
+  const double ru = this->camera_->imageWidth();
+  const double rv = this->camera_->imageHeight();
+  const double cu = this->camera_->cu();
+  const double cv = this->camera_->cv();
+  const double margin = 5.0;
+
+  Eigen::Vector2d keypoint1(margin, margin);
+  EXPECT_TRUE(this->camera_->isKeypointVisibleWithMargin(keypoint1, margin)) << "Keypoint1: " << keypoint1;
+
+  Eigen::Vector2d keypoint2(ru - 1 - margin, rv - 1 - margin);
+  EXPECT_TRUE(this->camera_->isKeypointVisibleWithMargin(keypoint2, margin)) << "Keypoint2: " << keypoint2;
+
+  Eigen::Vector2d keypoint3(cu, cv);
+  EXPECT_TRUE(this->camera_->isKeypointVisibleWithMargin(keypoint3, margin)) << "Keypoint3: " << keypoint3;
+
+  Eigen::Vector2d keypoint4(0, 0);
+  EXPECT_FALSE(this->camera_->isKeypointVisibleWithMargin(keypoint4, margin)) << "Keypoint4: " << keypoint4;
+
+  Eigen::Vector2f keypoint5(ru-1, rv-1);
+  EXPECT_FALSE(this->camera_->isKeypointVisibleWithMargin(keypoint5, 5.0f)) << "Keypoint5: " << keypoint5;
+
+  Eigen::Vector3i keypoint6(ru, rv, 1);
+  EXPECT_FALSE(this->camera_->isKeypointVisibleWithMargin(keypoint6.head<2>(), 5)) << "Keypoint6: " << keypoint6;
 }
 
 TYPED_TEST(TestCameras, isProjectable) {
