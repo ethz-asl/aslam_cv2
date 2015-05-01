@@ -198,16 +198,24 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
     }
     proc_it->second->setFrame(camera_index, frame);
 
-    // Check if all images have been received.
-    bool all_received = true;
-    for(size_t i = 0; i < proc_it->second->getNumFrames(); ++i) {
-      all_received &= proc_it->second->isFrameSet(i);
-    }
+    // Move all completed nframes from the processed_ queue to the completed_ queue chronologically.
+    auto it_processing = processing_.begin();
+    while (it_processing != processing_.end()) {
+      // Check if all images have been received.
+      bool all_received = true;
+      for (size_t i = 0; i < it_processing->second->getNumFrames(); ++i) {
+        all_received &= it_processing->second->isFrameSet(i);
+      }
 
-    if(all_received) {
-      completed_.insert(*proc_it);
-      processing_.erase(proc_it);
-      condition_not_empty_.notify_all();
+      if (all_received) {
+        completed_.insert(*it_processing);
+        it_processing = processing_.erase(it_processing);
+        condition_not_empty_.notify_all();
+      } else {
+        // As we are iterating over the map in chronological order we have to abort once an nframe
+        // is not yet finished processing to keep chornological ordering in the destination queue.
+        break;
+      }
     }
   }
 }
