@@ -405,10 +405,16 @@ class Camera {
   ///         can be run without numerical errors or singularities.
   bool isProjectable4(const Eigen::Ref<const Eigen::Vector4d>& point) const;
 
-  /// \brief  Check if a given keypoint is inside the imaging box of the camera.
-  template<typename Scalar>
-  bool isKeypointVisible(const Eigen::Matrix<Scalar, 2, 1>& keypoint) const;
-  inline bool isKeypointVisible(const Eigen::Ref<const Eigen::Vector2d>& keypoint) const;
+  /// \brief  Return if a given keypoint is inside the imaging box of the camera.
+  template<typename DerivedKeyPoint>
+  bool isKeypointVisible(const Eigen::MatrixBase<DerivedKeyPoint>& keypoint) const;
+
+  /// \brief  Return if a given keypoint is within the specified margin to the
+  ///         boundary of the imaging box of the camera.
+  template<typename DerivedKeyPoint>
+  bool isKeypointVisibleWithMargin(
+      const Eigen::MatrixBase<DerivedKeyPoint>& keypoint,
+      typename DerivedKeyPoint::Scalar margin) const;
 
   /// @}
 
