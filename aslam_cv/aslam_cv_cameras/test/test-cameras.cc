@@ -230,8 +230,8 @@ TYPED_TEST(TestCameras, isVisible) {
   Eigen::Vector2d keypoint5(-1, -1);
   EXPECT_FALSE(this->camera_->isKeypointVisible(keypoint5)) << "Keypoint5: " << keypoint5;
 
-  Eigen::Vector2d keypoint6(ru, rv);
-  EXPECT_FALSE(this->camera_->isKeypointVisible(keypoint6)) << "Keypoint6: " << keypoint6;
+  Eigen::Vector3d keypoint6(ru, rv, 1);
+  EXPECT_FALSE(this->camera_->isKeypointVisible(keypoint6.head<2>())) << "Keypoint6: " << keypoint6;
 }
 
 TYPED_TEST(TestCameras, isVisibleWithMargin) {
@@ -256,8 +256,8 @@ TYPED_TEST(TestCameras, isVisibleWithMargin) {
   Eigen::Vector2f keypoint5(ru-1, rv-1);
   EXPECT_FALSE(this->camera_->isKeypointVisibleWithMargin(keypoint5, 5.0f)) << "Keypoint5: " << keypoint5;
 
-  Eigen::Vector2i keypoint6(ru, rv);
-  EXPECT_FALSE(this->camera_->isKeypointVisibleWithMargin(keypoint6, 5)) << "Keypoint6: " << keypoint6;
+  Eigen::Vector3i keypoint6(ru, rv, 1);
+  EXPECT_FALSE(this->camera_->isKeypointVisibleWithMargin(keypoint6.head<2>(), 5)) << "Keypoint6: " << keypoint6;
 }
 
 TYPED_TEST(TestCameras, isProjectable) {
