@@ -20,14 +20,13 @@ void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* mat
 
 void convertMatches(const MatchesWithScore& matches_with_score_A_B, OpenCvMatches* matches_A_B) {
   CHECK_NOTNULL(matches_A_B)->clear();
-  int index_A = 0;
-  int index_B = 0;
-  float distance = 0.0;
+  matches_A_B->reserve(matches_with_score_A_B.size());
   for (MatchWithScore match : matches_with_score_A_B) {
     CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
     CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
-    matches_A_B->push_back(cv::DMatch(match.getIndexApple(), match.getIndexBanana(), static_cast<float>(match.getScore())));
+    matches_A_B->emplace_back(cv::DMatch(match.getIndexApple(), match.getIndexBanana(), static_cast<float>(match.getScore())));
   }
+  CHECK_EQ(matches_with_score_A_B.size(), matches_A_B->size());
 }
 
 size_t extractMatchesFromTrackIdChannel(const aslam::VisualFrame& frame_kp1,
