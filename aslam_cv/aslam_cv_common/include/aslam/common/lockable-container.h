@@ -52,8 +52,10 @@ class LockableContainer {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef std::shared_ptr<DataType> DataTypePtr;
   typedef std::unique_ptr<DataType> DataTypeUniquePtr;
+  class ConstLockedAccess;
   class LockedAccess;
   class ScopedLock;
+  friend class ConstLockedAccess;
   friend class LockedAccess;
   friend class ScopedLock;
 
@@ -82,8 +84,8 @@ class LockableContainer {
     return LockedAccess(this);
   }
 
-  inline LockedAccess lockedAccess() const {
-    return LockedAccess(this);
+  inline ConstLockedAccess lockedAccess() const {
+    return ConstLockedAccess(this);
   }
 
   inline DataType* getRawPointer() {
@@ -140,13 +142,13 @@ class LockableContainer<DataType>::ScopedLock {
   friend LockableContainer<DataType>;
   ScopedLock() = delete;
 
-  inline ScopedLock(LockableContainer<DataType>* underlying_lockable_container) :
+  inline ScopedLock(const LockableContainer<DataType>* underlying_lockable_container) :
     underlying_lockable_container_(underlying_lockable_container) {
     CHECK(underlying_lockable_container != nullptr) << "The managed object has been released.";
     underlying_lockable_container_->lock();
   }
 
-  inline ScopedLock(LockableContainer<DataType>& underlying_lockable_container)
+  inline ScopedLock(const LockableContainer<DataType>& underlying_lockable_container)
       : ScopedLock(&underlying_lockable_container) {}
 
   inline ~ScopedLock() {
@@ -154,7 +156,7 @@ class LockableContainer<DataType>::ScopedLock {
   }
 
  private:
-  LockableContainer<DataType>* underlying_lockable_container_;
+  const LockableContainer<DataType>* underlying_lockable_container_;
 };
 
 template<typename DataType>
@@ -162,14 +164,11 @@ class LockableContainer<DataType>::LockedAccess {
  public:
   friend LockableContainer<DataType>;
   LockedAccess() = delete;
-
-  inline ~LockedAccess() {
-    underlying_lockable_container_->unlock();
-  }
+  inline ~LockedAccess() { underlying_lockable_container_->unlock(); }
 
  protected:
-  inline LockedAccess(LockableContainer<DataType>* underlying_lockable_container) :
-    underlying_lockable_container_(underlying_lockable_container) {
+  inline LockedAccess(LockableContainer<DataType>* underlying_lockable_container)
+      : underlying_lockable_container_(underlying_lockable_container) {
     CHECK(underlying_lockable_container != nullptr) << "The managed object has been released.";
     underlying_lockable_container_->lock();
   }
@@ -185,6 +184,29 @@ class LockableContainer<DataType>::LockedAccess {
 
  private:
   LockableContainer<DataType>* underlying_lockable_container_;
+};
+
+template<typename DataType>
+class LockableContainer<DataType>::ConstLockedAccess {
+ public:
+  friend LockableContainer<DataType>;
+  ConstLockedAccess() = delete;
+  inline ~ConstLockedAccess() { underlying_lockable_container_->unlock(); }
+
+ protected:
+  inline ConstLockedAccess(const LockableContainer<DataType>* underlying_lockable_container)
+      : underlying_lockable_container_(underlying_lockable_container) {
+    CHECK(underlying_lockable_container != nullptr) << "The managed object has been released.";
+    underlying_lockable_container_->lock();
+  }
+
+ public:
+  inline const DataType* operator->() const {
+    return CHECK_NOTNULL(underlying_lockable_container_->data_.get());
+  }
+
+ private:
+  const LockableContainer<DataType>* underlying_lockable_container_;
 };
 
 #define ASLAM_DEFINE_LOCKABLE(TypeName)                \
