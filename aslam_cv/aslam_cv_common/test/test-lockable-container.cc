@@ -18,13 +18,23 @@ TEST(TestLockableContainer, BasicAccess) {
   typedef aslam::LockableContainer<TestObject> LockableObject;
   LockableObject::Ptr test_container = LockableObject::create();
 
+  // Check access with direct locking.
+  EXPECT_EQ(test_container->lockedAccess()->number(), kTestNumber);
+
+  // Check access with scoped locking.
+  {
+    LockableObject::ScopedLock lock(*test_container);
+    EXPECT_EQ(test_container->getRawPointer()->number(), kTestNumber);
+  }
+
   // Check death when accessing without locking.
   const std::string kLockedErrorMsg("You must lock the container before accessing it.");
-  EXPECT_DEATH((*test_container)->number(), kLockedErrorMsg);
+  EXPECT_DEATH(test_container->getRawPointer()->number(), kLockedErrorMsg);
 
-  // Check access with locking.
+  // Check success when accessing with lock.
   test_container->lock();
-  EXPECT_EQ((*test_container)->number(), kTestNumber);
+  EXPECT_EQ(test_container->getRawPointer()->number(), kTestNumber);
+  test_container->unlock();
 }
 
 TEST(TestLockableContainer, ReleaseObject) {
@@ -58,12 +68,10 @@ TEST(TestLockableContainer, CreateFromExistingObject) {
 
   // Check death when accessing without locking.
   const std::string kLockedErrorMsg("You must lock the container before accessing it.");
-  EXPECT_DEATH((*test_container)->number(), kLockedErrorMsg);
+  EXPECT_DEATH(test_container->getRawPointer()->number(), kLockedErrorMsg);
 
-  // Check access with locking.
-  test_container->lock();
-  EXPECT_EQ((*test_container)->number(), kTestNumber);
-  test_container->unlock();
+  // Check contents.
+  EXPECT_EQ(test_container->lockedAccess()->number(), kTestNumber);
 
   // Test releasing the contained object.
   std::shared_ptr<TestObject> object = test_container->release();
