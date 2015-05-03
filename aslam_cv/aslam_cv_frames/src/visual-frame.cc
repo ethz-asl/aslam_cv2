@@ -360,15 +360,7 @@ void VisualFrame::print(std::ostream& out, const std::string& label) const {
   } else {
     out << "  VisualFrame::camera is NULL" << std::endl;
   }
-  if(! channels_.empty()) {
-    out << "  Channels:" << std::endl;
-    aslam::channels::ChannelGroup::const_iterator it = channels_.begin();
-    for( ; it != channels_.end(); ++it) {
-      out << "   - " << it->first << std::endl;
-    }
-  } else {
-    out << "  Channels: empty" << std::endl;
-  }
+  channels_.printParameters(out);
 }
 
 aslam::ProjectionResult VisualFrame::getKeypointInRawImageCoordinates(

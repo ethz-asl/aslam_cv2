@@ -15,6 +15,7 @@
 /// @}
 /// @}
 
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -118,7 +119,33 @@ bool Channel<TYPE>::operator==(const Channel<TYPE>& other) {
   return equal_to(other, typename is_not_pointer<TYPE>::type());
 }
 
-typedef std::unordered_map<std::string, std::shared_ptr<ChannelBase> > ChannelGroup;
+typedef std::unordered_map<std::string, std::shared_ptr<ChannelBase>> ChannelMap;
+struct ChannelGroup {
+  ChannelGroup() = default;
+  ChannelGroup(ChannelGroup& other) {
+    *this = other;
+  }
+  ChannelGroup& operator=(const ChannelGroup& other) {
+    channels_ = other.channels_;
+    return *this;
+  }
+
+  void printParameters(std::ostream& out) const {
+    std::lock_guard<std::mutex> lock(m_channels_);
+    if (!channels_.empty()) {
+      out << "  Channels:" << std::endl;
+      ChannelMap::const_iterator it = channels_.begin();
+      for (; it != channels_.end(); ++it) {
+        out << "   - " << it->first << std::endl;
+      }
+    } else {
+      out << "  Channels: empty" << std::endl;
+    }
+  }
+
+  ChannelMap channels_;
+  mutable std::mutex m_channels_;
+};
 
 ChannelGroup cloneChannelGroup(const ChannelGroup& channels);
 bool isChannelGroupEqual(const ChannelGroup& left, const ChannelGroup& right);
