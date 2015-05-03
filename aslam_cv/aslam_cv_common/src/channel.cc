@@ -24,8 +24,13 @@ ChannelGroup cloneChannelGroup(const ChannelGroup& channels) {
 }
 
 bool isChannelGroupEqual(const ChannelGroup& left_channels, const ChannelGroup& right_channels) {
+  // Early exit if both groups are the same.
+  if (&left_channels == &right_channels) {
+    return true;
+  }
   std::lock_guard<std::mutex> lock_left(left_channels.m_channels_);
   std::lock_guard<std::mutex> lock_right(right_channels.m_channels_);
+
   if (left_channels.channels_.size() != right_channels.channels_.size()) {
     return false;
   }
