@@ -1,6 +1,7 @@
 #ifndef ASLAM_CV_COMMON_CHANNEL_DECLARATIONS_H_
 #define ASLAM_CV_COMMON_CHANNEL_DECLARATIONS_H_
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -22,8 +23,11 @@ const std::string NAME##_CHANNEL = #NAME;                                  \
 typedef GET_TYPE(TYPE) NAME##_ChannelValueType;                            \
 typedef Channel<NAME##_ChannelValueType> NAME##_ChannelType;               \
                                                                            \
-NAME##_ChannelValueType& get_##NAME##_Data(const ChannelGroup& channels) { \
-  ChannelGroup::const_iterator it = channels.find(NAME##_CHANNEL);         \
+NAME##_ChannelValueType& get_##NAME##_Data(                                \
+    const ChannelGroup& channel_group) {                                   \
+  std::lock_guard<std::mutex> lock(channel_group.m_channels_);             \
+  const ChannelMap& channels = channel_group.channels_;                    \
+  ChannelMap::const_iterator it = channels.find(NAME##_CHANNEL);           \
   CHECK(it != channels.end()) << "Channelgroup does not "                  \
       "contain channel " << NAME##_CHANNEL;                                \
   std::shared_ptr<NAME##_ChannelType> derived =                            \
@@ -33,9 +37,12 @@ NAME##_ChannelValueType& get_##NAME##_Data(const ChannelGroup& channels) { \
   return derived->value_;                                                  \
 }                                                                          \
                                                                            \
-NAME##_ChannelValueType& add_##NAME##_Channel(ChannelGroup* channels) {    \
-  CHECK_NOTNULL(channels);                                                 \
-  ChannelGroup::iterator it = channels->find(NAME##_CHANNEL);              \
+NAME##_ChannelValueType& add_##NAME##_Channel(                             \
+    ChannelGroup* channel_group) {                                         \
+  CHECK_NOTNULL(channel_group);                                            \
+  std::lock_guard<std::mutex> lock(channel_group->m_channels_);            \
+  ChannelMap* channels = &channel_group->channels_;                        \
+  ChannelMap::iterator it = channels->find(NAME##_CHANNEL);                \
   CHECK(it == channels->end()) << "Channelgroup already "                  \
       "contains channel " << NAME##_CHANNEL;                               \
   std::shared_ptr<NAME##_ChannelType> derived(new NAME##_ChannelType);     \
@@ -43,8 +50,10 @@ NAME##_ChannelValueType& add_##NAME##_Channel(ChannelGroup* channels) {    \
   return derived->value_;                                                  \
 }                                                                          \
                                                                            \
-bool has_##NAME##_Channel(const ChannelGroup& channels) {                  \
-  ChannelGroup::const_iterator it = channels.find(NAME##_CHANNEL);         \
+bool has_##NAME##_Channel(const ChannelGroup& channel_group) {             \
+  std::lock_guard<std::mutex> lock(channel_group.m_channels_);             \
+  const ChannelMap& channels = channel_group.channels_;                    \
+  ChannelMap::const_iterator it = channels.find(NAME##_CHANNEL);           \
   return it != channels.end();                                             \
 }                                                                          \
 }                                                                          \
@@ -56,35 +65,38 @@ bool has_##NAME##_Channel(const ChannelGroup& channels) {                  \
 namespace aslam {
 namespace channels {
 template<typename CHANNEL_DATA_TYPE>
-CHANNEL_DATA_TYPE& getChannelData(const std::string& channelName,
-                                  const ChannelGroup& channels) {
-  ChannelGroup::const_iterator it = channels.find(channelName);
-  CHECK(it != channels.end()) << "Channelgroup does not "
-      "contain channel " << channelName;
+CHANNEL_DATA_TYPE& getChannelData(const std::string& channel_name,
+                                  const ChannelGroup& channel_group) {
+  std::lock_guard<std::mutex> lock(channel_group.m_channels_);
+  ChannelMap::const_iterator it = channel_group.channels_.find(channel_name);
+  CHECK(it != channel_group.channels_.end()) << "Channelgroup does not "
+      "contain channel " << channel_name;
   typedef Channel<CHANNEL_DATA_TYPE> DerivedChannel;
   std::shared_ptr<DerivedChannel> derived =
       std::dynamic_pointer_cast < DerivedChannel > (it->second);
   CHECK(derived) << "Channel cast to derived failed " <<
-                    "channel: " << channelName;
+                    "channel: " << channel_name;
   return derived->value_;
 }
 
-inline bool hasChannel(const std::string& channelName,
-                       const ChannelGroup& channels) {
-  ChannelGroup::const_iterator it = channels.find(channelName);
-  return it != channels.end();
+inline bool hasChannel(const std::string& channel_name,
+                       const ChannelGroup& channel_group) {
+  std::lock_guard<std::mutex> lock(channel_group.m_channels_);
+  ChannelMap::const_iterator it = channel_group.channels_.find(channel_name);
+  return it != channel_group.channels_.end();
 }
 
 template<typename CHANNEL_DATA_TYPE>
-CHANNEL_DATA_TYPE& addChannel(const std::string& channelName,
-                              ChannelGroup* channels) {
-  CHECK_NOTNULL(channels);
-  ChannelGroup::iterator it = channels->find(channelName);
-  CHECK(it == channels->end()) << "Channelgroup already "
-      "contains channel " << channelName;
+CHANNEL_DATA_TYPE& addChannel(const std::string& channel_name,
+                              ChannelGroup* channel_group) {
+  CHECK_NOTNULL(channel_group);
+  std::lock_guard<std::mutex> lock(channel_group->m_channels_);
+  ChannelMap::iterator it = channel_group->channels_.find(channel_name);
+  CHECK(it == channel_group->channels_.end()) << "Channelgroup already "
+      "contains channel " << channel_name;
   typedef Channel<CHANNEL_DATA_TYPE> DerivedChannel;
   std::shared_ptr < DerivedChannel > derived(new DerivedChannel);
-  (*channels)[channelName] = derived;
+  channel_group->channels_[channel_name] = derived;
   return derived->value_;
 }
 }  // namespace channels
