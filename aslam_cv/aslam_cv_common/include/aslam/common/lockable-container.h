@@ -139,12 +139,15 @@ class LockableContainer {
 template<typename DataType>
 class LockableContainer<DataType>::ScopedLock {
  public:
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(ScopedLock);
   friend LockableContainer<DataType>;
   ScopedLock() = delete;
 
   inline ScopedLock(const LockableContainer<DataType>* underlying_lockable_container) :
     underlying_lockable_container_(underlying_lockable_container) {
-    CHECK(underlying_lockable_container != nullptr) << "The managed object has been released.";
+    CHECK_NOTNULL(underlying_lockable_container);
+    CHECK(underlying_lockable_container->data_.get() != nullptr)
+        << "The managed object has been released.";
     underlying_lockable_container_->lock();
   }
 
@@ -167,9 +170,14 @@ class LockableContainer<DataType>::LockedAccess {
   inline ~LockedAccess() { underlying_lockable_container_->unlock(); }
 
  protected:
+  LockedAccess(const LockedAccess&) = default;
+  LockedAccess& operator=(const LockedAccess&) = default;
+
   inline LockedAccess(LockableContainer<DataType>* underlying_lockable_container)
       : underlying_lockable_container_(underlying_lockable_container) {
-    CHECK(underlying_lockable_container != nullptr) << "The managed object has been released.";
+    CHECK_NOTNULL(underlying_lockable_container);
+    CHECK(underlying_lockable_container->data_.get() != nullptr)
+        << "The managed object has been released.";
     underlying_lockable_container_->lock();
   }
 
@@ -194,9 +202,14 @@ class LockableContainer<DataType>::ConstLockedAccess {
   inline ~ConstLockedAccess() { underlying_lockable_container_->unlock(); }
 
  protected:
+  ConstLockedAccess(const ConstLockedAccess&) = default;
+  ConstLockedAccess& operator=(const ConstLockedAccess&) = default;
+
   inline ConstLockedAccess(const LockableContainer<DataType>* underlying_lockable_container)
       : underlying_lockable_container_(underlying_lockable_container) {
-    CHECK(underlying_lockable_container != nullptr) << "The managed object has been released.";
+    CHECK_NOTNULL(underlying_lockable_container);
+    CHECK(underlying_lockable_container->data_.get() != nullptr)
+        << "The managed object has been released.";
     underlying_lockable_container_->lock();
   }
 
