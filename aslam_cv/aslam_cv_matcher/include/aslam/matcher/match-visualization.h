@@ -16,6 +16,23 @@ enum class FeatureVisualizationType {
   kInSitu       // Images side by side, matches joined within both images.
 };
 
+void getCvKeyPointsFromVisualFrame(const aslam::VisualFrame& frame,
+                                   std::vector<cv::KeyPoint>* cv_key_points);
+
+void drawVisualFrameKeyPointsAndMatches(const aslam::VisualFrame& frame_A,
+                                        const aslam::VisualFrame& frame_B,
+                                        aslam::FeatureVisualizationType visualization_type,
+                                        const aslam::Matches& matches_A_B,
+                                        cv::Mat* image_w_feature_matches);
+
+void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
+                                        const Eigen::Matrix2Xd key_points_A,
+                                        const cv::Mat& image_B,
+                                        const Eigen::Matrix2Xd key_points_B,
+                                        aslam::FeatureVisualizationType type,
+                                        const aslam::Matches& matches_A_B,
+                                        cv::Mat* image_w_feature_matches);
+
 void drawKeyPointsAndMatches(const cv::Mat& image_A,
                              const std::vector<cv::KeyPoint>& key_points_A,
                              const cv::Mat& image_B,

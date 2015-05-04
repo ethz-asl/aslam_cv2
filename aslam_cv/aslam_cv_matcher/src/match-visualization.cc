@@ -6,7 +6,92 @@
 
 #include "aslam/matcher/match-visualization.h"
 
+#include <aslam/frames/visual-frame.h>
+
 namespace aslam {
+
+
+void getCvKeyPointsFromVisualFrame(const aslam::VisualFrame& frame,
+                                   std::vector<cv::KeyPoint>* cv_key_points){
+  CHECK_NOTNULL(cv_key_points)->clear();
+  cv_key_points->reserve(frame.getNumKeypointMeasurements());
+  for(unsigned int i = 0; i < frame.getNumKeypointMeasurements(); ++i){
+    Eigen::Matrix2Xd key_point = frame.getKeypointMeasurement(i);
+    cv_key_points->emplace_back(
+        cv::KeyPoint(key_point(0,0),
+                     key_point(1,0),
+                     frame.getKeypointScale(i),
+                     frame.getKeypointOrientation(i),
+                     frame.getKeypointScore(i), 0, -1));
+  }
+}
+
+void drawVisualFrameKeyPointsAndMatches(const aslam::VisualFrame& frame_A,
+                                        const aslam::VisualFrame& frame_B,
+                                        aslam::FeatureVisualizationType type,
+                                        const aslam::Matches& matches_A_B,
+                                        cv::Mat* image_w_feature_matches) {
+  CHECK_NOTNULL(image_w_feature_matches);
+
+  cv::Mat image_A = frame_A.getRawImage();
+  cv::Mat image_B = frame_B.getRawImage();
+  if(image_A.empty() || image_B.empty()){
+    LOG(FATAL) << "Cannot draw key points. No images found.";
+  }
+
+  // Extract cv::KeyPoints
+  std::vector<cv::KeyPoint> cv_key_points_A, cv_key_points_B;
+  getCvKeyPointsFromVisualFrame(frame_A, &cv_key_points_A);
+  getCvKeyPointsFromVisualFrame(frame_B, &cv_key_points_B);
+
+  // Extract matches
+  std::vector<cv::DMatch> cv_matches_A_B;
+  if(!matches_A_B.empty()){
+    cv_matches_A_B.reserve(matches_A_B.size());
+    for(aslam::Match match: matches_A_B){
+      cv_matches_A_B.emplace_back(cv::DMatch(match.first, match.second, 0.0));
+    }
+  }
+
+  drawKeyPointsAndMatches(image_A, cv_key_points_A, image_B, cv_key_points_B,
+                          cv_matches_A_B, type, image_w_feature_matches);
+}
+
+void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
+                                        const Eigen::Matrix2Xd key_points_A,
+                                        const cv::Mat& image_B,
+                                        const Eigen::Matrix2Xd key_points_B,
+                                        aslam::FeatureVisualizationType type,
+                                        const aslam::Matches& matches_A_B,
+                                        cv::Mat* image_w_feature_matches) {
+  CHECK_NOTNULL(image_w_feature_matches);
+
+  // Extract cv::KeyPoints
+  std::vector<cv::KeyPoint> cv_key_points_A;
+  cv_key_points_A.reserve(key_points_A.size());
+  for(int i = 0; i < key_points_A.cols(); ++i){
+    cv::KeyPoint key_point_A(key_points_A(0,i), key_points_A(1,i), 0.0f, -1.0, 0.0, 0, -1);
+    cv_key_points_A.emplace_back(key_point_A);
+  }
+  std::vector<cv::KeyPoint> cv_key_points_B;
+  cv_key_points_B.reserve(key_points_B.size());
+  for(int i = 0; i < key_points_B.cols(); ++i){
+    cv::KeyPoint key_point_B(key_points_B(0,i), key_points_B(1,i), 0.0f, -1.0, 0.0, 0, -1);
+    cv_key_points_B.emplace_back(key_point_B);
+  }
+
+  // Extract matches
+  std::vector<cv::DMatch> cv_matches_A_B;
+  if(!matches_A_B.empty()){
+    cv_matches_A_B.reserve(matches_A_B.size());
+    for(aslam::Match match: matches_A_B){
+      cv_matches_A_B.emplace_back(cv::DMatch(match.first, match.second, 0.0));
+    }
+  }
+
+  drawKeyPointsAndMatches(image_A, cv_key_points_A, image_B, cv_key_points_B,
+                          cv_matches_A_B, type, image_w_feature_matches);
+}
 
 void drawKeyPointsAndMatches(const cv::Mat& image_A,
                              const std::vector<cv::KeyPoint>& key_points_A,
