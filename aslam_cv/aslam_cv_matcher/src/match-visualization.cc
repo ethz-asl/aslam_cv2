@@ -48,7 +48,7 @@ void drawVisualFrameKeyPointsAndMatches(const aslam::VisualFrame& frame_A,
   std::vector<cv::DMatch> cv_matches_A_B;
   if(!matches_A_B.empty()){
     cv_matches_A_B.reserve(matches_A_B.size());
-    for(aslam::Match match: matches_A_B){
+    for(const aslam::Match& match: matches_A_B){
       cv_matches_A_B.emplace_back(cv::DMatch(match.first, match.second, 0.0));
     }
   }
@@ -58,12 +58,12 @@ void drawVisualFrameKeyPointsAndMatches(const aslam::VisualFrame& frame_A,
 }
 
 void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
-                                        const Eigen::Matrix2Xd key_points_A,
-                                        const cv::Mat& image_B,
-                                        const Eigen::Matrix2Xd key_points_B,
-                                        aslam::FeatureVisualizationType type,
-                                        const aslam::Matches& matches_A_B,
-                                        cv::Mat* image_w_feature_matches) {
+                                  const Eigen::Matrix2Xd& key_points_A,
+                                  const cv::Mat& image_B,
+                                  const Eigen::Matrix2Xd& key_points_B,
+                                  aslam::FeatureVisualizationType type,
+                                  const aslam::Matches& matches_A_B,
+                                  cv::Mat* image_w_feature_matches) {
   CHECK_NOTNULL(image_w_feature_matches);
 
   // Extract cv::KeyPoints
@@ -84,7 +84,7 @@ void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
   std::vector<cv::DMatch> cv_matches_A_B;
   if(!matches_A_B.empty()){
     cv_matches_A_B.reserve(matches_A_B.size());
-    for(aslam::Match match: matches_A_B){
+    for(const aslam::Match& match: matches_A_B){
       cv_matches_A_B.emplace_back(cv::DMatch(match.first, match.second, 0.0));
     }
   }
@@ -151,9 +151,9 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
                     cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
   // Draw matches.
-  for (cv::DMatch match_A_B : matches_A_B) {
-    int idx_A = match_A_B.queryIdx;
-    int idx_B = match_A_B.trainIdx;
+  for (const cv::DMatch& match_A_B : matches_A_B) {
+    const int idx_A = match_A_B.queryIdx;
+    const int idx_B = match_A_B.trainIdx;
     CHECK_LT(idx_A, key_points_A.size());
     CHECK_LT(idx_B, key_points_B.size());
     const cv::KeyPoint& key_point_A = key_points_A[idx_A];
