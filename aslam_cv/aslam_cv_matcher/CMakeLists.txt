@@ -9,6 +9,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 set(HEADERS
   include/aslam/matcher/match.h
+  include/aslam/matcher/match-visualization.h
   include/aslam/matcher/matching-engine.h
   include/aslam/matcher/matching-engine-exclusive.h
   include/aslam/matcher/matching-engine-greedy.h
@@ -19,6 +20,7 @@ set(HEADERS
 
 set(SOURCES
   src/match.cc
+  src/match-visualization.cc
   src/matching-problem-frame-to-frame.cc
 )
 
