@@ -145,12 +145,15 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
   cvtColor(image_B, sub_image_B, CV_GRAY2BGR);
 
   // Draw keypoints.
-  cv::drawKeypoints(sub_image_A, key_points_A, sub_image_A, kGreen,
+  cv::drawKeypoints(sub_image_A, key_points_A, sub_image_A, kRed,
                     cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
   cv::drawKeypoints(sub_image_B, key_points_B, sub_image_B, kRed,
                     cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
   // Draw matches.
+  std::vector<cv::KeyPoint> matched_keypoint_A, matched_keypoint_B;
+  matched_keypoint_A.reserve(matches_A_B.size());
+  matched_keypoint_B.reserve(matches_A_B.size());
   for (const cv::DMatch& match_A_B : matches_A_B) {
     const int idx_A = match_A_B.queryIdx;
     const int idx_B = match_A_B.trainIdx;
@@ -158,6 +161,8 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
     CHECK_LT(idx_B, key_points_B.size());
     const cv::KeyPoint& key_point_A = key_points_A[idx_A];
     const cv::KeyPoint& key_point_B = key_points_B[idx_B];
+    matched_keypoint_A.emplace_back(key_point_A);
+    matched_keypoint_B.emplace_back(key_point_B);
     cv::Point start(cvRound(key_point_A.pt.x), cvRound(key_point_A.pt.y));
     cv::Point end(cvRound(key_point_B.pt.x), cvRound(key_point_B.pt.y));
     switch (type) {
@@ -178,5 +183,9 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
                    << static_cast<int>(type);
     }
   }
+  cv::drawKeypoints(sub_image_A, matched_keypoint_A, sub_image_A, kGreen,
+                    cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+  cv::drawKeypoints(sub_image_B, matched_keypoint_B, sub_image_B, kGreen,
+                    cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 }
 }  // namespace aslam
