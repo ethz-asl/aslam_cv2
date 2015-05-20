@@ -46,7 +46,7 @@ void BriskVisualPipeline::initializeBrisk(size_t octaves,
 #if __arm__
   // \TODO(slynen): Currently no Harris on ARM. Adapt if we port it to ARM.
   static const int AstThreshold = 70;
-  detector_.reset(new brisk::BriskFeatureDetector(AstThreshold) );
+  detector_.reset(new brisk::BriskFeatureDetector(AstThreshold));
 #else
   detector_.reset(
       new brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>(

@@ -32,11 +32,11 @@ public:
   /// \param[in] octaves            Number of octaves for brisk/freak scale computation.
   /// \param[in] uniformity_radius  Gets multiplied on the keypoint scale and determines
   ///                               the distance to the next neighboring keypoint.
-  /// \param[in] absolute_threshold The brisk absolute threshold.
+  /// \param[in] absolute_threshold The harris absolute threshold.
   ///                               Low makes more keypoints.
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
-  /// \param[in] rotation_invariant Should Brisk estimate the keypoint orientation?
-  /// \param[in] scale_invariant    Should Brisk estimate the keypoint scale?
+  /// \param[in] rotation_invariant Should freak estimate the keypoint orientation?
+  /// \param[in] scale_invariant    Should freak estimate the keypoint scale?
   /// \param[in] pattern_scale Scale of the pattern for the freak feature descriptor.
   FreakVisualPipeline(const Camera::ConstPtr& camera, bool copy_images, size_t octaves,
                       double uniformity_radius, double absolute_threshold,
@@ -51,7 +51,7 @@ public:
   /// \param[in] octaves            Number of octaves for brisk/freak scale computation.
   /// \param[in] uniformity_radius  Gets multiplied on the keypoint scale and determines
   ///                               the distance to the next neighboring keypoint.
-  /// \param[in] absolute_threshold The Brisk absolute threshold.
+  /// \param[in] absolute_threshold The harris absolute threshold.
   ///                               Low makes more keypoints.
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
   /// \param[in] rotation_invariant Should freak estimate the keypoint orientation?
@@ -69,7 +69,7 @@ public:
   /// \param[in] octaves            Number of octaves for FREAK scale computation.
   /// \param[in] uniformity_radius  Gets multiplied on the keypoint scale and determines
   ///                               the distance to the next neighboring keypoint.
-  /// \param[in] absolute_threshold The brisk absolute threshold.
+  /// \param[in] absolute_threshold The harris absolute threshold.
   ///                               Low makes more keypoints.
   /// \param[in] max_number_of_keypoints The maximum number of keypoints to return.
   /// \param[in] rotation_invariant Should freak estimate the keypoint orientation?
