@@ -14,6 +14,7 @@ set(HEADERS
   include/aslam/pipeline/visual-npipeline.h
   include/aslam/pipeline/visual-pipeline.h
   include/aslam/pipeline/visual-pipeline-brisk.h
+  include/aslam/pipeline/visual-pipeline-freak.h
   include/aslam/pipeline/visual-pipeline-null.h
 )
 
@@ -22,6 +23,7 @@ set(SOURCES
   src/undistorter-mapped.cc
   src/visual-npipeline.cc
   src/visual-pipeline-brisk.cc
+  src/visual-pipeline-freak.cc
   src/visual-pipeline-null.cc
   src/visual-pipeline.cc
 )
