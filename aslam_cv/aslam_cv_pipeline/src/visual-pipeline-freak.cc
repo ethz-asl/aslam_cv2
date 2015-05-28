@@ -1,9 +1,10 @@
 #include <aslam/pipeline/visual-pipeline-freak.h>
-
 #include <aslam/frames/visual-frame.h>
 #include <aslam/pipeline/undistorter.h>
 #include <brisk/brisk.h>
 #include <glog/logging.h>
+#include "opencv2/nonfree/features2d.hpp"
+#include <opencv2/nonfree/nonfree.hpp>
 
 namespace aslam {
 
@@ -11,44 +12,62 @@ FreakVisualPipeline::FreakVisualPipeline() {
   // Just for serialization. Not meant to be used.
 }
 
-FreakVisualPipeline::FreakVisualPipeline(const Camera::ConstPtr& camera, bool copy_images,
-                                         size_t octaves, double uniformity_radius,
-                                         double absolute_threshold, size_t max_number_of_keypoints,
-                                         bool rotation_invariant, bool scale_invariant, float pattern_scale)
-    : VisualPipeline(camera, camera, copy_images) {
-  initializeFreak(octaves, uniformity_radius, absolute_threshold, max_number_of_keypoints,
-                  rotation_invariant, scale_invariant, pattern_scale);
+FreakVisualPipeline::FreakVisualPipeline(const Camera::ConstPtr& camera,
+                                         bool copy_images,
+                                         size_t num_octaves,
+                                         double hessian_threshold,
+                                         int num_octave_layers,
+                                         bool extended,
+                                         bool rotation_invariant,
+                                         bool scale_invariant,
+                                         float pattern_scale)
+: VisualPipeline(camera, camera, copy_images) {
+  if (cv::initModule_nonfree()) {
+    initializeFreak(num_octaves, hessian_threshold, num_octave_layers, extended,
+                    rotation_invariant, scale_invariant, pattern_scale);
+  } else {
+    LOG(ERROR) << "Could not initialize opencv nonfree module.";
+  }
 }
 
-FreakVisualPipeline::FreakVisualPipeline(std::unique_ptr<Undistorter>& preprocessing,
-                                         bool copy_images, size_t octaves, double uniformity_radius,
-                                         double absolute_threshold, size_t max_number_of_keypoints,
-                                         bool rotation_invariant, bool scale_invariant, float pattern_scale)
-    : VisualPipeline(preprocessing, copy_images) {
-  initializeFreak(octaves, uniformity_radius, absolute_threshold, max_number_of_keypoints,
-                  rotation_invariant, scale_invariant, pattern_scale);
+FreakVisualPipeline::FreakVisualPipeline(
+                                   std::unique_ptr<Undistorter>& preprocessing,
+                                         bool copy_images, size_t num_octaves,
+                                         double hessian_threshold,
+                                         int num_octave_layers,
+                                         bool extended,
+                                         bool rotation_invariant,
+                                         bool scale_invariant,
+                                         float pattern_scale)
+: VisualPipeline(preprocessing, copy_images) {
+  if (cv::initModule_nonfree()) {
+    initializeFreak(num_octaves, hessian_threshold, num_octave_layers, extended,
+                    rotation_invariant, scale_invariant, pattern_scale);
+  } else {
+    LOG(ERROR) << "Could not initialize opencv nonfree module.";
+  }
 }
 
 FreakVisualPipeline::~FreakVisualPipeline() { }
 
-void FreakVisualPipeline::initializeFreak(size_t octaves,
-                                          double uniformity_radius,
-                                          double absolute_threshold,
-                                          size_t max_number_of_keypoints,
+void FreakVisualPipeline::initializeFreak(size_t num_octaves,
+                                          double hessian_threshold,
+                                          int num_octave_layers,
+                                          bool extended,
                                           bool rotation_invariant,
                                           bool scale_invariant,
                                           float pattern_scale) {
-  octaves_ = octaves;
-  uniformity_radius_ = uniformity_radius;
-  absolute_threshold_ = absolute_threshold;
-  max_number_of_keypoints_ = max_number_of_keypoints;
+  octaves_ = num_octaves;
+  num_octave_layers_ =  num_octave_layers;
+  hessian_threshold_ = hessian_threshold;
+  extended_ = extended;
   rotation_invariant_ = rotation_invariant;
   scale_invariant_ = scale_invariant;
   pattern_scale_ = pattern_scale;
 
-  detector_.reset(
-      new brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>(
-          octaves_, uniformity_radius_, absolute_threshold_, max_number_of_keypoints_)  );
+  detector_.reset(new  cv::SurfDescriptorExtractor(hessian_threshold_,
+                                                 octaves_, num_octave_layers_,
+                                                 extended_, rotation_invariant_));
   extractor_.reset(new cv::FREAK(rotation_invariant_,
                                  scale_invariant_, pattern_scale_, octaves_));
 }
