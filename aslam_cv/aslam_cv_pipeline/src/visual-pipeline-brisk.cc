@@ -45,8 +45,8 @@ void BriskVisualPipeline::initializeBrisk(size_t octaves,
   scale_invariant_ = scale_invariant;
 #if __arm__
   // \TODO(slynen): Currently no Harris on ARM. Adapt if we port it to ARM.
-  static const int AstThreshold = 70;
-  detector_.reset(new brisk::BriskFeatureDetector(AstThreshold));
+  static const int kAstThreshold = 70;
+  detector_.reset(new brisk::BriskFeatureDetector(kAstThreshold));
 #else
   detector_.reset(
       new brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>(
@@ -67,7 +67,7 @@ void BriskVisualPipeline::processFrameImpl(const cv::Mat& image, VisualFrame* fr
   if(!keypoints.empty()) {
     extractor_->compute(image, keypoints, descriptors);
   } else {
-    descriptors = cv::Mat(0,0,CV_8UC1);
+    descriptors = cv::Mat(0, 0, CV_8UC1);
     LOG(WARNING) << "Frame produced no keypoints:\n" << *frame;
   }
   // Note: It is important that

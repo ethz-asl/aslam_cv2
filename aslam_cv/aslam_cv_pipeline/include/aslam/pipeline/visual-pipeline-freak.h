@@ -79,7 +79,7 @@ public:
                        double absolute_threshold, size_t max_number_of_keypoints,
                        bool rotation_invariant, bool scale_invariant, float pattern_scale);
 
-protected:
+
   /// \brief Process the frame and fill the results into the frame variable
   ///
   /// The top level function will already fill in the timestamps and the output camera.
