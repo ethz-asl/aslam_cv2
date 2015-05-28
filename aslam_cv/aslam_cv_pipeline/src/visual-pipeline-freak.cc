@@ -46,15 +46,9 @@ void FreakVisualPipeline::initializeFreak(size_t octaves,
   scale_invariant_ = scale_invariant;
   pattern_scale_ = pattern_scale;
 
-#if __arm__
-  // \TODO(slynen): Currently no Harris on ARM. Adapt if we port it to ARM.
-  static const int AstThreshold = 70;
-  detector_.reset(new brisk::BriskFeatureDetector(AstThreshold));
-#else
   detector_.reset(
       new brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>(
           octaves_, uniformity_radius_, absolute_threshold_, max_number_of_keypoints_)  );
-#endif
   extractor_.reset(new cv::FREAK(rotation_invariant_,
                                  scale_invariant_, pattern_scale_, octaves_));
 }
@@ -69,7 +63,7 @@ void FreakVisualPipeline::processFrameImpl(const cv::Mat& image, VisualFrame* fr
   if(!keypoints.empty()) {
     extractor_->compute(image, keypoints, descriptors);
   } else {
-    descriptors = cv::Mat(0,0,CV_8UC1);
+    descriptors = cv::Mat(0, 0, CV_8UC1);
     LOG(WARNING) << "Frame produced no keypoints:\n" << *frame;
   }
   // Note: It is important that
