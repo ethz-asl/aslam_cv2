@@ -3,7 +3,7 @@
 #include <aslam/pipeline/undistorter.h>
 #include <brisk/brisk.h>
 #include <glog/logging.h>
-#include "opencv2/nonfree/features2d.hpp"
+#include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/nonfree/nonfree.hpp>
 
 namespace aslam {
