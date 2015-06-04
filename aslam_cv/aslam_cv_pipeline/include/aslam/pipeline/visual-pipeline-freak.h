@@ -32,16 +32,13 @@ public:
   /// \param[in] num_octaves            Number of octaves for surf/freak scale computation.
   /// \param[in] hessian_threshold  Threshold for hessian keypoint detector used in SURF.
   /// \param[in] num_octave_layers Number of octave layers within each octave.
-  /// \param[in] extended   Extended descriptor flag (true - use extended
-  ///                         128-element descriptors, false - use 64-element descriptors).
   /// \param[in] rotation_invariant Should surf/freak compute the keypoint orientation?
   /// \param[in] scale_invariant    Should freak estimate the keypoint scale?
   /// \param[in] pattern_scale Scale of the pattern for the freak feature descriptor.
   FreakVisualPipeline(const Camera::ConstPtr& camera, bool copy_images,
                       size_t num_octaves, double hessian_threshold,
-                      int num_octave_layers, bool extended,
-                      bool rotation_invariant, bool scale_invariant,
-                      float pattern_scale);
+                      int num_octave_layers, bool rotation_invariant,
+                      bool scale_invariant, float pattern_scale);
 
   /// \brief Initialize the surf/freak pipeline with a preprocessing pipeline.
   ///
@@ -51,16 +48,14 @@ public:
   /// \param[in] num_octaves            Number of octaves for surf/freak scale computation.
   /// \param[in] hessian_threshold  Threshold for hessian keypoint detector used in SURF.
   /// \param[in] num_octave_layers Number of octave layers within each octave.
-  /// \param[in] extended   Extended descriptor flag (true - use extended
-  ///                         128-element descriptors, false - use 64-element descriptors).
   /// \param[in] rotation_invariant Should surf/freak compute the keypoint orientation?
   /// \param[in] scale_invariant    Should freak estimate the keypoint scale?
   /// \param[in] pattern_scale Scale of the pattern for the freak feature descriptor.
   FreakVisualPipeline(std::unique_ptr<Undistorter>& preprocessing,
                       bool copy_images, size_t num_octaves,
                       double hessian_threshold, int num_octave_layers,
-                      bool extended, bool rotation_invariant,
-                      bool scale_invariant, float pattern_scale);
+                      bool rotation_invariant, bool scale_invariant,
+                      float pattern_scale);
 
   virtual ~FreakVisualPipeline();
 
@@ -69,15 +64,12 @@ public:
   /// \param[in] num_octaves            Number of octaves for surf/freak scale computation.
   /// \param[in] hessian_threshold  Threshold for hessian keypoint detector used in SURF.
   /// \param[in] num_octave_layers Number of octave layers within each octave.
-  /// \param[in] extended   Extended descriptor flag (true - use extended
-  ///                         128-element descriptors, false - use 64-element descriptors).
   /// \param[in] rotation_invariant Should surf/freak compute the keypoint orientation?
   /// \param[in] scale_invariant    Should freak estimate the keypoint scale?
   /// \param[in] pattern_scale Scale of the pattern for the freak feature descriptor.
   void initializeFreak(size_t num_octaves, double hessian_threshold,
-                          int num_octave_layers, bool extended,
-                          bool rotation_invariant, bool scale_invariant,
-                          float pattern_scale);
+                          int num_octave_layers, bool rotation_invariant,
+                          bool scale_invariant, float pattern_scale);
 
 
   /// \brief Process the frame and fill the results into the frame variable
@@ -94,7 +86,6 @@ private:
   size_t octaves_;
   double hessian_threshold_;
   int num_octave_layers_;
-  bool extended_;
   bool rotation_invariant_;
   bool scale_invariant_;
   float pattern_scale_;
