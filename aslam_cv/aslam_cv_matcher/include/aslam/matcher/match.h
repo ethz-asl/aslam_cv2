@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include <aslam/common/pose-types.h>
 #include <aslam/common/stl-helpers.h>
 #include <opencv2/features2d/features2d.hpp>
 
@@ -121,6 +122,13 @@ size_t extractMatchesFromTrackIdChannels(const aslam::VisualNFrame& nframe_kp1,
 double getMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
                                     const aslam::VisualNFrame& nframe_k,
                                     const std::vector<aslam::Matches>& matches_kp1_kp);
+
+/// Get the median pixel disparity for all matches, taking into account the relative
+/// orientation of the frames.
+double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
+                                             const aslam::VisualNFrame& nframe_k,
+                                             const std::vector<aslam::Matches>& matches_kp1_kp,
+                                             const aslam::Quaternion& q_kp1_k);
 
 /// Return the normalized bearing vectors for a list of single camera matches.
 void getBearingVectorsFromMatches(
