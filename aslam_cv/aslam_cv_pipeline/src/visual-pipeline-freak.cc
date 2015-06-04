@@ -14,15 +14,15 @@ FreakVisualPipeline::FreakVisualPipeline() {
 
 FreakVisualPipeline::FreakVisualPipeline(const Camera::ConstPtr& camera,
                                          bool copy_images,
+                                         int hessian_threshold,
                                          size_t num_octaves,
-                                         double hessian_threshold,
                                          int num_octave_layers,
                                          bool rotation_invariant,
                                          bool scale_invariant,
                                          float pattern_scale)
 : VisualPipeline(camera, camera, copy_images) {
   if (cv::initModule_nonfree()) {
-    initializeFreak(num_octaves, hessian_threshold, num_octave_layers,
+    initializeFreak(hessian_threshold, num_octaves, num_octave_layers,
                     rotation_invariant, scale_invariant, pattern_scale);
   } else {
     LOG(ERROR) << "Could not initialize opencv nonfree module.";
@@ -31,15 +31,16 @@ FreakVisualPipeline::FreakVisualPipeline(const Camera::ConstPtr& camera,
 
 FreakVisualPipeline::FreakVisualPipeline(
                                    std::unique_ptr<Undistorter>& preprocessing,
-                                         bool copy_images, size_t num_octaves,
-                                         double hessian_threshold,
+                                         bool copy_images,
+                                         int hessian_threshold,
+                                         size_t num_octaves,
                                          int num_octave_layers,
                                          bool rotation_invariant,
                                          bool scale_invariant,
                                          float pattern_scale)
 : VisualPipeline(preprocessing, copy_images) {
   if (cv::initModule_nonfree()) {
-    initializeFreak(num_octaves, hessian_threshold, num_octave_layers,
+    initializeFreak(hessian_threshold, num_octaves, num_octave_layers,
                     rotation_invariant, scale_invariant, pattern_scale);
   } else {
     LOG(ERROR) << "Could not initialize opencv nonfree module.";
@@ -48,15 +49,15 @@ FreakVisualPipeline::FreakVisualPipeline(
 
 FreakVisualPipeline::~FreakVisualPipeline() { }
 
-void FreakVisualPipeline::initializeFreak(size_t num_octaves,
-                                          double hessian_threshold,
+void FreakVisualPipeline::initializeFreak(int hessian_threshold,
+                                          size_t num_octaves,
                                           int num_octave_layers,
                                           bool rotation_invariant,
                                           bool scale_invariant,
                                           float pattern_scale) {
+  hessian_threshold_ = hessian_threshold;
   octaves_ = num_octaves;
   num_octave_layers_ =  num_octave_layers;
-  hessian_threshold_ = hessian_threshold;
   rotation_invariant_ = rotation_invariant;
   scale_invariant_ = scale_invariant;
   pattern_scale_ = pattern_scale;
