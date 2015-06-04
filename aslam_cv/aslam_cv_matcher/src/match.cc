@@ -86,6 +86,16 @@ size_t extractMatchesFromTrackIdChannels(const aslam::VisualNFrame& nframe_kp1,
 double getMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
                                     const aslam::VisualNFrame& nframe_k,
                                     const std::vector<aslam::Matches>& matches_kp1_kp) {
+  aslam::Quaternion q_kp1_kp;
+  q_kp1_kp.setIdentity();
+  return getUnrotatedMatchPixelDisparityMedian(
+      nframe_kp1, nframe_k, matches_kp1_kp, q_kp1_kp);
+}
+
+double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
+                                    const aslam::VisualNFrame& nframe_k,
+                                    const std::vector<aslam::Matches>& matches_kp1_kp,
+                                    const aslam::Quaternion& q_kp1_k) {
   CHECK_EQ(nframe_kp1.getNCameraShared().get(), nframe_k.getNCameraShared().get());
 
   const size_t num_cameras = nframe_kp1.getNumCameras();
