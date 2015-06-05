@@ -86,22 +86,75 @@ size_t extractMatchesFromTrackIdChannels(const aslam::VisualNFrame& nframe_kp1,
 double getMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
                                     const aslam::VisualNFrame& nframe_k,
                                     const std::vector<aslam::Matches>& matches_kp1_kp) {
+  aslam::Quaternion q_kp1_kp;
+  q_kp1_kp.setIdentity();
+  return getUnrotatedMatchPixelDisparityMedian(
+      nframe_kp1, nframe_k, matches_kp1_kp, q_kp1_kp);
+}
+
+double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
+                                             const aslam::VisualNFrame& nframe_k,
+                                             const std::vector<aslam::Matches>& matches_kp1_k,
+                                             const aslam::Quaternion& q_kp1_k) {
   CHECK_EQ(nframe_kp1.getNCameraShared().get(), nframe_k.getNCameraShared().get());
 
   const size_t num_cameras = nframe_kp1.getNumCameras();
-  CHECK_EQ(matches_kp1_kp.size(), num_cameras);
-  const size_t num_matches = countRigMatches(matches_kp1_kp);
+  CHECK_EQ(matches_kp1_k.size(), num_cameras);
+  const size_t num_matches = countRigMatches(matches_kp1_k);
   std::vector<double> disparity_px(num_matches);
 
-  size_t match_idx = 0;
-  for (size_t cam_idx = 0; cam_idx < num_cameras; ++cam_idx) {
-    const Eigen::Matrix2Xd& keypoints_kp1 = nframe_kp1.getFrame(cam_idx).getKeypointMeasurements();
-    const Eigen::Matrix2Xd& keypoints_k = nframe_k.getFrame(cam_idx).getKeypointMeasurements();
-    for (const aslam::Match& match_kp1_kp : matches_kp1_kp[cam_idx]) {
-      CHECK_LT(static_cast<int>(match_kp1_kp.first), keypoints_kp1.cols());
-      CHECK_LT(static_cast<int>(match_kp1_kp.second), keypoints_k.cols());
-      disparity_px[match_idx++] = (keypoints_kp1.col(match_kp1_kp.first)
-          - keypoints_k.col(match_kp1_kp.second)).norm();
+  size_t match_idx = 0u;
+  if (q_kp1_k.w() == 1.0) {
+    // Case with no rotation specified, directly calculate the disparity from the image plane
+    // measurements.
+    for (size_t cam_idx = 0u; cam_idx < num_cameras; ++cam_idx) {
+      const Eigen::Matrix2Xd& keypoints_kp1 = nframe_kp1.getFrame(cam_idx).getKeypointMeasurements();
+      const Eigen::Matrix2Xd& keypoints_k = nframe_k.getFrame(cam_idx).getKeypointMeasurements();
+      for (const aslam::Match& match_kp1_kp : matches_kp1_k[cam_idx]) {
+        CHECK_LT(static_cast<int>(match_kp1_kp.first), keypoints_kp1.cols());
+        CHECK_LT(static_cast<int>(match_kp1_kp.second), keypoints_k.cols());
+        disparity_px[match_idx++] = (keypoints_kp1.col(match_kp1_kp.first)
+            - keypoints_k.col(match_kp1_kp.second)).norm();
+      }
+    }
+  } else {
+    // Non-identity rotation case.
+    for (size_t cam_idx = 0u; cam_idx < num_cameras; ++cam_idx) {
+      std::vector<size_t> keypoint_indices_k(matches_kp1_k[cam_idx].size());
+      size_t camera_match_idx = 0u;
+      for (const aslam::Match& match_kp1_kp : matches_kp1_k[cam_idx]) {
+        CHECK_LT(static_cast<int>(match_kp1_kp.second),
+                 nframe_k.getFrame(cam_idx).getNumKeypointMeasurements());
+        keypoint_indices_k[camera_match_idx++] = match_kp1_kp.second;
+      }
+
+      std::vector<char> success;
+      Eigen::Matrix3Xd bearing_vectors_k =
+          nframe_k.getFrame(cam_idx).getNormalizedBearingVectors(
+              keypoint_indices_k, &success);
+      CHECK_EQ(success.size(), bearing_vectors_k.cols());
+      CHECK_EQ(matches_kp1_k[cam_idx].size(), bearing_vectors_k.cols());
+
+      // Rotate the bearing vectors into the frame_kp1 coordinates.
+      Eigen::Matrix3Xd bearing_vectors_k_kp1 = q_kp1_k.rotate(bearing_vectors_k);
+
+      // Project the bearing vectors to the frame kp1 and calculate the disparity.
+      const Eigen::Matrix2Xd& keypoints_kp1 =
+          nframe_kp1.getFrame(cam_idx).getKeypointMeasurements();
+      for (int i = 0; i < bearing_vectors_k_kp1.cols(); ++i) {
+        if (success[i]) {
+          Eigen::Vector2d rotated_k_keypoint;
+          aslam::ProjectionResult projection_result =
+              nframe_kp1.getCamera(cam_idx).project3(bearing_vectors_k_kp1.col(i),
+                                                     &rotated_k_keypoint);
+          if (projection_result == aslam::ProjectionResult::KEYPOINT_VISIBLE) {
+            const size_t kp1_match_index = matches_kp1_k[cam_idx][i].first;
+            CHECK_LT(static_cast<int>(kp1_match_index), keypoints_kp1.cols());
+            disparity_px[match_idx++] = (keypoints_kp1.col(kp1_match_index)
+                - rotated_k_keypoint).norm();
+          }
+        }
+      }
     }
   }
   CHECK_EQ(match_idx, num_matches);
