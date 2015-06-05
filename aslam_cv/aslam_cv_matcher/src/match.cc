@@ -127,7 +127,7 @@ void getBearingVectorsFromMatches(
     keypoint_indices_k.emplace_back(match_kp1_k.second);
   }
 
-  std::vector<bool> success;
+  std::vector<char> success;
   aslam::common::convertEigenToStlVector(frame_kp1.getNormalizedBearingVectors(
       keypoint_indices_kp1, &success), bearing_vectors_kp1);
   aslam::common::convertEigenToStlVector(frame_k.getNormalizedBearingVectors(
