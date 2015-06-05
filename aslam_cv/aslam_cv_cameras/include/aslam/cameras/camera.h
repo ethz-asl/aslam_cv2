@@ -266,7 +266,7 @@ class Camera {
   /// @param[out] out_success   Were the projections successful?
   virtual void backProject3Vectorized(const Eigen::Ref<const Eigen::Matrix2Xd>& keypoints,
                                       Eigen::Matrix3Xd* out_points_3d,
-                                      std::vector<bool>* out_success) const;
+                                      std::vector<char>* out_success) const;
   /// @}
 
   //////////////////////////////////////////////////////////////
