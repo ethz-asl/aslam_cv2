@@ -223,7 +223,7 @@ TEST(Frame, getNormalizedBearingVectors) {
   keypoint_indices.emplace_back(4);
   keypoint_indices.emplace_back(kNumKeypoints - 1);  // This is the invalid keypoint.
 
-  std::vector<bool> projection_success;
+  std::vector<char> projection_success;
   Eigen::Matrix3Xd bearing_vectors = frame->getNormalizedBearingVectors(keypoint_indices,
                                                                         &projection_success);
 

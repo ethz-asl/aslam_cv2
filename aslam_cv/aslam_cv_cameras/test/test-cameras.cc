@@ -300,7 +300,7 @@ TYPED_TEST(TestCameras, CameraTest_isInvertible) {
   for(size_t n = 0; n < N; ++n) {
     ASSERT_EQ(aslam::ProjectionResult::Status::KEYPOINT_VISIBLE, result[n].getDetailedStatus());
   }
-  std::vector<bool> success;
+  std::vector<char> success;
   this->camera_->backProject3Vectorized(projections3, &points3, &success);
   for(size_t n = 0; n < N; ++n) {
     ASSERT_TRUE(success[n]);
