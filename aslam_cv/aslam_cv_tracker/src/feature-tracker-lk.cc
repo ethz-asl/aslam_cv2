@@ -66,7 +66,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     // Use the rotation to predict keypoints in the next frame.
     Eigen::Matrix3Xd rays;
     Eigen::Matrix2Xd predicted_keypoints;
-    std::vector<bool> projection_successfull;
+    std::vector<char> projection_successfull;
     std::vector<ProjectionResult> projection_result;
     frame_k.getCameraGeometry()->backProject3Vectorized(
         frame_k.getKeypointMeasurements(), &rays, &projection_successfull);
