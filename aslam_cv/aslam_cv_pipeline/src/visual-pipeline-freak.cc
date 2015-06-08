@@ -62,8 +62,8 @@ void FreakVisualPipeline::initializeFreak(size_t num_octaves,
   scale_invariant_ = scale_invariant;
   pattern_scale_ = pattern_scale;
 
-  detector_.reset(new cv::SurfFeatureDetector(octaves_,
-                                              hessian_threshold_,num_octave_layers_));
+  detector_.reset(new cv::SurfFeatureDetector(hessian_threshold_, octaves_,
+                                              num_octave_layers_));
   extractor_.reset(new cv::FREAK(rotation_invariant_,
                                  scale_invariant_, pattern_scale_, octaves_));
 }
