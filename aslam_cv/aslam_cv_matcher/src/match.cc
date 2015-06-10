@@ -9,6 +9,7 @@ namespace aslam {
 
 void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B) {
   CHECK_NOTNULL(matches_A_B)->clear();
+  matches_A_B->reserve(matches_with_score_A_B.size());
   for (const aslam::MatchWithScore& match : matches_with_score_A_B) {
     CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
     CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
@@ -49,8 +50,9 @@ size_t extractMatchesFromTrackIdChannel(const aslam::VisualFrame& frame_kp1,
   }
   CHECK_LE(track_id_kp1_keypoint_idx_kp1_map.size(), frame_kp1.getNumKeypointMeasurements());
 
-  // Create indices matche vector using the lookup table.
+  // Create indices matches vector using the lookup table.
   matches_kp1_kp->clear();
+  matches_kp1_kp->reserve(1000);
   for (int keypoint_idx_k = 0; keypoint_idx_k < track_ids_k.rows(); ++keypoint_idx_k) {
     int track_id_k = track_ids_k(keypoint_idx_k);
     if(track_id_k < 0)
@@ -88,8 +90,7 @@ double getMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
                                     const std::vector<aslam::Matches>& matches_kp1_kp) {
   aslam::Quaternion q_kp1_kp;
   q_kp1_kp.setIdentity();
-  return getUnrotatedMatchPixelDisparityMedian(
-      nframe_kp1, nframe_k, matches_kp1_kp, q_kp1_kp);
+  return getUnrotatedMatchPixelDisparityMedian(nframe_kp1, nframe_k, matches_kp1_kp, q_kp1_kp);
 }
 
 double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
@@ -108,7 +109,8 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
     // Case with no rotation specified, directly calculate the disparity from the image plane
     // measurements.
     for (size_t cam_idx = 0u; cam_idx < num_cameras; ++cam_idx) {
-      const Eigen::Matrix2Xd& keypoints_kp1 = nframe_kp1.getFrame(cam_idx).getKeypointMeasurements();
+      const Eigen::Matrix2Xd& keypoints_kp1 =
+          nframe_kp1.getFrame(cam_idx).getKeypointMeasurements();
       const Eigen::Matrix2Xd& keypoints_k = nframe_k.getFrame(cam_idx).getKeypointMeasurements();
       for (const aslam::Match& match_kp1_kp : matches_kp1_k[cam_idx]) {
         CHECK_LT(static_cast<int>(match_kp1_kp.first), keypoints_kp1.cols());
@@ -175,6 +177,8 @@ void getBearingVectorsFromMatches(
   std::vector<size_t> keypoint_indices_k;
   keypoint_indices_k.reserve(num_matches);
 
+  keypoint_indices_kp1.reserve(matches_kp1_k.size());
+  keypoint_indices_k.reserve(matches_kp1_k.size());
   for (const aslam::Match& match_kp1_k : matches_kp1_k) {
     keypoint_indices_kp1.emplace_back(match_kp1_k.first);
     keypoint_indices_k.emplace_back(match_kp1_k.second);
