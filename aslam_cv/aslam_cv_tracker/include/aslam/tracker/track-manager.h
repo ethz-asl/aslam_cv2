@@ -1,6 +1,7 @@
 #ifndef ASLAM_TRACK_MANAGER_H_
 #define ASLAM_TRACK_MANAGER_H_
 
+#include <mutex>
 #include <unordered_set>
 
 #include <glog/logging.h>
@@ -9,11 +10,33 @@ namespace aslam {
   struct MatchWithScore;
   class VisualNFrame;
 
+  template<typename IdType>
+  class ThreadSafeIdProvider {
+   public:
+    ThreadSafeIdProvider(IdType initial_id) : initial_id_(initial_id) {
+      reset();
+    }
+
+    IdType getNewId() {
+      std::lock_guard<std::mutex> lock(mutex_);
+      return id_++;
+    }
+
+    void reset() {
+      std::lock_guard<std::mutex> lock(mutex_);
+      id_ = initial_id_;
+    }
+
+   private:
+    mutable std::mutex mutex_;
+    IdType id_;
+    IdType initial_id_;
+  };
+
   /// \brief The Track manager assigns track ids to the given matches with different strategies.
   class TrackManager {
    public:
-    TrackManager() : track_id_provider_(0) {}
-    explicit TrackManager(size_t track_id);
+    TrackManager() {}
     virtual ~TrackManager() {};
 
     /// \brief Writes track ids for a list of matches into two given frames.
@@ -32,8 +55,12 @@ namespace aslam {
     /// @return             Pointer to the track id channel.
     static Eigen::VectorXi* createAndGetTrackIdChannel(VisualFrame* frame);
 
+    static void resetIdProvider() {
+      track_id_provider_.reset();
+    }
+
    protected:
-    size_t track_id_provider_;
+    static ThreadSafeIdProvider<size_t> track_id_provider_;
   };
 
 
@@ -42,8 +69,6 @@ namespace aslam {
   class SimpleTrackManager : public TrackManager {
    public:
     SimpleTrackManager() = default;
-    explicit SimpleTrackManager(size_t start_track_id) :
-        TrackManager(start_track_id) {};
     virtual ~SimpleTrackManager() {};
 
     /// \brief Writes track ids into the given frames for the given matches.
@@ -85,20 +110,6 @@ namespace aslam {
           num_strong_new_tracks_to_force_push),
       match_score_very_strong_new_tracks_threshold_(
           match_score_very_strong_new_tracks_threshold) {}
-    explicit UniformTrackManager(
-                           size_t start_track_id,
-                           size_t num_buckets_root,
-                           size_t max_number_of_weak_new_tracks,
-                           size_t num_strong_new_tracks_to_push,
-                           double match_score_very_strong_new_tracks_threshold)
-    : TrackManager(start_track_id),
-      number_of_tracking_buckets_root_(num_buckets_root),
-      bucket_capacity_(std::floor(
-                       static_cast<double>(max_number_of_weak_new_tracks) /
-                       static_cast<double>(num_buckets_root * num_buckets_root))),
-      number_of_very_strong_new_tracks_to_force_push_(num_strong_new_tracks_to_push),
-      match_score_very_strong_new_tracks_threshold_(
-          match_score_very_strong_new_tracks_threshold) {};
 
     virtual ~UniformTrackManager() {};
 

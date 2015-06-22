@@ -8,9 +8,7 @@
 #include "aslam/tracker/track-manager.h"
 
 namespace aslam {
-  TrackManager::TrackManager(size_t start_track_id) {
-    track_id_provider_ = start_track_id;
-  }
+  ThreadSafeIdProvider<size_t> TrackManager::track_id_provider_(0u);
 
   Eigen::VectorXi* TrackManager::createAndGetTrackIdChannel(VisualFrame* frame) {
     // Load (and create) track id channels.
@@ -57,7 +55,7 @@ namespace aslam {
 
       if ((track_id_apple) < 0 && (track_id_banana < 0)) {
         // Both track ids are < 0. Start a new track.
-        int new_track_id = track_id_provider_++;
+        int new_track_id = track_id_provider_.getNewId();
         apple_track_ids(index_apple) = new_track_id;
         banana_track_ids(index_banana) = new_track_id;
       } else {
@@ -203,7 +201,7 @@ namespace aslam {
       ++buckets[bin_index];
 
       // Write back the applied match.
-      int new_track_id = track_id_provider_++;
+      int new_track_id = track_id_provider_.getNewId();
       apple_track_ids(index_apple) = new_track_id;
       banana_track_ids(index_banana) = new_track_id;
     }
@@ -226,7 +224,7 @@ namespace aslam {
         ++buckets[bin_index];
 
         // Write back the applied match.
-        int new_track_id = track_id_provider_++;
+        int new_track_id = track_id_provider_.getNewId();
         apple_track_ids(index_apple) = new_track_id;
         banana_track_ids(index_banana) = new_track_id;
       }
