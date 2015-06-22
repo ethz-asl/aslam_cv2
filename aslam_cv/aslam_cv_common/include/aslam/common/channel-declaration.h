@@ -56,6 +56,14 @@ bool has_##NAME##_Channel(const ChannelGroup& channel_group) {             \
   ChannelMap::const_iterator it = channels.find(NAME##_CHANNEL);           \
   return it != channels.end();                                             \
 }                                                                          \
+                                                                           \
+void remove_##NAME##_Channel(ChannelGroup* channel_group) {                \
+  CHECK_NOTNULL(channel_group);                                            \
+  std::lock_guard<std::mutex> lock(channel_group->m_channels_);            \
+  ChannelMap& channels = channel_group->channels_;                         \
+  CHECK_EQ(channels.erase(NAME##_CHANNEL), 1u)                             \
+    << "Channelgroup does not contain channel " << NAME##_CHANNEL;         \
+}                                                                          \
 }                                                                          \
 }                                                                          \
 
