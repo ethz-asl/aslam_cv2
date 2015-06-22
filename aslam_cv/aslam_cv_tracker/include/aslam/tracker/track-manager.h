@@ -28,7 +28,7 @@ namespace aslam {
     }
 
    private:
-    mutable std::mutex mutex_;
+    std::mutex mutex_;
     IdType id_;
     IdType initial_id_;
   };
