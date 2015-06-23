@@ -88,8 +88,11 @@ class VisualNFrame {
   /// frames.
   void setNCameras(std::shared_ptr<NCamera> ncameras);
 
-  /// \brief Is a frame set for this index.
+  /// \brief Is a frame set for this index?
   bool isFrameSet(size_t frame_index) const;
+
+  /// \brief Are all the frames set?
+  bool allFramesSet() const;
 
   /// \brief Is the frame at this index valid.
   bool isFrameValid(size_t frame_index) const;

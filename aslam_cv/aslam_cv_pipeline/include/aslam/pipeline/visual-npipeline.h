@@ -161,11 +161,11 @@ class VisualNPipeline {
   /// A flag indicating a system shutdown.
   std::atomic<bool> shutdown_;
 
+  typedef std::map<int64_t, std::shared_ptr<VisualNFrame>> TimestampVisualNFrameMap;
   /// The frames that are in progress.
-  std::map<int64_t, std::shared_ptr<VisualNFrame>> processing_;
-
+  TimestampVisualNFrameMap processing_;
   /// The output queue of completed frames.
-  std::map<int64_t, std::shared_ptr<VisualNFrame>> completed_;
+  TimestampVisualNFrameMap completed_;
 
   /// A thread pool for processing.
   std::shared_ptr<aslam::ThreadPool> thread_pool_;
