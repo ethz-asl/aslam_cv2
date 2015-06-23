@@ -44,8 +44,10 @@ class KeypointIdentifier {
  public:
   inline size_t getKeypointIndex() const { return keypoint_index_; }
   inline size_t getFrameIndex() const { return frame_index_; }
-  inline aslam::NFramesId getNFrameId() const { return nframe_->getId(); }
-  inline aslam::FrameId getFrameId() const { return nframe_->getFrame(frame_index_).getId(); }
+  inline const aslam::NFramesId& getNFrameId() const { return nframe_->getId(); }
+  inline const aslam::FrameId& getFrameId() const {
+    return nframe_->getFrame(frame_index_).getId();
+  }
   inline const aslam::VisualFrame& getFrame() const { return nframe_->getFrame(frame_index_); }
   inline const aslam::VisualNFrame& getNFrame() const { return *nframe_; }
 
