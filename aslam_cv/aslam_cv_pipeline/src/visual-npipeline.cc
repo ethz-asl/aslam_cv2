@@ -4,6 +4,7 @@
 #include <aslam/cameras/ncamera.h>
 #include <aslam/common/memory.h>
 #include <aslam/common/thread-pool.h>
+#include <aslam/common/time.h>
 #include <aslam/frames/visual-nframe.h>
 #include <aslam/pipeline/visual-pipeline.h>
 #include <aslam/pipeline/visual-pipeline-null.h>
@@ -166,10 +167,10 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
       if(it != processing_.begin()) { --it; }
       // Now it points to the first element that is less than the value.
       // Check both this value, and the one >=.
-      int64_t min_time_diff = std::abs(it->first - frame->getTimestampNanoseconds());
+      int64_t min_time_diff = std::fabs(it->first - frame->getTimestampNanoseconds());
       proc_it = it;
       if(++it != processing_.end()) {
-        int64_t time_diff = std::abs(it->first - frame->getTimestampNanoseconds());
+        int64_t time_diff = std::fabs(it->first - frame->getTimestampNanoseconds());
         if(time_diff < min_time_diff) {
           proc_it = it;
           min_time_diff = time_diff;
@@ -183,31 +184,68 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
 
     if(create_new_nframes) {
       std::shared_ptr<VisualNFrame> nframes(new VisualNFrame(output_camera_system_));
-      bool replaced;
-      std::tie(proc_it, replaced) = processing_.insert(
+      bool not_replaced;
+      std::tie(proc_it, not_replaced) = processing_.insert(
           std::make_pair(frame->getTimestampNanoseconds(), nframes)
       );
+      CHECK(not_replaced);
     }
     // Now proc_it points to the correct place in the processing_ list and
     // the NFrame has been created if necessary.
     VisualFrame::Ptr existing_frame = proc_it->second->getFrameShared(camera_index);
-    if(existing_frame) {
-      LOG(WARNING) << "Overwriting a frame at index " << camera_index << ":\n"
+    if (existing_frame) {
+      LOG(ERROR) << "Overwriting a frame at index " << camera_index << ":\n"
           << *existing_frame << "\nwith a new frame: "
           << *frame << "\nbecause the timestamp was the same.";
     }
     proc_it->second->setFrame(camera_index, frame);
 
+    // Find the first index that has N consecutive complete nframes following in chronological
+    // ordering.
+    // E.g. N=3    I I C I C C C C C   (I: incomplete, C: complete)
+    //      idx    0 1 2 3 4 5 6 7 8
+    //                     # --> first index with N complete = 4
+    const size_t kNumMinConsecutiveCompleteThreshold = 2u;
+    int delete_upto_including_index = -1;
+    if (processing_.size() > kNumMinConsecutiveCompleteThreshold + 1) {
+      size_t num_consecutive_complete = 0u;
+
+      size_t idx = 0u;
+      auto it_processing = processing_.begin();
+      while (it_processing != processing_.end()) {
+        bool is_complete = CHECK_NOTNULL(it_processing->second.get())->allFramesSet();
+        if (is_complete) {
+          ++num_consecutive_complete;
+        } else {
+          num_consecutive_complete = 0u;
+        }
+        if (num_consecutive_complete >= kNumMinConsecutiveCompleteThreshold) {
+          delete_upto_including_index = idx - kNumMinConsecutiveCompleteThreshold;
+          CHECK_GE(delete_upto_including_index, 0);
+          break;
+        }
+        ++it_processing;
+        ++idx;
+      }
+    }
+
+    // Now drop all incomplete nframes up to delete_upto_including_index. All frames below this
+    // index will probably never complete as one camera in the rig dropped an image.
+    if (delete_upto_including_index >= 0) {
+      int num_nframes_to_delete = delete_upto_including_index + 1;
+      auto it_processing = processing_.begin();
+      while (it_processing != processing_.end() && num_nframes_to_delete-- > 0) {
+        it_processing = processing_.erase(it_processing);
+      }
+      LOG(ERROR) << "Detected frame drop: removing "<< delete_upto_including_index + 1
+                 << " nframes from the queue.";
+    }
+
     // Move all completed nframes from the processed_ queue to the completed_ queue chronologically.
     auto it_processing = processing_.begin();
     while (it_processing != processing_.end()) {
       // Check if all images have been received.
-      bool all_received = true;
-      for (size_t i = 0; i < it_processing->second->getNumFrames(); ++i) {
-        all_received &= it_processing->second->isFrameSet(i);
-      }
-
-      if (all_received) {
+      if (it_processing->second->allFramesSet()) {
         completed_.insert(*it_processing);
         it_processing = processing_.erase(it_processing);
         condition_not_empty_.notify_all();
