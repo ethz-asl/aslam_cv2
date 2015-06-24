@@ -125,6 +125,9 @@ class VisualFrame  {
   /// The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
 
+  /// Release the raw image. Only if the cv::Mat reference count is 1 the memory will be freed.
+  void releaseRawImage();
+
   template<typename CHANNEL_DATA_TYPE>
   const CHANNEL_DATA_TYPE& getChannelData(const std::string& channel) const {
     return aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);
