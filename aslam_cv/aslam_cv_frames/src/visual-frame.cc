@@ -95,6 +95,10 @@ const cv::Mat& VisualFrame::getRawImage() const {
   return aslam::channels::get_RAW_IMAGE_Data(channels_);
 }
 
+void VisualFrame::releaseRawImage() {
+  aslam::channels::remove_RAW_IMAGE_Channel(&channels_);
+}
+
 Eigen::Matrix2Xd* VisualFrame::getKeypointMeasurementsMutable() {
   Eigen::Matrix2Xd& keypoints =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
