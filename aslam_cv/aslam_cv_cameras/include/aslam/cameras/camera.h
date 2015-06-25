@@ -440,14 +440,19 @@ class Camera {
 
   /// Returns a const pointer to the underlying distortion object.
   /// @return ConstPointer for the distortion model
-  const aslam::Distortion& getDistortion() const { return *distortion_; };
+  const aslam::Distortion& getDistortion() const { return *CHECK_NOTNULL(distortion_.get()); };
 
   /// Set the distortion model.
   void setDistortion(aslam::Distortion::UniquePtr& distortion) {
     distortion_ = std::move(distortion);
   };
 
-  /// Remove the the distortion model from this camera.
+  /// Is a distortion model set for this camera.
+  bool hasDistortion() const {
+    return distortion_.get() != nullptr;
+  }
+
+  /// Remove the distortion model from this camera.
   void removeDistortion() { distortion_.reset(); };
   /// @}
 
