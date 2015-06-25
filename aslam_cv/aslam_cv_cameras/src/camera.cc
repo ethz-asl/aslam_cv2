@@ -29,7 +29,7 @@ std::ostream& operator<< (std::ostream& out, const ProjectionResult& state) {
 /// Camera constructor with distortion
 Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
                uint32_t image_width, uint32_t image_height, Type camera_type)
-    : line_delay_nano_seconds_(0),
+    : line_delay_nanoseconds_(0),
       label_("unnamed camera"),
       image_width_(image_width),
       image_height_(image_height),
@@ -42,7 +42,7 @@ Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& 
 /// Camera constructor without distortion
 Camera::Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
                Type camera_type)
-    : line_delay_nano_seconds_(0),
+    : line_delay_nanoseconds_(0),
       label_("unnamed camera"),
       image_width_(image_width),
       image_height_(image_height),
@@ -55,14 +55,14 @@ void Camera::printParameters(std::ostream& out, const std::string& text) const {
     out << text << std::endl;
   }
   out << "Camera(" << this->id_ << "): " << this->label_ << std::endl;
-  out << "  line delay: " << this->line_delay_nano_seconds_ << std::endl;
+  out << "  line delay: " << this->line_delay_nanoseconds_ << std::endl;
   out << "  image (cols,rows): " << imageWidth() << ", " << imageHeight() << std::endl;
 }
 
 bool Camera::operator==(const Camera& other) const {
   // \TODO(slynen) should we include the id and name here?
   return (this->intrinsics_ == other.intrinsics_) &&
-         (this->line_delay_nano_seconds_ == other.line_delay_nano_seconds_) &&
+         (this->line_delay_nanoseconds_ == other.line_delay_nanoseconds_) &&
          (this->image_width_ == other.image_width_) &&
          (this->image_height_ == other.image_height_);
 }
