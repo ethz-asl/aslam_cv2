@@ -212,7 +212,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
       size_t idx = 0u;
       auto it_processing = processing_.begin();
       while (it_processing != processing_.end()) {
-        bool is_complete = CHECK_NOTNULL(it_processing->second.get())->allFramesSet();
+        bool is_complete = CHECK_NOTNULL(it_processing->second.get())->areAllFramesSet();
         if (is_complete) {
           ++num_consecutive_complete;
         } else {
@@ -244,7 +244,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
     auto it_processing = processing_.begin();
     while (it_processing != processing_.end()) {
       // Check if all images have been received.
-      if (it_processing->second->allFramesSet()) {
+      if (it_processing->second->areAllFramesSet()) {
         completed_.insert(*it_processing);
         it_processing = processing_.erase(it_processing);
         condition_not_empty_.notify_all();
