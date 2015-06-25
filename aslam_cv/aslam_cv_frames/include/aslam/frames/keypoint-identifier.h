@@ -63,6 +63,10 @@ class KeypointIdentifier {
     return nframe_->getNCamera().getCameraShared(frame_index_);
   }
 
+  const aslam::NCamera& getNCamera() const {
+    return nframe_->getNCamera();
+  }
+
   const aslam::Transformation& get_T_C_B() const {
     return nframe_->getNCamera().get_T_C_B(frame_index_);
   }
