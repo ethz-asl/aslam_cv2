@@ -53,7 +53,9 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   virtual void distortUsingExternalCoefficients(const Eigen::VectorXd* /* dist_coeffs */,
                                                 Eigen::Vector2d* /* point */,
                                                 Eigen::Matrix2d* out_jacobian) const {
-    if(out_jacobian){ out_jacobian->setIdentity(); }
+    if (out_jacobian) {
+      out_jacobian->setIdentity();
+    }
   }
 
   /// \brief Template version of the distortExternalCoeffs function.
@@ -76,10 +78,12 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   /// @param[in]  point        The point in the normalized image plane.
   /// @param[out] out_jacobian The Jacobian of the distortion with respect to small changes in
   ///                          the distortion parameters.
-  virtual void distortParameterJacobian(const Eigen::VectorXd* /* dist_coeffs */,
-                                        const Eigen::Vector2d& /* point */,
-                                        Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
-    if(out_jacobian){ out_jacobian->resize(2,0); }
+  virtual void distortParameterJacobian(
+      const Eigen::VectorXd* /* dist_coeffs */, const Eigen::Vector2d& /* point */,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+    if (out_jacobian) {
+      out_jacobian->resize(2, 0);
+    }
   }
 
   /// @}
@@ -96,7 +100,7 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   ///                              normalized image plane.
   virtual void undistortUsingExternalCoefficients(
       const Eigen::VectorXd& /*dist_coeffs*/,
-      Eigen::Vector2d* /* point */) const { }
+      Eigen::Vector2d* /*point*/) const {}
 
   /// @}
 
@@ -143,7 +147,8 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras.
   virtual void printParameters(std::ostream& out, const std::string& text) const {
-    out << text;
+    out << text << std::endl;
+    out << "Distortion: (NullDistortion) " << std::endl;
   }
   /// @}
 };

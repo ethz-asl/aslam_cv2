@@ -75,18 +75,6 @@ void VisualNFrame::setNCameras(NCamera::Ptr ncamera) {
   // Also assign the camera to the existing non-NULL frames.
   for (unsigned int i = 0; i < frames_.size(); ++i) {
     if (frames_[i] != nullptr) {
-      const bool is_already_assigned = frames_[i]->getCameraGeometry().get()
-          == camera_rig_->getCameraShared(i).get();
-      if (is_already_assigned) {
-        // This camera was already assigned to the visual frame. Most probably
-        // used did it manually before.
-        continue;
-      }
-      CHECK(frames_[i]->getCameraGeometry() == nullptr) << "Visual frame "
-          << "with index " << i << " has been already assigned a camera "
-          << frames_[i]->getCameraGeometry()->getId()
-          << " which is not matching the new camera "
-          << camera_rig_->getCameraShared(i);
       frames_[i]->setCameraGeometry(camera_rig_->getCameraShared(i));
       CHECK_EQ(frames_[i]->getCameraGeometry().get(),
                camera_rig_->getCameraShared(i).get());
