@@ -422,11 +422,10 @@ class Camera {
   /// \name Methods to support unit testing.
   /// @{
 
-  /// \brief Creates a random valid keypoint..
+  /// Creates a random valid keypoint..
   virtual Eigen::Vector2d createRandomKeypoint() const = 0;
 
-  /// \brief Creates a random visible point. Negative depth means random between
-  ///        0 and 100 meters.
+  /// Creates a random visible point. Negative depth means random between 0 and 100 meters.
   virtual Eigen::Vector3d createRandomVisiblePoint(double depth) const = 0;
 
   /// @}
@@ -435,14 +434,21 @@ class Camera {
   /// \name Methods to interface the underlying distortion model.
   /// @{
 
-  /// \brief Returns a pointer to the underlying distortion object.
+  /// Returns a pointer to the underlying distortion object.
   /// @return Pointer for the distortion model
-  virtual aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
+  aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
 
-  /// \brief Returns a const pointer to the underlying distortion object.
+  /// Returns a const pointer to the underlying distortion object.
   /// @return ConstPointer for the distortion model
-  virtual const aslam::Distortion& getDistortion() const { return *distortion_; };
+  const aslam::Distortion& getDistortion() const { return *distortion_; };
 
+  /// Set the distortion model.
+  void setDistortion(aslam::Distortion::UniquePtr& distortion) {
+    distortion_ = std::move(distortion);
+  };
+
+  /// Remove the the distortion model from this camera.
+  void removeDistortion() { distortion_.reset(); };
   /// @}
 
   //////////////////////////////////////////////////////////////

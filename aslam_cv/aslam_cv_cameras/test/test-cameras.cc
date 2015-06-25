@@ -325,8 +325,6 @@ TYPED_TEST(TestCameras, TestClone) {
   EXPECT_TRUE(this->camera_->getDistortion() == cam1->getDistortion());
 }
 
-
-
 TYPED_TEST(TestCameras, invalidMaskTest) {
   // Die on empty mask.
   cv::Mat mask;
