@@ -9,6 +9,7 @@
 #include <aslam/common/macros.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/unique-id.h>
+#include <gtest/gtest_prod.h>
 
 namespace sm {
 class PropertyTree;
@@ -56,12 +57,12 @@ public:
   ~NCamera() {}
 
   /// Copy constructor for clone.
-  NCamera(const NCamera&) = default;
+  NCamera(const NCamera&);
   void operator=(const NCamera&) = delete;
   bool operator==(const NCamera& other) const;
 
-  /// Method to clone this instance (Make sure the Camera and NCamera ID's are
-  /// set to your requirement after cloning!)
+  /// Method to clone this instance. All contained camera objects are cloned.
+  /// (Make sure the Camera and NCamera ID's are set to your requirement after cloning!)
   NCamera* clone() const {
     return new NCamera(static_cast<NCamera const&>(*this));
   };
@@ -144,6 +145,9 @@ public:
   /// each direction. (similar to the V-Charge or JanETH camera system)
   static aslam::NCamera::Ptr createSurroundViewTestNCamera();
 
+  /// Create a copy of this NCamera with all distortion models removed. All internal cameras
+  /// get cloned and new IDs will be assigned to the cloned NCamera and all contained cameras.
+  aslam::NCamera::Ptr cloneRigWithoutDistortion() const;
 private:
   /// Internal consistency checks and initialization.
   void initInternal();

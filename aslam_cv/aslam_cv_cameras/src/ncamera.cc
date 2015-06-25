@@ -5,6 +5,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
+#include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/ncamera.h>
 #include <aslam/cameras/yaml/ncamera-yaml-serialization.h>
 #include <aslam/common/pose-types.h>
@@ -27,6 +28,17 @@ NCamera::NCamera(const NCameraId& id, const TransformationVector& T_C_B,
 NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
   // TODO(PTF): fill in
   CHECK(false) << "Not implemented";
+}
+
+NCamera::NCamera(const NCamera& other) :
+    id_(other.id_),
+    T_C_B_(other.T_C_B_),
+    label_(other.label_) {
+  // Clone all contained cameras.
+  for (size_t idx = 0u; idx < other.getNumCameras(); ++idx) {
+    cameras_.emplace_back(other.getCamera(idx).clone());
+  }
+  initInternal();
 }
 
 NCamera::Ptr NCamera::loadFromYaml(const std::string& yaml_file) {
@@ -164,7 +176,7 @@ NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
   aslam::Aligned<std::vector, aslam::Transformation>::type T_C_B_vector;
 
   for(size_t camera_idx = 0; camera_idx < num_cameras; ++camera_idx) {
-    cameras.push_back(aslam::PinholeCamera::createTestCamera());
+    cameras.push_back(aslam::PinholeCamera::createTestCamera<aslam::RadTanDistortion>());
 
     // Offset each camera 0.1 m in x direction and rotate it to face forward.
     Eigen::Vector3d position(0.1 * (camera_idx + 1), 0.0, 0.0);
@@ -219,6 +231,17 @@ NCamera::Ptr NCamera::createSurroundViewTestNCamera() {
   rig_transformations.emplace_back(q_B_C3.inverse(), -t_B_C3);
   std::string label = "Artificial Planar 4-Pinhole-Camera-Rig";
   return aslam::aligned_shared<aslam::NCamera>(rig_id, rig_transformations, cameras, label);
+}
+
+aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
+  aslam::NCamera::Ptr rig_without_distortion(this->clone());
+  // Remove distortion and assign new IDs to the rig and all cameras.
+  for (Camera::Ptr& camera : rig_without_distortion->cameras_) {
+    camera->removeDistortion();
+    camera->setId(aslam::CameraId::Random());
+  }
+  rig_without_distortion->setId(aslam::NCameraId::Random());
+  return rig_without_distortion;
 }
 
 bool NCamera::operator==(const NCamera& other) const {
