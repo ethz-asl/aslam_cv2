@@ -92,7 +92,7 @@ class VisualNFrame {
   bool isFrameSet(size_t frame_index) const;
 
   /// \brief Are all the frames set?
-  bool allFramesSet() const;
+  bool areAllFramesSet() const;
 
   /// \brief Is the frame at this index valid.
   bool isFrameValid(size_t frame_index) const;
