@@ -150,6 +150,15 @@ bool VisualNFrame::isFrameSet(size_t frame_index) const {
   return static_cast<bool>(frames_[frame_index]);
 }
 
+bool VisualNFrame::areAllFramesSet() const {
+  for (size_t frame_idx = 0u; frame_idx < frames_.size(); ++frame_idx) {
+    if (!static_cast<bool>(frames_[frame_idx])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool VisualNFrame::isFrameValid(size_t frame_index) const {
   CHECK_LT(frame_index, frames_.size());
   CHECK(isFrameSet(frame_index));
