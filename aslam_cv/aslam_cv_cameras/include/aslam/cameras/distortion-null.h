@@ -147,7 +147,8 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras.
   virtual void printParameters(std::ostream& out, const std::string& text) const {
-    out << text;
+    out << text << std::endl;
+    out << "Distortion: (NullDistortion) " << std::endl;
   }
   /// @}
 };
