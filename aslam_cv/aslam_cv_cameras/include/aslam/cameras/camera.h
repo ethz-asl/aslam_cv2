@@ -14,6 +14,7 @@
 #include <aslam/common/types.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/cameras/distortion.h>
+#include <aslam/cameras/distortion-null.h>
 
 // TODO(slynen) Enable commented out PropertyTree support
 //namespace sm {
@@ -155,16 +156,15 @@ class Camera {
  protected:
   /// Copy constructor for clone operation.
   Camera(const Camera& other) :
-  line_delay_nano_seconds_(other.line_delay_nano_seconds_),
-  label_(other.label_),
-  id_(other.id_),
-  image_width_(other.image_width_),
-  image_height_(other.image_height_),
-  intrinsics_(other.intrinsics_),
-  camera_type_(other.camera_type_) {
-    // Clone distortion if model is set.
-    if (other.distortion_)
-      distortion_.reset(other.distortion_->clone());
+    line_delay_nano_seconds_(other.line_delay_nano_seconds_),
+    label_(other.label_),
+    id_(other.id_),
+    image_width_(other.image_width_),
+    image_height_(other.image_height_),
+    intrinsics_(other.intrinsics_),
+    camera_type_(other.camera_type_) {
+    CHECK(other.distortion_);
+  distortion_.reset(other.distortion_->clone());
   };
 
   void operator=(const Camera&) = delete;
@@ -436,7 +436,7 @@ class Camera {
 
   /// Returns a pointer to the underlying distortion object.
   /// @return Pointer for the distortion model
-  aslam::Distortion* getDistortionMutable() { return distortion_.get(); };
+  aslam::Distortion* getDistortionMutable() { return CHECK_NOTNULL(distortion_.get()); };
 
   /// Returns a const pointer to the underlying distortion object.
   /// @return ConstPointer for the distortion model
@@ -449,11 +449,12 @@ class Camera {
 
   /// Is a distortion model set for this camera.
   bool hasDistortion() const {
-    return distortion_.get() != nullptr;
+    CHECK(distortion_);
+    return distortion_->getType() != aslam::Distortion::Type::kNoDistortion;
   }
 
   /// Remove the distortion model from this camera.
-  void removeDistortion() { distortion_.reset(); };
+  void removeDistortion() { distortion_.reset(new NullDistortion); };
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -548,7 +549,6 @@ class Camera {
   Type camera_type_;
 
   /// \brief The distortion for this camera.
-  ///        NOTE: Can be nullptr if no distortion model is set.
   aslam::Distortion::UniquePtr distortion_;
 };
 }  // namespace aslam

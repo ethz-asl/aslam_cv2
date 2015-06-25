@@ -60,7 +60,7 @@ TEST(TestNCamera, testClone) {
   EXPECT_EQ(ncamera->getNumCameras(), ncamera_clone->getNumCameras());
   EXPECT_EQ(ncamera->getId(), ncamera_clone->getId());
 
-  for (int idx = 0; idx < ncamera->getNumCameras(); ++idx) {
+  for (int idx = 0; idx < static_cast<int>(ncamera->getNumCameras()); ++idx) {
     EXPECT_EQ(ncamera->get_T_C_B(idx), ncamera_clone->get_T_C_B(idx));
     // Make sure all individual camera objects are cloned but equal.
     EXPECT_TRUE(ncamera->getCamera(idx) == ncamera_clone->getCamera(idx));
@@ -76,17 +76,17 @@ TEST(TestNCamera, testCloneRigWithoutDistortion) {
   aslam::NCamera::Ptr ncamera_clone(ncamera->cloneRigWithoutDistortion());
 
   // Make sure the source rig has actually a distortion model set.
-  for (size_t idx = 0; idx < ncamera->getNumCameras(); ++idx) {
-    ASSERT_TRUE(ncamera->getCameraShared(idx)->getDistortionMutable() != nullptr);
+  for (size_t idx = 0u; idx < ncamera->getNumCameras(); ++idx) {
+    ASSERT_TRUE(ncamera->getCameraShared(idx)->hasDistortion());
   }
 
   // Make sure the rig and all cameras are cloned but equal except for the new ids.
   EXPECT_TRUE(ncamera_clone.get() != ncamera.get());
   EXPECT_NE(ncamera->getId(), ncamera_clone->getId());
 
-  for (size_t idx = 0; idx < ncamera->getNumCameras(); ++idx) {
+  for (size_t idx = 0u; idx < ncamera->getNumCameras(); ++idx) {
     EXPECT_TRUE(ncamera->getCameraShared(idx).get() != ncamera_clone->getCameraShared(idx).get());
-    EXPECT_TRUE(ncamera_clone->getCameraShared(idx)->getDistortionMutable() == nullptr);
+    EXPECT_FALSE(ncamera_clone->getCameraShared(idx)->hasDistortion());
   }
 }
 
