@@ -53,7 +53,9 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   virtual void distortUsingExternalCoefficients(const Eigen::VectorXd* /* dist_coeffs */,
                                                 Eigen::Vector2d* /* point */,
                                                 Eigen::Matrix2d* out_jacobian) const {
-    if(out_jacobian){ out_jacobian->setIdentity(); }
+    if (out_jacobian) {
+      out_jacobian->setIdentity();
+    }
   }
 
   /// \brief Template version of the distortExternalCoeffs function.
@@ -77,9 +79,11 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   /// @param[out] out_jacobian The Jacobian of the distortion with respect to small changes in
   ///                          the distortion parameters.
   virtual void distortParameterJacobian(const Eigen::VectorXd* /* dist_coeffs */,
-                                        const Eigen::Vector2d& /* point */,
-                                        Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
-    if(out_jacobian){ out_jacobian->resize(2,0); }
+      const Eigen::Vector2d& /* point */,
+      Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
+    if (out_jacobian) {
+      out_jacobian->resize(2, 0);
+    }
   }
 
   /// @}
@@ -96,7 +100,7 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   ///                              normalized image plane.
   virtual void undistortUsingExternalCoefficients(
       const Eigen::VectorXd& /*dist_coeffs*/,
-      Eigen::Vector2d* /* point */) const { }
+      Eigen::Vector2d* /*point*/) const {}
 
   /// @}
 
