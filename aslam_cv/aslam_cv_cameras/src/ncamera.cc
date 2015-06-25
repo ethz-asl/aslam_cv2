@@ -175,7 +175,7 @@ NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
   std::vector<aslam::Camera::Ptr> cameras;
   aslam::Aligned<std::vector, aslam::Transformation>::type T_C_B_vector;
 
-  for(size_t camera_idx = 0; camera_idx < num_cameras; ++camera_idx) {
+  for(size_t camera_idx = 0u; camera_idx < num_cameras; ++camera_idx) {
     cameras.push_back(aslam::PinholeCamera::createTestCamera<aslam::RadTanDistortion>());
 
     // Offset each camera 0.1 m in x direction and rotate it to face forward.
