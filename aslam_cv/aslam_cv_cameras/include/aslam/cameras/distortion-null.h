@@ -78,8 +78,8 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   /// @param[in]  point        The point in the normalized image plane.
   /// @param[out] out_jacobian The Jacobian of the distortion with respect to small changes in
   ///                          the distortion parameters.
-  virtual void distortParameterJacobian(const Eigen::VectorXd* /* dist_coeffs */,
-      const Eigen::Vector2d& /* point */,
+  virtual void distortParameterJacobian(
+      const Eigen::VectorXd* /* dist_coeffs */, const Eigen::Vector2d& /* point */,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian) const {
     if (out_jacobian) {
       out_jacobian->resize(2, 0);

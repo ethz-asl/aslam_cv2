@@ -156,7 +156,7 @@ class Camera {
  protected:
   /// Copy constructor for clone operation.
   Camera(const Camera& other) :
-    line_delay_nano_seconds_(other.line_delay_nano_seconds_),
+    line_delay_nanoseconds_(other.line_delay_nanoseconds_),
     label_(other.label_),
     id_(other.id_),
     image_width_(other.image_width_),
@@ -363,13 +363,13 @@ class Camera {
   ///         Global shutter cameras return zero.
   /// @return Line delay in nano seconds.
   uint64_t getLineDelayNanoSeconds() const {
-    return line_delay_nano_seconds_;
+    return line_delay_nanoseconds_;
   }
 
   /// \brief Set the temporal offset of a rolling shutter camera.
   /// @param[in] line_delay_nano_seconds Line delay in nano seconds.
   void setLineDelayNanoSeconds(uint64_t line_delay_nano_seconds) {
-    line_delay_nano_seconds_ = line_delay_nano_seconds;
+    line_delay_nanoseconds_ = line_delay_nano_seconds;
   }
 
   /// \brief The amount of time elapsed between the first row of the image and the
@@ -380,13 +380,13 @@ class Camera {
   int64_t temporalOffsetNanoSeconds(const Eigen::Vector2d& keypoint) const {
     // Don't check validity. This allows points to wander in and out
     // of the frame during optimization
-    return static_cast<int64_t>(keypoint(1)) * line_delay_nano_seconds_;
+    return static_cast<int64_t>(keypoint(1)) * line_delay_nanoseconds_;
   }
 
   /// \brief The amount of time elapsed between the first row of the image and the
   ///        last row of the image. For a global shutter camera, this can return 0.
   int64_t maxTemporalOffsetNanoSeconds() const {
-    return this->imageHeight() * line_delay_nano_seconds_;
+    return this->imageHeight() * line_delay_nanoseconds_;
   }
 
   /// @}
@@ -422,7 +422,7 @@ class Camera {
   /// \name Methods to support unit testing.
   /// @{
 
-  /// Creates a random valid keypoint..
+  /// Creates a random valid keypoint.
   virtual Eigen::Vector2d createRandomKeypoint() const = 0;
 
   /// Creates a random visible point. Negative depth means random between 0 and 100 meters.
@@ -435,11 +435,9 @@ class Camera {
   /// @{
 
   /// Returns a pointer to the underlying distortion object.
-  /// @return Pointer for the distortion model
   aslam::Distortion* getDistortionMutable() { return CHECK_NOTNULL(distortion_.get()); };
 
-  /// Returns a const pointer to the underlying distortion object.
-  /// @return ConstPointer for the distortion model
+  /// Returns the underlying distortion object.
   const aslam::Distortion& getDistortion() const { return *CHECK_NOTNULL(distortion_.get()); };
 
   /// Set the distortion model.
@@ -529,7 +527,7 @@ class Camera {
 
  private:
   /// The delay per scanline for a rolling shutter camera in nanoseconds.
-  uint64_t line_delay_nano_seconds_;
+  uint64_t line_delay_nanoseconds_;
   /// A label for this camera, a name.
   std::string label_;
   /// The id of this camera.
