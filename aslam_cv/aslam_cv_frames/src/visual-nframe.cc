@@ -162,7 +162,7 @@ bool VisualNFrame::isFrameSet(size_t frame_index) const {
   return static_cast<bool>(frames_[frame_index]);
 }
 
-bool VisualNFrame::allFramesSet() const {
+bool VisualNFrame::areAllFramesSet() const {
   for (size_t frame_idx = 0u; frame_idx < frames_.size(); ++frame_idx) {
     if (!static_cast<bool>(frames_[frame_idx])) {
       return false;

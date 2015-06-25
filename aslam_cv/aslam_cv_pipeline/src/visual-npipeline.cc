@@ -194,9 +194,9 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
     // the NFrame has been created if necessary.
     VisualFrame::Ptr existing_frame = proc_it->second->getFrameShared(camera_index);
     if (existing_frame) {
-      LOG(ERROR) << "Overwriting a frame at index " << camera_index << ":\n"
-          << *existing_frame << "\nwith a new frame: "
-          << *frame << "\nbecause the timestamp was the same.";
+      LOG(ERROR) << "Overwriting a frame at index " << camera_index << ":" << std::endl
+          << *existing_frame << std::endl << "with a new frame: "
+          << *frame << std::endl << "because the timestamp was the same.";
     }
     proc_it->second->setFrame(camera_index, frame);
 
@@ -209,7 +209,6 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
     int delete_upto_including_index = -1;
     if (processing_.size() > kNumMinConsecutiveCompleteThreshold + 1) {
       size_t num_consecutive_complete = 0u;
-
       size_t idx = 0u;
       auto it_processing = processing_.begin();
       while (it_processing != processing_.end()) {
@@ -237,8 +236,8 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
       while (it_processing != processing_.end() && num_nframes_to_delete-- > 0) {
         it_processing = processing_.erase(it_processing);
       }
-      LOG(ERROR) << "Detected frame drop: removing "<< delete_upto_including_index + 1
-                 << " nframes from the queue.";
+      LOG(WARNING) << "Detected frame drop: removing " << delete_upto_including_index + 1
+                   << " nframes from the queue.";
     }
 
     // Move all completed nframes from the processed_ queue to the completed_ queue chronologically.
