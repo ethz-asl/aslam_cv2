@@ -15,7 +15,7 @@ namespace common {
 
 template<typename RandAccessIter>
 double median(RandAccessIter begin, RandAccessIter end) {
-  CHECK(begin != end);
+  CHECK(begin != end) << "No data provided to calculate the median.";
   size_t size = end - begin;
   size_t middle_idx = size / 2;
   RandAccessIter target_high = begin + middle_idx;
