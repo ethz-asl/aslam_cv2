@@ -93,7 +93,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
 
     // Sort indices by tracking error.
     std::vector<size_t> indices_sorted_by_descending_tracking_error(tracking_error.size());
-    for (size_t i = 0; i < indices_sorted_by_descending_tracking_error.size(); ++i) {
+    for (size_t i = 0u; i < indices_sorted_by_descending_tracking_error.size(); ++i) {
       indices_sorted_by_descending_tracking_error[i] = i;
     }
     std::sort(indices_sorted_by_descending_tracking_error.begin(),
