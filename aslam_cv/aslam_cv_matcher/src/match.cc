@@ -160,6 +160,8 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
             CHECK_LT(static_cast<int>(kp1_match_index), keypoints_kp1.cols());
             disparity_px.emplace_back((keypoints_kp1.col(kp1_match_index)
                 - rotated_k_keypoint).norm());
+          } else {
+            ++projection_failed_counter;
           }
         } else {
           ++projection_failed_counter;
