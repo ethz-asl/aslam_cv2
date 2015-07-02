@@ -102,10 +102,10 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
   const size_t num_cameras = nframe_kp1.getNumCameras();
   CHECK_EQ(matches_kp1_k.size(), num_cameras);
   const size_t num_matches = countRigMatches(matches_kp1_k);
-  std::vector<double> disparity_px(num_matches);
-  disparity_px.reserve(5000u);
+  std::vector<double> disparity_px;
+  disparity_px.reserve(num_matches);
+  size_t projection_failed_counter = 0u;
 
-  size_t match_idx = 0u;
   if (q_kp1_k.w() == 1.0) {
     // Case with no rotation specified, directly calculate the disparity from the image plane
     // measurements.
@@ -116,27 +116,28 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
       for (const aslam::Match& match_kp1_kp : matches_kp1_k[cam_idx]) {
         CHECK_LT(static_cast<int>(match_kp1_kp.first), keypoints_kp1.cols());
         CHECK_LT(static_cast<int>(match_kp1_kp.second), keypoints_k.cols());
-        disparity_px[match_idx++] = (keypoints_kp1.col(match_kp1_kp.first)
-            - keypoints_k.col(match_kp1_kp.second)).norm();
+        disparity_px.emplace_back((keypoints_kp1.col(match_kp1_kp.first)
+            - keypoints_k.col(match_kp1_kp.second)).norm());
       }
     }
   } else {
     // Non-identity rotation case.
     for (size_t cam_idx = 0u; cam_idx < num_cameras; ++cam_idx) {
-      std::vector<size_t> keypoint_indices_k(matches_kp1_k[cam_idx].size());
-      size_t camera_match_idx = 0u;
+      std::vector<size_t> keypoint_indices_k;
+      keypoint_indices_k.reserve(matches_kp1_k[cam_idx].size());
       for (const aslam::Match& match_kp1_kp : matches_kp1_k[cam_idx]) {
         CHECK_LT(static_cast<int>(match_kp1_kp.second),
                  nframe_k.getFrame(cam_idx).getNumKeypointMeasurements());
-        keypoint_indices_k[camera_match_idx++] = match_kp1_kp.second;
+        keypoint_indices_k.emplace_back(match_kp1_kp.second);
       }
 
       std::vector<char> success;
+      success.reserve(keypoint_indices_k.size());
       Eigen::Matrix3Xd bearing_vectors_k =
           nframe_k.getFrame(cam_idx).getNormalizedBearingVectors(
               keypoint_indices_k, &success);
-      CHECK_EQ(success.size(), bearing_vectors_k.cols());
-      CHECK_EQ(matches_kp1_k[cam_idx].size(), bearing_vectors_k.cols());
+      CHECK_EQ(static_cast<int>(success.size()), bearing_vectors_k.cols());
+      CHECK_EQ(static_cast<int>(matches_kp1_k[cam_idx].size()), bearing_vectors_k.cols());
 
       if (bearing_vectors_k.cols() == 0u) {
         continue;
@@ -157,14 +158,16 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
           if (projection_result == aslam::ProjectionResult::KEYPOINT_VISIBLE) {
             const size_t kp1_match_index = matches_kp1_k[cam_idx][i].first;
             CHECK_LT(static_cast<int>(kp1_match_index), keypoints_kp1.cols());
-            disparity_px[match_idx++] = (keypoints_kp1.col(kp1_match_index)
-                - rotated_k_keypoint).norm();
+            disparity_px.emplace_back((keypoints_kp1.col(kp1_match_index)
+                - rotated_k_keypoint).norm());
           }
+        } else {
+          ++projection_failed_counter;
         }
       }
     }
   }
-  CHECK_LE(match_idx, num_matches);
+  CHECK_EQ(disparity_px.size() + projection_failed_counter, num_matches);
   return aslam::common::median(disparity_px.begin(), disparity_px.end());
 }
 
