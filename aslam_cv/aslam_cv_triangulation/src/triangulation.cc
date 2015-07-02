@@ -24,7 +24,7 @@ TriangulationResult linearTriangulateFromNViews(
     return TriangulationResult(TriangulationResult::TOO_FEW_MEASUREMENTS);
   }
 
-  VLOG(5) << "Triangulating from " << T_G_B.size() << " views.";
+  VLOG(200) << "Triangulating from " << T_G_B.size() << " views.";
 
   const size_t rows = 3 * measurements_normalized.size();
   const size_t cols = 3 + measurements_normalized.size();
@@ -270,7 +270,7 @@ TriangulationResult triangulateFeatureTrack(
   CHECK_GT(track_length, 1u);
   CHECK_EQ(track_length, T_W_Bs.size());
 
-  VLOG(4) << "Triangulating track of length " << track_length;
+  VLOG(200) << "Triangulating track of length " << track_length;
 
   const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
   CHECK(camera);
@@ -295,7 +295,7 @@ TriangulationResult triangulateFeatureTrack(
     normalized_measurements.push_back(normalized_measurement);
   }
 
-  VLOG(6) << "Assembled triangulation data.";
+  VLOG(200) << "Assembled triangulation data.";
 
   // Triangulate the landmark.
   CHECK_EQ(track_length, normalized_measurements.size());
@@ -306,7 +306,7 @@ TriangulationResult triangulateFeatureTrack(
                                                         T_B_C,
                                                         W_landmark);
 
-  VLOG(4) << "Triangulation returned the following result:" << std::endl
+  VLOG(200) << "Triangulation returned the following result:" << std::endl
           << triangulation_result;
 
   return triangulation_result;
@@ -321,7 +321,7 @@ TriangulationResult fastTriangulateFeatureTrack(
   CHECK_GT(track_length, 1u);
   CHECK_EQ(track_length, T_W_Bs.size());
 
-  VLOG(4) << "Triangulating track of length " << track_length;
+  VLOG(200) << "Triangulating track of length " << track_length;
 
   const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
   CHECK(camera);
@@ -351,13 +351,13 @@ TriangulationResult fastTriangulateFeatureTrack(
     p_G_C_vector.col(index) = T_W_C.getPosition();
   }
 
-  VLOG(6) << "Assembled triangulation data.";
+  VLOG(200) << "Assembled triangulation data.";
 
   // Triangulate the landmark.
   aslam::TriangulationResult triangulation_result = linearTriangulateFromNViews(
       G_bearing_vectors, p_G_C_vector, W_landmark);
 
-  VLOG(4) << "Triangulation returned the following result:" << std::endl
+  VLOG(200) << "Triangulation returned the following result:" << std::endl
           << triangulation_result;
 
   return triangulation_result;

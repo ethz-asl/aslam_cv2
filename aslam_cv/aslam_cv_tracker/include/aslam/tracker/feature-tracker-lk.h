@@ -71,12 +71,12 @@ class FeatureTrackerLk : public FeatureTracker {
   static constexpr double kGoodFeaturesToTrackMinDistancePixel = 10.0;
 
   /// Maximum number of corners to return. If there are more corners than are found,
-  /// the strongest of them is returned.
-  static constexpr size_t kMaxFeatureCount = 250u;
+  /// the strongest of them are returned.
+  static constexpr size_t kMaxFeatureCount = 750u;
 
   /// Minimum number of features to be tracked. Initialize new features to track if
   /// number is/drops below this number.
-  static constexpr size_t kMinFeatureCount = 150u;
+  static constexpr size_t kMinFeatureCount = 500u;
 
   /// Parameter for corner refinement. Half of the side length of the search window.
   /// For example, if kSubPixWinSize=Size(5,5), then a 5*2+1 \times 5*2+1 = 11 \times 11

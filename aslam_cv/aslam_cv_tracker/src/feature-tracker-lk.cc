@@ -92,9 +92,13 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
                              kMinEigenThreshold);
 
     // Sort indices by tracking error.
-    std::vector<size_t> ind(tracking_error.size());
-    for (size_t i = 0; i < ind.size(); ++i) ind[i] = i;
-    std::sort(ind.begin(), ind.end(), [&tracking_error](size_t i1, size_t i2) {
+    std::vector<size_t> indices_sorted_by_descending_tracking_error(tracking_error.size());
+    for (size_t i = 0u; i < indices_sorted_by_descending_tracking_error.size(); ++i) {
+      indices_sorted_by_descending_tracking_error[i] = i;
+    }
+    std::sort(indices_sorted_by_descending_tracking_error.begin(),
+              indices_sorted_by_descending_tracking_error.end(),
+              [&tracking_error](size_t i1, size_t i2) {
       return tracking_error[i1] < tracking_error[i2];
     });
 
@@ -105,9 +109,9 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
 
     matches_with_score_kp1_k->clear();
     CHECK_EQ(keypoints_k.size(), keypoints_kp1.size());
-    size_t k = 0;
-    for (size_t j = 0; j < keypoints_k.size(); ++j) {
-      size_t i = ind[j]; // Get sorted index.
+    size_t k = 0u;
+    for (size_t j = 0u; j < keypoints_k.size(); ++j) {
+      size_t i = indices_sorted_by_descending_tracking_error[j]; // Get sorted index.
 
       if (keypoints_kp1[i].x < kMinDistanceToImageBorderPx ||
           keypoints_kp1[i].x >= (frame_k.getRawImage().cols - kMinDistanceToImageBorderPx) ||
@@ -121,8 +125,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
         size_t grid_x = std::floor(keypoints_kp1[i].x * kGridCellResolution / image_width );
         size_t grid_y = std::floor(keypoints_kp1[i].y * kGridCellResolution / image_height );
 
+        // Don't use the track if there are too many landmarks in this cell.
         if (occupancy_grid(grid_x, grid_y) >= kMaxLandmarksPerCell) {
-          // Don't use the track if there are too many landmarks in this cell.
           continue;
         }
         ++occupancy_grid(grid_x, grid_y);
