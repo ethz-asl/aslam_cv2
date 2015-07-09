@@ -74,6 +74,10 @@ class FeatureTrack {
     return !keypoint_identifiers_.empty();
   }
 
+  bool operator<(const FeatureTrack& other) const {
+    return getTrackLength() < other.getTrackLength();
+  }
+
  private:
   /// Track id.
   size_t track_id_;
