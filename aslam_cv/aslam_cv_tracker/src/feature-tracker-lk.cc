@@ -4,8 +4,7 @@
 #include <opencv/highgui.h>
 namespace aslam {
 
-FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
-    : first_frame_processed_(false) {
+FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) {
   // Create the detection mask.
   detection_mask_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
   cv::Mat roi(detection_mask_, cv::Rect(kMinDistanceToImageBorderPx, kMinDistanceToImageBorderPx,
@@ -89,6 +88,12 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       occupancy_grid.setZero();
     }
 
+    // Make sure the registered keypoints to abort belong to this frame.
+    if (!keypoint_indices_to_abort_.empty() && abort_keypoints_wrt_frame_id_ != frame_k.getId()) {
+      LOG(WARNING) << "Keypoints to abort do not match the processed frame.";
+      keypoint_indices_to_abort_.clear();
+    }
+
     size_t keypoint_idx_kp1 = 0u;
     for (size_t j = 0u; j < keypoints_k.size(); ++j) {
       const size_t keypoint_idx_k = indices_sorted_by_ascending_tracking_error[j];
@@ -163,6 +168,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   CHECK(frame_kp1->hasKeypointMeasurements());
 
   keypoint_indices_to_abort_.clear();
+  abort_keypoints_wrt_frame_id_.setInvalid();
 }
 
 void FeatureTrackerLk::detectGfttCorners(const cv::Mat& image, Vector2dList* detected_keypoints) {

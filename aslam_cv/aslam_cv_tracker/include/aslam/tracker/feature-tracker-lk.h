@@ -33,9 +33,12 @@ class FeatureTrackerLk : public FeatureTracker {
 
   /// Set a list of keypoint ids that have been identified as outliers in the last update step.
   /// The tracking of these features will be aborted.
-  virtual void swapKeypointIndicesToAbort(std::unordered_set<size_t>* keypoint_indices_to_abort) {
+  virtual void swapKeypointIndicesToAbort(
+      const aslam::FrameId& frame_id, std::unordered_set<size_t>* keypoint_indices_to_abort) {
     CHECK_NOTNULL(keypoint_indices_to_abort);
+    CHECK(frame_id.isValid());
     keypoint_indices_to_abort_.swap(*keypoint_indices_to_abort);
+    abort_keypoints_wrt_frame_id_ = frame_id;
   }
 
  private:
@@ -142,12 +145,10 @@ class FeatureTrackerLk : public FeatureTracker {
   /// Mask the area where no tracks should be spawned.
   cv::Mat detection_mask_;
 
-  /// Was the first frame processed?
-  bool first_frame_processed_;
-
   /// Keypoint indices wrt. to the last frame for which the tracking should be aborted during
   /// the next call to track().
   std::unordered_set<size_t> keypoint_indices_to_abort_;
+  aslam::FrameId abort_keypoints_wrt_frame_id_;
 };
 }  // namespace aslam
 
