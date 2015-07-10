@@ -1,6 +1,9 @@
 #ifndef ASLAM_FEATURE_TRACKER_BASE_H_
 #define ASLAM_FEATURE_TRACKER_BASE_H_
 
+#include <unordered_set>
+#include <vector>
+
 #include <aslam/cameras/camera.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/matcher/match.h>
@@ -29,9 +32,14 @@ class FeatureTracker {
   /// and should be written to the track id channels using a TrackManager (after e.g. outlier
   /// filtering).
   virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
-                     const aslam::VisualFrame& frame_k,
-                     aslam::VisualFrame* frame_kp1,
+                     const aslam::VisualFrame& frame_k, aslam::VisualFrame* frame_kp1,
                      aslam::MatchesWithScore* matches_with_score_kp1_k) = 0;
+
+  /// Set a list of keypoint indices that should be abort during the next call to track.
+  /// The vector is swaped and invalidates the source vector.
+  virtual void swapKeypointIndicesToAbort(std::unordered_set<size_t>* keypoint_indices_to_abort) {
+    LOG(FATAL) << "FeatureTracker does not support track abortion.";
+  };
 };
 
 }  // namespace aslam
