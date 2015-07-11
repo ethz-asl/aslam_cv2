@@ -35,10 +35,10 @@ class FeatureTracker {
                      const aslam::VisualFrame& frame_k, aslam::VisualFrame* frame_kp1,
                      aslam::MatchesWithScore* matches_with_score_kp1_k) = 0;
 
-  /// Set a list of keypoint indices that should be abort during the next call to track.
-  /// The vector is swaped and invalidates the source vector.
+  /// Set a list of keypoint indices that should be aborted during the next call to track.
+  /// The vector is swapped and invalidates the source vector.
   virtual void swapKeypointIndicesToAbort(const aslam::FrameId& /*frame_id*/,
-      std::unordered_set<size_t>*/*keypoint_indices_to_abort*/) {
+      std::unordered_set<size_t>* /*keypoint_indices_to_abort*/) {
     LOG(FATAL) << "FeatureTracker does not support track abortion.";
   };
 };

@@ -7,10 +7,11 @@ namespace aslam {
 FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) {
   // Create the detection mask.
   detection_mask_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
-  cv::Mat roi(detection_mask_, cv::Rect(kMinDistanceToImageBorderPx, kMinDistanceToImageBorderPx,
-                                        camera.imageWidth() - 2 * kMinDistanceToImageBorderPx,
-                                        camera.imageHeight() - 2 * kMinDistanceToImageBorderPx));
-  roi = cv::Scalar(255);
+  cv::Mat region_of_interest(detection_mask_,
+                             cv::Rect(kMinDistanceToImageBorderPx, kMinDistanceToImageBorderPx,
+                                      camera.imageWidth() - 2 * kMinDistanceToImageBorderPx,
+                                      camera.imageHeight() - 2 * kMinDistanceToImageBorderPx));
+  region_of_interest = cv::Scalar(255);
 }
 
 void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
@@ -28,17 +29,17 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   // Track existing feature of frame k to frame kp1.
   Vector2dList new_keypoints_kp1;
   new_keypoints_kp1.reserve(kMaxFeatureCount);
-  if (frame_k.hasKeypointMeasurements() && frame_k.getNumKeypointMeasurements() > 0) {
+  if (frame_k.hasKeypointMeasurements() && frame_k.getNumKeypointMeasurements() > 0u) {
     std::vector<cv::Point2f> keypoints_k;
     getKeypointsFromFrame(frame_k, &keypoints_k);
 
     // Use the rotation to predict keypoints in the next frame.
     Eigen::Matrix3Xd rays;
     Eigen::Matrix2Xd predicted_keypoints_kp1;
-    std::vector<char> projection_successfull;
+    std::vector<char> projection_successful;
     std::vector<ProjectionResult> projection_result;
     frame_k.getCameraGeometry()->backProject3Vectorized(
-        frame_k.getKeypointMeasurements(), &rays, &projection_successfull);
+        frame_k.getKeypointMeasurements(), &rays, &projection_successful);
     rays = q_Ckp1_Ck.getRotationMatrix() * rays;
     frame_kp1->getCameraGeometry()->project3Vectorized(rays, &predicted_keypoints_kp1,
                                                        &projection_result);
@@ -46,7 +47,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     std::vector<cv::Point2f> tracked_keypoints_kp1;
     tracked_keypoints_kp1.reserve(keypoints_k.size());
     for (int idx = 0; idx < predicted_keypoints_kp1.cols(); ++idx) {
-      if (projection_successfull[idx] && projection_result[idx].isKeypointVisible()) {
+      if (projection_successful[idx] && projection_result[idx].isKeypointVisible()) {
         tracked_keypoints_kp1.emplace_back(predicted_keypoints_kp1.col(idx)(0),
                                            predicted_keypoints_kp1.col(idx)(1));
       } else {
@@ -120,9 +121,9 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
         const size_t image_width = frame_k.getRawImage().cols;
         const size_t image_height = frame_k.getRawImage().rows;
         size_t grid_x = std::floor(
-            tracked_keypoints_kp1[keypoint_idx_k].x * kGridCellResolution / image_width );
+            tracked_keypoints_kp1[keypoint_idx_k].x * kGridCellResolution / image_width);
         size_t grid_y = std::floor(
-            tracked_keypoints_kp1[keypoint_idx_k].y * kGridCellResolution / image_height );
+            tracked_keypoints_kp1[keypoint_idx_k].y * kGridCellResolution / image_height);
 
         if (occupancy_grid(grid_x, grid_y) >= kMaxLandmarksPerCell) {
           continue;
@@ -142,7 +143,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   }
 
   // Initialize new features if the number of tracked features drops below a certain threshold or
-  // there aren't any during initialization. They will be tracked in next time step.
+  // there aren't any during initialization. They will be tracked in the next time step.
   if (!frame_kp1->hasKeypointMeasurements() ||
       frame_kp1->getNumKeypointMeasurements() < kMinFeatureCount) {
     Vector2dList detected_keypoints;
@@ -154,11 +155,11 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       occupancyGrid(*frame_kp1, detected_keypoints, &detected_keypoints_in_grid);
 
       new_keypoints_kp1.insert(new_keypoints_kp1.end(), detected_keypoints_in_grid.begin(),
-                           detected_keypoints_in_grid.end());
+                               detected_keypoints_in_grid.end());
     } else {
       // Add ALL features to the frame.
       new_keypoints_kp1.insert(new_keypoints_kp1.end(), detected_keypoints.begin(),
-                           detected_keypoints.end());
+                               detected_keypoints.end());
     }
   }
   CHECK(!new_keypoints_kp1.empty());
