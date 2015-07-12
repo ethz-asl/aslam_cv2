@@ -1,8 +1,15 @@
+#include <aslam/common/timer.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/tracker/feature-tracker-lk.h>
-
+#include <brisk/brisk.h>
+#include <gflags/gflags.h>
 #include <opencv/highgui.h>
+
 namespace aslam {
+
+DEFINE_bool(lk_use_brisk_harris, false,
+            "Use the brisk harris detector to initialize new features?");
+DEFINE_bool(lk_gfft_subpix_refinement, true, "Perform subpixel refinement on gfft corners?");
 
 FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) {
   // Create the detection mask.
@@ -12,12 +19,18 @@ FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) {
                                       camera.imageWidth() - 2 * kMinDistanceToImageBorderPx,
                                       camera.imageHeight() - 2 * kMinDistanceToImageBorderPx));
   region_of_interest = cv::Scalar(255);
+
+  if (FLAGS_lk_use_brisk_harris) {
+    detector_.reset(new brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>(
+        kBriskOctaves, kBriskUniformityRadius, kBriskAbsoluteThreshold, kMaxFeatureCount));
+  }
 }
 
 void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
                              const aslam::VisualFrame& frame_k,
                              aslam::VisualFrame* frame_kp1,
                              aslam::MatchesWithScore* matches_with_score_kp1_k) {
+  aslam::timing::Timer timer("FeatureTrackerLk: track");
   CHECK_NOTNULL(frame_kp1);
   CHECK_NOTNULL(matches_with_score_kp1_k)->clear();
 
@@ -34,6 +47,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     getKeypointsFromFrame(frame_k, &keypoints_k);
 
     // Use the rotation to predict keypoints in the next frame.
+    aslam::timing::Timer timer_prediction("FeatureTrackerLk: track - prediction");
     Eigen::Matrix3Xd rays;
     Eigen::Matrix2Xd predicted_keypoints_kp1;
     std::vector<char> projection_successful;
@@ -55,7 +69,9 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
         tracked_keypoints_kp1.emplace_back(keypoints_k[idx]);
       }
     }
+    timer_prediction.Stop();
 
+    aslam::timing::Timer timer_tracking("FeatureTrackerLk: track - calcOpticalFlowPyrLK");
     // Output vector of errors. Each element of the vector is set to an error for the corresponding
     // feature. Type of the error measure can be set in flags parameter. If the flow wasn’t found
     // then the error is not defined (use the tracking_successful parameter to find such cases).
@@ -71,7 +87,9 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
                              keypoints_k, tracked_keypoints_kp1, tracking_successful, tracking_errors,
                              kWindowSize, kMaxPyramidLevel, kTerminationCriteria, kOperationFlag,
                              kMinEigenThreshold);
+    timer_tracking.Stop();
 
+    aslam::timing::Timer timer_selection("FeatureTrackerLk: track - feature selection");
     // Sort indices by tracking error.
     std::vector<size_t> indices_sorted_by_ascending_tracking_error(tracking_errors.size());
     for (size_t i = 0u; i < indices_sorted_by_ascending_tracking_error.size(); ++i) {
@@ -140,6 +158,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       CHECK_LT(keypoint_idx_kp1, tracked_keypoints_kp1.size());
       ++keypoint_idx_kp1;
     }
+    timer_selection.Stop();
   }
 
   // Initialize new features if the number of tracked features drops below a certain threshold or
@@ -174,14 +193,29 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
 
 void FeatureTrackerLk::detectGfttCorners(const cv::Mat& image, Vector2dList* detected_keypoints) {
   CHECK_NOTNULL(detected_keypoints);
-  std::vector<cv::Point2f> detected_keypoints_cv;
-  cv::goodFeaturesToTrack(image, detected_keypoints_cv, kMaxFeatureCount,
-                          kGoodFeaturesToTrackQualityLevel, kGoodFeaturesToTrackMinDistancePixel,
-                          detection_mask_);
+  aslam::timing::Timer timer("FeatureTrackerLk: detectGfttCorners");
 
-  // Subpixel refinement of detected corners.
-  cv::cornerSubPix(image, detected_keypoints_cv, kSubPixelWinSize, kSubPixelZeroZone,
-                   kTerminationCriteria);
+  std::vector<cv::Point2f> detected_keypoints_cv;
+  if (FLAGS_lk_use_brisk_harris) {
+    aslam::timing::Timer timer_detection("FeatureTrackerLk: detection");
+
+    CHECK(detector_);
+    std::vector<cv::KeyPoint> keypoints;
+    detector_->detect(image, keypoints);
+    cv::KeyPoint::convert(keypoints, detected_keypoints_cv);
+  } else {
+    aslam::timing::Timer timer_detection("FeatureTrackerLk: detection");
+    cv::goodFeaturesToTrack(image, detected_keypoints_cv, kMaxFeatureCount,
+                            kGoodFeaturesToTrackQualityLevel, kGoodFeaturesToTrackMinDistancePixel,
+                            detection_mask_);
+    timer_detection.Stop();
+    if (FLAGS_lk_gfft_subpix_refinement) {
+      aslam::timing::Timer timer_subpix("FeatureTrackerLk: detection - cornerSubPix");
+      cv::cornerSubPix(image, detected_keypoints_cv, kSubPixelWinSize, kSubPixelZeroZone,
+                       kTerminationCriteria);
+      timer_subpix.Stop();
+    }
+  }
 
   // Simple type conversion and removal of tracks that are close to the border as we can't compute
   // descriptors.
@@ -201,6 +235,8 @@ void FeatureTrackerLk::detectGfttCorners(const cv::Mat& image, Vector2dList* det
 void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_keypoint_list,
                                                         aslam::VisualFrame* frame) {
   CHECK_NOTNULL(frame);
+  aslam::timing::Timer timer("FeatureTrackerLk: insertAdditionalKeypointsToFrame");
+
   const size_t num_new_keypoints = new_keypoint_list.size();
   Eigen::Matrix2Xd new_keypoints(2, num_new_keypoints);
   for (size_t i = 0; i < num_new_keypoints; ++i) {
@@ -250,6 +286,8 @@ void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_
 void FeatureTrackerLk::getKeypointsFromFrame(const aslam::VisualFrame& frame,
                                              std::vector<cv::Point2f>* keypoints_out) {
   CHECK_NOTNULL(keypoints_out);
+  aslam::timing::Timer timer("FeatureTrackerLk: getKeypointsFromFrame");
+
   const Eigen::Matrix2Xd& keypoints = frame.getKeypointMeasurements();
   keypoints_out->reserve(keypoints.cols());
   for (size_t i = 0u; i < static_cast<size_t>(keypoints.cols()); ++i) {
@@ -261,6 +299,8 @@ void FeatureTrackerLk::occupancyGrid(const aslam::VisualFrame& frame,
                                      const Vector2dList& detected_keypoints,
                                      Vector2dList* detected_keypoints_in_grid) {
   CHECK_NOTNULL(detected_keypoints_in_grid);
+  aslam::timing::Timer timer("FeatureTrackerLk: occupancyGrid");
+
   Eigen::Matrix<size_t, kGridCellResolution, kGridCellResolution> occupancy_grid;
   occupancy_grid.setZero();
   const size_t image_width = frame.getRawImage().cols;
