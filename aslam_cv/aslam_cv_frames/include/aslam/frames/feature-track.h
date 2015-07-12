@@ -74,8 +74,12 @@ class FeatureTrack {
     return !keypoint_identifiers_.empty();
   }
 
-  bool operator<(const FeatureTrack& other) const {
+  inline bool operator<(const FeatureTrack& other) const {
     return getTrackLength() < other.getTrackLength();
+  }
+
+  inline bool operator>(const FeatureTrack& other) const {
+    return getTrackLength() > other.getTrackLength();
   }
 
  private:

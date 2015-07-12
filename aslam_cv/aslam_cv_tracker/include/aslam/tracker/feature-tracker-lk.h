@@ -1,6 +1,7 @@
 #ifndef ASLAM_FEATURE_TRACKER_LK_H_
 #define ASLAM_FEATURE_TRACKER_LK_H_
 
+#include <unordered_set>
 #include <vector>
 
 #include <aslam/common/memory.h>
@@ -30,6 +31,16 @@ class FeatureTrackerLk : public FeatureTracker {
                      aslam::VisualFrame* frame_kp1,
                      aslam::MatchesWithScore* matches_with_score_kp1_k);
 
+  /// Set a list of keypoint ids that have been identified as outliers in the last update step.
+  /// The tracking of these features will be aborted.
+  virtual void swapKeypointIndicesToAbort(
+      const aslam::FrameId& frame_id, std::unordered_set<size_t>* keypoint_indices_to_abort) {
+    CHECK_NOTNULL(keypoint_indices_to_abort);
+    CHECK(frame_id.isValid());
+    keypoint_indices_to_abort_.swap(*keypoint_indices_to_abort);
+    abort_keypoints_wrt_frame_id_ = frame_id;
+  }
+
  private:
   /// \brief Detect good features to track opencv-wrapper.
   /// @param[in] image Extract features from this image.
@@ -45,7 +56,7 @@ class FeatureTrackerLk : public FeatureTracker {
   /// \brief Get keypoints of type cv::Point2f from frame.
   /// @param[in] frame Frame from which the keypoints should be extracted.
   /// @param[out] keypoints_out Keypoints extracted from frame.
-  void getKeypointsfromFrame(const aslam::VisualFrame& frame,
+  void getKeypointsFromFrame(const aslam::VisualFrame& frame,
                              std::vector<cv::Point2f>* keypoints_out);
 
   /// \brief Build up an occupancy grid and only add new features to empty cells.
@@ -134,8 +145,10 @@ class FeatureTrackerLk : public FeatureTracker {
   /// Mask the area where no tracks should be spawned.
   cv::Mat detection_mask_;
 
-  /// Was the first frame processed?
-  bool first_frame_processed_;
+  /// Keypoint indices wrt. to the last frame for which the tracking should be aborted during
+  /// the next call to track().
+  std::unordered_set<size_t> keypoint_indices_to_abort_;
+  aslam::FrameId abort_keypoints_wrt_frame_id_;
 };
 }  // namespace aslam
 

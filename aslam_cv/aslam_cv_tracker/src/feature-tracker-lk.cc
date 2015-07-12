@@ -4,14 +4,14 @@
 #include <opencv/highgui.h>
 namespace aslam {
 
-FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
-    : first_frame_processed_(false) {
+FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) {
   // Create the detection mask.
   detection_mask_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
-  cv::Mat roi(detection_mask_, cv::Rect(kMinDistanceToImageBorderPx, kMinDistanceToImageBorderPx,
-                                        camera.imageWidth() - 2 * kMinDistanceToImageBorderPx,
-                                        camera.imageHeight() - 2 * kMinDistanceToImageBorderPx));
-  roi = cv::Scalar(255);
+  cv::Mat region_of_interest(detection_mask_,
+                             cv::Rect(kMinDistanceToImageBorderPx, kMinDistanceToImageBorderPx,
+                                      camera.imageWidth() - 2 * kMinDistanceToImageBorderPx,
+                                      camera.imageHeight() - 2 * kMinDistanceToImageBorderPx));
+  region_of_interest = cv::Scalar(255);
 }
 
 void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
@@ -19,141 +19,133 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
                              aslam::VisualFrame* frame_kp1,
                              aslam::MatchesWithScore* matches_with_score_kp1_k) {
   CHECK_NOTNULL(frame_kp1);
-  CHECK_NOTNULL(matches_with_score_kp1_k);
+  CHECK_NOTNULL(matches_with_score_kp1_k)->clear();
 
   // Make sure the nframes don't already contain keypoint/tracking information.
   CHECK(frame_kp1->hasRawImage());
   CHECK(!frame_kp1->hasKeypointMeasurements());
   CHECK(!frame_kp1->hasTrackIds());
 
-  if (!first_frame_processed_) {
-    // Detect new features.
-    Vector2dList detected_keypoints;
-    detectGfttCorners(frame_kp1->getRawImage(), &detected_keypoints);
+  // Track existing feature of frame k to frame kp1.
+  Vector2dList new_keypoints_kp1;
+  new_keypoints_kp1.reserve(kMaxFeatureCount);
+  if (frame_k.hasKeypointMeasurements() && frame_k.getNumKeypointMeasurements() > 0u) {
+    std::vector<cv::Point2f> keypoints_k;
+    getKeypointsFromFrame(frame_k, &keypoints_k);
 
-    if (kUseOccupancyGrid && frame_k.hasKeypointMeasurements()) {
-      // Decide which new features to track based on occupancy grid.
-      Vector2dList detected_keypoints_in_grid;
-      occupancyGrid(frame_k, detected_keypoints, &detected_keypoints_in_grid);
+    // Use the rotation to predict keypoints in the next frame.
+    Eigen::Matrix3Xd rays;
+    Eigen::Matrix2Xd predicted_keypoints_kp1;
+    std::vector<char> projection_successful;
+    std::vector<ProjectionResult> projection_result;
+    frame_k.getCameraGeometry()->backProject3Vectorized(
+        frame_k.getKeypointMeasurements(), &rays, &projection_successful);
+    rays = q_Ckp1_Ck.getRotationMatrix() * rays;
+    frame_kp1->getCameraGeometry()->project3Vectorized(rays, &predicted_keypoints_kp1,
+                                                       &projection_result);
 
-      // Add these features to the frame.
-      insertAdditionalKeypointsToFrame(detected_keypoints_in_grid, frame_kp1);
-    } else {
-      // Add ALL features to the frame.
-      insertAdditionalKeypointsToFrame(detected_keypoints, frame_kp1);
+    std::vector<cv::Point2f> tracked_keypoints_kp1;
+    tracked_keypoints_kp1.reserve(keypoints_k.size());
+    for (int idx = 0; idx < predicted_keypoints_kp1.cols(); ++idx) {
+      if (projection_successful[idx] && projection_result[idx].isKeypointVisible()) {
+        tracked_keypoints_kp1.emplace_back(predicted_keypoints_kp1.col(idx)(0),
+                                           predicted_keypoints_kp1.col(idx)(1));
+      } else {
+        // Default to no motion for prediction.
+        tracked_keypoints_kp1.emplace_back(keypoints_k[idx]);
+      }
     }
-    // This is the first frame. We are done here.
-    first_frame_processed_ = true;
-    return;
-  }
-
-  // Track the features in the current frame kp1.
-  Vector2dList new_keypoints;
-  // Check if there are features to track at all.
-  if (frame_k.getNumKeypointMeasurements() > 0) {
-    // Output status vector (of unsigned chars). Each element of the vector is set to 1 if the flow
-    // for the corresponding features has been found, otherwise, it is set to 0.
-    std::vector<unsigned char> tracking_successful;
 
     // Output vector of errors. Each element of the vector is set to an error for the corresponding
     // feature. Type of the error measure can be set in flags parameter. If the flow wasn’t found
     // then the error is not defined (use the tracking_successful parameter to find such cases).
-    std::vector<float> tracking_error;
+    std::vector<float> tracking_errors;
+    tracking_errors.reserve(keypoints_k.size());
 
-    std::vector<cv::Point2f> keypoints_k, keypoints_kp1;
-    getKeypointsfromFrame(frame_k, &keypoints_k);
-
-    // Use the rotation to predict keypoints in the next frame.
-    Eigen::Matrix3Xd rays;
-    Eigen::Matrix2Xd predicted_keypoints;
-    std::vector<char> projection_successfull;
-    std::vector<ProjectionResult> projection_result;
-    frame_k.getCameraGeometry()->backProject3Vectorized(
-        frame_k.getKeypointMeasurements(), &rays, &projection_successfull);
-    rays = q_Ckp1_Ck.getRotationMatrix() * rays;
-    frame_kp1->getCameraGeometry()->project3Vectorized(rays,
-                                                       &predicted_keypoints,
-                                                       &projection_result);
-    keypoints_kp1.reserve(keypoints_k.size());
-    for (int i = 0; i < predicted_keypoints.cols(); ++i) {
-      if (projection_successfull[i]
-          && projection_result[i].isKeypointVisible()) {
-        keypoints_kp1.emplace_back(predicted_keypoints.col(i)(0),
-                                   predicted_keypoints.col(i)(1));
-      } else {
-        // Default to no motion for prediction.
-        keypoints_kp1.emplace_back(keypoints_k[i]);
-      }
-    }
+    // Output status vector (of unsigned chars). Each element of the vector is set to 1 if the flow
+    // for the corresponding features has been found, otherwise, it is set to 0.
+    std::vector<unsigned char> tracking_successful;
+    tracking_successful.reserve(keypoints_k.size());
 
     cv::calcOpticalFlowPyrLK(frame_k.getRawImage(), frame_kp1->getRawImage(),
-                             keypoints_k, keypoints_kp1, tracking_successful, tracking_error,
+                             keypoints_k, tracked_keypoints_kp1, tracking_successful, tracking_errors,
                              kWindowSize, kMaxPyramidLevel, kTerminationCriteria, kOperationFlag,
                              kMinEigenThreshold);
 
     // Sort indices by tracking error.
-    std::vector<size_t> indices_sorted_by_descending_tracking_error(tracking_error.size());
-    for (size_t i = 0u; i < indices_sorted_by_descending_tracking_error.size(); ++i) {
-      indices_sorted_by_descending_tracking_error[i] = i;
+    std::vector<size_t> indices_sorted_by_ascending_tracking_error(tracking_errors.size());
+    for (size_t i = 0u; i < indices_sorted_by_ascending_tracking_error.size(); ++i) {
+      indices_sorted_by_ascending_tracking_error[i] = i;
     }
-    std::sort(indices_sorted_by_descending_tracking_error.begin(),
-              indices_sorted_by_descending_tracking_error.end(),
-              [&tracking_error](size_t i1, size_t i2) {
-      return tracking_error[i1] < tracking_error[i2];
+    std::sort(indices_sorted_by_ascending_tracking_error.begin(),
+              indices_sorted_by_ascending_tracking_error.end(),
+              [&tracking_errors](size_t index_1, size_t index_2) {
+      return tracking_errors[index_1] < tracking_errors[index_2];
     });
+    CHECK_EQ(keypoints_k.size(), tracked_keypoints_kp1.size());
 
     Eigen::Matrix<size_t, kGridCellResolution, kGridCellResolution> occupancy_grid;
-    occupancy_grid.setZero();
-    const size_t image_width = frame_k.getRawImage().cols;
-    const size_t image_height = frame_k.getRawImage().rows;
+    if (kUseOccupancyGrid) {
+      occupancy_grid.setZero();
+    }
 
-    matches_with_score_kp1_k->clear();
-    CHECK_EQ(keypoints_k.size(), keypoints_kp1.size());
-    size_t k = 0u;
+    // Make sure the registered keypoints to abort belong to this frame.
+    if (!keypoint_indices_to_abort_.empty() && abort_keypoints_wrt_frame_id_ != frame_k.getId()) {
+      LOG(WARNING) << "Keypoints to abort do not match the processed frame.";
+      keypoint_indices_to_abort_.clear();
+    }
+
+    size_t keypoint_idx_kp1 = 0u;
     for (size_t j = 0u; j < keypoints_k.size(); ++j) {
-      size_t i = indices_sorted_by_descending_tracking_error[j]; // Get sorted index.
+      const size_t keypoint_idx_k = indices_sorted_by_ascending_tracking_error[j];
 
-      if (keypoints_kp1[i].x < kMinDistanceToImageBorderPx ||
-          keypoints_kp1[i].x >= (frame_k.getRawImage().cols - kMinDistanceToImageBorderPx) ||
-          keypoints_kp1[i].y < kMinDistanceToImageBorderPx ||
-          keypoints_kp1[i].y >= (frame_k.getRawImage().rows - kMinDistanceToImageBorderPx) ||
-          !tracking_successful[i]) {
+      // Drop tracks that are marked for abortion or invalid.
+      if (keypoint_indices_to_abort_.count(keypoint_idx_k) == 1u) {
         continue;
       }
 
-      {
-        size_t grid_x = std::floor(keypoints_kp1[i].x * kGridCellResolution / image_width );
-        size_t grid_y = std::floor(keypoints_kp1[i].y * kGridCellResolution / image_height );
+      // Drop tracks where the tracking failed or that are close to the border as we can't
+      // compute descriptors.
+      if (tracked_keypoints_kp1[keypoint_idx_k].x < kMinDistanceToImageBorderPx ||
+          tracked_keypoints_kp1[keypoint_idx_k].x >=
+            (frame_k.getRawImage().cols - kMinDistanceToImageBorderPx) ||
+          tracked_keypoints_kp1[keypoint_idx_k].y < kMinDistanceToImageBorderPx ||
+          tracked_keypoints_kp1[keypoint_idx_k].y >=
+            (frame_k.getRawImage().rows - kMinDistanceToImageBorderPx) ||
+          !tracking_successful[keypoint_idx_k]) {
+        continue;
+      }
 
-        // Don't use the track if there are too many landmarks in this cell.
+      // Drop tracks if there are too many landmarks already in the the bucket.
+      if (kUseOccupancyGrid) {
+        const size_t image_width = frame_k.getRawImage().cols;
+        const size_t image_height = frame_k.getRawImage().rows;
+        size_t grid_x = std::floor(
+            tracked_keypoints_kp1[keypoint_idx_k].x * kGridCellResolution / image_width);
+        size_t grid_y = std::floor(
+            tracked_keypoints_kp1[keypoint_idx_k].y * kGridCellResolution / image_height);
+
         if (occupancy_grid(grid_x, grid_y) >= kMaxLandmarksPerCell) {
           continue;
         }
         ++occupancy_grid(grid_x, grid_y);
-       }
+      }
 
-      new_keypoints.emplace_back(keypoints_kp1[i].x, keypoints_kp1[i].y);
-
-      // Create the matches.
       // Index k corresponds to current frame kp1, index i corresponds to previous frame k.
-      matches_with_score_kp1_k->emplace_back(k, i, -tracking_error[i]);
-      CHECK_LT(k, keypoints_kp1.size());
-      CHECK_LT(i, keypoints_k.size());
-      ++k;
+      matches_with_score_kp1_k->emplace_back(keypoint_idx_kp1, keypoint_idx_k,
+                                             -tracking_errors[keypoint_idx_k]);
+      new_keypoints_kp1.emplace_back(tracked_keypoints_kp1[keypoint_idx_k].x,
+                                     tracked_keypoints_kp1[keypoint_idx_k].y);
+
+      CHECK_LT(keypoint_idx_kp1, tracked_keypoints_kp1.size());
+      ++keypoint_idx_kp1;
     }
   }
 
-  // Add the keypoints that were tracked from frame k to frame k+1
-  // to the current frame k+1.
-  if (!new_keypoints.empty()) {
-    insertAdditionalKeypointsToFrame(new_keypoints, frame_kp1);
-  }
-
-  // If the number of tracked features drops below threshold, then add
-  // new features to the current frame. They will be tracked in next
-  // time step.
-  if (frame_kp1->getNumKeypointMeasurements() < kMinFeatureCount) {
-    // Detect new features.
+  // Initialize new features if the number of tracked features drops below a certain threshold or
+  // there aren't any during initialization. They will be tracked in the next time step.
+  if (!frame_kp1->hasKeypointMeasurements() ||
+      frame_kp1->getNumKeypointMeasurements() < kMinFeatureCount) {
     Vector2dList detected_keypoints;
     detectGfttCorners(frame_kp1->getRawImage(), &detected_keypoints);
 
@@ -162,13 +154,22 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       Vector2dList detected_keypoints_in_grid;
       occupancyGrid(*frame_kp1, detected_keypoints, &detected_keypoints_in_grid);
 
-      // Add these features to the frame.
-      insertAdditionalKeypointsToFrame(detected_keypoints_in_grid, frame_kp1);
+      new_keypoints_kp1.insert(new_keypoints_kp1.end(), detected_keypoints_in_grid.begin(),
+                               detected_keypoints_in_grid.end());
     } else {
       // Add ALL features to the frame.
-      insertAdditionalKeypointsToFrame(detected_keypoints, frame_kp1);
+      new_keypoints_kp1.insert(new_keypoints_kp1.end(), detected_keypoints.begin(),
+                               detected_keypoints.end());
     }
   }
+  CHECK(!new_keypoints_kp1.empty());
+
+  // Write the tracked and new keypoints to the frame kp1.
+  insertAdditionalKeypointsToFrame(new_keypoints_kp1, frame_kp1);
+  CHECK(frame_kp1->hasKeypointMeasurements());
+
+  keypoint_indices_to_abort_.clear();
+  abort_keypoints_wrt_frame_id_.setInvalid();
 }
 
 void FeatureTrackerLk::detectGfttCorners(const cv::Mat& image, Vector2dList* detected_keypoints) {
@@ -182,9 +183,10 @@ void FeatureTrackerLk::detectGfttCorners(const cv::Mat& image, Vector2dList* det
   cv::cornerSubPix(image, detected_keypoints_cv, kSubPixelWinSize, kSubPixelZeroZone,
                    kTerminationCriteria);
 
-  // Simple type conversion.
+  // Simple type conversion and removal of tracks that are close to the border as we can't compute
+  // descriptors.
   detected_keypoints->clear();
-  for (size_t i = 0; i < detected_keypoints_cv.size(); ++i) {
+  for (size_t i = 0u; i < detected_keypoints_cv.size(); ++i) {
     if (detected_keypoints_cv[i].x < kMinDistanceToImageBorderPx ||
         detected_keypoints_cv[i].x >= (detection_mask_.cols - kMinDistanceToImageBorderPx) ||
         detected_keypoints_cv[i].y < kMinDistanceToImageBorderPx ||
@@ -199,8 +201,7 @@ void FeatureTrackerLk::detectGfttCorners(const cv::Mat& image, Vector2dList* det
 void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_keypoint_list,
                                                         aslam::VisualFrame* frame) {
   CHECK_NOTNULL(frame);
-
-  size_t num_new_keypoints = new_keypoint_list.size();
+  const size_t num_new_keypoints = new_keypoint_list.size();
   Eigen::Matrix2Xd new_keypoints(2, num_new_keypoints);
   for (size_t i = 0; i < num_new_keypoints; ++i) {
     new_keypoints.col(i) = new_keypoint_list[i];
@@ -246,10 +247,11 @@ void FeatureTrackerLk::insertAdditionalKeypointsToFrame(const Vector2dList& new_
   }
 }
 
-void FeatureTrackerLk::getKeypointsfromFrame(const aslam::VisualFrame& frame,
+void FeatureTrackerLk::getKeypointsFromFrame(const aslam::VisualFrame& frame,
                                              std::vector<cv::Point2f>* keypoints_out) {
   CHECK_NOTNULL(keypoints_out);
   const Eigen::Matrix2Xd& keypoints = frame.getKeypointMeasurements();
+  keypoints_out->reserve(keypoints.cols());
   for (size_t i = 0u; i < static_cast<size_t>(keypoints.cols()); ++i) {
     keypoints_out->emplace_back(keypoints.col(i)(0), keypoints.col(i)(1));
   }
@@ -273,7 +275,7 @@ void FeatureTrackerLk::occupancyGrid(const aslam::VisualFrame& frame,
     num_previous_keypoints = 0;
   }
 
-  // First extract the keypoints that are are currently tracked.
+  // First extract the keypoints that are currently tracked.
   for (size_t keypoint_idx = 0; keypoint_idx < num_previous_keypoints; ++keypoint_idx) {
     const Eigen::Vector2d previous_keypoint = previous_keypoints.col(keypoint_idx);
     CHECK_GE(previous_keypoint(0), 0u);
