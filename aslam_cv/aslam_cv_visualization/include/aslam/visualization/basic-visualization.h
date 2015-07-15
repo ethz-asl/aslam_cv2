@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <aslam/common/memory.h>
+#include <aslam/frames/feature-track.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/frames/visual-nframe.h>
 #include <aslam/matcher/match.h>
@@ -23,11 +24,10 @@ const cv::Scalar kBlack(0, 0, 0);
 const cv::Scalar kWhite(255, 255, 255);
 
 struct ImagePositionOffset {
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   size_t width;
   size_t height;
 };
-typedef aslam::Aligned<std::vector, ImagePositionOffset>::type Offsets;
+typedef std::vector<ImagePositionOffset> Offsets;
 
 ////////////////////////////////////////////////
 /// High-level functions - They render raw images plus some additional visualization.
@@ -61,6 +61,18 @@ void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
 /// Takes an nframe and creates a single image patching together all raw images of all frames.
 void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
                         cv::Mat* full_image, Offsets* offsets);
+
+/// Draw the patches around keypoints for one features tracks.
+void drawFeatureTrackPatches(const aslam::FeatureTrack& track, size_t neighborhood_px,
+                               cv::Mat* image);
+
+/// Draw the patches around keypoints for a list of features tracks.
+bool drawFeatureTracksPatches(const aslam::FeatureTracks& tracks, size_t neighborhood_px,
+                              size_t num_cols, cv::Mat* all_tracks_image);
+
+/// Draw a list of feature tracks into an image. The tracks are drawn into the image
+/// associated with the last keypoint of the first track in the list.
+bool drawFeatureTracks(const aslam::FeatureTracks& tracks, cv::Mat* image);
 
 }  // namespace aslam_cv_visualization
 
