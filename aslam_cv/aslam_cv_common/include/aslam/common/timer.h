@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <chrono>
 #include <limits>
-#include <mutex>
 #include <map>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -14,7 +14,7 @@
 namespace aslam {
 namespace timing {
 
-// A class that has the timer interface but does nothing. Swapping this in in
+// A class that has the timer interface but does nothing. Swapping this in
 // place of the Timer class (say with a typedef) should allow one to disable
 // timing. Because all of the functions are inline, they should just disappear.
 class DummyTimer {
@@ -22,7 +22,7 @@ class DummyTimer {
   DummyTimer(size_t /*handle*/, bool construct_stopped = false) {
     static_cast<void>(construct_stopped);
   }
-  DummyTimer(std::string const& /*tag*/, bool construct_stopped = false) {
+  DummyTimer(const std::string& /*tag*/, bool construct_stopped = false) {
     static_cast<void>(construct_stopped);
   }
   ~DummyTimer() {}
@@ -33,7 +33,7 @@ class DummyTimer {
 
 class Timer {
  public:
-  Timer(std::string const& tag, bool construct_stopped = false);
+  Timer(const std::string& tag, bool construct_stopped = false);
   ~Timer();
 
   void Start();
@@ -46,7 +46,7 @@ class Timer {
  private:
   std::chrono::time_point<std::chrono::system_clock> time_;
 
-  bool timing_;
+  bool is_timing_;
   size_t handle_;
   std::string tag_;
 };
@@ -56,28 +56,28 @@ class Timing {
   typedef std::map<std::string, size_t> map_t;
   friend class Timer;
   // Definition of static functions to query the timers.
-  static size_t GetHandle(std::string const& tag);
+  static size_t GetHandle(const std::string& tag);
   static std::string GetTag(size_t handle);
   static double GetTotalSeconds(size_t handle);
-  static double GetTotalSeconds(std::string const& tag);
+  static double GetTotalSeconds(const std::string& tag);
   static double GetMeanSeconds(size_t handle);
-  static double GetMeanSeconds(std::string const& tag);
+  static double GetMeanSeconds(const std::string& tag);
   static size_t GetNumSamples(size_t handle);
-  static size_t GetNumSamples(std::string const& tag);
+  static size_t GetNumSamples(const std::string& tag);
   static double GetVarianceSeconds(size_t handle);
-  static double GetVarianceSeconds(std::string const& tag);
+  static double GetVarianceSeconds(const std::string& tag);
   static double GetMinSeconds(size_t handle);
-  static double GetMinSeconds(std::string const& tag);
+  static double GetMinSeconds(const std::string& tag);
   static double GetMaxSeconds(size_t handle);
-  static double GetMaxSeconds(std::string const& tag);
+  static double GetMaxSeconds(const std::string& tag);
   static double GetHz(size_t handle);
-  static double GetHz(std::string const& tag);
+  static double GetHz(const std::string& tag);
   static void Print(std::ostream& out);  // NOLINT
   static std::string Print();
   static std::string SecondsToTimeString(double seconds);
   static void Reset();
   static const map_t& GetTimers() {
-    return Instance().tagMap_;
+    return Instance().tag_map_;
   }
 
  private:
@@ -91,8 +91,8 @@ class Timing {
   typedef std::vector<statistics::StatisticsMapValue> list_t;
 
   list_t timers_;
-  map_t tagMap_;
-  size_t maxTagLength_;
+  map_t tag_map_;
+  size_t max_tag_length_;
   std::mutex mutex_;
 };
 
