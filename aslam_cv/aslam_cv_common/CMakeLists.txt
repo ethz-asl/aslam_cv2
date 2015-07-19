@@ -38,6 +38,7 @@ set(HEADERS
   include/aslam/common/yaml-serialization-eigen.h
   include/aslam/common/statistics/accumulator.h
   include/aslam/common/statistics/statistics.h
+  include/aslam/common/timer.h
 )
 
 set(SOURCES
@@ -46,6 +47,7 @@ set(SOURCES
   src/hash-id.cc
   src/statistics.cc
   src/thread-pool.cc
+  src/timer.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
