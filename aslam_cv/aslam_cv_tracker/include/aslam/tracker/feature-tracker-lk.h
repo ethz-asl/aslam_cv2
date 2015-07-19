@@ -7,6 +7,7 @@
 #include <aslam/common/memory.h>
 #include <aslam/matcher/match.h>
 #include <aslam/tracker/feature-tracker.h>
+#include <brisk/brisk.h>
 #include <Eigen/Dense>
 #include <opencv2/video/tracking.hpp>
 
@@ -42,9 +43,9 @@ class FeatureTrackerLk : public FeatureTracker {
   }
 
  private:
-  /// \brief Detect good features to track opencv-wrapper.
+  /// \brief Detect good features to track.
   /// @param[in] image Extract features from this image.
-  /// @param[out] detected_keypoints A list with keypoint detections.
+  /// @param[out] detected_keypoints List of detected keypoints.
   void detectGfttCorners(const cv::Mat& image, Vector2dList* detected_keypoints);
 
   /// \brief Apply keypoints of type Eigen::Vector2d to frame.
@@ -74,12 +75,12 @@ class FeatureTrackerLk : public FeatureTracker {
   /// is multiplied by the best corner quality measure, which is the minimal eigenvalue
   /// (see cornerMinEigenVal() ) or the Harris function response (see cornerHarris() ). The corners
   /// with the quality measure less than the product are rejected. For example, if the best corner
-  /// has the quality measure = 1500, and the qualityLevel=0.01 , then all the corners with the
+  /// has the quality measure = 1500, and the qualityLevel=0.01, then all the corners with the
   /// quality measure less than 15 are rejected.
   static constexpr double kGoodFeaturesToTrackQualityLevel = 0.01;
 
   /// Minimum possible euclidean distance between the returned corners.
-  static constexpr double kGoodFeaturesToTrackMinDistancePixel = 10.0;
+  static constexpr double kGoodFeaturesToTrackMinDistancePixel = 5.0;
 
   /// Maximum number of corners to return. If there are more corners than are found,
   /// the strongest of them are returned.
@@ -149,6 +150,12 @@ class FeatureTrackerLk : public FeatureTracker {
   /// the next call to track().
   std::unordered_set<size_t> keypoint_indices_to_abort_;
   aslam::FrameId abort_keypoints_wrt_frame_id_;
+
+  /// Optional brisk harris detector.
+  size_t kBriskOctaves = 0;
+  size_t kBriskUniformityRadius = 0;
+  size_t kBriskAbsoluteThreshold = 15;
+  std::unique_ptr<brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>> detector_;
 };
 }  // namespace aslam
 
