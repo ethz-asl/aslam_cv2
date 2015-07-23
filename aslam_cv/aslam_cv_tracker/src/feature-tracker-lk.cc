@@ -191,7 +191,6 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       CHECK_LT(keypoint_idx_kp1, tracked_keypoints_kp1.size());
       ++keypoint_idx_kp1;
     }
-
     timer_selection.Stop();
   }
 
