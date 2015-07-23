@@ -110,7 +110,9 @@ class FeatureTrackerLk : public FeatureTracker {
   /// Either use occupancy grid and SimpleTrackManager or
   /// do not use occupancy grid and do use UniformTrackManager!
   static const bool kUseOccupancyGrid = true;
-  static const bool kUseOccupancyMatrix = true;
+
+  /// Uses a occupancy matrix that disallows close-together keypoints.
+  static const bool kUseOccupancyMatrix = false;
   /// @}
 
   //////////////////////////////////////////////////////////////
