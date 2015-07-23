@@ -5,11 +5,6 @@
 #include <gflags/gflags.h>
 #include <opencv/highgui.h>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/core/eigen.hpp>
-
-#include <opencv2/highgui/highgui.hpp>
-
 namespace aslam {
 
 DEFINE_bool(lk_use_brisk_harris, false,
