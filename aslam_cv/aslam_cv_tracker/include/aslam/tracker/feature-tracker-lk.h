@@ -68,6 +68,22 @@ class FeatureTrackerLk : public FeatureTracker {
   void occupancyGrid(const aslam::VisualFrame& frame, const Vector2dList& detected_keypoints,
                      Vector2dList* detected_keypoints_in_grid);
 
+  inline void fillOccupancyMatrix(size_t x_pixel, size_t y_pixel, size_t image_width, size_t image_height) {
+    int x_occupancy_block_corner = x_pixel - kHalfOccupancyBlockSizePx;
+    if (x_occupancy_block_corner < 0) { x_occupancy_block_corner = 0; }
+    if (x_occupancy_block_corner > image_width - kOccupancyBlockSizePx) {
+      x_occupancy_block_corner = image_width - kOccupancyBlockSizePx;
+    }
+    int y_occupancy_block_corner = y_pixel - kHalfOccupancyBlockSizePx;
+    if (y_occupancy_block_corner < 0) { y_occupancy_block_corner = 0; }
+    if (y_occupancy_block_corner > image_height - kOccupancyBlockSizePx) {
+      y_occupancy_block_corner = image_height - kOccupancyBlockSizePx;
+    }
+
+    occupancy_matrix_.block<kOccupancyBlockSizePx, kOccupancyBlockSizePx>
+      (y_occupancy_block_corner, x_occupancy_block_corner) = occupancy_block_;
+  }
+
   //////////////////////////////////////////////////////////////
   /// \name Parameters for Feature Detection.
   /// @{

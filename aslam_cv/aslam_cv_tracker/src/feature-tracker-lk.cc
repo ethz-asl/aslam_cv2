@@ -42,6 +42,9 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   CHECK(!frame_kp1->hasKeypointMeasurements());
   CHECK(!frame_kp1->hasTrackIds());
 
+  const size_t image_width = frame_k.getRawImage().cols;
+  const size_t image_height = frame_k.getRawImage().rows;
+
   // Track existing feature of frame k to frame kp1.
   Vector2dList new_keypoints_kp1;
   new_keypoints_kp1.reserve(kMaxFeatureCount);
@@ -116,9 +119,6 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       keypoint_indices_to_abort_.clear();
     }
 
-    const size_t image_width = frame_k.getRawImage().cols;
-    const size_t image_height = frame_k.getRawImage().rows;
-
     if (kUseOccupancyMatrix) {
       CHECK_EQ(image_width, occupancy_matrix_.cols());
       CHECK_EQ(image_height, occupancy_matrix_.rows());
@@ -172,19 +172,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       if (kUseOccupancyMatrix) {
         aslam::timing::Timer timer_occupancy_matrix(
             "FeatureTrackerLk: track - filling occupancy matrix");
-        int x_occupancy_block_corner = x_pixel - kHalfOccupancyBlockSizePx;
-        if (x_occupancy_block_corner < 0) { x_occupancy_block_corner = 0; }
-        if (x_occupancy_block_corner > image_width - kOccupancyBlockSizePx) {
-          x_occupancy_block_corner = image_width - kOccupancyBlockSizePx;
-        }
-        int y_occupancy_block_corner = y_pixel - kHalfOccupancyBlockSizePx;
-        if (y_occupancy_block_corner < 0) { y_occupancy_block_corner = 0; }
-        if (y_occupancy_block_corner > image_height - kOccupancyBlockSizePx) {
-          y_occupancy_block_corner = image_height - kOccupancyBlockSizePx;
-        }
-
-        occupancy_matrix_.block<kOccupancyBlockSizePx, kOccupancyBlockSizePx>
-          (y_occupancy_block_corner, x_occupancy_block_corner) = occupancy_block_;
+        fillOccupancyMatrix(x_pixel, y_pixel, image_width, image_height);
         timer_occupancy_matrix.Stop();
       }
 
@@ -201,6 +189,23 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     Vector2dList detected_keypoints;
     detectGfttCorners(frame_kp1->getRawImage(), &detected_keypoints);
 
+    if (kUseOccupancyMatrix) {
+      for (Vector2dList::iterator keypoint_iterator = detected_keypoints.begin(); keypoint_iterator != detected_keypoints.end();) {
+        const size_t x_pixel = std::round((*keypoint_iterator)(0));
+        const size_t y_pixel = std::round((*keypoint_iterator)(1));
+        if (occupancy_matrix_(y_pixel, x_pixel) > 0u) {
+          // Remove this keypoint as it is too close to n already existing.
+          keypoint_iterator = detected_keypoints.erase(keypoint_iterator);
+        } else {
+          // Keep this one and fill the occupancy matrix.
+          aslam::timing::Timer timer_occupancy_matrix(
+              "FeatureTrackerLk: track - filling occupancy matrix");
+          fillOccupancyMatrix(x_pixel, y_pixel, image_width, image_height);
+          timer_occupancy_matrix.Stop();
+          ++keypoint_iterator;
+        }
+      }
+    }
     if (kUseOccupancyGrid) {
       // Decide which new features to track based on occupancy grid.
       Vector2dList detected_keypoints_in_grid;
@@ -208,15 +213,6 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
 
       new_keypoints_kp1.insert(new_keypoints_kp1.end(), detected_keypoints_in_grid.begin(),
                                detected_keypoints_in_grid.end());
-    } else if (kUseOccupancyMatrix) {
-      // Add only new keypoints where they are not too close to currently tracked features.
-      for (const Vector2dList::value_type& keypoint : detected_keypoints) {
-        const size_t x_pixel = std::round(keypoint(0));
-        const size_t y_pixel = std::round(keypoint(1));
-        if (occupancy_matrix_(y_pixel, x_pixel) == 0u) {
-          new_keypoints_kp1.push_back(keypoint);
-        }
-      }
     } else {
       // Add ALL features to the frame.
       new_keypoints_kp1.insert(new_keypoints_kp1.end(), detected_keypoints.begin(),
