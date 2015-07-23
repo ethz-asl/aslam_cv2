@@ -120,6 +120,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     const size_t image_height = frame_k.getRawImage().rows;
 
     if (kUseOccupancyMatrix) {
+      CHECK_EQ(image_width, occupancy_matrix_.cols());
+      CHECK_EQ(image_height, occupancy_matrix_.rows());
       occupancy_matrix_.setZero();
     }
 
