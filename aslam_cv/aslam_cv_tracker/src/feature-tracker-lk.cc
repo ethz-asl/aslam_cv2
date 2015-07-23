@@ -5,6 +5,11 @@
 #include <gflags/gflags.h>
 #include <opencv/highgui.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/eigen.hpp>
+
+#include <opencv2/highgui/highgui.hpp>
+
 namespace aslam {
 
 DEFINE_bool(lk_use_brisk_harris, false,
@@ -24,6 +29,9 @@ FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) {
     detector_.reset(new brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>(
         kBriskOctaves, kBriskUniformityRadius, kBriskAbsoluteThreshold, kMaxFeatureCount));
   }
+
+  occupancy_matrix_.resize(camera.imageHeight(), camera.imageWidth());
+  occupancy_block_.setConstant(255u);
 }
 
 void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
@@ -113,6 +121,13 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       keypoint_indices_to_abort_.clear();
     }
 
+    const size_t image_width = frame_k.getRawImage().cols;
+    const size_t image_height = frame_k.getRawImage().rows;
+
+    if (kUseOccupancyMatrix) {
+      occupancy_matrix_.setZero();
+    }
+
     size_t keypoint_idx_kp1 = 0u;
     for (size_t j = 0u; j < keypoints_k.size(); ++j) {
       const size_t keypoint_idx_k = indices_sorted_by_ascending_tracking_error[j];
@@ -122,26 +137,28 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
         continue;
       }
 
+      const size_t x_pixel = std::round(tracked_keypoints_kp1[keypoint_idx_k].x);
+      const size_t y_pixel = std::round(tracked_keypoints_kp1[keypoint_idx_k].y);
+
       // Drop tracks where the tracking failed or that are close to the border as we can't
       // compute descriptors.
-      if (tracked_keypoints_kp1[keypoint_idx_k].x < kMinDistanceToImageBorderPx ||
-          tracked_keypoints_kp1[keypoint_idx_k].x >=
-            (frame_k.getRawImage().cols - kMinDistanceToImageBorderPx) ||
-          tracked_keypoints_kp1[keypoint_idx_k].y < kMinDistanceToImageBorderPx ||
-          tracked_keypoints_kp1[keypoint_idx_k].y >=
-            (frame_k.getRawImage().rows - kMinDistanceToImageBorderPx) ||
+      if (x_pixel < kMinDistanceToImageBorderPx || x_pixel >=
+            (image_width - kMinDistanceToImageBorderPx) ||
+          y_pixel < kMinDistanceToImageBorderPx ||
+          y_pixel >= (image_height - kMinDistanceToImageBorderPx) ||
           !tracking_successful[keypoint_idx_k]) {
+        continue;
+      }
+
+      // Drop tracks that are too close to another track.
+      if (kUseOccupancyMatrix && (occupancy_matrix_(y_pixel, x_pixel) > 0u)) {
         continue;
       }
 
       // Drop tracks if there are too many landmarks already in the the bucket.
       if (kUseOccupancyGrid) {
-        const size_t image_width = frame_k.getRawImage().cols;
-        const size_t image_height = frame_k.getRawImage().rows;
-        size_t grid_x = std::floor(
-            tracked_keypoints_kp1[keypoint_idx_k].x * kGridCellResolution / image_width);
-        size_t grid_y = std::floor(
-            tracked_keypoints_kp1[keypoint_idx_k].y * kGridCellResolution / image_height);
+        size_t grid_x = std::floor(x_pixel * kGridCellResolution / image_width);
+        size_t grid_y = std::floor(y_pixel * kGridCellResolution / image_height);
 
         if (occupancy_grid(grid_x, grid_y) >= kMaxLandmarksPerCell) {
           continue;
@@ -155,9 +172,29 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       new_keypoints_kp1.emplace_back(tracked_keypoints_kp1[keypoint_idx_k].x,
                                      tracked_keypoints_kp1[keypoint_idx_k].y);
 
+      if (kUseOccupancyMatrix) {
+        aslam::timing::Timer timer_occupancy_matrix(
+            "FeatureTrackerLk: track - filling occupancy matrix");
+        int x_occupancy_block_corner = x_pixel - kHalfOccupancyBlockSizePx;
+        if (x_occupancy_block_corner < 0) { x_occupancy_block_corner = 0; }
+        if (x_occupancy_block_corner > image_width - kOccupancyBlockSizePx) {
+          x_occupancy_block_corner = image_width - kOccupancyBlockSizePx;
+        }
+        int y_occupancy_block_corner = y_pixel - kHalfOccupancyBlockSizePx;
+        if (y_occupancy_block_corner < 0) { y_occupancy_block_corner = 0; }
+        if (y_occupancy_block_corner > image_height - kOccupancyBlockSizePx) {
+          y_occupancy_block_corner = image_height - kOccupancyBlockSizePx;
+        }
+
+        occupancy_matrix_.block<kOccupancyBlockSizePx, kOccupancyBlockSizePx>
+          (y_occupancy_block_corner, x_occupancy_block_corner) = occupancy_block_;
+        timer_occupancy_matrix.Stop();
+      }
+
       CHECK_LT(keypoint_idx_kp1, tracked_keypoints_kp1.size());
       ++keypoint_idx_kp1;
     }
+
     timer_selection.Stop();
   }
 
@@ -175,6 +212,15 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
 
       new_keypoints_kp1.insert(new_keypoints_kp1.end(), detected_keypoints_in_grid.begin(),
                                detected_keypoints_in_grid.end());
+    } else if (kUseOccupancyMatrix) {
+      // Add only new keypoints where they are not too close to currently tracked features.
+      for (const Vector2dList::value_type& keypoint : detected_keypoints) {
+        const size_t x_pixel = std::round(keypoint(0));
+        const size_t y_pixel = std::round(keypoint(1));
+        if (occupancy_matrix_(y_pixel, x_pixel) == 0u) {
+          new_keypoints_kp1.push_back(keypoint);
+        }
+      }
     } else {
       // Add ALL features to the frame.
       new_keypoints_kp1.insert(new_keypoints_kp1.end(), detected_keypoints.begin(),

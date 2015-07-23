@@ -110,6 +110,7 @@ class FeatureTrackerLk : public FeatureTracker {
   /// Either use occupancy grid and SimpleTrackManager or
   /// do not use occupancy grid and do use UniformTrackManager!
   static const bool kUseOccupancyGrid = true;
+  static const bool kUseOccupancyMatrix = true;
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -141,6 +142,11 @@ class FeatureTrackerLk : public FeatureTracker {
 
   /// Enforce a minimal distance of all keypoints to the image border.
   const size_t kMinDistanceToImageBorderPx = 30u;
+
+  /// Half the block size in pixels to be occuopied by a keypoint.
+  static constexpr int kHalfOccupancyBlockSizePx = 10;
+  static constexpr int kOccupancyBlockSizePx = 2 * kHalfOccupancyBlockSizePx;
+
   /// @}
 
   /// Mask the area where no tracks should be spawned.
@@ -156,6 +162,9 @@ class FeatureTrackerLk : public FeatureTracker {
   size_t kBriskUniformityRadius = 0;
   size_t kBriskAbsoluteThreshold = 15;
   std::unique_ptr<brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>> detector_;
+
+  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> occupancy_matrix_;
+  Eigen::Matrix<unsigned char, kOccupancyBlockSizePx, kOccupancyBlockSizePx> occupancy_block_;
 };
 }  // namespace aslam
 
