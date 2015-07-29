@@ -38,14 +38,14 @@ void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& in
                          std::vector<ElementType, Allocator>* output) {
   CHECK_NOTNULL(output)->clear();
   CHECK_GT(N, 0u);
-  size_t num_input_elements = input.size();
+  const size_t num_input_elements = input.size();
   if (num_input_elements <= N) {
     *output = input;
     return;
   }
 
   // Draw random indices.
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
   std::default_random_engine generator(seed);
   std::uniform_int_distribution<int> distribution(0, N);
 
@@ -73,7 +73,7 @@ size_t keepOnlyNSortedElements(size_t max_elements_to_keep,
     const RemoveActionFunctor& action_on_removed_elements = NullAction<ElementType>()) {
   CHECK_NOTNULL(container);
 
-  // Special case for  max_elements_to_keep == 0u: only run the action on all elements.
+  // Special case for max_elements_to_keep == 0u: only run the action on all elements.
   if (max_elements_to_keep == 0u) {
     for (const ElementType& element : *container) {
       action_on_removed_elements(element);
@@ -83,12 +83,12 @@ size_t keepOnlyNSortedElements(size_t max_elements_to_keep,
   }
 
   // Early exit if the container has less elements than the number to keep.
-  size_t num_elements = container->size();
+  const size_t num_elements = container->size();
   if (num_elements <= max_elements_to_keep) {
     return num_elements;
   }
 
-  // Sort upto N greatest elements.
+  // Sort up to N greatest elements.
   std::partial_sort(container->begin(), container->begin() + max_elements_to_keep,
                     container->end(), sort_compare_functor);
   CHECK_GE(container->size(), max_elements_to_keep);
