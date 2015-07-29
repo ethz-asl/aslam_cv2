@@ -62,11 +62,11 @@ void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
 void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
                         cv::Mat* full_image, Offsets* offsets);
 
-/// Draw the patches around keypoints for one features tracks.
+/// Draw the patches around all keypoints for one features tracks.
 void drawFeatureTrackPatches(const aslam::FeatureTrack& track, size_t neighborhood_px,
-                               cv::Mat* image);
+                             cv::Mat* image);
 
-/// Draw the patches around keypoints for a list of features tracks.
+/// Draw the patches around all keypoints for a list of features tracks.
 bool drawFeatureTracksPatches(const aslam::FeatureTracks& tracks, size_t neighborhood_px,
                               size_t num_cols, cv::Mat* all_tracks_image);
 

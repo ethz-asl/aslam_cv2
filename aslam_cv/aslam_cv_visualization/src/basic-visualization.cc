@@ -180,41 +180,45 @@ void visualizeMatches(const aslam::VisualFrame& frame_kp1, const aslam::VisualFr
                       &match_image);
 }
 
-void drawFeatureTrackPatches(const aslam::FeatureTrack& track, size_t neighborhood_px,
+void drawFeatureTrackPatches(const aslam::FeatureTrack& track, size_t keypoint_neighborhood_px,
                              size_t num_cols, cv::Mat* image) {
   CHECK_NOTNULL(image);
-  CHECK_GT(neighborhood_px, 0u);
+  CHECK_GT(keypoint_neighborhood_px, 0u);
   CHECK_GT(num_cols, 0u);
   const size_t track_length = track.getTrackLength();
   CHECK_GT(track_length, 0u);
 
-  size_t subimage_edge_length_px = 2 * neighborhood_px;
-  size_t num_subimage_rows =
+  const size_t subimage_edge_length_px = 2u * keypoint_neighborhood_px;
+  const size_t num_subimage_rows =
       std::ceil(track_length / static_cast<double>(num_cols)) * subimage_edge_length_px;
-  size_t num_subimage_cols = num_cols * subimage_edge_length_px;
+  const size_t num_subimage_cols = num_cols * subimage_edge_length_px;
 
   image->create(num_subimage_rows, num_subimage_cols, CV_8UC3);
   image->setTo(0);
 
   size_t keypoint_index = 0u;
   for (const aslam::KeypointIdentifier& kip : track.getKeypointIdentifiers()) {
-    size_t subimage_row = std::floor(keypoint_index / num_cols);
-    size_t subimage_col = keypoint_index % num_cols;
+    const size_t subimage_row = std::floor(keypoint_index / num_cols);
+    const size_t subimage_col = keypoint_index % num_cols;
+
+    // roi denotes the region of interest wrt. to a larger image.
     cv::Rect roi_subimage(
         cv::Point(subimage_col * subimage_edge_length_px,
                   subimage_row * subimage_edge_length_px),
         cv::Point((subimage_col + 1) * subimage_edge_length_px,
                   (subimage_row + 1) * subimage_edge_length_px));
 
-    // Extract the image around the keypoint and write it the full image.
+    // Extract the image patch around the keypoint and write it to the full image.
     const Eigen::Vector2d keypoint = kip.getKeypointMeasurement();
     const cv::Mat& keypoint_image = kip.getFrame().getRawImage();
 
-    cv::Point roi_keypoint_topleft(std::max((keypoint(0) - neighborhood_px), 0.0),
-                                   std::max((keypoint(1) - neighborhood_px), 0.0));
+    cv::Point roi_keypoint_topleft(std::max((keypoint(0) - keypoint_neighborhood_px), 0.0),
+                                   std::max((keypoint(1) - keypoint_neighborhood_px), 0.0));
     cv::Point roi_keypoint_bottomright(
-        std::min((keypoint(0) + neighborhood_px), static_cast<double>(keypoint_image.cols)),
-        std::min((keypoint(1) + neighborhood_px), static_cast<double>(keypoint_image.rows)));
+        std::min((keypoint(0) + keypoint_neighborhood_px),
+                 static_cast<double>(keypoint_image.cols)),
+        std::min((keypoint(1) + keypoint_neighborhood_px),
+                 static_cast<double>(keypoint_image.rows)));
     cv::Rect roi_keypoint(roi_keypoint_topleft, roi_keypoint_bottomright);
 
     // Adjust the size in case of border truncation.
@@ -225,7 +229,7 @@ void drawFeatureTrackPatches(const aslam::FeatureTrack& track, size_t neighborho
 
     // Draw the keypoint.
     cv::Mat keypoint_neighbourhood_image;
-    cv::cvtColor(keypoint_image(roi_keypoint), keypoint_neighbourhood_image,CV_GRAY2BGR);
+    cv::cvtColor(keypoint_image(roi_keypoint), keypoint_neighbourhood_image, CV_GRAY2BGR);
     cv::Point keypoint_coords_subimage(keypoint[0] - roi_keypoint.x, keypoint[1] - roi_keypoint.y);
     cv::circle(keypoint_neighbourhood_image, keypoint_coords_subimage, 1,
                cv::Scalar(0, 255, 255), 1, CV_AA);
@@ -238,14 +242,16 @@ void drawFeatureTrackPatches(const aslam::FeatureTrack& track, size_t neighborho
 bool drawFeatureTracksPatches(const aslam::FeatureTracks& tracks, size_t neighborhood_px,
                               size_t num_cols, cv::Mat* all_tracks_image) {
   CHECK_NOTNULL(all_tracks_image);
+  CHECK_GT(num_cols, 0u);
+  CHECK_GT(neighborhood_px, 0u);
   if (tracks.empty()) {
     return false;
   }
 
   const size_t num_tracks = tracks.size();
-  const size_t edge_size = 2 * neighborhood_px;
-  size_t full_image_width = num_cols * edge_size;
-  size_t full_image_height = num_tracks * edge_size;
+  const size_t edge_size = 2u * neighborhood_px;
+  const size_t full_image_width = num_cols * edge_size;
+  const size_t full_image_height = num_tracks * edge_size;
   all_tracks_image->create(full_image_height, full_image_width, CV_8UC3);
   all_tracks_image->setTo(0);
 
@@ -268,22 +274,24 @@ bool drawFeatureTracks(const aslam::FeatureTracks& tracks, cv::Mat* image) {
     return false;
   }
 
-  // Draw the the tracks in the image of the last keypoint of the first track.
-  cv::Mat frame_image = tracks.front().getLastKeypointIdentifier().getFrame().getRawImage();
+  // Draw the tracks in the image of the last keypoint of the first track.
+  const cv::Mat& frame_image = tracks.front().getLastKeypointIdentifier().getFrame().getRawImage();
   cv::cvtColor(frame_image, *image, CV_GRAY2BGR);
 
   // Draw all keypoints on the tracks.
   for (const aslam::FeatureTrack& track : tracks) {
     cv::Point last_keypoint_cv;
-    bool first_keypoint_drawn = false;
+    bool is_first_keypoint_drawn = false;
     for (const aslam::KeypointIdentifier& kip : track.getKeypointIdentifiers()) {
       const Eigen::Vector2d keypoint = kip.getKeypointMeasurement();
       const cv::Point keypoint_cv(keypoint(0), keypoint(1));
-      cv::circle(*image, keypoint_cv, 1, cv::Scalar(0, 255, 255), 1, CV_AA);
-      if (first_keypoint_drawn) {
-        cv::line(*image, keypoint_cv, last_keypoint_cv, cv::Scalar(0, 255, 255));
+      const size_t kRadiusPx = 1u;
+      const size_t kThicknessPx = 1u;
+      cv::circle(*image, keypoint_cv, kRadiusPx, kYellow, kThicknessPx, CV_AA);
+      if (is_first_keypoint_drawn) {
+        cv::line(*image, keypoint_cv, last_keypoint_cv, kYellow);
       } else {
-        first_keypoint_drawn = true;
+        is_first_keypoint_drawn = true;
       }
       last_keypoint_cv = keypoint_cv;
     }
