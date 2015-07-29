@@ -89,6 +89,26 @@ class FeatureTrack {
   KeypointIdentifierList keypoint_identifiers_;
 };
 typedef Aligned<std::vector, FeatureTrack>::type FeatureTracks;
+
+struct ContinuedFeatureTrack {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  ContinuedFeatureTrack(int track_id, const aslam::KeypointIdentifier& kip)
+      : track_id(track_id), keypoint_identifier(kip) {
+    CHECK_GE(track_id, 0);
+  }
+
+  inline bool operator<(const ContinuedFeatureTrack& other) const {
+    return track_id < other.track_id;
+  }
+  inline bool operator>(const ContinuedFeatureTrack& other) const {
+    return track_id > other.track_id;
+  }
+
+  int track_id;
+  aslam::KeypointIdentifier keypoint_identifier;
+};
+typedef Aligned<std::vector, ContinuedFeatureTrack>::type ContinuedFeatureTracks;
+
 }  // namespace aslam
 #include "aslam/frames/feature-track-inl.h"
 #endif  // ASLAM_FEATURE_TRACK_H_

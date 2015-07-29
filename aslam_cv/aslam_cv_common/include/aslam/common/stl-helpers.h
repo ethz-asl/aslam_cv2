@@ -2,6 +2,7 @@
 #define ASLAM_STL_HELPERS_H_
 
 #include <algorithm>
+#include <chrono>
 #include <random>
 #include <unordered_set>
 #include <vector>
@@ -32,14 +33,20 @@ double median(RandAccessIter begin, RandAccessIter end) {
   return (target_high_value + *target_low) / 2.0;
 }
 
-template<typename ElementType>
-std::vector<ElementType> drawNRandomElements(size_t N, const std::vector<ElementType>& input) {
-  if (input.size() <= N) {
-    return input;
+template<typename ElementType, typename Allocator>
+void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
+                         std::vector<ElementType, Allocator>* output) {
+  CHECK_NOTNULL(output)->clear();
+  CHECK_GT(N, 0u);
+  const size_t num_input_elements = input.size();
+  if (num_input_elements <= N) {
+    *output = input;
+    return;
   }
 
   // Draw random indices.
-  std::default_random_engine generator;
+  unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+  std::default_random_engine generator(seed);
   std::uniform_int_distribution<int> distribution(0, N);
 
   std::unordered_set<size_t> random_indices;
@@ -48,12 +55,55 @@ std::vector<ElementType> drawNRandomElements(size_t N, const std::vector<Element
   }
 
   // Copy to output.
-  std::vector<ElementType> output;
-  output.reserve(N);
+  output->reserve(N);
   for (size_t idx : random_indices) {
-    output.emplace_back(input[idx]);
+    CHECK_LT(idx, num_input_elements);
+    output->emplace_back(input[idx]);
   }
-  return output;
+}
+
+// Remove all elements except the N greatest elements. An optional action can be provided
+// that is executed on all removed elements.
+template<typename ElementType> struct NullAction { void operator()(const ElementType&) const {} };
+template<typename ElementType, typename Allocator, typename CompareFunctor,
+         typename RemoveActionFunctor = NullAction<ElementType>>
+size_t keepOnlyNSortedElements(size_t max_elements_to_keep,
+    const CompareFunctor& sort_compare_functor,
+    std::vector<ElementType, Allocator>* container,
+    const RemoveActionFunctor& action_on_removed_elements = NullAction<ElementType>()) {
+  CHECK_NOTNULL(container);
+
+  // Special case for max_elements_to_keep == 0u: only run the action on all elements.
+  if (max_elements_to_keep == 0u) {
+    for (const ElementType& element : *container) {
+      action_on_removed_elements(element);
+    }
+    container->clear();
+    return 0u;
+  }
+
+  // Early exit if the container has less elements than the number to keep.
+  const size_t num_elements = container->size();
+  if (num_elements <= max_elements_to_keep) {
+    return num_elements;
+  }
+
+  // Sort up to N greatest elements.
+  std::partial_sort(container->begin(), container->begin() + max_elements_to_keep,
+                    container->end(), sort_compare_functor);
+  CHECK_GE(container->size(), max_elements_to_keep);
+
+  // Run the optional action on removed elements.
+  typename std::vector<ElementType, Allocator>::const_iterator it =
+      container->begin() + max_elements_to_keep;
+  for(; it != container->end(); ++it) {
+    action_on_removed_elements(*it);
+  }
+
+  // Remove the elements.
+  container->erase(container->begin() + max_elements_to_keep, container->end());
+  CHECK_LE(container->size(), max_elements_to_keep);
+  return container->size();
 }
 
 template<int VectorDim>
