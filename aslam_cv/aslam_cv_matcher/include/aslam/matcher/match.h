@@ -101,7 +101,7 @@ std::vector<MatchesType> pickNRandomRigMatches(size_t n_per_camera,
     if (camera_matches.size() <= n_per_camera) {
       subsampled_rig_matches[cam_idx] = camera_matches;
     } else {
-      subsampled_rig_matches[cam_idx] = common::drawNRandomElements(n_per_camera, camera_matches);
+      common::drawNRandomElements(n_per_camera, camera_matches, &subsampled_rig_matches[cam_idx]);
     }
   }
   CHECK_EQ(rig_matches.size(), subsampled_rig_matches.size());
