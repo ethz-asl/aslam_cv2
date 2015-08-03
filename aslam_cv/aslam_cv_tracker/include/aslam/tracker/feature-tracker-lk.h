@@ -1,6 +1,7 @@
 #ifndef ASLAM_FEATURE_TRACKER_LK_H_
 #define ASLAM_FEATURE_TRACKER_LK_H_
 
+#include <algorithm>
 #include <unordered_set>
 #include <vector>
 
@@ -69,16 +70,11 @@ class FeatureTrackerLk : public FeatureTracker {
                      Vector2dList* detected_keypoints_in_grid);
 
   inline void fillOccupancyMatrix(size_t x_pixel, size_t y_pixel, size_t image_width, size_t image_height) {
-    int x_occupancy_block_corner = x_pixel - kHalfOccupancyBlockSizePx;
-    if (x_occupancy_block_corner < 0) { x_occupancy_block_corner = 0; }
-    if (x_occupancy_block_corner > image_width - kOccupancyBlockSizePx) {
-      x_occupancy_block_corner = image_width - kOccupancyBlockSizePx;
-    }
-    int y_occupancy_block_corner = y_pixel - kHalfOccupancyBlockSizePx;
-    if (y_occupancy_block_corner < 0) { y_occupancy_block_corner = 0; }
-    if (y_occupancy_block_corner > image_height - kOccupancyBlockSizePx) {
-      y_occupancy_block_corner = image_height - kOccupancyBlockSizePx;
-    }
+
+    int x_occupancy_block_corner = std::min<int>(
+        std::max<int>(0, static_cast<int>(x_pixel) - kHalfOccupancyBlockSizePx), static_cast<int>(image_width) - kOccupancyBlockSizePx);
+    int y_occupancy_block_corner = std::min<int>(
+        std::max<int>(0, static_cast<int>(y_pixel) - kHalfOccupancyBlockSizePx), static_cast<int>(image_height) - kOccupancyBlockSizePx);
 
     occupancy_matrix_.block<kOccupancyBlockSizePx, kOccupancyBlockSizePx>
       (y_occupancy_block_corner, x_occupancy_block_corner) = occupancy_block_;

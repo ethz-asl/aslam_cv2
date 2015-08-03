@@ -134,8 +134,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
         continue;
       }
 
-      const size_t x_pixel = std::round(tracked_keypoints_kp1[keypoint_idx_k].x);
-      const size_t y_pixel = std::round(tracked_keypoints_kp1[keypoint_idx_k].y);
+      const size_t x_pixel = static_cast<size_t>(std::round(tracked_keypoints_kp1[keypoint_idx_k].x));
+      const size_t y_pixel = static_cast<size_t>(std::round(tracked_keypoints_kp1[keypoint_idx_k].y));
 
       // Drop tracks where the tracking failed or that are close to the border as we can't
       // compute descriptors.
