@@ -194,7 +194,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
         const size_t x_pixel = std::round((*keypoint_iterator)(0));
         const size_t y_pixel = std::round((*keypoint_iterator)(1));
         if (occupancy_matrix_(y_pixel, x_pixel) > 0u) {
-          // Remove this keypoint as it is too close to n already existing.
+          // Remove this keypoint as it is too close to one that is already existing.
           keypoint_iterator = detected_keypoints.erase(keypoint_iterator);
         } else {
           // Keep this one and fill the occupancy matrix.

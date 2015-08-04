@@ -157,7 +157,7 @@ class FeatureTrackerLk : public FeatureTracker {
   /// Enforce a minimal distance of all keypoints to the image border.
   const size_t kMinDistanceToImageBorderPx = 30u;
 
-  /// Half the block size in pixels to be occuopied by a keypoint.
+  /// Half the block size in pixels to be occupied by a keypoint.
   static constexpr int kHalfOccupancyBlockSizePx = 10;
   static constexpr int kOccupancyBlockSizePx = 2 * kHalfOccupancyBlockSizePx;
 
@@ -177,7 +177,10 @@ class FeatureTrackerLk : public FeatureTracker {
   size_t kBriskAbsoluteThreshold = 15;
   std::unique_ptr<brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>> detector_;
 
+  // The occupancy matrix lets keypoints occupy a small block in the image space, thus preventing
+  // multiple keypoints to lie close to each other.
   Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> occupancy_matrix_;
+  // Block template that is used to fill the occupancy matrix.
   Eigen::Matrix<unsigned char, kOccupancyBlockSizePx, kOccupancyBlockSizePx> occupancy_block_;
 };
 }  // namespace aslam
