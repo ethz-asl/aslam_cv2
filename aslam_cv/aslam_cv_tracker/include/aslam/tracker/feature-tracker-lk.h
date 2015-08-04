@@ -1,6 +1,7 @@
 #ifndef ASLAM_FEATURE_TRACKER_LK_H_
 #define ASLAM_FEATURE_TRACKER_LK_H_
 
+#include <algorithm>
 #include <unordered_set>
 #include <vector>
 
@@ -68,6 +69,17 @@ class FeatureTrackerLk : public FeatureTracker {
   void occupancyGrid(const aslam::VisualFrame& frame, const Vector2dList& detected_keypoints,
                      Vector2dList* detected_keypoints_in_grid);
 
+  inline void fillOccupancyMatrix(size_t x_pixel, size_t y_pixel, size_t image_width, size_t image_height) {
+
+    int x_occupancy_block_corner = std::min<int>(
+        std::max<int>(0, static_cast<int>(x_pixel) - kHalfOccupancyBlockSizePx), static_cast<int>(image_width) - kOccupancyBlockSizePx);
+    int y_occupancy_block_corner = std::min<int>(
+        std::max<int>(0, static_cast<int>(y_pixel) - kHalfOccupancyBlockSizePx), static_cast<int>(image_height) - kOccupancyBlockSizePx);
+
+    occupancy_matrix_.block<kOccupancyBlockSizePx, kOccupancyBlockSizePx>
+      (y_occupancy_block_corner, x_occupancy_block_corner) = occupancy_block_;
+  }
+
   //////////////////////////////////////////////////////////////
   /// \name Parameters for Feature Detection.
   /// @{
@@ -110,6 +122,9 @@ class FeatureTrackerLk : public FeatureTracker {
   /// Either use occupancy grid and SimpleTrackManager or
   /// do not use occupancy grid and do use UniformTrackManager!
   static const bool kUseOccupancyGrid = true;
+
+  /// Uses a occupancy matrix that disallows close-together keypoints.
+  static const bool kUseOccupancyMatrix = false;
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -141,6 +156,11 @@ class FeatureTrackerLk : public FeatureTracker {
 
   /// Enforce a minimal distance of all keypoints to the image border.
   const size_t kMinDistanceToImageBorderPx = 30u;
+
+  /// Half the block size in pixels to be occupied by a keypoint.
+  static constexpr int kHalfOccupancyBlockSizePx = 10;
+  static constexpr int kOccupancyBlockSizePx = 2 * kHalfOccupancyBlockSizePx;
+
   /// @}
 
   /// Mask the area where no tracks should be spawned.
@@ -156,6 +176,12 @@ class FeatureTrackerLk : public FeatureTracker {
   size_t kBriskUniformityRadius = 0;
   size_t kBriskAbsoluteThreshold = 15;
   std::unique_ptr<brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>> detector_;
+
+  // The occupancy matrix lets keypoints occupy a small block in the image space, thus preventing
+  // multiple keypoints to lie close to each other.
+  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> occupancy_matrix_;
+  // Block template that is used to fill the occupancy matrix.
+  Eigen::Matrix<unsigned char, kOccupancyBlockSizePx, kOccupancyBlockSizePx> occupancy_block_;
 };
 }  // namespace aslam
 
