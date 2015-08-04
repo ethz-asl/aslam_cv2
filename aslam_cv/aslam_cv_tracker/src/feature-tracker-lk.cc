@@ -12,7 +12,8 @@ DEFINE_bool(lk_use_brisk_harris, false,
 DEFINE_bool(lk_gfft_subpix_refinement, true, "Perform subpixel refinement on gfft corners?");
 DEFINE_bool(lk_use_occupancy_matrix, false, "Use the occupancy matrix to prevent overlaying keypoints?");
 
-FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) : use_occupancy_matrix_(FLAGS_lk_use_occupancy_matrix) {
+FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
+  : use_occupancy_matrix_(FLAGS_lk_use_occupancy_matrix) {
   // Create the detection mask.
   detection_mask_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
   cv::Mat region_of_interest(detection_mask_,
@@ -191,7 +192,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     detectGfttCorners(frame_kp1->getRawImage(), &detected_keypoints);
 
     if (use_occupancy_matrix_) {
-      for (Vector2dList::iterator keypoint_iterator = detected_keypoints.begin(); keypoint_iterator != detected_keypoints.end();) {
+      for (Vector2dList::iterator keypoint_iterator = detected_keypoints.begin();
+          keypoint_iterator != detected_keypoints.end();) {
         const size_t x_pixel = std::round((*keypoint_iterator)(0));
         const size_t y_pixel = std::round((*keypoint_iterator)(1));
         if (occupancy_matrix_(y_pixel, x_pixel) > 0u) {
