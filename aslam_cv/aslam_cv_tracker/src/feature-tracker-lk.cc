@@ -10,8 +10,9 @@ namespace aslam {
 DEFINE_bool(lk_use_brisk_harris, false,
             "Use the brisk harris detector to initialize new features?");
 DEFINE_bool(lk_gfft_subpix_refinement, true, "Perform subpixel refinement on gfft corners?");
+DEFINE_bool(lk_use_occupancy_matrix, false, "Use the occupancy matrix to prevent overlaying keypoints?");
 
-FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) {
+FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) : use_occupancy_matrix_(FLAGS_lk_use_occupancy_matrix) {
   // Create the detection mask.
   detection_mask_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
   cv::Mat region_of_interest(detection_mask_,
@@ -119,7 +120,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       keypoint_indices_to_abort_.clear();
     }
 
-    if (kUseOccupancyMatrix) {
+    if (use_occupancy_matrix_) {
       CHECK_EQ(image_width, occupancy_matrix_.cols());
       CHECK_EQ(image_height, occupancy_matrix_.rows());
       occupancy_matrix_.setZero();
@@ -148,7 +149,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       }
 
       // Drop tracks that are too close to another track.
-      if (kUseOccupancyMatrix && (occupancy_matrix_(y_pixel, x_pixel) > 0u)) {
+      if (use_occupancy_matrix_ && (occupancy_matrix_(y_pixel, x_pixel) > 0u)) {
         continue;
       }
 
@@ -169,7 +170,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       new_keypoints_kp1.emplace_back(tracked_keypoints_kp1[keypoint_idx_k].x,
                                      tracked_keypoints_kp1[keypoint_idx_k].y);
 
-      if (kUseOccupancyMatrix) {
+      if (use_occupancy_matrix_) {
         aslam::timing::Timer timer_occupancy_matrix(
             "FeatureTrackerLk: track - filling occupancy matrix");
         fillOccupancyMatrix(x_pixel, y_pixel, image_width, image_height);
@@ -189,7 +190,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     Vector2dList detected_keypoints;
     detectGfttCorners(frame_kp1->getRawImage(), &detected_keypoints);
 
-    if (kUseOccupancyMatrix) {
+    if (use_occupancy_matrix_) {
       for (Vector2dList::iterator keypoint_iterator = detected_keypoints.begin(); keypoint_iterator != detected_keypoints.end();) {
         const size_t x_pixel = std::round((*keypoint_iterator)(0));
         const size_t y_pixel = std::round((*keypoint_iterator)(1));

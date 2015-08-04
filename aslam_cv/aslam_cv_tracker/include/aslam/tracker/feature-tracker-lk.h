@@ -124,7 +124,7 @@ class FeatureTrackerLk : public FeatureTracker {
   static const bool kUseOccupancyGrid = true;
 
   /// Uses a occupancy matrix that disallows close-together keypoints.
-  static const bool kUseOccupancyMatrix = false;
+  bool use_occupancy_matrix_ = false;
   /// @}
 
   //////////////////////////////////////////////////////////////
