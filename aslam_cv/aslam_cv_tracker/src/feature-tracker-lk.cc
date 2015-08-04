@@ -195,8 +195,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     detectGfttCorners(frame_kp1->getRawImage(), &detected_keypoints);
 
     if (use_occupancy_matrix_) {
-      for (Vector2dList::iterator keypoint_iterator = detected_keypoints.begin();
-          keypoint_iterator != detected_keypoints.end();) {
+      Vector2dList::iterator keypoint_iterator = detected_keypoints.begin();
+      while (keypoint_iterator != detected_keypoints.end()) {
         const size_t x_pixel = std::round((*keypoint_iterator)(0));
         const size_t y_pixel = std::round((*keypoint_iterator)(1));
         if (occupancy_matrix_(y_pixel, x_pixel) > 0u) {
