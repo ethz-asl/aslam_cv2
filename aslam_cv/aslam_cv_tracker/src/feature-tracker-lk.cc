@@ -10,7 +10,8 @@ namespace aslam {
 DEFINE_bool(lk_use_brisk_harris, false,
             "Use the brisk harris detector to initialize new features?");
 DEFINE_bool(lk_gfft_subpix_refinement, true, "Perform subpixel refinement on gfft corners?");
-DEFINE_bool(lk_use_occupancy_matrix, false, "Use the occupancy matrix to prevent overlaying keypoints?");
+DEFINE_bool(lk_use_occupancy_matrix, false,
+            "Use the occupancy matrix to prevent overlaying keypoints?");
 
 FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
   : use_occupancy_matrix_(FLAGS_lk_use_occupancy_matrix) {
@@ -92,9 +93,9 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     tracking_successful.reserve(keypoints_k.size());
 
     cv::calcOpticalFlowPyrLK(frame_k.getRawImage(), frame_kp1->getRawImage(),
-                             keypoints_k, tracked_keypoints_kp1, tracking_successful, tracking_errors,
-                             kWindowSize, kMaxPyramidLevel, kTerminationCriteria, kOperationFlag,
-                             kMinEigenThreshold);
+                             keypoints_k, tracked_keypoints_kp1, tracking_successful,
+                             tracking_errors, kWindowSize, kMaxPyramidLevel, kTerminationCriteria,
+                             kOperationFlag, kMinEigenThreshold);
     timer_tracking.Stop();
 
     aslam::timing::Timer timer_selection("FeatureTrackerLk: track - feature selection");
@@ -136,8 +137,10 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
         continue;
       }
 
-      const size_t x_pixel = static_cast<size_t>(std::round(tracked_keypoints_kp1[keypoint_idx_k].x));
-      const size_t y_pixel = static_cast<size_t>(std::round(tracked_keypoints_kp1[keypoint_idx_k].y));
+      const size_t x_pixel = static_cast<size_t>(
+          std::round(tracked_keypoints_kp1[keypoint_idx_k].x));
+      const size_t y_pixel = static_cast<size_t>(
+          std::round(tracked_keypoints_kp1[keypoint_idx_k].y));
 
       // Drop tracks where the tracking failed or that are close to the border as we can't
       // compute descriptors.
