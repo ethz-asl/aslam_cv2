@@ -10,13 +10,13 @@
 #include <memory>
 #include <vector>
 
+#include <aslam/common/feature-descriptor-ref.h>
 #include <aslam/common/macros.h>
 #include <aslam/common/pose-types.h>
-#include <aslam/common/feature-descriptor-ref.h>
 #include <Eigen/Core>
 
 #include "aslam/matcher/matching-problem.h"
-#include "match.h"
+#include "aslam/matcher/match.h"
 
 namespace aslam {
 class VisualFrame;
@@ -26,20 +26,20 @@ typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, 1> Descriptor;
 struct LandmarkWithDescriptor {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   LandmarkWithDescriptor() = delete;
-  LandmarkWithDescriptor(const Eigen::Vector3d& t_G_C,
+  LandmarkWithDescriptor(const Eigen::Vector3d& C_landmark,
                          const Descriptor& descriptor)
-    : t_G_C_(t_G_C), descriptor_(descriptor) {}
+    : C_landmark_(C_landmark), descriptor_(descriptor) {}
   virtual ~LandmarkWithDescriptor() = default;
 
-  const Eigen::Vector3d& get_t_G_C() const {
-    return t_G_C_;
+  const Eigen::Vector3d& get_C_landmark() const {
+    return C_landmark_;
   }
 
   const Descriptor& getDescriptor() const {
     return descriptor_;
   }
  private:
-  Eigen::Vector3d t_G_C_;
+  Eigen::Vector3d C_landmark_;
   Descriptor descriptor_;
 };
 
