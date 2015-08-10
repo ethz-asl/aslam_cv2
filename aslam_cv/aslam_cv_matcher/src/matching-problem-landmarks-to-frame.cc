@@ -96,7 +96,7 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
   // Then, project all landmarks into the visual frame.
   for (size_t landmark_idx = 0u; landmark_idx < num_landmarks; ++landmark_idx) {
     aslam::ProjectionResult projection_result = camera->project3(
-        landmarks_[landmark_idx].get_t_G_C(),
+        landmarks_[landmark_idx].get_C_landmark(),
         &C_projected_landmark_keypoints_[landmark_idx]);
 
     if (projection_result.isKeypointVisible()) {
