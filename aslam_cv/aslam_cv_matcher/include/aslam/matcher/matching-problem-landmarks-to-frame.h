@@ -59,7 +59,7 @@ class MatchingProblemLandmarksToFrame : public MatchingProblem {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrame);
-  friend class MatcherTest;
+  friend class LandmarksToFrame;
 
   MatchingProblemLandmarksToFrame() = delete;
 
@@ -99,7 +99,8 @@ public:
   virtual void getAppleCandidatesForBanana(int landmark_index, Candidates* candidates);
 
   inline double computeMatchScore(int hamming_distance) {
-    return static_cast<double>(384 - hamming_distance) / 384.0;
+    return static_cast<double>(descriptor_size_bits_ - hamming_distance) /
+        static_cast<double>(descriptor_size_bits_);
   }
 
   inline int computeHammingDistance(int landmark_index, int frame_keypoint_index) {
@@ -151,8 +152,9 @@ private:
   /// The landmark descriptors.
   std::vector<common::FeatureDescriptorConstRef> landmark_descriptors_;
 
-  /// Descriptor size in bytes.
+  /// Descriptor size in bits and bytes.
   size_t descriptor_size_byes_;
+  int descriptor_size_bits_;
 
   /// Half width of the vertical band used for match lookup in pixels.
   int vertical_band_halfwidth_pixels_;
@@ -165,7 +167,7 @@ private:
   /// excluded from matches.
   int hamming_distance_threshold_;
 
-  /// The heigh of the apple frame.
+  /// The heigh of the visual frame.
   size_t image_height_frame_;
 };
 }

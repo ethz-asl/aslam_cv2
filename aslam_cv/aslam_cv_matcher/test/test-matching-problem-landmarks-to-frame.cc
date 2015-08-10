@@ -13,7 +13,7 @@
 #include <aslam/matcher/matching-engine-non-exclusive.h>
 #include <aslam/matcher/matching-problem-landmarks-to-frame.h>
 
-class MatcherTest : public testing::Test {
+class LandmarksToFrameMatcherTest : public testing::Test {
  protected:
   virtual void SetUp() {
     camera_ = aslam::PinholeCamera::createTestCamera();
@@ -39,17 +39,16 @@ TEST_F(MatcherTest, EmptyMatch) {
 
   aslam::MatchingProblemLandmarksToFrame::Ptr matching_problem = aslam::aligned_shared<
       aslam::MatchingProblemLandmarksToFrame>(*frame_, landmarks_,
-                                          image_space_distance_threshold_,
-                                          hamming_distance_threshold_);
+                                              image_space_distance_threshold_,
+                                              hamming_distance_threshold_);
   aslam::MatchesWithScore matches_A_B;
   matching_engine_.match(matching_problem.get(), &matches_A_B);
 
   EXPECT_TRUE(matches_A_B.empty());
 }
 
-
 TEST_F(MatcherTest, MatchIdentity) {
-  Eigen::Matrix2Xd frame_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
+  const Eigen::Matrix2Xd frame_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
 
   Eigen::Vector3d projected_keypoint;
   camera_->backProject3(frame_keypoints.col(0), &projected_keypoint);
@@ -66,9 +65,7 @@ TEST_F(MatcherTest, MatchIdentity) {
 
   aslam::MatchingProblemLandmarksToFrame::Ptr matching_problem =
       aslam::aligned_shared<aslam::MatchingProblemLandmarksToFrame>(
-          *frame_,
-          landmarks_,
-          image_space_distance_threshold_,
+          *frame_, landmarks_, image_space_distance_threshold_,
           hamming_distance_threshold_);
 
   aslam::MatchesWithScore matches_A_B;
@@ -83,11 +80,12 @@ TEST_F(MatcherTest, MatchIdentity) {
 }
 
 TEST_F(MatcherTest, MatchIdentityWithScale) {
-  Eigen::Matrix2Xd frame_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
+  const Eigen::Matrix2Xd frame_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
 
   Eigen::Vector3d projected_keypoint;
   camera_->backProject3(frame_keypoints.col(0), &projected_keypoint);
 
+  // Arbitrarily picked scaling factor.
   projected_keypoint *= 34.23232;
 
   Eigen::Matrix<unsigned char, 48, 1> frame_descriptors =
@@ -102,9 +100,7 @@ TEST_F(MatcherTest, MatchIdentityWithScale) {
 
   aslam::MatchingProblemLandmarksToFrame::Ptr matching_problem =
       aslam::aligned_shared<aslam::MatchingProblemLandmarksToFrame>(
-          *frame_,
-          landmarks_,
-          image_space_distance_threshold_,
+          *frame_, landmarks_, image_space_distance_threshold_,
           hamming_distance_threshold_);
 
   aslam::MatchesWithScore matches_A_B;
@@ -152,6 +148,7 @@ TEST_F(MatcherTest, MatchRandomly) {
     projected_keypoints.col(keypoint_index) = projected_keypoint;
   }
 
+  // Arbitrarily picked scaling factor.
   const double kScalingFactor = 1e5;
 
   Eigen::VectorXd random_scale = Eigen::VectorXd::Random(kNumKeypoints);
@@ -174,9 +171,7 @@ TEST_F(MatcherTest, MatchRandomly) {
 
   aslam::MatchingProblemLandmarksToFrame::Ptr matching_problem =
       aslam::aligned_shared<aslam::MatchingProblemLandmarksToFrame>(
-          *frame_,
-          landmarks_,
-          image_space_distance_threshold_,
+          *frame_, landmarks_, image_space_distance_threshold_,
           hamming_distance_threshold_);
 
   aslam::MatchesWithScore matches_A_B;

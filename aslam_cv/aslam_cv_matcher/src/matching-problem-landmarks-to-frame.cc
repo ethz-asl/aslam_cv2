@@ -11,20 +11,20 @@ MatchingProblemLandmarksToFrame::MatchingProblemLandmarksToFrame(
     const LandmarkWithDescriptorList& landmarks,
     double image_space_distance_threshold_pixels,
     int hamming_distance_threshold)
-  : landmarks_(landmarks),
-    frame_(frame),
+  : landmarks_(landmarks), frame_(frame),
     squared_image_space_distance_threshold_pixels_squared_(image_space_distance_threshold_pixels *
                                                            image_space_distance_threshold_pixels),
     hamming_distance_threshold_(hamming_distance_threshold) {
-  CHECK_GE(hamming_distance_threshold, 0) << "Descriptor distance needs to be positive.";
-  CHECK_GE(image_space_distance_threshold_pixels, 0.0) << "Image space distance needs to be positive.";
+  CHECK_GT(hamming_distance_threshold, 0) << "Descriptor distance needs to be positive.";
+  CHECK_GT(image_space_distance_threshold_pixels, 0.0) << "Image space distance needs to be positive.";
 
   descriptor_size_byes_ = frame.getDescriptorSizeBytes();
+  descriptor_size_bits_ = static_cast<int>(frame.getDescriptorSizeBytes() * 8u);
 
   // The vertical search band must be at least twice the image space distance.
   vertical_band_halfwidth_pixels_ = static_cast<int>(std::ceil(image_space_distance_threshold_pixels));
 
-  CHECK(frame.getCameraGeometry()) << "The iCam is NULL.";
+  CHECK(frame.getCameraGeometry()) << "The camer of the visual frame is NULL.";
   image_height_frame_ = frame.getCameraGeometry()->imageHeight();
   CHECK_GT(image_height_frame_, 0u) << "The visual frame has zero image rows.";
 }
@@ -53,13 +53,13 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
   // This creates a descriptor wrapper for the given descriptor and allows computing the hamming
   // distance between two descriptors. todo(mbuerki): Think of ways to generalize this for
   // different descriptor types (surf, sift, ...).
-  for (size_t frame_descriptor_idx = 0; frame_descriptor_idx < num_frame_descriptors;
+  for (size_t frame_descriptor_idx = 0u; frame_descriptor_idx < num_frame_descriptors;
       ++frame_descriptor_idx) {
     frame_descriptors_.emplace_back(
         &(frame_descriptors.coeffRef(0, frame_descriptor_idx)), descriptor_size_byes_);
   }
 
-  for (size_t landmark_descriptor_idx = 0; landmark_descriptor_idx < num_landmarks;
+  for (size_t landmark_descriptor_idx = 0u; landmark_descriptor_idx < num_landmarks;
       ++landmark_descriptor_idx) {
     landmark_descriptors_.emplace_back(
         landmarks_[landmark_descriptor_idx].getDescriptor().data(), descriptor_size_byes_);
@@ -74,7 +74,7 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
   Camera::ConstPtr camera = frame_.getCameraGeometry();
   CHECK(camera);
 
-  for (size_t keypoint_idx = 0; keypoint_idx < num_frame_keypoints; ++keypoint_idx) {
+  for (size_t keypoint_idx = 0u; keypoint_idx < num_frame_keypoints; ++keypoint_idx) {
     // Check if the keypoint is valid.
     const Eigen::Vector2d& keypoint = C_keypoints_frame.col(keypoint_idx);
     if (camera->isMasked(keypoint)) {
@@ -95,7 +95,6 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
 
   // Then, project all landmarks into the visual frame.
   for (size_t landmark_idx = 0u; landmark_idx < num_landmarks; ++landmark_idx) {
-
     aslam::ProjectionResult projection_result = camera->project3(
         landmarks_[landmark_idx].get_t_G_C(),
         &C_projected_landmark_keypoints_[landmark_idx]);
@@ -145,15 +144,22 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
     // Compute the lower and upper bound of the vertical search window, making it respect the
     // image dimension of the visual frame.
     int y_lower_int = projected_landmark_keypoint_y_coordinate - vertical_band_halfwidth_pixels_;
-    size_t y_lower = 0;
-    if (y_lower_int > 0) y_lower = static_cast<size_t>(y_lower_int);
-    CHECK_LT(y_lower, image_height_frame_);
+    size_t y_lower = 0u;
+    if (y_lower_int > 0) {
+      y_lower = static_cast<size_t>(y_lower_int);
+    }
+    CHECK_LT(y_lower, image_height_frame_) << "The y coordinate of the lower search band bound "
+        << "is bigger than or equal to the number of rows in the image.";
 
     int y_upper_int = projected_landmark_keypoint_y_coordinate + vertical_band_halfwidth_pixels_;
     size_t y_upper = image_height_frame_;
-    if (y_upper_int < static_cast<int>(image_height_frame_)) y_upper = y_upper_int;
-    CHECK_GE(y_upper, 0u);
-    CHECK_GT(y_upper, y_lower);
+    if (y_upper_int < static_cast<int>(image_height_frame_)) {
+      y_upper = y_upper_int;
+    }
+    CHECK_GE(y_upper, 0u) << "The y coordinate of the upper search band bound "
+        << "is negative.";
+    CHECK_GT(y_upper, y_lower) << "The y coordinate of the upper search band bound "
+        << " is bigger than or equal to the number of rows in the image.";
 
     std::multimap<size_t, size_t>::iterator it_lower =
         y_coordinate_to_keypoint_index_map_.lower_bound(y_lower);
@@ -199,7 +205,7 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
 }
 
 size_t MatchingProblemLandmarksToFrame::numApples() const {
-  return static_cast<size_t>(frame_.getNumKeypointMeasurements());
+  return frame_.getNumKeypointMeasurements();
 }
 
 size_t MatchingProblemLandmarksToFrame::numBananas() const {
