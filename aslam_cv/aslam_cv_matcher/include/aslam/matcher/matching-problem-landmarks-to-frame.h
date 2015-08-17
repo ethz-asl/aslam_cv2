@@ -26,20 +26,21 @@ typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, 1> Descriptor;
 struct LandmarkWithDescriptor {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   LandmarkWithDescriptor() = delete;
-  LandmarkWithDescriptor(const Eigen::Vector3d& C_landmark,
+  LandmarkWithDescriptor(const Eigen::Vector3d& p_C_landmark,
                          const Descriptor& descriptor)
-    : C_landmark_(C_landmark), descriptor_(descriptor) {}
+    : p_C_landmark_(p_C_landmark), descriptor_(descriptor) {}
   virtual ~LandmarkWithDescriptor() = default;
 
-  const Eigen::Vector3d& get_C_landmark() const {
-    return C_landmark_;
+  const Eigen::Vector3d& get_p_C_landmark() const {
+    return p_C_landmark_;
   }
 
   const Descriptor& getDescriptor() const {
     return descriptor_;
   }
+
  private:
-  Eigen::Vector3d C_landmark_;
+  Eigen::Vector3d p_C_landmark_;
   Descriptor descriptor_;
 };
 
@@ -82,12 +83,7 @@ public:
   virtual size_t numApples() const;
   virtual size_t numBananas() const;
 
-  /// Get a short list of candidates in list a for index b
-  ///
-  /// Return all indices of list a for n^2 matching; or use something
-  /// smarter like nabo to get nearest neighbors. Can also be used to
-  /// mask out invalid elements in the lists, or an invalid b, by
-  /// returning and empty candidate list.  
+  /// Get a short list of candidates in list a for index b.
   ///
   /// The score for each candidate is a rough score that can be used
   /// for sorting, pre-filtering, and will be explicitly recomputed
@@ -105,15 +101,18 @@ public:
 
   inline int computeHammingDistance(int landmark_index, int frame_keypoint_index) {
     CHECK_LT(frame_keypoint_index, static_cast<int>(frame_descriptors_.size()))
-        << "No descriptor for this apple.";
+        << "No descriptor for keypoint with index " << frame_keypoint_index << ".";
     CHECK_LT(landmark_index, static_cast<int>(landmark_descriptors_.size()))
-        << "No descriptor for this banana.";
+        << "No descriptor for landmark with index " << landmark_index << ".";
     CHECK_LT(frame_keypoint_index, static_cast<int>(valid_frame_keypoints_.size()))
-        << "No valid flag for this apple.";
+        << "No valid flag for keypoint with index " << frame_keypoint_index << ".";
     CHECK_LT(landmark_index, static_cast<int>(valid_landmarks_.size()))
-        << "No valid flag for this apple.";
-    CHECK(valid_frame_keypoints_[frame_keypoint_index]) << "The given frame keypoint is not valid.";
-    CHECK(valid_landmarks_[landmark_index]) << "The given landmark is not valid.";
+        << "No valid flag for landmark with index " << landmark_index << ".";
+    CHECK(valid_frame_keypoints_[frame_keypoint_index])
+        << "The given frame keypoint with index " << frame_keypoint_index
+        << " is not valid.";
+    CHECK(valid_landmarks_[landmark_index]) << "The given landmark with index "
+        << landmark_index << " is not valid.";
 
     const common::FeatureDescriptorConstRef& apple_descriptor = frame_descriptors_[frame_keypoint_index];
     const common::FeatureDescriptorConstRef& banana_descriptor = landmark_descriptors_[landmark_index];
@@ -143,8 +142,8 @@ private:
   /// Index marking landmarks as valid or invalid.
   std::vector<unsigned char> valid_landmarks_;
 
-  /// The landmarks projected into the visual frame, expressed in coordinate frame C.
-  aslam::Aligned<std::vector, Eigen::Vector2d>::type C_projected_landmark_keypoints_;
+  /// The landmarks projected into the visual frame.
+  aslam::Aligned<std::vector, Eigen::Vector2d>::type projected_landmark_keypoints_;
 
   /// The frame keypoint descriptors.
   std::vector<common::FeatureDescriptorConstRef> frame_descriptors_;
@@ -153,8 +152,8 @@ private:
   std::vector<common::FeatureDescriptorConstRef> landmark_descriptors_;
 
   /// Descriptor size in bits and bytes.
-  size_t descriptor_size_byes_;
-  int descriptor_size_bits_;
+  const size_t descriptor_size_bytes_;
+  const int descriptor_size_bits_;
 
   /// Half width of the vertical band used for match lookup in pixels.
   int vertical_band_halfwidth_pixels_;
@@ -167,8 +166,8 @@ private:
   /// excluded from matches.
   int hamming_distance_threshold_;
 
-  /// The heigh of the visual frame.
+  /// The height of the visual frame.
   size_t image_height_frame_;
 };
-}
-#endif //ASLAM_CV_MATCHING_PROBLEM_LANDMARKS_TO_FRAME_H_
+}  // namespace aslam
+#endif  //ASLAM_CV_MATCHING_PROBLEM_LANDMARKS_TO_FRAME_H_
