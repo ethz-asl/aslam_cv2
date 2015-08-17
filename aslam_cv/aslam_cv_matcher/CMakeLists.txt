@@ -44,6 +44,7 @@ target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
 
 catkin_add_gtest(test_matching_problem_landmarks_to_frame test/test-matching-problem-landmarks-to-frame.cc)
 target_link_libraries(test_matching_problem_landmarks_to_frame ${PROJECT_NAME})
+
 ##########
 # EXPORT #
 ##########
