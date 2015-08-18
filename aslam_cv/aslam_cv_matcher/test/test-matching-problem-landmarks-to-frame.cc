@@ -3,9 +3,6 @@
 #include <random>
 #include <vector>
 
-#include <glog/logging.h>
-#include <gtest/gtest.h>
-
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/pose-types.h>
@@ -13,8 +10,15 @@
 #include <aslam/matcher/match.h>
 #include <aslam/matcher/matching-engine-non-exclusive.h>
 #include <aslam/matcher/matching-problem-landmarks-to-frame.h>
+#include <eigen-checks/gtest.h>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
 
 static const size_t kDescriptorSizeBytes = 48u;
+static const size_t kSeed = 233232u;
+static const unsigned char kCharThreshold = 128;
+
+typedef Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> Descriptors;
 
 class LandmarksToFrameMatcherTest : public testing::Test {
  protected:
@@ -38,6 +42,112 @@ class LandmarksToFrameMatcherTest : public testing::Test {
     matching_engine_.match(matching_problem.get(), matches_A_B);
   }
 
+  inline void createRandomKeypointsAndLandmarksWithinSearchRegion(
+      size_t num_keypoints, double scaling_factor, Eigen::Matrix2Xd* frame_keypoints,
+      Eigen::Matrix3Xd* C_p_landmarks) {
+    CHECK_NOTNULL(frame_keypoints);
+    CHECK_NOTNULL(C_p_landmarks);
+    CHECK_GT(camera_->imageWidth(), 0u);
+    CHECK_GT(camera_->imageHeight(), 0u);
+
+    (*frame_keypoints) = Eigen::Matrix2Xd::Zero(2, num_keypoints);
+    (*C_p_landmarks) = Eigen::Matrix3Xd(3, num_keypoints);
+
+    std::default_random_engine random_engine(kSeed);
+
+    std::uniform_int_distribution<int> uniform_dist_image_width(0, camera_->imageWidth() - 1);
+    std::uniform_int_distribution<int> uniform_dist_image_height(0, camera_->imageHeight() - 1);
+    std::uniform_real_distribution<double> uniform_dist_image_space(
+        0, image_space_distance_threshold_pixels_);
+    std::uniform_int_distribution<int> uniform_dist_angle(0, 359);
+
+    for (size_t keypoint_index = 0u; keypoint_index < num_keypoints; ++keypoint_index) {
+      const double keypoint_x = static_cast<double>(uniform_dist_image_width(random_engine));
+      const double keypoint_y = static_cast<double>(uniform_dist_image_height(random_engine));
+
+      (*frame_keypoints)(0, keypoint_index) = keypoint_x;
+      (*frame_keypoints)(1, keypoint_index) = keypoint_y;
+
+      const double shift_translation_pixels = uniform_dist_image_space(random_engine);
+
+      const double shift_angle_radians =
+          static_cast<double>(uniform_dist_angle(random_engine)) / 180.0 * M_PI;
+
+      const double x_shift = shift_translation_pixels * std::cos(shift_angle_radians);
+      const double y_shift = shift_translation_pixels * std::sin(shift_angle_radians);
+
+      const double shifted_keypoint_x = std::min<double>(
+          std::max<double>(keypoint_x + x_shift, 0.1), camera_->imageWidth() - 0.1);
+      const double shifted_keypoint_y = std::min<double>(
+          std::max<double>(keypoint_y + y_shift, 0.1), camera_->imageHeight() - 0.1);
+
+      const Eigen::Vector2d shifted_keypoint(shifted_keypoint_x, shifted_keypoint_y);
+
+      Eigen::Vector3d projected_keypoint;
+      CHECK(camera_->backProject3(shifted_keypoint, &projected_keypoint));
+      C_p_landmarks->col(keypoint_index) = projected_keypoint;
+    }
+
+    Eigen::VectorXd random_scale = Eigen::VectorXd::Random(num_keypoints);
+    random_scale = random_scale.cwiseAbs() * scaling_factor;
+
+    (*C_p_landmarks) = (*C_p_landmarks) * random_scale.asDiagonal();
+  }
+
+  inline void shuffleKeypointsAndLandmarkIndices(size_t num_keypoints,
+                                                 Eigen::Matrix2Xd* frame_keypoints,
+                                                 Descriptors* frame_descriptors,
+                                                 Eigen::Matrix3Xd* C_p_landmarks,
+                                                 Descriptors* landmark_descriptors) {
+    CHECK_GT(num_keypoints, 0u);
+    CHECK_NOTNULL(frame_keypoints);
+    CHECK_NOTNULL(frame_descriptors);
+    CHECK_NOTNULL(C_p_landmarks);
+    CHECK_NOTNULL(landmark_descriptors);
+
+    permutation_matrix_keypoints_.resize(num_keypoints);
+    permutation_matrix_landmarks_.resize(num_keypoints);
+
+    permutation_matrix_keypoints_.setIdentity();
+    permutation_matrix_landmarks_.setIdentity();
+
+    std::random_shuffle(permutation_matrix_keypoints_.indices().data(),
+                        permutation_matrix_keypoints_.indices().data() + permutation_matrix_keypoints_.indices().size());
+    std::random_shuffle(permutation_matrix_landmarks_.indices().data(),
+                        permutation_matrix_landmarks_.indices().data() + permutation_matrix_landmarks_.indices().size());
+
+    CHECK_EQ(permutation_matrix_keypoints_.cols(), frame_keypoints->cols());
+    CHECK_EQ(permutation_matrix_keypoints_.rows(), frame_keypoints->cols());
+    CHECK_EQ(permutation_matrix_landmarks_.cols(), C_p_landmarks->cols());
+    CHECK_EQ(permutation_matrix_landmarks_.rows(), C_p_landmarks->cols());
+
+    (*frame_keypoints) = (*frame_keypoints) * permutation_matrix_keypoints_;
+    (*frame_descriptors) = (*frame_descriptors) * permutation_matrix_keypoints_;
+
+    (*C_p_landmarks) = (*C_p_landmarks) * permutation_matrix_landmarks_;;
+    (*landmark_descriptors) = (*landmark_descriptors) * permutation_matrix_landmarks_;
+  }
+
+  inline void setKeypointsAndLandmarks(
+      const Eigen::Matrix2Xd& frame_keypoints,
+      const Descriptors& frame_descriptors,
+      const Eigen::Matrix3Xd C_p_landmarks,
+      const Descriptors& landmark_descriptors) {
+    const size_t num_keypoints = frame_keypoints.cols();
+
+    CHECK_EQ(num_keypoints, frame_descriptors.cols());
+    CHECK_EQ(num_keypoints, C_p_landmarks.cols());
+    CHECK_EQ(num_keypoints, landmark_descriptors.cols());
+
+    frame_->setKeypointMeasurements(frame_keypoints);
+    frame_->setDescriptors(frame_descriptors);
+
+    for (size_t keypoint_index = 0u; keypoint_index < num_keypoints; ++keypoint_index) {
+      landmarks_.emplace_back(C_p_landmarks.col(keypoint_index),
+                              landmark_descriptors.col(keypoint_index));
+    }
+  }
+
   double image_space_distance_threshold_pixels_;
   int hamming_distance_threshold_;
 
@@ -47,6 +157,9 @@ class LandmarksToFrameMatcherTest : public testing::Test {
   aslam::MatchingEngineNonExclusive<aslam::MatchingProblemLandmarksToFrame> matching_engine_;
 
   aslam::PinholeCamera::Ptr camera_;
+
+  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> permutation_matrix_keypoints_;
+  Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> permutation_matrix_landmarks_;
 };
 
 TEST_F(LandmarksToFrameMatcherTest, EmptyMatch) {
@@ -65,9 +178,9 @@ TEST_F(LandmarksToFrameMatcherTest, MatchIdentity) {
   CHECK(camera_->backProject3(frame_keypoints.col(0), &projected_keypoint));
 
   const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1> frame_descriptors =
-      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1>::Zero();
+      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1>::Random();
   const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1> landmark_descriptors =
-      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1>::Zero();
+      frame_descriptors;
 
   frame_->setKeypointMeasurements(frame_keypoints);
   frame_->setDescriptors(frame_descriptors);
@@ -95,14 +208,12 @@ TEST_F(LandmarksToFrameMatcherTest, MatchIdentityWithScale) {
   projected_keypoint *= 34.23232;
 
   const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1> frame_descriptors =
-      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1>::Zero();
+      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1>::Random();
   const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1> landmark_descriptors =
-      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, 1>::Zero();
+      frame_descriptors;
 
-  frame_->setKeypointMeasurements(frame_keypoints);
-  frame_->setDescriptors(frame_descriptors);
-
-  landmarks_.emplace_back(projected_keypoint, landmark_descriptors.col(0));
+  setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoint,
+                           landmark_descriptors);
 
   aslam::MatchesWithScore matches_A_B;
   match(&matches_A_B);
@@ -117,68 +228,19 @@ TEST_F(LandmarksToFrameMatcherTest, MatchIdentityWithScale) {
 
 TEST_F(LandmarksToFrameMatcherTest, MatchRandomly) {
   const size_t kNumKeypoints = 2000u;
-  Eigen::Matrix2Xd frame_keypoints = Eigen::Matrix2Xd::Zero(2, kNumKeypoints);
-
-  Eigen::Matrix3Xd projected_keypoints(3, kNumKeypoints);
-
-  std::random_device random_device;
-  std::default_random_engine random_engine(random_device());
-
-  CHECK_GT(camera_->imageWidth(), 0u);
-  CHECK_GT(camera_->imageHeight(), 0u);
-  std::uniform_int_distribution<int> uniform_dist_image_width(0, camera_->imageWidth() - 1);
-  std::uniform_int_distribution<int> uniform_dist_image_height(0, camera_->imageHeight() - 1);
-  std::uniform_real_distribution<double> uniform_dist_image_space(0, image_space_distance_threshold_pixels_);
-  std::uniform_int_distribution<int> uniform_dist_angle(0, 359);
-
-
-  for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    const double keypoint_x = static_cast<double>(uniform_dist_image_width(random_engine));
-    const double keypoint_y = static_cast<double>(uniform_dist_image_height(random_engine));
-
-    frame_keypoints(0, keypoint_index) = keypoint_x;
-    frame_keypoints(1, keypoint_index) = keypoint_y;
-
-    const double shift_translation_pixels = uniform_dist_image_space(random_engine);
-    const double shift_angle_radians =
-        static_cast<double>(uniform_dist_angle(random_engine)) / 180.0 * 3.14159;
-
-    const double x_shift = shift_translation_pixels * std::cos(shift_angle_radians);
-    const double y_shift = shift_translation_pixels * std::sin(shift_angle_radians);
-
-    const double shifted_keypoint_x = std::min<double>(
-        std::max<double>(keypoint_x + x_shift, 0.1), camera_->imageWidth() - 0.1);
-    const double shifted_keypoint_y = std::min<double>(
-        std::max<double>(keypoint_y + y_shift, 0.1), camera_->imageHeight() - 0.1);
-
-    const Eigen::Vector2d shifted_keypoint(shifted_keypoint_x, shifted_keypoint_y);
-
-    Eigen::Vector3d projected_keypoint;
-    CHECK(camera_->backProject3(shifted_keypoint, &projected_keypoint));
-    projected_keypoints.col(keypoint_index) = projected_keypoint;
-  }
-
-  // Arbitrarily picked scaling factor.
   const double kScalingFactor = 1e5;
 
-  Eigen::VectorXd random_scale = Eigen::VectorXd::Random(kNumKeypoints);
-  random_scale = random_scale.cwiseAbs() * kScalingFactor;
+  Eigen::Matrix2Xd frame_keypoints;
+  Eigen::Matrix3Xd C_p_landmarks;
 
-  projected_keypoints = projected_keypoints * random_scale.asDiagonal();
+  createRandomKeypointsAndLandmarksWithinSearchRegion(kNumKeypoints, kScalingFactor,
+                                                      &frame_keypoints, &C_p_landmarks);
 
-  const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> frame_descriptors =
-      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic>::Random(kDescriptorSizeBytes, kNumKeypoints);
+  const Descriptors frame_descriptors = Descriptors::Random(kDescriptorSizeBytes, kNumKeypoints);
+  const Descriptors landmark_descriptors = frame_descriptors;
 
-  const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> landmark_descriptors =
-      frame_descriptors;
-
-  frame_->setKeypointMeasurements(frame_keypoints);
-  frame_->setDescriptors(frame_descriptors);
-
-  for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    landmarks_.emplace_back(projected_keypoints.col(keypoint_index),
-                            landmark_descriptors.col(keypoint_index));
-  }
+  setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, C_p_landmarks,
+                           landmark_descriptors);
 
   aslam::MatchesWithScore matches_A_B;
   match(&matches_A_B);
@@ -191,224 +253,270 @@ TEST_F(LandmarksToFrameMatcherTest, MatchRandomly) {
   }
 }
 
-TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchesBecauseOfHammingDistance) {
+TEST_F(LandmarksToFrameMatcherTest, MatchRandomlyWithRandomOrder) {
   const size_t kNumKeypoints = 2000u;
-  Eigen::Matrix2Xd frame_keypoints = Eigen::Matrix2Xd::Zero(2, kNumKeypoints);
-
-  Eigen::Matrix3Xd projected_keypoints(3, kNumKeypoints);
-
-  std::random_device random_device;
-  std::default_random_engine random_engine(random_device());
-
-  std::uniform_int_distribution<int> uniform_dist_image_width(0, camera_->imageWidth() - 1);
-  std::uniform_int_distribution<int> uniform_dist_image_height(0, camera_->imageHeight() - 1);
-  std::uniform_real_distribution<double> uniform_dist_image_space(0, image_space_distance_threshold_pixels_);
-  std::uniform_int_distribution<int> uniform_dist_angle(0, 359);
-
-
-  for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    const double keypoint_x = static_cast<double>(uniform_dist_image_width(random_engine));
-    const double keypoint_y = static_cast<double>(uniform_dist_image_height(random_engine));
-
-    frame_keypoints(0, keypoint_index) = keypoint_x;
-    frame_keypoints(1, keypoint_index) = keypoint_y;
-
-    const double shift_translation_pixels = uniform_dist_image_space(random_engine);
-    const double shift_angle_radians =
-        static_cast<double>(uniform_dist_angle(random_engine)) / 180.0 * 3.14159;
-
-    const double x_shift = shift_translation_pixels * std::cos(shift_angle_radians);
-    const double y_shift = shift_translation_pixels * std::sin(shift_angle_radians);
-
-    const double shifted_keypoint_x = std::min<double>(
-        std::max<double>(keypoint_x + x_shift, 0.1), camera_->imageWidth() - 0.1);
-    const double shifted_keypoint_y = std::min<double>(
-        std::max<double>(keypoint_y + y_shift, 0.1), camera_->imageHeight() - 0.1);
-
-    const Eigen::Vector2d shifted_keypoint(shifted_keypoint_x, shifted_keypoint_y);
-
-    Eigen::Vector3d projected_keypoint;
-    CHECK(camera_->backProject3(shifted_keypoint, &projected_keypoint));
-    projected_keypoints.col(keypoint_index) = projected_keypoint;
-  }
-
-  // Arbitrarily picked scaling factor.
   const double kScalingFactor = 1e5;
 
-  Eigen::VectorXd random_scale = Eigen::VectorXd::Random(kNumKeypoints);
-  random_scale = random_scale.cwiseAbs() * kScalingFactor;
+  Eigen::Matrix2Xd frame_keypoints;
+  Eigen::Matrix3Xd C_p_landmarks;
 
-  projected_keypoints = projected_keypoints * random_scale.asDiagonal();
+  createRandomKeypointsAndLandmarksWithinSearchRegion(kNumKeypoints, kScalingFactor,
+                                                      &frame_keypoints, &C_p_landmarks);
 
-  Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> frame_descriptors =
-      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic>::Random(kDescriptorSizeBytes, kNumKeypoints);
+  Descriptors frame_descriptors = Descriptors::Random(kDescriptorSizeBytes, kNumKeypoints);
+  Descriptors landmark_descriptors = frame_descriptors;
 
-  Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> landmark_descriptors =
-      frame_descriptors;
+  shuffleKeypointsAndLandmarkIndices(kNumKeypoints, &frame_keypoints, &frame_descriptors,
+                                     &C_p_landmarks, &landmark_descriptors);
+
+  setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, C_p_landmarks,
+                           landmark_descriptors);
+
+  aslam::MatchesWithScore matches_A_B;
+  match(&matches_A_B);
+  const size_t num_matches = matches_A_B.size();
+
+  ASSERT_EQ(kNumKeypoints, num_matches);
+
+  Eigen::MatrixXi result_matrix_keypoints(kNumKeypoints, kNumKeypoints);
+  result_matrix_keypoints.setZero();
+
+  Eigen::MatrixXi result_matrix_landmarks(kNumKeypoints, kNumKeypoints);
+  result_matrix_landmarks.setZero();
+
+  for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
+    const aslam::MatchWithScore& match = matches_A_B[match_index];
+    const int keypoint_index = match.getIndexApple();
+    const int landmark_index = match.getIndexBanana();
+    CHECK_LT(keypoint_index, kNumKeypoints);
+    CHECK_LT(landmark_index, kNumKeypoints);
+
+    result_matrix_keypoints(keypoint_index, match_index) = 1;
+    result_matrix_landmarks(landmark_index, match_index) = 1;
+
+    EXPECT_DOUBLE_EQ(1.0, match.score);
+  }
+
+  result_matrix_keypoints = permutation_matrix_keypoints_.toDenseMatrix() * result_matrix_keypoints;
+  result_matrix_landmarks = permutation_matrix_landmarks_.toDenseMatrix() * result_matrix_landmarks;
+
+  ASSERT_TRUE(EIGEN_MATRIX_EQUAL(result_matrix_keypoints, result_matrix_keypoints ));
+}
+
+TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchesBecauseOfHammingDistance) {
+  const size_t kNumKeypoints = 2000u;
+  const double kScalingFactor = 1e5;
+
+  Eigen::Matrix2Xd frame_keypoints;
+  Eigen::Matrix3Xd projected_keypoints;
+
+  createRandomKeypointsAndLandmarksWithinSearchRegion(kNumKeypoints, kScalingFactor,
+                                                      &frame_keypoints, &projected_keypoints);
+
+  Descriptors frame_descriptors = Descriptors::Random(kDescriptorSizeBytes, kNumKeypoints);
+  Descriptors landmark_descriptors = frame_descriptors;
+
+  Eigen::Matrix<unsigned char, kNumKeypoints, 1> selection_vector =
+      Eigen::Matrix<unsigned char, kNumKeypoints, 1>::Random();
+
+  selection_vector.setConstant(255u);
+  selection_vector(1) = 0u;
 
   const int kNumBytesDifferent = 2;
   hamming_distance_threshold_ = kNumBytesDifferent * 8;
   CHECK_LT(kNumBytesDifferent, frame_descriptors.rows());
   CHECK_LT(kNumBytesDifferent, landmark_descriptors.rows());
-  frame_descriptors.topRows(kNumBytesDifferent) =
-      Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>::Zero(kNumBytesDifferent, kNumKeypoints);
-  landmark_descriptors.topRows(kNumBytesDifferent) =
-      Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>::Constant(kNumBytesDifferent, kNumKeypoints, 255u);;
 
-  frame_->setKeypointMeasurements(frame_keypoints);
-  frame_->setDescriptors(frame_descriptors);
+  unsigned char kCharThreshold = 128;
+  size_t num_made_invalid = 0u;
 
   for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    landmarks_.emplace_back(projected_keypoints.col(keypoint_index),
-                            landmark_descriptors.col(keypoint_index));
+    if (selection_vector(keypoint_index) < kCharThreshold) {
+      frame_descriptors.block<kNumBytesDifferent, 1>(0, keypoint_index) =
+          Eigen::Matrix<unsigned char, kNumBytesDifferent, 1>::Zero();
+      landmark_descriptors.block<kNumBytesDifferent, 1>(0, keypoint_index) =
+          Eigen::Matrix<unsigned char, kNumBytesDifferent, 1>::Constant(255u);
+
+      ++num_made_invalid;
+    }
   }
+
+  shuffleKeypointsAndLandmarkIndices(kNumKeypoints, &frame_keypoints, &frame_descriptors,
+                                     &projected_keypoints, &landmark_descriptors);
+
+  setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoints,
+                           landmark_descriptors);
 
   aslam::MatchesWithScore matches_A_B;
   match(&matches_A_B);
 
-  ASSERT_TRUE(matches_A_B.empty());
+  const size_t num_matches = matches_A_B.size();
+  ASSERT_EQ(num_matches, kNumKeypoints - num_made_invalid);
+
+  Eigen::MatrixXi result_matrix_keypoints(kNumKeypoints, kNumKeypoints);
+  result_matrix_keypoints.setZero();
+
+  Eigen::MatrixXi result_matrix_landmarks(kNumKeypoints, kNumKeypoints);
+  result_matrix_landmarks.setZero();
+
+  for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
+    const aslam::MatchWithScore& match = matches_A_B[match_index];
+    const int keypoint_index = match.getIndexApple();
+    const int landmark_index = match.getIndexBanana();
+    CHECK_LT(keypoint_index, kNumKeypoints);
+    CHECK_LT(landmark_index, kNumKeypoints);
+
+    result_matrix_keypoints(keypoint_index, match_index) = 1;
+    result_matrix_landmarks(landmark_index, match_index) = 1;
+
+    EXPECT_DOUBLE_EQ(1.0, match.score);
+  }
+
+  result_matrix_keypoints = permutation_matrix_keypoints_ * result_matrix_keypoints;
+  result_matrix_landmarks = permutation_matrix_landmarks_ * result_matrix_landmarks;
+
+  ASSERT_TRUE(EIGEN_MATRIX_NEAR(result_matrix_keypoints, result_matrix_keypoints, 1e-8));
 }
 
 TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseOfSearchBand) {
   const size_t kNumKeypoints = 2000u;
-  Eigen::Matrix2Xd frame_keypoints = Eigen::Matrix2Xd::Zero(2, kNumKeypoints);
-
-  Eigen::Matrix3Xd projected_keypoints(3, kNumKeypoints);
-
-  std::random_device random_device;
-  std::default_random_engine random_engine(random_device());
-
-  std::uniform_int_distribution<int> uniform_dist_image_width(0, camera_->imageWidth() - 1);
-  std::uniform_int_distribution<int> uniform_dist_image_height(0, camera_->imageHeight() - 1);
-  std::uniform_int_distribution<int> uniform_dist_angle(0, 359);
-
-  for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    const double keypoint_x = static_cast<double>(uniform_dist_image_width(random_engine));
-    const double keypoint_y = static_cast<double>(uniform_dist_image_height(random_engine));
-
-    frame_keypoints(0, keypoint_index) = keypoint_x;
-    frame_keypoints(1, keypoint_index) = keypoint_y;
-
-    const double shift_translation_pixels = image_space_distance_threshold_pixels_ + 0.1;
-    const double shift_angle_radians =
-        static_cast<double>(uniform_dist_angle(random_engine)) / 180.0 * 3.14159;
-
-    const double x_shift = shift_translation_pixels * std::cos(shift_angle_radians);
-    const double y_shift = shift_translation_pixels * std::sin(shift_angle_radians);
-
-    // Move all projected keypoints out of the search band.
-    const double shifted_keypoint_x = keypoint_x + x_shift;
-    const double shifted_keypoint_y = keypoint_y + y_shift;
-
-    const Eigen::Vector2d shifted_keypoint(shifted_keypoint_x, shifted_keypoint_y);
-
-    Eigen::Vector3d projected_keypoint;
-    CHECK(camera_->backProject3(shifted_keypoint, &projected_keypoint));
-    projected_keypoints.col(keypoint_index) = projected_keypoint;
-  }
-
-  // Arbitrarily picked scaling factor.
   const double kScalingFactor = 1e5;
 
-  Eigen::VectorXd random_scale = Eigen::VectorXd::Random(kNumKeypoints);
-  random_scale = random_scale.cwiseAbs() * kScalingFactor;
+  Eigen::Matrix2Xd frame_keypoints;
+  Eigen::Matrix3Xd projected_keypoints;
 
-  projected_keypoints = projected_keypoints * random_scale.asDiagonal();
+  createRandomKeypointsAndLandmarksWithinSearchRegion(kNumKeypoints, kScalingFactor, &frame_keypoints,
+                                                      &projected_keypoints);
 
-  const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> frame_descriptors =
-      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic>::Random(kDescriptorSizeBytes, kNumKeypoints);
+  Eigen::Matrix<unsigned char, kNumKeypoints, 1> selection_vector =
+      Eigen::Matrix<unsigned char, kNumKeypoints, 1>::Random();
 
-  const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> landmark_descriptors =
-      frame_descriptors;
+  const double shift_translation_pixels = image_space_distance_threshold_pixels_ + 0.1;
 
-  frame_->setKeypointMeasurements(frame_keypoints);
-  frame_->setDescriptors(frame_descriptors);
+  std::default_random_engine random_engine(kSeed);
+  std::uniform_int_distribution<int> uniform_dist_angle(0, 359);
 
-  hamming_distance_threshold_ = 1;
-
+  size_t num_made_invalid = 0u;
   for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    landmarks_.emplace_back(projected_keypoints.col(keypoint_index),
-                            landmark_descriptors.col(keypoint_index));
+    if (selection_vector(keypoint_index) < kCharThreshold) {
+      Eigen::Vector2d keypoint = frame_keypoints.col(keypoint_index);
+
+      const double shift_angle_radians =
+          static_cast<double>(uniform_dist_angle(random_engine)) / 180.0 * M_PI;
+
+      const double x_shift = shift_translation_pixels * std::cos(shift_angle_radians);
+      const double y_shift = shift_translation_pixels * std::sin(shift_angle_radians);
+
+      keypoint(0) = keypoint(0) + x_shift;
+      keypoint(1) = keypoint(1) + y_shift;
+
+      Eigen::Vector3d projected_keypoint;
+      CHECK(camera_->backProject3(keypoint, &projected_keypoint));
+
+      projected_keypoints.col(keypoint_index) = projected_keypoint;
+
+      ++num_made_invalid;
+    }
   }
+
+  Descriptors frame_descriptors = Descriptors::Random(kDescriptorSizeBytes, kNumKeypoints);
+  Descriptors landmark_descriptors = frame_descriptors;
+
+  shuffleKeypointsAndLandmarkIndices(kNumKeypoints, &frame_keypoints, &frame_descriptors,
+                                     &projected_keypoints, &landmark_descriptors);
+
+  setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoints,
+                           landmark_descriptors);
 
   aslam::MatchesWithScore matches_A_B;
   match(&matches_A_B);
-  LOG(INFO) << "Got " << matches_A_B.size() << " matches.";
 
-  ASSERT_TRUE(matches_A_B.empty());
+  const size_t num_matches = matches_A_B.size();
+  ASSERT_EQ(num_matches, kNumKeypoints - num_made_invalid);
+
+  Eigen::MatrixXi result_matrix_keypoints(kNumKeypoints, kNumKeypoints);
+  result_matrix_keypoints.setZero();
+
+  Eigen::MatrixXi result_matrix_landmarks(kNumKeypoints, kNumKeypoints);
+  result_matrix_landmarks.setZero();
+
+  for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
+    const aslam::MatchWithScore& match = matches_A_B[match_index];
+    const int keypoint_index = match.getIndexApple();
+    const int landmark_index = match.getIndexBanana();
+    CHECK_LT(keypoint_index, kNumKeypoints);
+    CHECK_LT(landmark_index, kNumKeypoints);
+
+    result_matrix_keypoints(keypoint_index, match_index) = 1;
+    result_matrix_landmarks(landmark_index, match_index) = 1;
+
+    EXPECT_DOUBLE_EQ(1.0, match.score);
+  }
+
+  result_matrix_keypoints = permutation_matrix_keypoints_ * result_matrix_keypoints;
+  result_matrix_landmarks = permutation_matrix_landmarks_ * result_matrix_landmarks;
+
+  ASSERT_TRUE(EIGEN_MATRIX_NEAR(result_matrix_keypoints, result_matrix_keypoints, 1e-8));
 }
-
 
 TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseLandmarksBehindCamera) {
   const size_t kNumKeypoints = 2000u;
-  Eigen::Matrix2Xd frame_keypoints = Eigen::Matrix2Xd::Zero(2, kNumKeypoints);
+  const double kScalingFactor = 1e5;
 
-  Eigen::Matrix3Xd projected_keypoints(3, kNumKeypoints);
+  Eigen::Matrix2Xd frame_keypoints;
+  Eigen::Matrix3Xd projected_keypoints;
 
-  std::random_device random_device;
-  std::default_random_engine random_engine(random_device());
+  createRandomKeypointsAndLandmarksWithinSearchRegion(kNumKeypoints, kScalingFactor,
+                                                      &frame_keypoints, &projected_keypoints);
 
-  //const size_t kSeed = 23980u;
-  //std::srand(23980u);
-  std::uniform_int_distribution<int> uniform_dist_image_width(0, camera_->imageWidth() - 1);
-  std::uniform_int_distribution<int> uniform_dist_image_height(0, camera_->imageHeight() - 1);
-  std::uniform_int_distribution<int> uniform_dist_image_space(
-      -image_space_distance_threshold_pixels_, image_space_distance_threshold_pixels_);
-  std::uniform_int_distribution<int> uniform_dist_angle(0, 359);
+  Eigen::Matrix<unsigned char, kNumKeypoints, 1> selection_vector =
+      Eigen::Matrix<unsigned char, kNumKeypoints, 1>::Random();
 
-
+  size_t num_made_invalid = 0u;
   for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    const double keypoint_x = static_cast<double>(uniform_dist_image_width(random_engine));
-    const double keypoint_y = static_cast<double>(uniform_dist_image_height(random_engine));
-
-    frame_keypoints(0, keypoint_index) = keypoint_x;
-    frame_keypoints(1, keypoint_index) = keypoint_y;
-
-    const double shift_translation_pixels = static_cast<double>(uniform_dist_image_space(random_engine));
-    const double shift_angle_radians =
-        static_cast<double>(uniform_dist_angle(random_engine)) / 180.0 * 3.14159;
-
-    const double x_shift = shift_translation_pixels * std::cos(shift_angle_radians);
-    const double y_shift = shift_translation_pixels * std::sin(shift_angle_radians);
-
-    const double shifted_keypoint_x = std::min<double>(
-        std::max<double>(keypoint_x + x_shift, 0.1), camera_->imageWidth() - 0.1);
-    const double shifted_keypoint_y = std::min<double>(
-        std::max<double>(keypoint_y + y_shift, 0.1), camera_->imageHeight() - 0.1);
-
-    const Eigen::Vector2d shifted_keypoint(shifted_keypoint_x, shifted_keypoint_y);
-
-    Eigen::Vector3d projected_keypoint;
-    CHECK(camera_->backProject3(shifted_keypoint, &projected_keypoint));
-    projected_keypoints.col(keypoint_index) = projected_keypoint;
+    if (selection_vector(keypoint_index) < kCharThreshold) {
+      projected_keypoints.col(keypoint_index) *= -1;
+      ++num_made_invalid;
+    }
   }
 
-  // Arbitrarily picked negative scaling factor.
-  const double kScalingFactor = -1e5;
+  Descriptors frame_descriptors = Descriptors::Random(kDescriptorSizeBytes, kNumKeypoints);
+  Descriptors landmark_descriptors = frame_descriptors;
 
-  Eigen::VectorXd random_scale = Eigen::VectorXd::Random(kNumKeypoints);
-  random_scale = random_scale.cwiseAbs() * kScalingFactor;
+  shuffleKeypointsAndLandmarkIndices(kNumKeypoints, &frame_keypoints, &frame_descriptors,
+                                    &projected_keypoints, &landmark_descriptors);
 
-  projected_keypoints = projected_keypoints * random_scale.asDiagonal();
-
-  const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> frame_descriptors =
-      Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic>::Random(kDescriptorSizeBytes, kNumKeypoints);
-
-  const Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> landmark_descriptors =
-      frame_descriptors;
-
-  frame_->setKeypointMeasurements(frame_keypoints);
-  frame_->setDescriptors(frame_descriptors);
-
-  for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    landmarks_.emplace_back(projected_keypoints.col(keypoint_index),
-                            landmark_descriptors.col(keypoint_index));
-  }
+  setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoints,
+                           landmark_descriptors);
 
   aslam::MatchesWithScore matches_A_B;
   match(&matches_A_B);
+  const size_t num_matches = matches_A_B.size();
+  ASSERT_EQ(num_matches, kNumKeypoints - num_made_invalid);
 
-  ASSERT_TRUE(matches_A_B.empty());
+  Eigen::MatrixXi result_matrix_keypoints(kNumKeypoints, kNumKeypoints);
+  result_matrix_keypoints.setZero();
+
+  Eigen::MatrixXi result_matrix_landmarks(kNumKeypoints, kNumKeypoints);
+  result_matrix_landmarks.setZero();
+
+  for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
+    const aslam::MatchWithScore& match = matches_A_B[match_index];
+    const int keypoint_index = match.getIndexApple();
+    const int landmark_index = match.getIndexBanana();
+    CHECK_LT(keypoint_index, kNumKeypoints);
+    CHECK_LT(landmark_index, kNumKeypoints);
+
+    result_matrix_keypoints(keypoint_index, match_index) = 1;
+    result_matrix_landmarks(landmark_index, match_index) = 1;
+
+    EXPECT_DOUBLE_EQ(1.0, match.score);
+  }
+
+  result_matrix_keypoints = permutation_matrix_keypoints_ * result_matrix_keypoints;
+  result_matrix_landmarks = permutation_matrix_landmarks_ * result_matrix_landmarks;
+
+  ASSERT_TRUE(EIGEN_MATRIX_NEAR(result_matrix_keypoints, result_matrix_keypoints, 1e-8));
 }
 
 ASLAM_UNITTEST_ENTRYPOINT

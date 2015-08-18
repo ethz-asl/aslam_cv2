@@ -20,14 +20,18 @@ MatchingProblemLandmarksToFrame::MatchingProblemLandmarksToFrame(
                                                            image_space_distance_threshold_pixels),
     hamming_distance_threshold_(hamming_distance_threshold) {
   CHECK_GT(hamming_distance_threshold, 0) << "Descriptor distance needs to be positive.";
-  CHECK_GT(image_space_distance_threshold_pixels, 0.0) << "Image space distance needs to be positive.";
+  CHECK_GT(image_space_distance_threshold_pixels, 0.0)
+    << "Image space distance needs to be positive.";
 
   // The vertical search band must be at least twice the image space distance.
-  vertical_band_halfwidth_pixels_ = static_cast<int>(std::ceil(image_space_distance_threshold_pixels));
+  vertical_band_halfwidth_pixels_ = static_cast<int>(
+      std::ceil(image_space_distance_threshold_pixels));
 
   CHECK(frame.getCameraGeometry()) << "The camera of the visual frame is NULL.";
   image_height_frame_ = frame.getCameraGeometry()->imageHeight();
   CHECK_GT(image_height_frame_, 0u) << "The visual frame has zero image rows.";
+  CHECK_GT(descriptor_size_bytes_, 0);
+  CHECK_GT(descriptor_size_bits_, 0);
 }
 
 bool MatchingProblemLandmarksToFrame::doSetup() {
@@ -90,8 +94,8 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
       CHECK_LT(y_coordinate, image_height_frame_) << "The y coordinate for keypoint "
           << keypoint_idx << " is bigger than or equal to the number of rows in the image.";
 
-      y_coordinate_to_keypoint_index_map_.insert(std::make_pair(y_coordinate, keypoint_idx));
-      //y_coordinate_to_keypoint_index_map_.emplace(y_coordinate, keypoint_idx);
+      //y_coordinate_to_keypoint_index_map_.insert(std::make_pair(y_coordinate, keypoint_idx));
+      y_coordinate_to_keypoint_index_map_.emplace(y_coordinate, keypoint_idx);
 
       valid_frame_keypoints_[keypoint_idx] = true;
       ++num_added;
@@ -125,9 +129,9 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
   // keypoint and within some defined descriptor distance.
   CHECK_NOTNULL(candidates)->clear();
   CHECK_EQ(numApples(), y_coordinate_to_keypoint_index_map_.size()) << "The number of apples"
-      << " and the number of apples in the apple LUT differs. This can happen if 1. the visual frame "
-      << "was altered between calling setup() and getAppleCandidatesForBanana(...) or 2. if the "
-      << "setup() function did not build a valid LUT for the visual frame keypoints.";
+      << " and the number of apples in the apple LUT differs. This can happen if 1. the visual "
+      << "frame was altered between calling setup() and getAppleCandidatesForBanana(...) or 2. "
+      << "if the setup() function did not build a valid LUT for the visual frame keypoints.";
   CHECK_LT(landmark_index, static_cast<int>(valid_landmarks_.size()))
     << "No valid flag for the landmark with index " << landmark_index << ".";
   CHECK_LT(landmark_index, static_cast<int>(projected_landmark_keypoints_.size()))
@@ -146,11 +150,12 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
     const Eigen::Vector2d& keypoint_landmark = projected_landmark_keypoints_[landmark_index];
 
     // Get the y coordinate of the projected landmark keypoint in the visual frame.
-    int projected_landmark_keypoint_y_coordinate = static_cast<int>(std::round(keypoint_landmark(1)));
+    const int projected_landmark_keypoint_y_coordinate =
+        static_cast<int>(std::round(keypoint_landmark(1)));
 
     // Compute the lower and upper bound of the vertical search window, making it respect the
     // image dimension of the visual frame.
-    size_t y_lower = static_cast<size_t>(std::max(
+    const size_t y_lower = static_cast<size_t>(std::max(
         projected_landmark_keypoint_y_coordinate - vertical_band_halfwidth_pixels_, 0));
     CHECK_LT(y_lower, image_height_frame_) << "The y coordinate of the lower search band bound "
         << "is bigger than or equal to the number of rows in the image.";
@@ -164,7 +169,7 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
     // we want to have included in our loop).
     // Note: It's ok if y_upper > image_height because then we will just
     // get it_upper = .end() which is what we want in this case.
-    size_t y_upper = static_cast<size_t>(projected_landmark_keypoint_y_coordinate +
+    const size_t y_upper = static_cast<size_t>(projected_landmark_keypoint_y_coordinate +
                                          vertical_band_halfwidth_pixels_ + 1);
 
     std::multimap<size_t, size_t>::iterator it_lower =
@@ -177,16 +182,12 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
     std::multimap<size_t, size_t>::iterator it_upper =
         y_coordinate_to_keypoint_index_map_.lower_bound(y_upper);
 
-    size_t num_keypoints_looked_at = 0u;
-    size_t num_keypoints_within_distance = 0u;
-
     std::unordered_set<size_t> keypoints_indices_looked_at;
 
     for (std::multimap<size_t, size_t>::iterator it = it_lower; it != it_upper; ++it) {
       // Go over all the frame keypoints and compute image space distance to the projected landmark
       // keypoint.
-      ++num_keypoints_looked_at;
-      size_t frame_keypoint_index = it->second;
+      const size_t frame_keypoint_index = it->second;
       keypoints_indices_looked_at.insert(frame_keypoint_index);
 
       CHECK_LT(static_cast<int>(frame_keypoint_index), keypoints_frame.cols());
@@ -195,7 +196,6 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
       const double squared_image_space_distance = (frame_keypoint - keypoint_landmark).squaredNorm();
 
       if (squared_image_space_distance < squared_image_space_distance_threshold_pixels_squared_) {
-        ++num_keypoints_within_distance;
         // This one is within the radius. Compute the descriptor distance.
         const int hamming_distance = computeHammingDistance(landmark_index, frame_keypoint_index);
 

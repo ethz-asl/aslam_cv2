@@ -114,8 +114,10 @@ public:
     CHECK(valid_landmarks_[landmark_index]) << "The given landmark with index "
         << landmark_index << " is not valid.";
 
-    const common::FeatureDescriptorConstRef& apple_descriptor = frame_descriptors_[frame_keypoint_index];
-    const common::FeatureDescriptorConstRef& banana_descriptor = landmark_descriptors_[landmark_index];
+    const common::FeatureDescriptorConstRef& apple_descriptor =
+        frame_descriptors_[frame_keypoint_index];
+    const common::FeatureDescriptorConstRef& banana_descriptor =
+        landmark_descriptors_[landmark_index];
 
     CHECK_NOTNULL(apple_descriptor.data());
     CHECK_NOTNULL(banana_descriptor.data());
