@@ -11,13 +11,13 @@
 
 namespace aslam {
 class VisualFrame;
-typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type KeypointList;
+typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Verctor2dList;
 
 void convertKeypointVectorToCvPointList(const Eigen::Matrix2Xd& keypoints,
-                                        std::vector<cv::Point2f>* keypoints_out);
+                                        std::vector<cv::Point2f>* keypoints_cv);
 
 void convertCvPointListToKeypointVector(const std::vector<cv::Point2f>& keypoints,
-                                        Eigen::Matrix2Xd* keypoints_out);
+                                        Eigen::Matrix2Xd* keypoints_eigen);
 
 /// Rotate keypoints from a VisualFrame using a specified rotation. Note that if the back-,
 /// projection fails or the keypoint leaves the image region, the predicted keypoint will be left
@@ -25,16 +25,14 @@ void convertCvPointListToKeypointVector(const std::vector<cv::Point2f>& keypoint
 void predictKeypointsByRotation(const VisualFrame& frame_k,
                                 const aslam::Quaternion& q_Ckp1_Ck,
                                 Eigen::Matrix2Xd* predicted_keypoints_kp1,
-                                std::vector<char>* prediction_success);
+                                std::vector<unsigned char>* prediction_success);
 
 /// Append a list of kepoints to a VisualFrame.
 void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
-                                            double fixed_keypoint_uncertainty,
+                                            double fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame);
-
-/// Append a list of kepoints to a VisualFrame.
-void insertAdditionalKeypointsToVisualFrame(const KeypointList& keypoints,
-                                            double fixed_keypoint_uncertainty,
+void insertAdditionalKeypointsToVisualFrame(const Verctor2dList& keypoints,
+                                            double fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame);
 
 }  // namespace aslam
