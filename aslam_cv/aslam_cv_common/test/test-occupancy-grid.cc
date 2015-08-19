@@ -42,7 +42,7 @@ TEST(OccupancyGrid, addPointOrReplaceWeakestIfCellFull) {
       grid.addPointOrReplaceWeakestIfCellFull(Point(0.5, 1.5, 1.0, 6), kMaxNumPointsPerCell));
 }
 
-TEST(OccupancyGrid, removeWeightedPointsFromOverFullCells) {
+TEST(OccupancyGrid, removeWeightedPointsFromOverfullCells) {
   WeightedOccupancyGrid grid(2.0, 2.0, 1.0, 1.0);
 
   grid.addPointUnconditional(Point(0.5, 0.0, 0.3, 0));

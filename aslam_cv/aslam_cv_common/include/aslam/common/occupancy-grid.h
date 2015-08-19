@@ -113,7 +113,7 @@ class WeightedOccupancyGrid {
 
   /// Remove points from cells that contain more points than specified. Points with the lowest
   /// score will be removed first.
-  size_t removeWeightedPointsFromOverFullCells(size_t max_points_per_cell);
+  size_t removeWeightedPointsFromOverfullCells(size_t max_points_per_cell);
   /// @}
 
  private:

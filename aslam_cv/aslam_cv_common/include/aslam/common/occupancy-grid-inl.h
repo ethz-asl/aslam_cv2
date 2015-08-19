@@ -97,7 +97,7 @@ void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
     << "has to be smaller or equal to the cell size.";
 
   // As the min. distance has to be smaller than the grid size, we only need to check points in the
-  // cells that are direct neighboors.
+  // cells that are direct neighbors.
   GridCoordinates cell_input_point = inputToGridCoordinates(point_to_insert.u_rows,
                                                             point_to_insert.v_cols);
 
@@ -223,7 +223,7 @@ size_t WeightedOccupancyGrid<PointType>::getNumPoints() const {
 }
 
 template<typename PointType>
-size_t WeightedOccupancyGrid<PointType>::removeWeightedPointsFromOverFullCells(
+size_t WeightedOccupancyGrid<PointType>::removeWeightedPointsFromOverfullCells(
     size_t max_points_per_cell) {
   CHECK_GT(max_points_per_cell, 0u);
 
@@ -233,7 +233,7 @@ size_t WeightedOccupancyGrid<PointType>::removeWeightedPointsFromOverFullCells(
       PointList& cell = getGridCell(GridCoordinates(i_row, j_col));
 
       if (cell.size() > max_points_per_cell) {
-        num_removed += cell.size() - max_points_per_cell;
+        num_removed += (cell.size() - max_points_per_cell);
 
         // Remove the points with the lowest score.
         std::sort(cell.begin(), cell.end(), std::greater<PointType>());
@@ -250,8 +250,8 @@ cv::Mat WeightedOccupancyGrid<PointType>::getOccupancyMask(
   CHECK_GT(radius_mask_around_points, static_cast<CoordinatesType>(0.0));
   CHECK_GT(max_points_per_cell, 0u);
 
-  // Go over all cells either mask out the entire cell if the max. point count has been reached
-  // for this cell or otherwise mask out the point in this cell.
+  // Go over all cells and mask either the entire cell if the max. point count has been reached
+  // in this cell or otherwise mask out the point in this cell.
   cv::Mat mask(static_cast<int>(std::floor(max_input_coordinate_rows_)),
                static_cast<int>(std::floor(max_input_coordinate_cols_)),
                CV_8UC1, cv::Scalar(255));
