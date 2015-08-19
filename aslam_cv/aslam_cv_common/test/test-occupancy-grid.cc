@@ -8,7 +8,7 @@
 typedef aslam::WeightedKeypoint<double, double, size_t> Point;
 typedef aslam::WeightedOccupancyGrid<Point> WeightedOccupancyGrid;
 
-TEST(OccupancyGrid, DISABLED_addPointOrReplaceWeakestIfCellFull) {
+TEST(OccupancyGrid, addPointOrReplaceWeakestIfCellFull) {
   WeightedOccupancyGrid grid(2.0, 2.0, 1.0, 1.0);
 
   static constexpr size_t kMaxNumPointsPerCell = 2u;
@@ -42,7 +42,7 @@ TEST(OccupancyGrid, DISABLED_addPointOrReplaceWeakestIfCellFull) {
       grid.addPointOrReplaceWeakestIfCellFull(Point(0.5, 1.5, 1.0, 6), kMaxNumPointsPerCell));
 }
 
-TEST(OccupancyGrid, DISABLED_removeWeightedPointsFromOverFullCells) {
+TEST(OccupancyGrid, removeWeightedPointsFromOverFullCells) {
   WeightedOccupancyGrid grid(2.0, 2.0, 1.0, 1.0);
 
   grid.addPointUnconditional(Point(0.5, 0.0, 0.3, 0));
@@ -66,7 +66,7 @@ TEST(OccupancyGrid, DISABLED_removeWeightedPointsFromOverFullCells) {
   EXPECT_EQ(cell[1].id, 0u);
 }
 
-TEST(OccupancyGrid, DISABLED_CellIndexing) {
+TEST(OccupancyGrid, CellIndexing) {
   WeightedOccupancyGrid grid(2.0, 2.0, 1.0, 1.0);
 
   // Add N points to cell: 2:00 1:10 0:01 1:11
@@ -97,7 +97,7 @@ TEST(OccupancyGrid, DISABLED_CellIndexing) {
   EXPECT_EQ(grid.getGridCell(1.5, 1.5).size(), 3u);
 }
 
-TEST(OccupancyGrid, DISABLED_AddInvalidPointCoordinates) {
+TEST(OccupancyGrid, AddInvalidPointCoordinates) {
   const double kGridSize = 2.0;
   WeightedOccupancyGrid grid(kGridSize, kGridSize, 1.0, 1.0);
 
@@ -146,7 +146,7 @@ TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPoints) {
   // TODO(schneith): Add more tests.
 }
 
-TEST(OccupancyGrid, DISABLED_GetOccupancyMask) {
+TEST(OccupancyGrid, GetOccupancyMask) {
   // Create a grid with some points.
   const double kGridSize = 100.0;
   const double kCellSize = 25.0;
@@ -193,7 +193,7 @@ TEST(OccupancyGrid, DISABLED_GetOccupancyMask) {
   EXPECT_EQ(mask.at<unsigned char>(75, 75 - kMaskRadiusAroundPointsPx - 1), 255);
 }
 
-TEST(OccupancyGrid, DISABLED_InvalidGridParameters) {
+TEST(OccupancyGrid, InvalidGridParameters) {
   // Zero sized grid.
   EXPECT_DEATH(WeightedOccupancyGrid(0.0, 1.0, 1.0, 1.0), "^");
   EXPECT_DEATH(WeightedOccupancyGrid(1.0, 0.0, 1.0, 1.0), "^");
