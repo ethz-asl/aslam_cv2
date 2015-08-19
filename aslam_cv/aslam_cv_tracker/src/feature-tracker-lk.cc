@@ -10,11 +10,8 @@ namespace aslam {
 DEFINE_bool(lk_use_brisk_harris, false,
             "Use the brisk harris detector to initialize new features?");
 DEFINE_bool(lk_gfft_subpix_refinement, true, "Perform subpixel refinement on gfft corners?");
-DEFINE_bool(lk_use_occupancy_matrix, false,
-            "Use the occupancy matrix to prevent overlaying keypoints?");
 
-FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
-  : use_occupancy_matrix_(FLAGS_lk_use_occupancy_matrix) {
+FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera) {
   // Create the detection mask.
   detection_mask_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
   cv::Mat region_of_interest(detection_mask_,
@@ -93,9 +90,9 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     tracking_successful.reserve(keypoints_k.size());
 
     cv::calcOpticalFlowPyrLK(frame_k.getRawImage(), frame_kp1->getRawImage(),
-                             keypoints_k, tracked_keypoints_kp1, tracking_successful,
-                             tracking_errors, kWindowSize, kMaxPyramidLevel, kTerminationCriteria,
-                             kOperationFlag, kMinEigenThreshold);
+                             keypoints_k, tracked_keypoints_kp1, tracking_successful, tracking_errors,
+                             kWindowSize, kMaxPyramidLevel, kTerminationCriteria, kOperationFlag,
+                             kMinEigenThreshold);
     timer_tracking.Stop();
 
     aslam::timing::Timer timer_selection("FeatureTrackerLk: track - feature selection");
@@ -122,7 +119,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       keypoint_indices_to_abort_.clear();
     }
 
-    if (use_occupancy_matrix_) {
+    if (kUseOccupancyMatrix) {
       CHECK_EQ(image_width, occupancy_matrix_.cols());
       CHECK_EQ(image_height, occupancy_matrix_.rows());
       occupancy_matrix_.setZero();
@@ -137,10 +134,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
         continue;
       }
 
-      const size_t x_pixel = static_cast<size_t>(
-          std::round(tracked_keypoints_kp1[keypoint_idx_k].x));
-      const size_t y_pixel = static_cast<size_t>(
-          std::round(tracked_keypoints_kp1[keypoint_idx_k].y));
+      const size_t x_pixel = static_cast<size_t>(std::round(tracked_keypoints_kp1[keypoint_idx_k].x));
+      const size_t y_pixel = static_cast<size_t>(std::round(tracked_keypoints_kp1[keypoint_idx_k].y));
 
       // Drop tracks where the tracking failed or that are close to the border as we can't
       // compute descriptors.
@@ -153,7 +148,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       }
 
       // Drop tracks that are too close to another track.
-      if (use_occupancy_matrix_ && (occupancy_matrix_(y_pixel, x_pixel) > 0u)) {
+      if (kUseOccupancyMatrix && (occupancy_matrix_(y_pixel, x_pixel) > 0u)) {
         continue;
       }
 
@@ -174,7 +169,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       new_keypoints_kp1.emplace_back(tracked_keypoints_kp1[keypoint_idx_k].x,
                                      tracked_keypoints_kp1[keypoint_idx_k].y);
 
-      if (use_occupancy_matrix_) {
+      if (kUseOccupancyMatrix) {
         aslam::timing::Timer timer_occupancy_matrix(
             "FeatureTrackerLk: track - filling occupancy matrix");
         fillOccupancyMatrix(x_pixel, y_pixel, image_width, image_height);
@@ -194,9 +189,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     Vector2dList detected_keypoints;
     detectGfttCorners(frame_kp1->getRawImage(), &detected_keypoints);
 
-    if (use_occupancy_matrix_) {
-      Vector2dList::iterator keypoint_iterator = detected_keypoints.begin();
-      while (keypoint_iterator != detected_keypoints.end()) {
+    if (kUseOccupancyMatrix) {
+      for (Vector2dList::iterator keypoint_iterator = detected_keypoints.begin(); keypoint_iterator != detected_keypoints.end();) {
         const size_t x_pixel = std::round((*keypoint_iterator)(0));
         const size_t y_pixel = std::round((*keypoint_iterator)(1));
         if (occupancy_matrix_(y_pixel, x_pixel) > 0u) {
