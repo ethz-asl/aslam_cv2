@@ -57,7 +57,7 @@ class WeightedOccupancyGrid {
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
   /// @{
-
+ public:
   WeightedOccupancyGrid(CoordinatesType max_input_coordinate_rows,
                         CoordinatesType max_input_coordinate_cols,
                         CoordinatesType cell_size_rows,
@@ -87,7 +87,7 @@ class WeightedOccupancyGrid {
   //////////////////////////////////////////////////////////////
   /// \name Methods to query the grid.
   /// @{
-
+ public:
   size_t getNumPoints() const;
   size_t getAllPointsInGrid(PointList* points) const;
 
@@ -107,7 +107,7 @@ class WeightedOccupancyGrid {
   //////////////////////////////////////////////////////////////
   /// \name Methods to manipulate existing points in the grid.
   /// @{
-
+ public:
   /// Methods to filter/modify the points in the grid.
   void setConstantWeightForAllPointsInGrid(WeightType weight);
 
