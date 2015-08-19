@@ -127,16 +127,15 @@ template<typename ElementType>
 inline std::vector<ElementType> eraseIndicesFromVector(
     const std::vector<ElementType>& data,
     const std::vector<size_t>& indices_to_delete) {
-  std::vector<size_t> mutable_indices_to_delete = indices_to_delete;
   if (mutable_indices_to_delete.empty()) {
     return data;
   }
+  std::vector<size_t> mutable_indices_to_delete = indices_to_delete;
   std::sort(mutable_indices_to_delete.begin(), mutable_indices_to_delete.end());
-  for (size_t index : mutable_indices_to_delete) {
-    CHECK_LT(index, data.size());
-  }
+  CHECK_LT(mutable_indices_to_delete.back(), data.size());
 
   std::vector<ElementType> reduced_vector;
+  CHECK_GE(data.size(), mutable_indices_to_delete.size());
   reduced_vector.reserve(data.size() - mutable_indices_to_delete.size());
 
   // Copy blocks from the input vector to the output vector.
