@@ -19,6 +19,8 @@ FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
 void FeatureTrackerLk::initialize(const aslam::Camera& camera) {
   // Create a detection mask that prevents detecting new keypoints close to the image border as
   // no descriptors can be calculated in this region.
+  CHECK_LT(2 * kMinDistanceToImageBorderPx, camera.imageWidth());
+  CHECK_LT(2 * kMinDistanceToImageBorderPx, camera.imageHeight());
   detection_mask_image_border_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
   cv::Mat region_of_interest(detection_mask_image_border_,
                              cv::Rect(kMinDistanceToImageBorderPx + 1,
@@ -43,13 +45,13 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   CHECK(!frame_kp1->hasKeypointMeasurements());
   CHECK(!frame_kp1->hasTrackIds());
 
-  // Make sure the externally set list of keypoints to abort correspond to this frame.
+  // Make sure the externally set list of keypoints to abort corresponds to this frame.
   if (!keypoint_indices_to_abort_.empty() && abort_keypoints_wrt_frame_id_ != frame_k.getId()) {
     LOG(FATAL) << "Keypoints to abort do not match the processed frame.";
   }
 
   // Track existing keypoints from frame (k) to frame (k+1).
-  KeypointList tracked_keypoints_kp1;
+  Vector2dList tracked_keypoints_kp1;
   std::vector<unsigned char> tracking_success;
   std::vector<float> tracking_errors;
   trackKeypoints(q_Ckp1_Ck, frame_k, frame_kp1->getRawImage(), &tracked_keypoints_kp1,
@@ -61,7 +63,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   //   - too close to the image border
   //   - too close to other tracked point. In case of conflicts the keypoint
   //     with the lowest tracking error will be kept.
-  // Reject features that got to close to each other (probably by object occlusion), left the
+  // Reject features that got too close to each other (probably by object occlusion), left the
   // image, tracking failed or were marked for abortion by external logic. Keep the features with
   // the lower tracking error in case of conflicts.
   aslam::timing::Timer timer_selection("FeatureTrackerLk: track - feature selection");
@@ -118,15 +120,17 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
 
     // Detect new points.
     CHECK_LT(occupancy_grid.getNumPoints(), kMaxFeatureCount);
-    const size_t num_corners_to_detect = kMaxFeatureCount - occupancy_grid.getNumPoints();
+    const size_t num_keypoints_to_detect = kMaxFeatureCount - occupancy_grid.getNumPoints();
 
-    KeypointList new_keypoints;
+    Vector2dList new_keypoints;
     std::vector<double> new_keypoints_scores;
-    detectNewKeypoints(frame_kp1->getRawImage(), num_corners_to_detect, detection_mask,
+    detectNewKeypoints(frame_kp1->getRawImage(), num_keypoints_to_detect, detection_mask,
                        &new_keypoints, &new_keypoints_scores);
 
-    // Add the new keypoints to the occupancy grid. If a keypoint is inserted close an existing
-    // point in the grid, the point with the higher score will be kept.
+    // Add the new points to the occupancy grid. If a keypoint is inserted too close to an
+    // existing point in the grid, the point with the higher score will be kept.
+    // The grid stores an id for each point that corresponds to the keypoint index in the previous
+    // frame for tracked keypoints. If it is a new detect keypoint the index -1 is set.
     const int kKeypointMatchIndexPreviousFrame = -1;
     for (size_t idx = 0u; idx < new_keypoints.size(); ++idx) {
       occupancy_grid.addPointOrReplaceWeakestNearestPoints(
@@ -141,7 +145,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   OccupancyGrid::PointList keypoints_kp1;
   occupancy_grid.getAllPointsInGrid(&keypoints_kp1);
 
-  KeypointList new_keypoints_kp1;
+  Vector2dList new_keypoints_kp1;
   new_keypoints_kp1.reserve(keypoints_kp1.size());
   size_t keypoint_idx_kp1 = 0u;
   for (const WeightedKeypoint& point : keypoints_kp1) {
@@ -167,7 +171,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
 void FeatureTrackerLk::trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
                                       const aslam::VisualFrame& frame_k,
                                       const cv::Mat& image_frame_kp1,
-                                      KeypointList* tracked_keypoints_kp1,
+                                      Vector2dList* tracked_keypoints_kp1,
                                       std::vector<unsigned char>* tracking_success,
                                       std::vector<float>* tracking_errors) const {
   aslam::timing::Timer timer_tracking("FeatureTrackerLk: track - trackKeypoints");
@@ -183,7 +187,7 @@ void FeatureTrackerLk::trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
   // Predict the keypoint locations from the frame (k) to the frame (k+1) using the rotation prior.
   // The initial keypoint location is kept if the prediction failed.
   Eigen::Matrix2Xd predicted_keypoints_kp1;
-  std::vector<char> prediction_success;
+  std::vector<unsigned char> prediction_success;
   predictKeypointsByRotation(frame_k, q_Ckp1_Ck, &predicted_keypoints_kp1, &prediction_success);
 
   // Convert the keypoint type to OpenCV.
@@ -191,9 +195,9 @@ void FeatureTrackerLk::trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
   convertKeypointVectorToCvPointList(frame_k.getKeypointMeasurements(), &keypoints_k);
   convertKeypointVectorToCvPointList(predicted_keypoints_kp1, &keypoints_kp1);
 
-  // Find the keypoint location the frame (k+1) starting from the predicted positions using optical
-  // flow. If the flow wasn’t found then the error is not defined. Use the tracking_success
-  // parameter to find such cases.
+  // Find the keypoint location in the frame (k+1) starting from the predicted positions using
+  // optical flow. If the flow wasn’t found, then the error is not defined. Use the
+  // tracking_success parameter to find such cases.
   cv::calcOpticalFlowPyrLK(frame_k.getRawImage(),
                            image_frame_kp1,
                            keypoints_k,
@@ -220,7 +224,7 @@ void FeatureTrackerLk::trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
 void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
                                           size_t num_keypoints_to_detect,
                                           const cv::Mat& detection_mask,
-                                          KeypointList* keypoints,
+                                          Vector2dList* keypoints,
                                           std::vector<double>* keypoint_scores) const {
   aslam::timing::Timer timer_detection("FeatureTrackerLk: detectNewKeypoints");
   CHECK_NOTNULL(keypoints)->clear();

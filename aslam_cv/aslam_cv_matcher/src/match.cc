@@ -106,7 +106,7 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
   disparity_px.reserve(num_matches);
   size_t projection_failed_counter = 0u;
 
-  if (q_kp1_k.w() == 1.0) {
+  if (std::fabs(q_kp1_k.w()) == 1.0) {
     // Case with no rotation specified, directly calculate the disparity from the image plane
     // measurements.
     for (size_t cam_idx = 0u; cam_idx < num_cameras; ++cam_idx) {

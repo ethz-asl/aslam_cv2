@@ -18,7 +18,7 @@ class VisualFrame;
 class FeatureTrackerLk : public FeatureTracker {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type KeypointList;
+  typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
   typedef aslam::WeightedKeypoint<double, double, int> WeightedKeypoint;
   typedef aslam::WeightedOccupancyGrid<WeightedKeypoint> OccupancyGrid;
 
@@ -52,7 +52,7 @@ class FeatureTrackerLk : public FeatureTracker {
   void trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
                       const aslam::VisualFrame& frame_k,
                       const cv::Mat& image_frame_kp1,
-                      KeypointList* tracked_keypoints_kp1,
+                      Vector2dList* tracked_keypoints_kp1,
                       std::vector<unsigned char>* tracking_success,
                       std::vector<float>* tracking_errors) const;
 
@@ -91,7 +91,7 @@ class FeatureTrackerLk : public FeatureTracker {
   void detectNewKeypoints(const cv::Mat& image_kp1,
                           size_t num_keypoints_to_detect,
                           const cv::Mat& detection_mask,
-                          KeypointList* keypoints,
+                          Vector2dList* keypoints,
                           std::vector<double>* keypoint_scores) const;
 
   /// Enforce a minimal distance of all keypoints to the image border.
