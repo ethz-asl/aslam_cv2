@@ -18,6 +18,7 @@ set(SOURCES
   src/feature-tracker-lk.cc
   src/feature-tracker-descriptor-matcher.cc
   src/track-manager.cc
+  src/tracking-helpers.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
