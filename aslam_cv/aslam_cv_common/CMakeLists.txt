@@ -66,24 +66,32 @@ target_link_libraries(test_channel-serialization ${PROJECT_NAME})
 catkin_add_gtest(test_channels test/test-channels.cc)
 target_link_libraries(test_channels ${PROJECT_NAME}) 
 
-catkin_add_gtest(test_thread-pool test/test-thread-pool.cc)
-target_link_libraries(test_thread-pool ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_time test/test-time.cc)
-target_link_libraries(test_time ${PROJECT_NAME}) 
-
-catkin_add_gtest(test_hash-id test/test-hash-id.cc)
-target_link_libraries(test_hash-id ${PROJECT_NAME})
-
 catkin_add_gtest(test_eigen-yaml-serialization 
   test/test-eigen-yaml-serialization.cc
 )
 target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME}) 
 
+catkin_add_gtest(test_hash_id test/test-hash-id.cc)
+target_link_libraries(test_hash_id ${PROJECT_NAME})
+
 catkin_add_gtest(test_lockable_container 
   test/test-lockable-container.cc
 )
 target_link_libraries(test_lockable_container ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_occupancy_grid 
+  test/test-occupancy-grid.cc
+)
+target_link_libraries(test_occupancy_grid ${PROJECT_NAME})
+
+catkin_add_gtest(test_stl_helpers test/test-stl-helpers.cc)
+target_link_libraries(test_stl_helpers ${PROJECT_NAME})
+
+catkin_add_gtest(test_thread-pool test/test-thread-pool.cc)
+target_link_libraries(test_thread-pool ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_time test/test-time.cc)
+target_link_libraries(test_time ${PROJECT_NAME}) 
 
 ##########
 # EXPORT #

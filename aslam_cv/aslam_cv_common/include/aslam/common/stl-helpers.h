@@ -121,6 +121,42 @@ inline void convertEigenToStlVector(
   }
 }
 
+// Solution from:
+// http://stackoverflow.com/questions/7571937/how-to-delete-items-from-a-stdvector-given-a-list-of-indices
+template<typename ElementType>
+inline std::vector<ElementType> eraseIndicesFromVector(
+    const std::vector<ElementType>& data,
+    const std::vector<size_t>& indices_to_delete) {
+  if (mutable_indices_to_delete.empty()) {
+    return data;
+  }
+  std::vector<size_t> mutable_indices_to_delete = indices_to_delete;
+  std::sort(mutable_indices_to_delete.begin(), mutable_indices_to_delete.end());
+  CHECK_LT(mutable_indices_to_delete.back(), data.size());
+
+  std::vector<ElementType> reduced_vector;
+  CHECK_GE(data.size(), mutable_indices_to_delete.size());
+  reduced_vector.reserve(data.size() - mutable_indices_to_delete.size());
+
+  // Copy blocks from the input vector to the output vector.
+  typename std::vector<ElementType>::const_iterator it_block_begin = data.begin();
+
+  for (typename std::vector<size_t>::const_iterator it = mutable_indices_to_delete.begin();
+      it != mutable_indices_to_delete.end(); ++it) {
+    typename std::vector<ElementType>::const_iterator it_block_end = data.begin() + *it;
+    if (it_block_begin != it_block_end) {
+      std::copy(it_block_begin, it_block_end, std::back_inserter(reduced_vector));
+    }
+    it_block_begin = it_block_end + 1;
+  }
+
+  // Copy the last block.
+  if (it_block_begin != data.end()) {
+    std::copy(it_block_begin, data.end(), std::back_inserter(reduced_vector));
+  }
+  return reduced_vector;
+}
+
 }  // namespace common
 }  // namespace aslam
 
