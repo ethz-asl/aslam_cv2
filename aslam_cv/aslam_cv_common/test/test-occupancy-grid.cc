@@ -131,19 +131,62 @@ TEST(OccupancyGrid, AddInvalidPointCoordinates) {
 
 TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPoints) {
   const double kGridSize = 50.0;
-  const double kMinDistanceBetweenPoints = 3.0;
-  WeightedOccupancyGrid grid(kGridSize, kGridSize,
-                             kMinDistanceBetweenPoints, kMinDistanceBetweenPoints);
+  const double kGridCellSize = 10.0;
+  const double kMinDistanceBetweenPoints = 5.0;
+  WeightedOccupancyGrid grid(kGridSize, kGridSize, kGridCellSize, kGridCellSize);
 
   // Test rejection of the same point that violates the min. distance.
   grid.addPointOrReplaceWeakestNearestPoints(Point(0.1, 0.1, 1.0, 0), kMinDistanceBetweenPoints);
   grid.addPointOrReplaceWeakestNearestPoints(Point(0.1, 0.1, 3.0, 1), kMinDistanceBetweenPoints);
   grid.addPointOrReplaceWeakestNearestPoints(Point(0.1, 0.1, 2.0, 2), kMinDistanceBetweenPoints);
   ASSERT_EQ(grid.getNumPoints(), 1u);
-  EXPECT_EQ(grid.getGridCell(0.1, 0.1).size(), 1u);
+  ASSERT_EQ(grid.getGridCell(0.1, 0.1).size(), 1u);
   EXPECT_EQ(grid.getGridCell(0.1, 0.1)[0].id, 1u);  // Point with id 1 has highest score of 3.0
 
-  // TODO(schneith): Add more tests.
+  // Point2 should reject point1 as it is closer than the min. distance and has higher score.
+  grid.reset();
+  Point point1(7.5, 7.5, 1.0, 1);
+  Point point2(7.5 + 0.95 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 2.0, 2);
+
+  grid.addPointOrReplaceWeakestNearestPoints(point1, kMinDistanceBetweenPoints);
+  grid.addPointOrReplaceWeakestNearestPoints(point2, kMinDistanceBetweenPoints);
+  ASSERT_EQ(grid.getNumPoints(), 1u);
+  ASSERT_EQ(grid.getGridCell(5.0, 7.5).size(), 0u);
+  ASSERT_EQ(grid.getGridCell(15.0, 7.5).size(), 1u);
+  EXPECT_EQ(grid.getGridCell(15.0, 7.5)[0].id, 2u);
+
+  // Point3 should be rejected as it is too close to point4 and it has a higher score.
+  grid.reset();
+  Point point3(7.5, 7.5, 2.0, 3);
+  Point point4(7.5 + 0.95 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 1.0, 4);
+
+  grid.addPointOrReplaceWeakestNearestPoints(point3, kMinDistanceBetweenPoints);
+  grid.addPointOrReplaceWeakestNearestPoints(point4, kMinDistanceBetweenPoints);
+  ASSERT_EQ(grid.getNumPoints(), 1u);
+  ASSERT_EQ(grid.getGridCell(15.0, 7.5).size(), 0u);
+  ASSERT_EQ(grid.getGridCell(5.0, 7.5).size(), 1u);
+  EXPECT_EQ(grid.getGridCell(5.0, 7.5)[0].id, 3u);
+
+  // No point should be rejected as the distance is equal to the allowed min. distance.
+  grid.reset();
+  Point point5(7.5, 7.5, 2.0, 5);
+  Point point6(7.5 + static_cast<double>(kMinDistanceBetweenPoints), 7.5, 1.0, 6);
+  grid.addPointOrReplaceWeakestNearestPoints(point5, kMinDistanceBetweenPoints);
+  grid.addPointOrReplaceWeakestNearestPoints(point6, kMinDistanceBetweenPoints);
+  ASSERT_EQ(grid.getNumPoints(), 2u);
+  ASSERT_EQ(grid.getGridCell(5.0, 7.5).size(), 1u);
+  EXPECT_EQ(grid.getGridCell(5.0, 7.5)[0].id, 5u);
+  ASSERT_EQ(grid.getGridCell(15.0, 7.5).size(), 1u);
+  EXPECT_EQ(grid.getGridCell(15.0, 7.5)[0].id, 6u);
+
+  // Now we add a point in the middle that should reject point point5 and point6 as it has a higher
+  // score.
+  Point point7(7.5 + 0.5 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 5.0, 7);
+  grid.addPointOrReplaceWeakestNearestPoints(point7, kMinDistanceBetweenPoints);
+  ASSERT_EQ(grid.getNumPoints(), 1u);
+  ASSERT_EQ(grid.getGridCell(5.0, 7.5).size(), 0u);
+  ASSERT_EQ(grid.getGridCell(15.0, 7.5).size(), 1u);
+  EXPECT_EQ(grid.getGridCell(15.0, 7.5)[0].id, 7u);
 }
 
 TEST(OccupancyGrid, GetOccupancyMask) {
