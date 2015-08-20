@@ -131,7 +131,7 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
         keypoint_indices_k.emplace_back(match_kp1_kp.second);
       }
 
-      std::vector<char> success;
+      std::vector<unsigned char> success;
       success.reserve(keypoint_indices_k.size());
       Eigen::Matrix3Xd bearing_vectors_k =
           nframe_k.getFrame(cam_idx).getNormalizedBearingVectors(
@@ -194,7 +194,7 @@ void getBearingVectorsFromMatches(
     keypoint_indices_k.emplace_back(match_kp1_k.second);
   }
 
-  std::vector<char> success;
+  std::vector<unsigned char> success;
   aslam::common::convertEigenToStlVector(frame_kp1.getNormalizedBearingVectors(
       keypoint_indices_kp1, &success), bearing_vectors_kp1);
   aslam::common::convertEigenToStlVector(frame_k.getNormalizedBearingVectors(
