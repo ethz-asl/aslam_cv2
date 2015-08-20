@@ -9,10 +9,42 @@
 
 DEFINE_bool(lk_show_detection_mask, false, "Draw the detection mask.");
 
+DEFINE_uint64(lk_brisk_octaves, 3, "Brisk detector number of octaves.");
+DEFINE_uint64(lk_brisk_uniformity_radius, 0, "Brisk detector uniformity radius.");
+DEFINE_uint64(lk_brisk_absolute_threshold, 45, "Brisk detector absolute threshold.");
+DEFINE_double(lk_min_distance_between_features_px, 10.0, "Minimal image space distance between "
+              "nearest features");
+DEFINE_uint64(lk_max_feature_count, 750, "Max. number of features to track.");
+DEFINE_uint64(lk_min_feature_count, 500, "Min. number of tracked features before a redetection is"
+              "performed.");
+DEFINE_double(lk_min_eigen_threshold, 0.001, "Minimum eigen value of a 2x2 normal matrix of the"
+              "optical flow equations.");
+DEFINE_uint64(lk_max_pyramid_level, 5, "Maximal pyramid level number for the Lk-tracking.");
+DEFINE_uint64(lk_window_size, 21, "Size of the search window at each pyramid level.");
+
 namespace aslam {
 
-FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera)
-    : camera_(camera) {
+LkTrackerSettings::LkTrackerSettings()
+    : brisk_detector_octaces(FLAGS_lk_brisk_octaves),
+      brisk_detector_uniformity_radius(FLAGS_lk_brisk_uniformity_radius),
+      brisk_detector_absolute_threshold(FLAGS_lk_brisk_absolute_threshold),
+      min_distance_between_features_px(FLAGS_lk_min_distance_between_features_px),
+      max_feature_count(FLAGS_lk_max_feature_count),
+      min_feature_count(FLAGS_lk_min_feature_count),
+      lk_min_eigen_threshold(FLAGS_lk_min_eigen_threshold),
+      lk_max_pyramid_level(FLAGS_lk_max_pyramid_level),
+      lk_window_size(FLAGS_lk_window_size) {
+  CHECK_GT(min_distance_between_features_px, 1.0);
+  CHECK_GT(min_feature_count, 0u);
+  CHECK_GT(max_feature_count, min_feature_count);
+  CHECK_GT(lk_min_eigen_threshold, 0.0);
+  CHECK_GT(lk_window_size, 0u);
+}
+
+FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera, const LkTrackerSettings& settings)
+    : lk_window_size_(settings.lk_window_size, settings.lk_window_size),
+      camera_(camera),
+      settings_(settings) {
   initialize(camera);
 }
 
@@ -69,7 +101,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   aslam::timing::Timer timer_selection("FeatureTrackerLk: track - feature selection");
 
   OccupancyGrid occupancy_grid(camera_.imageHeight(),camera_.imageWidth(),
-                               kMinDistanceBetweenKeypointsPx, kMinDistanceBetweenKeypointsPx);
+                               settings_.min_distance_between_features_px,
+                               settings_.min_distance_between_features_px);
 
   for (size_t keypoint_idx_k = 0u; keypoint_idx_k < tracked_keypoints_kp1.size(); ++keypoint_idx_k) {
     // Drop keypoint if the tracking was unsuccessful.
@@ -94,7 +127,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     // Drop keypoints that have moved too close to another tracked keypoint.
     occupancy_grid.addPointOrReplaceWeakestNearestPoints(
         WeightedKeypoint(point(1), point(0), -tracking_errors[keypoint_idx_k], keypoint_idx_k),
-        kMinDistanceBetweenKeypointsPx);
+        settings_.min_distance_between_features_px);
   }
   timer_selection.Stop();
 
@@ -104,12 +137,12 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       std::numeric_limits<OccupancyGrid::WeightType>::max());
 
   // Detect new keypoints if the number of keypoints drops below the specified threshold.
-  if (occupancy_grid.getNumPoints() < kMinFeatureCount) {
+  if (occupancy_grid.getNumPoints() < settings_.min_feature_count) {
     // Create the detection mask consisting of the mask that prevents detecting points too close to
     // the image border and the mask of the current points in the occupancy grid.
     const size_t kMaxNumberOfKeypointPerCell = std::numeric_limits<size_t>::max();
     const cv::Mat detection_mask_occupancy_grid = occupancy_grid.getOccupancyMask(
-        kMinDistanceBetweenKeypointsPx, kMaxNumberOfKeypointPerCell);
+        settings_.min_distance_between_features_px, kMaxNumberOfKeypointPerCell);
     cv::Mat detection_mask;
     cv::bitwise_and(detection_mask_image_border_, detection_mask_occupancy_grid, detection_mask);
     if (FLAGS_lk_show_detection_mask) {
@@ -119,8 +152,9 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     }
 
     // Detect new points.
-    CHECK_LT(occupancy_grid.getNumPoints(), kMaxFeatureCount);
-    const size_t num_keypoints_to_detect = kMaxFeatureCount - occupancy_grid.getNumPoints();
+    CHECK_LT(occupancy_grid.getNumPoints(), settings_.max_feature_count);
+    const size_t num_keypoints_to_detect =
+        settings_.max_feature_count - occupancy_grid.getNumPoints();
 
     Vector2dList new_keypoints;
     std::vector<double> new_keypoints_scores;
@@ -136,7 +170,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
       occupancy_grid.addPointOrReplaceWeakestNearestPoints(
           WeightedKeypoint(new_keypoints[idx](1), new_keypoints[idx](0),
                            new_keypoints_scores[idx], kKeypointMatchIndexPreviousFrame),
-          kMinDistanceBetweenKeypointsPx);
+          settings_.min_distance_between_features_px);
     }
   }
 
@@ -204,11 +238,11 @@ void FeatureTrackerLk::trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
                            keypoints_kp1,
                            *tracking_success,
                            *tracking_errors,
-                           kWindowSize,
-                           kMaxPyramidLevel,
+                           lk_window_size_,
+                           settings_.lk_max_pyramid_level,
                            kTerminationCriteria,
                            kOperationFlag,
-                           kMinEigenThreshold);
+                           settings_.lk_min_eigen_threshold);
 
   tracked_keypoints_kp1->reserve(keypoints_kp1.size());
   for (const cv::Point2f& tracked_point : keypoints_kp1) {
@@ -238,8 +272,8 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
   // The detector needs to be reconstructed in each iteration as brisk doesn't provide an
   // interface to change the number of detected keypoints.
   brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator> detector(
-      kBriskDetectorOctaves, kBriskDetectorUniformityRadius, kBriskDetectorAbsoluteThreshold,
-      num_keypoints_to_detect);
+      settings_.brisk_detector_octaces, settings_.brisk_detector_uniformity_radius,
+      settings_.brisk_detector_absolute_threshold, num_keypoints_to_detect);
 
   // Detect new keypoints in the unmasked image area.
   std::vector<cv::KeyPoint> keypoints_cv;

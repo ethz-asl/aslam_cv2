@@ -10,10 +10,41 @@
 #include <aslam/tracker/feature-tracker.h>
 #include <aslam/common/occupancy-grid.h>
 #include <Eigen/Core>
+#include <gflags/gflags.h>
 #include <opencv2/video/tracking.hpp>
 
 namespace aslam {
 class VisualFrame;
+
+struct LkTrackerSettings {
+  /// Brisk harris detector settings.
+  size_t brisk_detector_octaces;
+  size_t brisk_detector_uniformity_radius;
+  size_t brisk_detector_absolute_threshold;
+
+  /// Min. distance between the detected keypoints.
+  double min_distance_between_features_px;
+  /// Maximum number of keypoint to detect.
+  size_t max_feature_count;
+  /// Threshold when to detect new keypoints.
+  size_t min_feature_count;
+
+
+  /// The algorithm calculates the minimum eigen value of a 2x2 normal matrix of optical flow
+  /// equations (this matrix is called a spatial gradient matrix in [Bouguet00]), divided by number
+  /// of pixels in a window; if this value is less than kMinEigThreshold, then a corresponding
+  /// feature is filtered out and its flow is not processed, so it allows to remove bad points and
+  /// get a performance boost.
+  double lk_min_eigen_threshold;
+  /// 0-based maximal pyramid level number. If set to 0, pyramids are not used (single level),
+  /// if set to 1, two levels are used, and so on; if pyramids are passed to input then algorithm
+  /// will use as many levels as pyramids have but no more than maxLevel.
+  size_t lk_max_pyramid_level;
+  /// Size of the search window at each pyramid level.
+  size_t lk_window_size;
+
+  LkTrackerSettings();
+};
 
 class FeatureTrackerLk : public FeatureTracker {
  public:
@@ -26,7 +57,7 @@ class FeatureTrackerLk : public FeatureTracker {
   /// \name Constructors/destructors and operators
   /// @{
  public:
-  FeatureTrackerLk(const aslam::Camera& camera);
+  FeatureTrackerLk(const aslam::Camera& camera, const LkTrackerSettings& settings);
   virtual ~FeatureTrackerLk() {}
 
  private:
@@ -56,30 +87,12 @@ class FeatureTrackerLk : public FeatureTracker {
                       std::vector<unsigned char>* tracking_success,
                       std::vector<float>* tracking_errors) const;
 
-  /// The algorithm calculates the minimum eigen value of a 2x2 normal matrix of optical flow
-  /// equations (this matrix is called a spatial gradient matrix in [Bouguet00]), divided by number
-  /// of pixels in a window; if this value is less than kMinEigThreshold, then a corresponding
-  /// feature is filtered out and its flow is not processed, so it allows to remove bad points and
-  /// get a performance boost.
-  static constexpr double kMinEigenThreshold = 0.001;
-
-  /// 0-based maximal pyramid level number. If set to 0, pyramids are not used (single level),
-  /// if set to 1, two levels are used, and so on; if pyramids are passed to input then algorithm
-  /// will use as many levels as pyramids have but no more than maxLevel.
-  static constexpr size_t kMaxPyramidLevel = 5u;
-
   /// Operation flag. See opencv documentation for details.
   static constexpr size_t kOperationFlag = cv::OPTFLOW_USE_INITIAL_FLOW;// ||
       //cv::OPTFLOW_LK_GET_MIN_EIGENVALS;
 
-  /// Parameter specifying the termination criteria of the iterative search algorithm
-  /// (after the specified maximum number of iterations criteria.maxCount or when the search
-  /// window moves by less than criteria.epsilon.
-  const cv::TermCriteria kTerminationCriteria = cv::TermCriteria(
-      cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
-
   /// Size of the search window at each pyramid level.
-  const cv::Size kWindowSize = cv::Size(21, 21);
+  const cv::Size lk_window_size_;
 
   /// @}
 
@@ -97,19 +110,11 @@ class FeatureTrackerLk : public FeatureTracker {
   /// Enforce a minimal distance of all keypoints to the image border.
   const size_t kMinDistanceToImageBorderPx = 30u;
 
-  /// Brisk harris detector settings.
-  const size_t kBriskDetectorOctaves = 3u;
-  const size_t kBriskDetectorUniformityRadius = 0u;
-  const size_t kBriskDetectorAbsoluteThreshold = 45u;
-
-  /// Min. distance between the detected keypoints.
-  const double kMinDistanceBetweenKeypointsPx = 10.0;
-
-  /// Maximum number of keypoint to detect.
-  static constexpr size_t kMaxFeatureCount = 750u;
-
-  /// Threshold when to detect new keypoints.
-  static constexpr size_t kMinFeatureCount = 500u;
+  /// Parameter specifying the termination criteria of the iterative search algorithm
+  /// (after the specified maximum number of iterations criteria.maxCount or when the search
+  /// window moves by less than criteria.epsilon.
+  const cv::TermCriteria kTerminationCriteria = cv::TermCriteria(
+      cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
 
   /// @}
 
@@ -131,6 +136,7 @@ class FeatureTrackerLk : public FeatureTracker {
 
  private:
   const aslam::Camera& camera_;
+  const LkTrackerSettings settings_;
 
   /// Detection mask that prevents detecting keypoints close to the image border.
   cv::Mat detection_mask_image_border_;
