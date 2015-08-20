@@ -79,7 +79,7 @@ class FeatureTrackerLk : public FeatureTracker {
       cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
 
   /// Size of the search window at each pyramid level.
-  const cv::Size kWindowSize = cv::Size(31, 31);
+  const cv::Size kWindowSize = cv::Size(21, 21);
 
   /// @}
 
@@ -98,9 +98,9 @@ class FeatureTrackerLk : public FeatureTracker {
   const size_t kMinDistanceToImageBorderPx = 30u;
 
   /// Brisk harris detector settings.
-  const size_t kBriskDetectorOctaves = 4u;
+  const size_t kBriskDetectorOctaves = 3u;
   const size_t kBriskDetectorUniformityRadius = 0u;
-  const size_t kBriskDetectorAbsoluteThreshold = 20u;
+  const size_t kBriskDetectorAbsoluteThreshold = 45u;
 
   /// Min. distance between the detected keypoints.
   const double kMinDistanceBetweenKeypointsPx = 10.0;
