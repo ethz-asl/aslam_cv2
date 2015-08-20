@@ -56,7 +56,7 @@ TEST(OccupancyGrid, removeWeightedPointsFromOverfullCells) {
 
   // Remove points from full cells.
   static constexpr size_t kMaxNumPointsPerCell = 2u;
-  EXPECT_EQ(grid.removeWeightedPointsFromOverFullCells(kMaxNumPointsPerCell), 1u);
+  EXPECT_EQ(grid.removeWeightedPointsFromOverfullCells(kMaxNumPointsPerCell), 1u);
 
   const WeightedOccupancyGrid::PointList& cell = grid.getGridCell(0.5, 0.5);
   ASSERT_EQ(cell.size(), kMaxNumPointsPerCell);
