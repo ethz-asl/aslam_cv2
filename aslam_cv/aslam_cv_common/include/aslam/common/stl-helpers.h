@@ -127,7 +127,7 @@ template<typename ElementType>
 inline std::vector<ElementType> eraseIndicesFromVector(
     const std::vector<ElementType>& data,
     const std::vector<size_t>& indices_to_delete) {
-  if (mutable_indices_to_delete.empty()) {
+  if (indices_to_delete.empty()) {
     return data;
   }
   std::vector<size_t> mutable_indices_to_delete = indices_to_delete;
