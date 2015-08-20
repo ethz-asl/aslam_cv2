@@ -80,7 +80,7 @@ void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoint
                                             double fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame) {
   CHECK_NOTNULL(frame);
-  CHECK_GT(fixed_keypoint_uncertainty, 0.0);
+  CHECK_GT(fixed_keypoint_uncertainty_px, 0.0);
   const size_t num_new_keypoints = static_cast<size_t>(new_keypoints.cols());
 
   // Add keypoints at the back if the frame already contains keypoints, otherwise just insert
@@ -106,7 +106,8 @@ void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoint
     // Insert new keypoints at the back.
     keypoints->block(initial_size, num_new_keypoints, 2, num_new_keypoints) = new_keypoints;
     track_ids->segment(initial_size, num_new_keypoints).setConstant(-1);
-    uncertainties->segment(initial_size, num_new_keypoints).setConstant(fixed_keypoint_uncertainty);
+    uncertainties->segment(initial_size, num_new_keypoints).setConstant(
+        fixed_keypoint_uncertainty_px);
 
     CHECK_EQ(static_cast<int>(extended_size), frame->getKeypointMeasurements().cols());
     CHECK_EQ(static_cast<int>(extended_size), frame->getKeypointMeasurementUncertainties().rows());
@@ -120,12 +121,12 @@ void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoint
     frame->swapTrackIds(&track_ids);
 
     Eigen::VectorXd uncertainties(num_new_keypoints);
-    uncertainties.setConstant(fixed_keypoint_uncertainty);
+    uncertainties.setConstant(fixed_keypoint_uncertainty_px);
     frame->swapKeypointMeasurementUncertainties(&uncertainties);
   }
 }
 
-void insertAdditionalKeypointsToVisualFrame(const KeypointList& keypoints,
+void insertAdditionalKeypointsToVisualFrame(const Verctor2dList& keypoints,
                                             double fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame) {
   // Convert std::vector to Eigen vector.

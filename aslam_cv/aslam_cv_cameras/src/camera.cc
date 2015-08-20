@@ -202,7 +202,7 @@ void Camera::project3Vectorized(
 
 void Camera::backProject3Vectorized(const Eigen::Ref<const Eigen::Matrix2Xd>& keypoints,
                                     Eigen::Matrix3Xd* out_points_3d,
-                                    std::vector<char>* out_success) const {
+                                    std::vector<unsigned char>* out_success) const {
   CHECK_NOTNULL(out_points_3d);
   CHECK_NOTNULL(out_success);
   out_points_3d->resize(Eigen::NoChange, keypoints.cols());
