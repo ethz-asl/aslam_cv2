@@ -394,7 +394,7 @@ void VisualFrame::toRawImageCoordinatesVectorized(
   CHECK_NOTNULL(out_image_coordinates);
   CHECK_NOTNULL(results);
   Eigen::Matrix3Xd bearings;
-  std::vector<char> success;
+  std::vector<unsigned char> success;
   camera_geometry_->backProject3Vectorized(keypoints, &bearings, &success);
   raw_camera_geometry_->project3Vectorized(bearings, out_image_coordinates, results);
   for(size_t i = 0; i < success.size(); ++i) {
@@ -409,7 +409,8 @@ size_t VisualFrame::getDescriptorSizeBytes() const {
 }
 
 Eigen::Matrix3Xd VisualFrame::getNormalizedBearingVectors(
-    const std::vector<size_t>& keypoint_indices, std::vector<char>* backprojection_success) const {
+    const std::vector<size_t>& keypoint_indices,
+    std::vector<unsigned char>* backprojection_success) const {
   CHECK_NOTNULL(backprojection_success);
   if (keypoint_indices.empty()) {
     backprojection_success->clear();

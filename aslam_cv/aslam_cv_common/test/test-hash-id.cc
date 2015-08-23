@@ -26,8 +26,8 @@ TEST(HashIdTest, String) {
   HashId a(HashId::random()), b(HashId::random());
   std::string as(a.hexString()), bs(b.hexString());
   EXPECT_NE(as, bs);
-  EXPECT_EQ(as.length(), 32);
-  EXPECT_EQ(bs.length(), 32);
+  EXPECT_EQ(as.length(), 32u);
+  EXPECT_EQ(bs.length(), 32u);
 }
 
 TEST(HashIdTest, Deserialize) {
