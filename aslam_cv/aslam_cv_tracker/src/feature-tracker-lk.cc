@@ -96,9 +96,9 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   //   - too close to the image border
   //   - too close to other tracked point. In case of conflicts the keypoint
   //     with the lowest tracking error will be kept.
-  // Reject features that got too close to each other (probably by object occlusion), left the
-  // image, tracking failed or were marked for abortion by external logic. Keep the features with
-  // the lower tracking error in case of conflicts.
+  // Reject features that got too close to each other (probably by object occlusion), are outside
+  // the image, tracking failed or were marked for abortion by external logic. Keep the features
+  // with the lower tracking error in case of conflicts.
   aslam::timing::Timer timer_selection("FeatureTrackerLk: track - feature selection");
 
   OccupancyGrid occupancy_grid(camera_.imageHeight(),camera_.imageWidth(),
@@ -106,7 +106,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
                                settings_.min_distance_between_features_px);
 
   size_t num_failed_tracking = 0u;
-  size_t num_left_image = 0u;
+  size_t num_outside_image = 0u;
   size_t num_external_abort = 0u;
   for (size_t keypoint_idx_k = 0u; keypoint_idx_k < tracked_keypoints_kp1.size(); ++keypoint_idx_k) {
     // Drop keypoint if the tracking was unsuccessful.
@@ -121,7 +121,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
         point(0) >= (camera_.imageWidth() - kMinDistanceToImageBorderPx) ||
         point(1) < kMinDistanceToImageBorderPx ||
         point(1) >= (camera_.imageHeight() - kMinDistanceToImageBorderPx)) {
-      ++num_left_image;
+      ++num_outside_image;
       continue;
     }
 
@@ -145,12 +145,12 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   total_successful.AddSample(occupancy_grid.getNumPoints());
   aslam::statistics::StatsCollector failed_tracking("lk-tracker: num failed tracking error");
   failed_tracking.AddSample(num_failed_tracking);
-  aslam::statistics::StatsCollector failed_left_image("lk-tracker: num failed left image");
-  failed_left_image.AddSample(num_left_image);
+  aslam::statistics::StatsCollector failed_outside_image("lk-tracker: num failed outside image");
+  failed_outside_image.AddSample(num_outside_image);
   aslam::statistics::StatsCollector failed_external_abort("lk-tracker: num failed external abort");
   failed_external_abort.AddSample(num_external_abort);
-  size_t num_failed_occupancy_grid = tracked_keypoints_kp1.size() - num_failed_tracking
-      - num_left_image - num_external_abort - occupancy_grid.getNumPoints();
+  const size_t num_failed_occupancy_grid = tracked_keypoints_kp1.size() - num_failed_tracking
+      - num_outside_image - num_external_abort - occupancy_grid.getNumPoints();
   aslam::statistics::StatsCollector failed_occupancy_grid("lk-tracker: num failed occupancy grid");
   failed_occupancy_grid.AddSample(num_failed_occupancy_grid);
 
@@ -201,15 +201,16 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
     }
     CHECK_GE(occupancy_grid.getNumPoints(), num_tracked_keypoints);
 
-    aslam::statistics::StatsCollector lk_redetection("lk-tracker: num detected keypoints");
-    lk_redetection.AddSample(new_keypoints.size());
-    size_t num_added_detections = occupancy_grid.getNumPoints() - num_tracked_keypoints;
+    aslam::statistics::StatsCollector lk_num_detected_keypoints(
+        "lk-tracker: num detected keypoints");
+    lk_num_detected_keypoints.AddSample(new_keypoints.size());
+    const size_t num_added_detections = occupancy_grid.getNumPoints() - num_tracked_keypoints;
     aslam::statistics::StatsCollector lk_redetection_add("lk-tracker: num detected keypoints add");
     lk_redetection_add.AddSample(num_added_detections);
-    size_t num_rejected_detections = new_keypoints.size() - num_added_detections;
-    aslam::statistics::StatsCollector lk_reject_redetections(
-        "lk-tracker: num detect keypoints rejected");
-    lk_reject_redetections.AddSample(num_rejected_detections);
+    const size_t num_rejected_detections = new_keypoints.size() - num_added_detections;
+    aslam::statistics::StatsCollector lk_rejected_redetections(
+        "lk-tracker: num detected keypoints rejected");
+    lk_rejected_redetections.AddSample(num_rejected_detections);
   }
 
   // Write the keypoints to the frame (k+1) in the following order [tracked, new keypoints]. Also
