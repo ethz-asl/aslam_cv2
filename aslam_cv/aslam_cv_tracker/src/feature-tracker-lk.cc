@@ -8,13 +8,13 @@
 #include <opencv/highgui.h>
 
 DEFINE_bool(lk_show_detection_mask, false, "Draw the detection mask.");
-DEFINE_bool(lk_use_brisk_harris, true, "Use the BRISK harris implementation?");
+DEFINE_bool(lk_use_brisk_harris, true, "Use the BRISK Harris implementation?");
 
 DEFINE_uint64(lk_brisk_octaves, 0, "Brisk detector number of octaves.");
-DEFINE_uint64(lk_brisk_uniformity_radius, 0, "Brisk detector uniformity radius.");
+DEFINE_uint64(lk_brisk_uniformity_radius_px, 0, "Brisk detector uniformity radius.");
 DEFINE_uint64(lk_brisk_absolute_threshold, 45, "Brisk detector absolute threshold.");
 DEFINE_double(lk_min_distance_between_features_px, 5.0, "Minimal image space distance between "
-              "nearest features");
+              "nearest features in pixels.");
 DEFINE_uint64(lk_max_feature_count, 750, "Max. number of features to track.");
 DEFINE_uint64(lk_min_feature_count, 500, "Min. number of tracked features before a redetection is"
               "performed.");
@@ -26,8 +26,8 @@ DEFINE_uint64(lk_window_size, 21, "Size of the search window at each pyramid lev
 namespace aslam {
 
 LkTrackerSettings::LkTrackerSettings()
-    : brisk_detector_octaces(FLAGS_lk_brisk_octaves),
-      brisk_detector_uniformity_radius(FLAGS_lk_brisk_uniformity_radius),
+    : brisk_detector_octaves(FLAGS_lk_brisk_octaves),
+      brisk_detector_uniformity_radius_px(FLAGS_lk_brisk_uniformity_radius_px),
       brisk_detector_absolute_threshold(FLAGS_lk_brisk_absolute_threshold),
       min_distance_between_features_px(FLAGS_lk_min_distance_between_features_px),
       max_feature_count(FLAGS_lk_max_feature_count),
@@ -312,7 +312,7 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
     // The detector needs to be reconstructed in each iteration as brisk doesn't provide an
     // interface to change the number of detected keypoints.
     brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator> detector(
-        settings_.brisk_detector_octaces, settings_.brisk_detector_uniformity_radius,
+        settings_.brisk_detector_octaves, settings_.brisk_detector_uniformity_radius_px,
         settings_.brisk_detector_absolute_threshold, num_keypoints_to_detect);
 
     // Detect new keypoints in the unmasked image area.
