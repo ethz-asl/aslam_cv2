@@ -143,7 +143,8 @@ TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPoints) {
   ASSERT_EQ(grid.getGridCell(0.1, 0.1).size(), 1u);
   EXPECT_EQ(grid.getGridCell(0.1, 0.1)[0].id, 1u);  // Point with id 1 has highest score of 3.0
 
-  // Point2 should reject point1 as it is closer than the min. distance and has higher score.
+  // Point2 should be selected over point1 as it is closer than the min. distance and has
+  // higher score.
   grid.reset();
   Point point1(7.5, 7.5, 1.0, 1);
   Point point2(7.5 + 0.95 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 2.0, 2);
@@ -153,9 +154,11 @@ TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPoints) {
   ASSERT_EQ(grid.getNumPoints(), 1u);
   ASSERT_EQ(grid.getGridCell(5.0, 7.5).size(), 0u);
   ASSERT_EQ(grid.getGridCell(15.0, 7.5).size(), 1u);
+  // The id of the first point in the grid cell has to be 2u only point 2 should remain in this
+  // cell.
   EXPECT_EQ(grid.getGridCell(15.0, 7.5)[0].id, 2u);
 
-  // Point3 should be rejected as it is too close to point4 and it has a higher score.
+  // Point4 should be rejected as it is too close to point3 and point3 has a higher score.
   grid.reset();
   Point point3(7.5, 7.5, 2.0, 3);
   Point point4(7.5 + 0.95 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 1.0, 4);
