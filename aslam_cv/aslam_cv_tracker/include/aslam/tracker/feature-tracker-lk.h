@@ -17,9 +17,9 @@ namespace aslam {
 class VisualFrame;
 
 struct LkTrackerSettings {
-  /// Brisk harris detector settings.
-  size_t brisk_detector_octaces;
-  size_t brisk_detector_uniformity_radius;
+  /// Brisk Harris detector settings.
+  size_t brisk_detector_octaves;
+  size_t brisk_detector_uniformity_radius_px;
   size_t brisk_detector_absolute_threshold;
 
   /// Min. distance between the detected keypoints.
@@ -36,9 +36,8 @@ struct LkTrackerSettings {
   /// feature is filtered out and its flow is not processed, so it allows to remove bad points and
   /// get a performance boost.
   double lk_min_eigen_threshold;
-  /// 0-based maximal pyramid level number. If set to 0, pyramids are not used (single level),
-  /// if set to 1, two levels are used, and so on; if pyramids are passed to input then algorithm
-  /// will use as many levels as pyramids have but no more than maxLevel.
+  /// Maximal pyramid level number. If set to 0, pyramids are not used (single level), if set to 1,
+  /// two levels are used, and so on.
   size_t lk_max_pyramid_level;
   /// Size of the search window at each pyramid level.
   size_t lk_window_size;
@@ -112,7 +111,7 @@ class FeatureTrackerLk : public FeatureTracker {
 
   /// Parameter specifying the termination criteria of the iterative search algorithm
   /// (after the specified maximum number of iterations criteria.maxCount or when the search
-  /// window moves by less than criteria.epsilon.
+  /// window moves by less than criteria.epsilon).
   const cv::TermCriteria kTerminationCriteria = cv::TermCriteria(
       cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
 
