@@ -16,12 +16,14 @@ set(HEADERS
   include/aslam/matcher/matching-engine-non-exclusive.h
   include/aslam/matcher/matching-problem.h
   include/aslam/matcher/matching-problem-frame-to-frame.h
+  include/aslam/matcher/matching-problem-landmarks-to-frame.h
 )
 
 set(SOURCES
   src/match.cc
   src/match-visualization.cc
   src/matching-problem-frame-to-frame.cc
+  src/matching-problem-landmarks-to-frame.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -39,6 +41,9 @@ target_link_libraries(test_matcher ${PROJECT_NAME})
 
 catkin_add_gtest(test_matcher_non_exclusive test/test-matcher-non-exclusive.cc)
 target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
+
+catkin_add_gtest(test_matching_problem_landmarks_to_frame test/test-matching-problem-landmarks-to-frame.cc)
+target_link_libraries(test_matching_problem_landmarks_to_frame ${PROJECT_NAME})
 
 ##########
 # EXPORT #
