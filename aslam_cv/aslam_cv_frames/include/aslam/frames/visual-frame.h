@@ -308,8 +308,9 @@ class VisualFrame  {
                                        std::vector<aslam::ProjectionResult>* results) const;
 
   /// Return a list of normalized bearing vectors for the specified keypoint indices.
-  Eigen::Matrix3Xd getNormalizedBearingVectors(const std::vector<size_t>& keypoint_indices,
-                                               std::vector<char>* backprojection_success) const;
+  Eigen::Matrix3Xd getNormalizedBearingVectors(
+      const std::vector<size_t>& keypoint_indices,
+      std::vector<unsigned char>* backprojection_success) const;
 
   /// Get the frame id.
   inline const aslam::FrameId& getId() const { return id_; }
