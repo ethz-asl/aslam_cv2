@@ -1,190 +1,144 @@
 #ifndef ASLAM_FEATURE_TRACKER_LK_H_
 #define ASLAM_FEATURE_TRACKER_LK_H_
 
-#include <algorithm>
 #include <unordered_set>
 #include <vector>
 
+#include <aslam/cameras/camera.h>
 #include <aslam/common/memory.h>
 #include <aslam/matcher/match.h>
 #include <aslam/tracker/feature-tracker.h>
-#include <brisk/brisk.h>
-#include <Eigen/Dense>
+#include <aslam/common/occupancy-grid.h>
+#include <Eigen/Core>
+#include <gflags/gflags.h>
 #include <opencv2/video/tracking.hpp>
 
 namespace aslam {
 class VisualFrame;
 
-class FeatureTrackerLk : public FeatureTracker {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
+struct LkTrackerSettings {
+  /// Brisk Harris detector settings.
+  size_t brisk_detector_octaves;
+  size_t brisk_detector_uniformity_radius_px;
+  size_t brisk_detector_absolute_threshold;
 
-  FeatureTrackerLk(const aslam::Camera& camera);
-  virtual ~FeatureTrackerLk() {}
+  /// Min. distance between the detected keypoints.
+  double min_distance_between_features_px;
+  /// Maximum number of keypoint to detect.
+  size_t max_feature_count;
+  /// Threshold when to detect new keypoints.
+  size_t min_feature_count;
 
-  /// \brief Main Lk-tracker routine.
-  /// @param[in] q_Ckp1_Ck Rotation taking points from the Ck frame to the Ckp1 frame.
-  /// @param[in] frame_k Frame at time step k.
-  /// @param[in,out] frame_kp1 Frame at time step k+1.
-  /// @param[out] matches_with_score_kp1_k Detected matches from frame k to frame k+1.
-  virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
-                     const aslam::VisualFrame& frame_k,
-                     aslam::VisualFrame* frame_kp1,
-                     aslam::MatchesWithScore* matches_with_score_kp1_k);
 
-  /// Set a list of keypoint ids that have been identified as outliers in the last update step.
-  /// The tracking of these features will be aborted.
-  virtual void swapKeypointIndicesToAbort(
-      const aslam::FrameId& frame_id, std::unordered_set<size_t>* keypoint_indices_to_abort) {
-    CHECK_NOTNULL(keypoint_indices_to_abort);
-    CHECK(frame_id.isValid());
-    keypoint_indices_to_abort_.swap(*keypoint_indices_to_abort);
-    abort_keypoints_wrt_frame_id_ = frame_id;
-  }
-
- private:
-  /// \brief Detect good features to track.
-  /// @param[in] image Extract features from this image.
-  /// @param[out] detected_keypoints List of detected keypoints.
-  void detectGfttCorners(const cv::Mat& image, Vector2dList* detected_keypoints);
-
-  /// \brief Apply keypoints of type Eigen::Vector2d to frame.
-  /// @param[in] new_keypoints Keypoints_new to be applied to the frame.
-  /// @param[in,out] frame_kp1 Frame to which the new keypoints should be applied.
-  void insertAdditionalKeypointsToFrame(const Vector2dList& new_keypoints,
-                                        aslam::VisualFrame* frame_kp1);
-
-  /// \brief Get keypoints of type cv::Point2f from frame.
-  /// @param[in] frame Frame from which the keypoints should be extracted.
-  /// @param[out] keypoints_out Keypoints extracted from frame.
-  void getKeypointsFromFrame(const aslam::VisualFrame& frame,
-                             std::vector<cv::Point2f>* keypoints_out);
-
-  /// \brief Build up an occupancy grid and only add new features to empty cells.
-  /// @param[in] frame Frame from which keypoints are extracted. The keypoints are
-  /// then inserted into the occupancy grid.
-  /// @param[in] detected_keypoints Points we want to add to the occupancy grid.
-  /// @param[out] detected_keypoints_in_grid Points actually added based on occupancy grid.
-  void occupancyGrid(const aslam::VisualFrame& frame, const Vector2dList& detected_keypoints,
-                     Vector2dList* detected_keypoints_in_grid);
-
-  inline void fillOccupancyMatrix(size_t x_pixel, size_t y_pixel,
-                                  size_t image_width, size_t image_height) {
-
-    int x_occupancy_block_corner = std::min<int>(
-        std::max<int>(0, static_cast<int>(x_pixel) - kHalfOccupancyBlockSizePx),
-        static_cast<int>(image_width) - kOccupancyBlockSizePx);
-    int y_occupancy_block_corner = std::min<int>(
-        std::max<int>(0, static_cast<int>(y_pixel) - kHalfOccupancyBlockSizePx),
-        static_cast<int>(image_height) - kOccupancyBlockSizePx);
-
-    occupancy_matrix_.block<kOccupancyBlockSizePx, kOccupancyBlockSizePx>
-      (y_occupancy_block_corner, x_occupancy_block_corner) = occupancy_block_;
-  }
-
-  //////////////////////////////////////////////////////////////
-  /// \name Parameters for Feature Detection.
-  /// @{
-  /// Parameter characterizing the minimal accepted quality of image corners. The parameter value
-  /// is multiplied by the best corner quality measure, which is the minimal eigenvalue
-  /// (see cornerMinEigenVal() ) or the Harris function response (see cornerHarris() ). The corners
-  /// with the quality measure less than the product are rejected. For example, if the best corner
-  /// has the quality measure = 1500, and the qualityLevel=0.01, then all the corners with the
-  /// quality measure less than 15 are rejected.
-  static constexpr double kGoodFeaturesToTrackQualityLevel = 0.01;
-
-  /// Minimum possible euclidean distance between the returned corners.
-  static constexpr double kGoodFeaturesToTrackMinDistancePixel = 5.0;
-
-  /// Maximum number of corners to return. If there are more corners than are found,
-  /// the strongest of them are returned.
-  static constexpr size_t kMaxFeatureCount = 750u;
-
-  /// Minimum number of features to be tracked. Initialize new features to track if
-  /// number is/drops below this number.
-  static constexpr size_t kMinFeatureCount = 500u;
-
-  /// Parameter for corner refinement. Half of the side length of the search window.
-  /// For example, if kSubPixWinSize=Size(5,5), then a 5*2+1 \times 5*2+1 = 11 \times 11
-  /// search window is used.
-  const cv::Size kSubPixelWinSize = cv::Size(10, 10);
-
-  /// Half of the size of the dead region in the middle of the search zone over which the
-  /// summation in the sub-pixel formula is not done. It is used sometimes to avoid possible
-  /// singularities of the autocorrelation matrix. The value of (-1,-1) indicates that there
-  /// is no such a size.
-  const cv::Size kSubPixelZeroZone = cv::Size(-1, -1);
-
-  /// Grid cell resolution of the occupancy grid.
-  static const size_t kGridCellResolution = 16u;
-
-  /// Maximum number of landmarks per cell in occupancy grid.
-  static const size_t kMaxLandmarksPerCell = 4u;
-
-  /// Either use occupancy grid and SimpleTrackManager or
-  /// do not use occupancy grid and do use UniformTrackManager!
-  static const bool kUseOccupancyGrid = true;
-
-  /// Uses a occupancy matrix that disallows close-together keypoints.
-  bool use_occupancy_matrix_ = false;
-  /// @}
-
-  //////////////////////////////////////////////////////////////
-  /// \name Parameters for Feature Tracking.
-  /// @{
   /// The algorithm calculates the minimum eigen value of a 2x2 normal matrix of optical flow
   /// equations (this matrix is called a spatial gradient matrix in [Bouguet00]), divided by number
   /// of pixels in a window; if this value is less than kMinEigThreshold, then a corresponding
   /// feature is filtered out and its flow is not processed, so it allows to remove bad points and
   /// get a performance boost.
-  static constexpr double kMinEigenThreshold = 0.001;
+  double lk_min_eigen_threshold;
+  /// Maximal pyramid level number. If set to 0, pyramids are not used (single level), if set to 1,
+  /// two levels are used, and so on.
+  size_t lk_max_pyramid_level;
+  /// Size of the search window at each pyramid level.
+  size_t lk_window_size;
 
-  /// 0-based maximal pyramid level number. If set to 0, pyramids are not used (single level),
-  /// if set to 1, two levels are used, and so on; if pyramids are passed to input then algorithm
-  /// will use as many levels as pyramids have but no more than maxLevel.
-  static constexpr size_t kMaxPyramidLevel = 2u;
+  LkTrackerSettings();
+};
+
+class FeatureTrackerLk : public FeatureTracker {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
+  typedef aslam::WeightedKeypoint<double, double, int> WeightedKeypoint;
+  typedef aslam::WeightedOccupancyGrid<WeightedKeypoint> OccupancyGrid;
+
+  //////////////////////////////////////////////////////////////
+  /// \name Constructors/destructors and operators
+  /// @{
+ public:
+  FeatureTrackerLk(const aslam::Camera& camera, const LkTrackerSettings& settings);
+  virtual ~FeatureTrackerLk() {}
+
+ private:
+  void initialize(const aslam::Camera& camera);
+  /// @}
+
+  //////////////////////////////////////////////////////////////
+  /// \name Tracking related methods.
+  /// @{
+ public:
+  /// External interface for feature tracking. This method tracks existig keypoints from frame (k)
+  /// to frame (k+1) and initializes new keypoints if the number of keypoints drops below the
+  /// specified threshold.
+  virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
+                     const aslam::VisualFrame& frame_k,
+                     aslam::VisualFrame* frame_kp1,
+                     aslam::MatchesWithScore* matches_with_score_kp1_k);
+
+ private:
+  /// Track existing keypoints from frame (k) to frame (k+1). Make sure that the ordering of the
+  /// keypoints in the keypoints_kp1 remains unchanged when writing the keypoints to the keypoint
+  /// channel of the VisualFrame.
+  void trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
+                      const aslam::VisualFrame& frame_k,
+                      const cv::Mat& image_frame_kp1,
+                      Vector2dList* tracked_keypoints_kp1,
+                      std::vector<unsigned char>* tracking_success,
+                      std::vector<float>* tracking_errors) const;
 
   /// Operation flag. See opencv documentation for details.
-  static constexpr size_t kOperationFlag = cv::OPTFLOW_USE_INITIAL_FLOW;
-
-  /// Parameter specifying the termination criteria of the iterative search algorithm
-  /// (after the specified maximum number of iterations criteria.maxCount or when the search
-  /// window moves by less than criteria.epsilon.
-  const cv::TermCriteria kTerminationCriteria = cv::TermCriteria(
-      cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
+  static constexpr size_t kOperationFlag = cv::OPTFLOW_USE_INITIAL_FLOW;// ||
+      //cv::OPTFLOW_LK_GET_MIN_EIGENVALS;
 
   /// Size of the search window at each pyramid level.
-  const cv::Size kWindowSize = cv::Size(21, 21);
+  const cv::Size lk_window_size_;
+
+  /// @}
+
+  //////////////////////////////////////////////////////////////
+  /// \name Keypoint detection related methods.
+  /// @{
+ private:
+  /// Detect new keypoints in the specified image.
+  void detectNewKeypoints(const cv::Mat& image_kp1,
+                          size_t num_keypoints_to_detect,
+                          const cv::Mat& detection_mask,
+                          Vector2dList* keypoints,
+                          std::vector<double>* keypoint_scores) const;
 
   /// Enforce a minimal distance of all keypoints to the image border.
   const size_t kMinDistanceToImageBorderPx = 30u;
 
-  /// Half the block size in pixels to be occupied by a keypoint.
-  static constexpr int kHalfOccupancyBlockSizePx = 10;
-  static constexpr int kOccupancyBlockSizePx = 2 * kHalfOccupancyBlockSizePx;
+  /// Parameter specifying the termination criteria of the iterative search algorithm
+  /// (after the specified maximum number of iterations criteria.maxCount or when the search
+  /// window moves by less than criteria.epsilon).
+  const cv::TermCriteria kTerminationCriteria = cv::TermCriteria(
+      cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
 
   /// @}
 
-  /// Mask the area where no tracks should be spawned.
-  cv::Mat detection_mask_;
+  //////////////////////////////////////////////////////////////
+  /// \name Method to abort the tracking of keypoints.
+  /// @{
+ public:
+  /// Set a list of keypoint ids that have been identified as outliers in the last update step.
+  /// The tracking of these features will be aborted.
+  virtual void swapKeypointIndicesToAbort(
+      const aslam::FrameId& frame_id, std::unordered_set<size_t>* keypoint_indices_to_abort);
 
   /// Keypoint indices wrt. to the last frame for which the tracking should be aborted during
   /// the next call to track().
   std::unordered_set<size_t> keypoint_indices_to_abort_;
   aslam::FrameId abort_keypoints_wrt_frame_id_;
 
-  /// Optional brisk harris detector.
-  size_t kBriskOctaves = 0;
-  size_t kBriskUniformityRadius = 0;
-  size_t kBriskAbsoluteThreshold = 15;
-  std::unique_ptr<brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>> detector_;
+  /// @}
 
-  // The occupancy matrix lets keypoints occupy a small block in the image space, thus preventing
-  // multiple keypoints to lie close to each other.
-  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> occupancy_matrix_;
-  // Block template that is used to fill the occupancy matrix.
-  Eigen::Matrix<unsigned char, kOccupancyBlockSizePx, kOccupancyBlockSizePx> occupancy_block_;
+ private:
+  const aslam::Camera& camera_;
+  const LkTrackerSettings settings_;
+
+  /// Detection mask that prevents detecting keypoints close to the image border.
+  cv::Mat detection_mask_image_border_;
 };
 }  // namespace aslam
 
