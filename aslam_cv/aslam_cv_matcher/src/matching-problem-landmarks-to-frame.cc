@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include <aslam/common/statistics/statistics.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/frames/visual-nframe.h>
 #include <glog/logging.h>
@@ -106,6 +107,9 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
   projected_landmark_keypoints_.resize(num_landmarks);
 
   // Then, project all landmarks into the visual frame.
+  size_t num_valid = 0u;
+  size_t num_invalid = 0u;
+  VLOG(3) << "Projecting " << num_landmarks << " into the visual frame.";
   for (size_t landmark_idx = 0u; landmark_idx < num_landmarks; ++landmark_idx) {
     aslam::ProjectionResult projection_result = camera->project3(
         landmarks_[landmark_idx].get_p_C_landmark(),
@@ -113,13 +117,18 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
 
     if (projection_result.isKeypointVisible()) {
       valid_landmarks_[landmark_idx] = true;
+      ++num_valid;
     } else {
+      VLOG(5) << "Projection of landmark " << landmark_idx << " is invalid. "
+          << std::endl << projection_result;
       projected_landmark_keypoints_[landmark_idx].setZero();
       valid_landmarks_[landmark_idx] = false;
+      ++num_invalid;
     }
   }
 
-  VLOG(3) << "Computed all projections of landmarks into the visual frame.";
+  VLOG(3) << "Computed all projections of landmarks into the visual frame. (valid/invalid) ("
+      << num_valid << "/" << num_invalid << ")";
   return true;
 }
 
@@ -184,6 +193,13 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
 
     std::unordered_set<size_t> keypoints_indices_looked_at;
 
+    if (it_lower == it_upper) {
+      aslam::statistics::StatsCollector zero_in_search_band(
+          "aslam::MatchingProblemLandmarksToFrame: 0 keypoints in search band");
+      zero_in_search_band.IncrementOne();
+
+      VLOG(5) << "Got 0 keypoints to in the search band of landmark " << landmark_index;
+    }
     for (std::multimap<size_t, size_t>::iterator it = it_lower; it != it_upper; ++it) {
       // Go over all the frame keypoints and compute image space distance to the projected landmark
       // keypoint.
@@ -206,11 +222,19 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
                                    landmark_index,
                                    computeMatchScore(hamming_distance),
                                    priority);
+        } else {
+          aslam::statistics::StatsCollector outside_hamming(
+              "aslam::MatchingProblemLandmarksToFrame: Hamming distance too big");
+          outside_hamming.IncrementOne();
         }
+      } else {
+        aslam::statistics::StatsCollector keypoint_outside_search_box(
+            "aslam::MatchingProblemLandmarksToFrame: Keypoint outside search box");
+        keypoint_outside_search_box.IncrementOne();
       }
     }
   } else {
-    LOG(WARNING) << "Landmark " << landmark_index << " is not valid.";
+    VLOG(5) << "Landmark " << landmark_index << " is not valid.";
   }
 }
 
