@@ -151,7 +151,7 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
     return;
   }
 
-  CHECK_GT(image_height_frame_, 0u) << "The image height of the visual frame is zero.";3
+  CHECK_GT(image_height_frame_, 0u) << "The image height of the visual frame is zero.";
 
   const Eigen::Matrix2Xd& keypoints_frame = frame_.getKeypointMeasurements();
 
@@ -194,7 +194,8 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
     std::unordered_set<size_t> keypoints_indices_looked_at;
 
     if (it_lower == it_upper) {
-      aslam::statistics::StatsCollector zero_in_search_band("aslam::MatchingProblemLandmarksToFrame: 0 keypoints in search band");
+      aslam::statistics::StatsCollector zero_in_search_band(
+          "aslam::MatchingProblemLandmarksToFrame: 0 keypoints in search band");
       zero_in_search_band.IncrementOne();
 
       VLOG(5) << "Got 0 keypoints to in the search band of landmark " << landmark_index;
@@ -222,11 +223,13 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
                                    computeMatchScore(hamming_distance),
                                    priority);
         } else {
-          aslam::statistics::StatsCollector outside_hamming("aslam::MatchingProblemLandmarksToFrame: Hamming distance too big");
+          aslam::statistics::StatsCollector outside_hamming(
+              "aslam::MatchingProblemLandmarksToFrame: Hamming distance too big");
           outside_hamming.IncrementOne();
         }
       } else {
-        aslam::statistics::StatsCollector keypoint_outside_search_box("aslam::MatchingProblemLandmarksToFrame: Keypoint outside search box");
+        aslam::statistics::StatsCollector keypoint_outside_search_box(
+            "aslam::MatchingProblemLandmarksToFrame: Keypoint outside search box");
         keypoint_outside_search_box.IncrementOne();
       }
     }
