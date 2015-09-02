@@ -168,12 +168,11 @@ void FeatureTrackerLk::track(
   // Make sure, frame_k has keypoint measurements (at least the channel).
   LOG_IF(WARNING, !frame_k.hasKeypointMeasurements())
       << "The frame k does not have keypoint measurements. The track function "
-         "will not track "
-      << "anything between the frame_k and frame_kp1 and only initialize new "
-         "keypoints in frame kp1."
+      << "will not track anything between the frame_k and frame_kp1 "
+      << "and only initialize new keypoints in frame kp1."
       << "Call FeatureTrackerLk::initializeKeypointsInVisualFrame(...) with "
-         "frame_k beforehand "
-      << "if you want to track keypoints between frame_k and frame_kp1.";
+      << "frame_k beforehand if you want to track keypoints between frame_k "
+      << "and frame_kp1.";
 
   // Make sure the frame_kp1 does not yet contain keypoint/tracking information.
   CHECK(frame_kp1->hasRawImage());
