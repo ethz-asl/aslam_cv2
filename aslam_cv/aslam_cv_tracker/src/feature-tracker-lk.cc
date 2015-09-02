@@ -96,7 +96,7 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
     OccupancyGrid* occupancy_grid) const {
   CHECK_NOTNULL(occupancy_grid);
   timing::Timer keypoint_detection_timer(
-      "FeatureTrackerLk::detectNewKeypointsInVisualFrame");
+      "FeatureTrackerLk::detectNewKeypointsInVisualFrame_keypoint_detection");
 
   CHECK(!frame.hasKeypointMeasurements())
       << "The given frame already has keypoints. "
@@ -114,6 +114,7 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
   detectNewKeypoints(frame.getRawImage(), num_keypoints_to_detect,
                      detection_mask, &new_keypoints, &new_keypoints_scores);
   VLOG(3) << "Detected " << new_keypoints.size() << " new keypoints.";
+  keypoint_detection_timer.Stop();
 
   // Add the new points to the occupancy grid. If a keypoint is inserted too
   // close to an
@@ -122,6 +123,9 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
   // in the previous
   // frame for tracked keypoints. If it is a newly detected keypoint the index
   // -1 is set.
+  timing::Timer keypoints_grid_insertion_timer(
+      "FeatureTrackerLk::detectNewKeypointsInVisualFrame_keypoint_grid_"
+      "insertion");
   const int kKeypointMatchIndexPreviousFrame = -1;
   const size_t num_tracked_keypoints = occupancy_grid->getNumPoints();
   for (size_t idx = 0u; idx < new_keypoints.size(); ++idx) {
@@ -132,6 +136,7 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
         settings_.min_distance_between_features_px);
   }
   CHECK_GE(occupancy_grid->getNumPoints(), num_tracked_keypoints);
+  keypoints_grid_insertion_timer.Stop();
 
   aslam::statistics::StatsCollector lk_num_detected_keypoints(
       "lk-tracker: num detected keypoints");
