@@ -75,6 +75,10 @@ class FeatureTrackerLk : public FeatureTracker {
                      aslam::VisualFrame* frame_kp1,
                      aslam::MatchesWithScore* matches_with_score_kp1_k);
 
+  /// Takes a visual frame with no keypoints, and initializes new keypoints.
+  /// Uses the class settings and an occupancy grid.
+  void initializeKeypointsInVisualFrame(aslam::VisualFrame* frame) const;
+
  private:
   /// Track existing keypoints from frame (k) to frame (k+1). Make sure that the ordering of the
   /// keypoints in the keypoints_kp1 remains unchanged when writing the keypoints to the keypoint
@@ -85,6 +89,15 @@ class FeatureTrackerLk : public FeatureTracker {
                       Vector2dList* tracked_keypoints_kp1,
                       std::vector<unsigned char>* tracking_success,
                       std::vector<float>* tracking_errors) const;
+
+  /// Detects new keypoints in the given visual frame, using the given detection
+  /// mask and
+  /// the given occupancy grid.
+  /// The keypoints will not be added to the visual frame, but only to the given
+  /// occupancy grid.
+  void detectNewKeypointsInVisualFrame(const aslam::VisualFrame& frame,
+                                       const cv::Mat& detection_mask,
+                                       OccupancyGrid* occupancy_grid) const;
 
   /// Operation flag. See opencv documentation for details.
   static constexpr size_t kOperationFlag = cv::OPTFLOW_USE_INITIAL_FLOW;// ||
