@@ -70,10 +70,10 @@ class FeatureTrackerLk : public FeatureTracker {
   /// External interface for feature tracking. This method tracks existig keypoints from frame (k)
   /// to frame (k+1) and initializes new keypoints if the number of keypoints drops below the
   /// specified threshold.
-  virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
-                     const aslam::VisualFrame& frame_k,
-                     aslam::VisualFrame* frame_kp1,
-                     aslam::MatchesWithScore* matches_with_score_kp1_k);
+  virtual void track(
+      const aslam::Quaternion& q_Ckp1_Ck, const aslam::VisualFrame& frame_k,
+      aslam::VisualFrame* frame_kp1,
+      aslam::MatchesWithScore* matches_with_score_kp1_k) override;
 
   /// Takes a visual frame with no keypoints, and initializes new keypoints.
   /// Uses the class settings and an occupancy grid.
