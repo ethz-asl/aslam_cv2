@@ -32,6 +32,15 @@ class TargetObservation  {
   TargetBase::Ptr getTarget() { return target_; };
   TargetBase::ConstPtr getTarget() const { return target_; };
 
+  void drawCornersIntoImage(cv::Mat* out_image) const {
+    CHECK_NOTNULL(out_image);
+    size_t num_corners = image_corners_.cols();
+    for (size_t idx = 0u; idx < num_corners; ++idx) {
+      cv::circle(*out_image, cv::Point(image_corners_(0, idx), image_corners_(1, idx)), 1,
+                 cv::Scalar(0, 0, 255), 2, CV_AA);
+    }
+  }
+
  private:
   void buildIndex() {
     cornerid_to_index_map_.clear();
