@@ -20,6 +20,5 @@
   <depend>minkindr</depend>
   <depend>opencv2_catkin</depend>  
   <depend>cv_bridge</depend>
-  <depend>sm_common</depend>
   <depend>yaml_cpp_catkin</depend>
 </package>
