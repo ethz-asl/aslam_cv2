@@ -1,13 +1,12 @@
-#ifndef ASLAM_CALIBRATION_TARGET_BASE_HPP
-#define ASLAM_CALIBRATION_TARGET_BASE_HPP
+#ifndef ASLAM_CALIBRATION_TARGET_BASE_H
+#define ASLAM_CALIBRATION_TARGET_BASE_H
 
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include <aslam/common/macros.h>
 #include <Eigen/Core>
 #include <opencv2/core/core.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
 
 namespace aslam {
 namespace calibration {
@@ -18,8 +17,8 @@ class TargetObservation;
 ///
 /// The class is a little limiting:
 ///  The target is supposed to be square such that each row has the same number of points.
-///  Points along a row are supposed to be nominally colinear.
-///  Points along a column are supposed to be nominally colinear.
+///  Points along a row are supposed to be colinear.
+///  Points along a column are supposed to be colinear.
 class TargetBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -77,7 +76,7 @@ class DetectorBase {
   virtual std::shared_ptr<TargetObservation> detectTargetInImage(const cv::Mat& image) const = 0;
 }; //class DetectorBase
 
-} // namespace calibration
-} // namespace aslam
+}  // namespace calibration
+}  // namespace aslam
 
-#endif /* ASLAM_CALIBRATION_TARGET_BASE_HPP */
+#endif  // ASLAM_CALIBRATION_TARGET_BASE_H
