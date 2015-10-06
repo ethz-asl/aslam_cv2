@@ -23,10 +23,10 @@ TEST(StlHelpers, erase_indices) {
 
 TEST(StlHelpers, erase_indices_aligned) {
   Aligned<std::vector, Eigen::Vector3i>::type test_vector;
-  test_vector.push_back(Eigen::Vector3i::Ones()*0);
-  test_vector.push_back(Eigen::Vector3i::Ones()*1);
-  test_vector.push_back(Eigen::Vector3i::Ones()*2);
-  test_vector.push_back(Eigen::Vector3i::Ones()*3);
+  test_vector.push_back(Eigen::Vector3i::Constant(0));
+  test_vector.push_back(Eigen::Vector3i::Constant(1));
+  test_vector.push_back(Eigen::Vector3i::Constant(2));
+  test_vector.push_back(Eigen::Vector3i::Constant(3));
   std::vector<size_t> indices_to_remove = {1, 2};
 
   Aligned<std::vector, Eigen::Vector3i>::type result_vector =
