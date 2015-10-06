@@ -67,7 +67,7 @@ class DetectorBase {
   ASLAM_POINTER_TYPEDEFS(DetectorBase);
 
  protected:
-  DetectorBase();
+  DetectorBase() = default;
 
  public:
   virtual ~DetectorBase() {};
