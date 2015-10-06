@@ -27,13 +27,13 @@ Eigen::Vector3d TargetBase::point(size_t point_idx) const {
 }
 
 std::pair<size_t, size_t> TargetBase::pointToGridCoordinates(size_t point_idx) const {
-  return std::pair<size_t, size_t>(point_idx % cols(), (int) point_idx / cols());
+  return std::pair<size_t, size_t>(point_idx % cols(), static_cast<int>(point_idx / cols()));
 }
 
 size_t TargetBase::gridCoordinatesToPoint(size_t row_idx, size_t col_idx) const {
   CHECK_LT(rows(), row_idx);
   CHECK_LT(cols(), col_idx);
-  const size_t point_idx =  cols() * row_idx + col_idx;
+  const size_t point_idx = cols() * row_idx + col_idx;
   CHECK_LT(size(), point_idx);
   return point_idx;
 }
