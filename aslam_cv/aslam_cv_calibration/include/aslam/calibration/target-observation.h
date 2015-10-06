@@ -1,5 +1,5 @@
-#ifndef ASLAM_CALIBRATION_TARGET_OBSERVATION_HPP
-#define ASLAM_CALIBRATION_TARGET_OBSERVATION_HPP
+#ifndef ASLAM_CALIBRATION_TARGET_OBSERVATION_H
+#define ASLAM_CALIBRATION_TARGET_OBSERVATION_H
 
 #include <memory>
 #include <unordered_map>
@@ -50,4 +50,4 @@ class TargetObservation  {
 }  // namespace calibration
 }  // namespace aslam
 
-#endif /* ASLAM_CALIBRATION_TARGET_OBSERVATION_HPP */
+#endif  // ASLAM_CALIBRATION_TARGET_OBSERVATION_H
