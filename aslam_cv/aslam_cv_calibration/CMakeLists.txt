@@ -14,6 +14,7 @@ set(HEADERS
 )
 
 set(SOURCES
+  src/target-aprilgrid.cc
   src/target-base.cc
 )
 
