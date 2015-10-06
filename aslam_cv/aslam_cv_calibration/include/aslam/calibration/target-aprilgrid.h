@@ -1,5 +1,5 @@
-#ifndef ASLAM_CALIBRATION_TARGET_APRILGRID_HPP
-#define ASLAM_CALIBRATION_TARGET_APRILGRID_HPP
+#ifndef ASLAM_CALIBRATION_TARGET_APRILGRID_H
+#define ASLAM_CALIBRATION_TARGET_APRILGRID_H
 
 #include <memory>
 #include <vector>
@@ -104,4 +104,4 @@ class DetectorAprilGrid : public DetectorBase {
 }  // namespace calibration
 }  // namespace aslam
 
-#endif /* ASLAM_CALIBRATION_TARGET_APRILGRID_HPP */
+#endif  // ASLAM_CALIBRATION_TARGET_APRILGRID_H
