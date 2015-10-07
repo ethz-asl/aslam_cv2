@@ -77,7 +77,7 @@ class FeatureTrackerLk : public FeatureTracker {
 
   /// Takes a visual frame with no keypoints, and initializes new keypoints.
   /// Uses the class settings and an occupancy grid.
-  void initializeKeypointsInVisualFrame(aslam::VisualFrame* frame) const;
+  void initializeKeypointsInEmptyVisualFrame(aslam::VisualFrame* frame) const;
 
  private:
   /// Track existing keypoints from frame (k) to frame (k+1). Make sure that the ordering of the
