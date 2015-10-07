@@ -32,6 +32,18 @@ class TargetObservation  {
   TargetBase::Ptr getTarget() { return target_; };
   TargetBase::ConstPtr getTarget() const { return target_; };
 
+  size_t numObservedCorners() const {
+    return corner_ids_.size();
+  }
+
+  const Eigen::Matrix2Xd& getObservedCorners() const {
+    return image_corners_;
+  }
+
+  const Eigen::VectorXi& getObservedCornerIds() const {
+    return corner_ids_;
+  }
+
   void drawCornersIntoImage(cv::Mat* out_image) const {
     CHECK_NOTNULL(out_image);
     size_t num_corners = image_corners_.cols();
@@ -39,6 +51,14 @@ class TargetObservation  {
       cv::circle(*out_image, cv::Point(image_corners_(0, idx), image_corners_(1, idx)), 1,
                  cv::Scalar(0, 0, 255), 2, CV_AA);
     }
+  }
+
+  Eigen::Matrix3Xd getCorrespondingTargetPoints() const {
+    Eigen::Matrix3Xd corners_target_frame(3, numObservedCorners());
+    for (size_t obs_idx = 0; obs_idx < numObservedCorners(); ++obs_idx) {
+      corners_target_frame.col(obs_idx) = target_->point(corner_ids_(obs_idx));
+    }
+    return corners_target_frame;
   }
 
  private:
