@@ -70,10 +70,14 @@ class FeatureTrackerLk : public FeatureTracker {
   /// External interface for feature tracking. This method tracks existig keypoints from frame (k)
   /// to frame (k+1) and initializes new keypoints if the number of keypoints drops below the
   /// specified threshold.
-  virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
-                     const aslam::VisualFrame& frame_k,
-                     aslam::VisualFrame* frame_kp1,
-                     aslam::MatchesWithScore* matches_with_score_kp1_k);
+  virtual void track(
+      const aslam::Quaternion& q_Ckp1_Ck, const aslam::VisualFrame& frame_k,
+      aslam::VisualFrame* frame_kp1,
+      aslam::MatchesWithScore* matches_with_score_kp1_k) override;
+
+  /// Takes a visual frame with no keypoints, and initializes new keypoints.
+  /// Uses the class settings and an occupancy grid.
+  void initializeKeypointsInEmptyVisualFrame(aslam::VisualFrame* frame) const;
 
  private:
   /// Track existing keypoints from frame (k) to frame (k+1). Make sure that the ordering of the
@@ -85,6 +89,15 @@ class FeatureTrackerLk : public FeatureTracker {
                       Vector2dList* tracked_keypoints_kp1,
                       std::vector<unsigned char>* tracking_success,
                       std::vector<float>* tracking_errors) const;
+
+  /// Detects new keypoints in the given visual frame, using the given detection
+  /// mask and
+  /// the given occupancy grid.
+  /// The keypoints will not be added to the visual frame, but only to the given
+  /// occupancy grid.
+  void detectNewKeypointsInVisualFrame(const aslam::VisualFrame& frame,
+                                       const cv::Mat& detection_mask,
+                                       OccupancyGrid* occupancy_grid) const;
 
   /// Operation flag. See opencv documentation for details.
   static constexpr size_t kOperationFlag = cv::OPTFLOW_USE_INITIAL_FLOW;// ||

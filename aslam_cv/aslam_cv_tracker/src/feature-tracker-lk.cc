@@ -25,6 +25,8 @@ DEFINE_uint64(lk_window_size, 21, "Size of the search window at each pyramid lev
 
 namespace aslam {
 
+static constexpr double kKeypointUncertaintyPx = 0.8;
+
 LkTrackerSettings::LkTrackerSettings()
     : brisk_detector_octaves(FLAGS_lk_brisk_octaves),
       brisk_detector_uniformity_radius_px(FLAGS_lk_brisk_uniformity_radius_px),
@@ -63,15 +65,111 @@ void FeatureTrackerLk::initialize(const aslam::Camera& camera) {
   region_of_interest = cv::Scalar(255);
 }
 
-void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
-                             const aslam::VisualFrame& frame_k,
-                             aslam::VisualFrame* frame_kp1,
-                             aslam::MatchesWithScore* matches_with_score_kp1_k) {
+void FeatureTrackerLk::initializeKeypointsInEmptyVisualFrame(
+    aslam::VisualFrame* frame) const {
+  CHECK_NOTNULL(frame);
+  CHECK(!frame->hasKeypointMeasurements());
+
+  OccupancyGrid occupancy_grid(camera_.imageHeight(), camera_.imageWidth(),
+                               settings_.min_distance_between_features_px,
+                               settings_.min_distance_between_features_px);
+
+  detectNewKeypointsInVisualFrame(*frame, detection_mask_image_border_,
+                                  &occupancy_grid);
+
+  OccupancyGrid::PointList keypoints;
+  occupancy_grid.getAllPointsInGrid(&keypoints);
+
+  VLOG(10) << "Inserting " << keypoints.size()
+           << " occupancy grid filtered keypoints into the frame.";
+  Vector2dList new_keypoints_occupancy_grid_filtered;
+  new_keypoints_occupancy_grid_filtered.reserve(keypoints.size());
+  for (const WeightedKeypoint& point : keypoints) {
+    new_keypoints_occupancy_grid_filtered.emplace_back(point.v_cols,
+                                                       point.u_rows);
+  }
+  // Insert the new keypoints into the frame. No special care wrt. ordering
+  // necessary, since we only have new keypoints here.
+  insertAdditionalKeypointsToVisualFrame(new_keypoints_occupancy_grid_filtered,
+                                         kKeypointUncertaintyPx, frame);
+
+  CHECK(frame->hasKeypointMeasurements());
+}
+
+void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
+    const aslam::VisualFrame& frame, const cv::Mat& detection_mask,
+    OccupancyGrid* occupancy_grid) const {
+  CHECK_NOTNULL(occupancy_grid);
+  timing::Timer keypoint_detection_timer(
+      "FeatureTrackerLk::detectNewKeypointsInVisualFrame_keypoint_detection");
+
+  CHECK(frame.hasRawImage())
+      << "Can only detect keypoints if the frame has a raw image";
+
+  const size_t num_keypoints_to_detect =
+      settings_.max_feature_count - occupancy_grid->getNumPoints();
+
+  Vector2dList new_keypoints;
+  std::vector<double> new_keypoints_scores;
+  detectNewKeypoints(frame.getRawImage(), num_keypoints_to_detect,
+                     detection_mask, &new_keypoints, &new_keypoints_scores);
+  VLOG(10) << "Detected " << new_keypoints.size() << " out of a desired "
+           << num_keypoints_to_detect << " keypoints.";
+  keypoint_detection_timer.Stop();
+
+  // Add the new points to the occupancy grid. If a keypoint is inserted too
+  // close to an existing point in the grid, the point with the higher score
+  // will be kept.  The grid stores an id for each point that corresponds to the
+  // keypoint index in the previous frame for tracked keypoints. If it is a
+  // newly detected keypoint the index -1 is set.
+  timing::Timer keypoints_grid_insertion_timer(
+      "FeatureTrackerLk::detectNewKeypointsInVisualFrame_keypoint_grid_"
+      "insertion");
+  const int kKeypointMatchIndexPreviousFrame = -1;
+  const size_t num_tracked_keypoints = occupancy_grid->getNumPoints();
+  for (size_t idx = 0u; idx < new_keypoints.size(); ++idx) {
+    occupancy_grid->addPointOrReplaceWeakestNearestPoints(
+        WeightedKeypoint(new_keypoints[idx](1), new_keypoints[idx](0),
+                         new_keypoints_scores[idx],
+                         kKeypointMatchIndexPreviousFrame),
+        settings_.min_distance_between_features_px);
+  }
+  CHECK_GE(occupancy_grid->getNumPoints(), num_tracked_keypoints);
+  keypoints_grid_insertion_timer.Stop();
+
+  aslam::statistics::StatsCollector lk_num_detected_keypoints(
+      "lk-tracker: num detected keypoints");
+  lk_num_detected_keypoints.AddSample(new_keypoints.size());
+  const size_t num_added_detections =
+      occupancy_grid->getNumPoints() - num_tracked_keypoints;
+  aslam::statistics::StatsCollector lk_redetection_add(
+      "lk-tracker: num detected keypoints add");
+  lk_redetection_add.AddSample(num_added_detections);
+  const size_t num_rejected_detections =
+      new_keypoints.size() - num_added_detections;
+  aslam::statistics::StatsCollector lk_rejected_redetections(
+      "lk-tracker: num detected keypoints rejected");
+  lk_rejected_redetections.AddSample(num_rejected_detections);
+}
+
+void FeatureTrackerLk::track(
+    const aslam::Quaternion& q_Ckp1_Ck, const aslam::VisualFrame& frame_k,
+    aslam::VisualFrame* frame_kp1,
+    aslam::MatchesWithScore* matches_with_score_kp1_k) {
   aslam::timing::Timer timer_tracking("FeatureTrackerLk: track");
   CHECK_NOTNULL(frame_kp1);
   CHECK_NOTNULL(matches_with_score_kp1_k)->clear();
   CHECK_EQ(camera_.getId(), CHECK_NOTNULL(frame_k.getCameraGeometry().get())->getId());
   CHECK_EQ(camera_.getId(), CHECK_NOTNULL(frame_kp1->getCameraGeometry().get())->getId());
+
+  // Make sure, frame_k has keypoint measurements (at least the channel).
+  LOG_IF(WARNING, !frame_k.hasKeypointMeasurements())
+      << "The frame k does not have keypoint measurements. The track function "
+      << "will not track anything between the frame_k and frame_kp1 "
+      << "and only initialize new keypoints in frame kp1."
+      << "Call FeatureTrackerLk::initializeKeypointsInVisualFrame(...) with "
+      << "frame_k beforehand if you want to track keypoints between frame_k "
+      << "and frame_kp1.";
 
   // Make sure the frame_kp1 does not yet contain keypoint/tracking information.
   CHECK(frame_kp1->hasRawImage());
@@ -89,6 +187,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   std::vector<float> tracking_errors;
   trackKeypoints(q_Ckp1_Ck, frame_k, frame_kp1->getRawImage(), &tracked_keypoints_kp1,
                  &tracking_success, &tracking_errors);
+  VLOG(10) << "Tracked " << tracked_keypoints_kp1.size()
+           << " keypoints from frame k to kp1.";
 
   // Reject tracked keypoints that meet one of the following criteria:
   //   - tracking was unsuccessful
@@ -164,6 +264,7 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
   lk_redetection.AddSample(1);
 
   if (occupancy_grid.getNumPoints() < settings_.min_feature_count) {
+    VLOG(5) << "Below min feature count. Spawning new ones.";
     // Create the detection mask consisting of the mask that prevents detecting points too close to
     // the image border and the mask of the current points in the occupancy grid.
     const size_t kMaxNumberOfKeypointPerCell = std::numeric_limits<size_t>::max();
@@ -179,38 +280,8 @@ void FeatureTrackerLk::track(const aslam::Quaternion& q_Ckp1_Ck,
 
     // Detect new points.
     CHECK_LT(occupancy_grid.getNumPoints(), settings_.max_feature_count);
-    const size_t num_keypoints_to_detect =
-        settings_.max_feature_count - occupancy_grid.getNumPoints();
-
-    Vector2dList new_keypoints;
-    std::vector<double> new_keypoints_scores;
-    detectNewKeypoints(frame_kp1->getRawImage(), num_keypoints_to_detect, detection_mask,
-                       &new_keypoints, &new_keypoints_scores);
-
-    // Add the new points to the occupancy grid. If a keypoint is inserted too close to an
-    // existing point in the grid, the point with the higher score will be kept.
-    // The grid stores an id for each point that corresponds to the keypoint index in the previous
-    // frame for tracked keypoints. If it is a new detect keypoint the index -1 is set.
-    const int kKeypointMatchIndexPreviousFrame = -1;
-    size_t num_tracked_keypoints = occupancy_grid.getNumPoints();
-    for (size_t idx = 0u; idx < new_keypoints.size(); ++idx) {
-      occupancy_grid.addPointOrReplaceWeakestNearestPoints(
-          WeightedKeypoint(new_keypoints[idx](1), new_keypoints[idx](0),
-                           new_keypoints_scores[idx], kKeypointMatchIndexPreviousFrame),
-          settings_.min_distance_between_features_px);
-    }
-    CHECK_GE(occupancy_grid.getNumPoints(), num_tracked_keypoints);
-
-    aslam::statistics::StatsCollector lk_num_detected_keypoints(
-        "lk-tracker: num detected keypoints");
-    lk_num_detected_keypoints.AddSample(new_keypoints.size());
-    const size_t num_added_detections = occupancy_grid.getNumPoints() - num_tracked_keypoints;
-    aslam::statistics::StatsCollector lk_redetection_add("lk-tracker: num detected keypoints add");
-    lk_redetection_add.AddSample(num_added_detections);
-    const size_t num_rejected_detections = new_keypoints.size() - num_added_detections;
-    aslam::statistics::StatsCollector lk_rejected_redetections(
-        "lk-tracker: num detected keypoints rejected");
-    lk_rejected_redetections.AddSample(num_rejected_detections);
+    detectNewKeypointsInVisualFrame(*frame_kp1, detection_mask,
+                                    &occupancy_grid);
   }
 
   // Write the keypoints to the frame (k+1) in the following order [tracked, new keypoints]. Also
@@ -254,6 +325,8 @@ void FeatureTrackerLk::trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
 
   // Early exit if the frame k does not contain any keypoints.
   if (!frame_k.hasKeypointMeasurements() || frame_k.getNumKeypointMeasurements() == 0u) {
+    VLOG(3) << "Aborting tracking of keypoints because frame_k does not have "
+            << "any.";
     return;
   }
 
