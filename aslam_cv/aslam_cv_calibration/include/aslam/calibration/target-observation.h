@@ -6,6 +6,7 @@
 
 #include <aslam/common/macros.h>
 #include <Eigen/Core>
+#include <glog/logging.h>
 
 #include "aslam/calibration/target-base.h"
 
