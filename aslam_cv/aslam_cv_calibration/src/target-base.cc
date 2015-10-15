@@ -22,7 +22,7 @@ Eigen::Matrix3Xd TargetBase::points() const {
 }
 
 Eigen::Vector3d TargetBase::point(size_t point_idx) const {
-  CHECK_LT(size(), point_idx);
+  CHECK_LT(point_idx, size());
   return points_target_frame_.col(point_idx);
 }
 
@@ -31,10 +31,10 @@ std::pair<size_t, size_t> TargetBase::pointToGridCoordinates(size_t point_idx) c
 }
 
 size_t TargetBase::gridCoordinatesToPoint(size_t row_idx, size_t col_idx) const {
-  CHECK_LT(rows(), row_idx);
-  CHECK_LT(cols(), col_idx);
+  CHECK_LT(row_idx, rows());
+  CHECK_LT(col_idx, cols());
   const size_t point_idx = cols() * row_idx + col_idx;
-  CHECK_LT(size(), point_idx);
+  CHECK_LT(point_idx, size());
   return point_idx;
 }
 
@@ -43,7 +43,7 @@ Eigen::Vector3d TargetBase::gridPoint(size_t row_idx, size_t col_idx) const {
 }
 
 double* TargetBase::pointMutable(size_t point_idx) {
-  CHECK_LT(size(), point_idx);
+  CHECK_LT(point_idx, size());
   return &points_target_frame_.coeffRef(0, point_idx);
 }
 
