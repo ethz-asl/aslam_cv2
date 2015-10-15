@@ -10,17 +10,15 @@
 
 namespace aslam {
 namespace calibration {
+class TargetObservation;
 
-/**
- * \class TargetBase
- * \brief Represents a calibration target with known geometry.
- *
- * The class is a little limiting:
- * The target is supposed to be square such that each row has the same number of points.
- * Points along a row are supposed to be colinear.
- * Points along a column are supposed to be colinear.
- *
- */
+/// \class TargetBase
+/// \brief Represents a calibration target with known geometry.
+///
+/// The class is a little limiting:
+///  The target is supposed to be square such that each row has the same number of points.
+///  Points along a row are supposed to be colinear.
+///  Points along a column are supposed to be colinear.
 class TargetBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -31,11 +29,6 @@ class TargetBase {
 
  public:
   virtual ~TargetBase() {};
-
-  /// Extract the calibration target points from an image.
-  virtual bool computeObservation(const cv::Mat& /*image*/,
-                                  Eigen::Matrix2Xd* /*image_points*/,
-                                  std::vector<bool>* /*corner_observed*/) const = 0;
 
   /// Get all points from the target expressed in the target frame.
   Eigen::Matrix3Xd points() const;
@@ -67,6 +60,21 @@ class TargetBase {
   /// Grid points stored in row-major order (idx = cols * r + c).
   Eigen::Matrix3Xd points_target_frame_;
 }; //class TargetBase
+
+class DetectorBase {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  ASLAM_POINTER_TYPEDEFS(DetectorBase);
+
+ protected:
+  DetectorBase() = default;
+
+ public:
+  virtual ~DetectorBase() {};
+
+  /// Extract the calibration target points from an image.
+  virtual std::shared_ptr<TargetObservation> detectTargetInImage(const cv::Mat& image) const = 0;
+}; //class DetectorBase
 
 }  // namespace calibration
 }  // namespace aslam
