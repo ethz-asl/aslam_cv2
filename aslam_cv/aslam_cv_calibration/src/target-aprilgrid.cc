@@ -6,8 +6,8 @@
 #include <apriltags/Tag36h11.h>
 #include <Eigen/Core>
 #include <glog/logging.h>
-#include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "aslam/calibration/target-aprilgrid.h"
@@ -17,8 +17,8 @@ namespace aslam {
 namespace calibration {
 
 TargetAprilGrid::TargetAprilGrid(const TargetAprilGrid::TargetConfiguration& target_config)
-    : TargetBase(2 * target_config.num_tag_rows,
-                 2 * target_config.num_tag_cols, // 4 points per tag.
+    : TargetBase(2u * target_config.num_tag_rows,
+                 2u * target_config.num_tag_cols, // 4 points per tag.
                  createGridPoints(target_config)),
                  target_config_(target_config) {
   CHECK_GT(target_config.tag_size_meter, 0.0);
@@ -38,20 +38,22 @@ Eigen::Matrix3Xd TargetAprilGrid::createGridPoints(
   ///   |-->x
   const double tag_size = target_config.tag_size_meter;
   const double tag_spacing = target_config.tag_inbetween_space_meter;
-  const size_t num_point_rows = 2 * target_config.num_tag_rows;
-  const size_t num_point_cols = 2 * target_config.num_tag_cols;
+  const size_t num_point_rows = 2u * target_config.num_tag_rows;
+  const size_t num_point_cols = 2u * target_config.num_tag_cols;
   CHECK_GT(tag_size, 0.0);
   CHECK_GT(tag_spacing, 0.0);
 
   Eigen::Matrix3Xd points_target_frame(3, num_point_rows * num_point_cols);
-  for (size_t r = 0u; r < num_point_rows; r++) {
-    for (size_t c = 0u; c < num_point_cols ; c++) {
+  for (size_t row_idx = 0u; row_idx < num_point_rows; ++row_idx) {
+    for (size_t col_idx = 0u; col_idx < num_point_cols; ++col_idx) {
       Eigen::Vector3d point;
-      point(0) = (int) (c / 2) * (tag_size + tag_spacing) + (c % 2) * tag_size;
-      point(1) = (int) (r / 2) * (tag_size + tag_spacing) + (r % 2) * tag_size;
+      point(0) =
+          static_cast<int>(col_idx / 2) * (tag_size + tag_spacing) + (col_idx % 2) * tag_size;
+      point(1) =
+          static_cast<int>(row_idx / 2) * (tag_size + tag_spacing) + (row_idx % 2) * tag_size;
       point(2) = 0.0;
 
-      points_target_frame.col(r * num_point_cols + c) = point;
+      points_target_frame.col(row_idx * num_point_cols + col_idx) = point;
     }
   }
   return points_target_frame;
@@ -78,12 +80,12 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
     bool remove = false;
 
     // Enforce min. distance of corners to the image border (tag removed if violated).
-    for (int j = 0; j < 4; j++) {
-      remove |= iter->p[j].first < detector_config_.min_border_distance_px;
-      remove |= iter->p[j].first >
+    for (int tag_corner_idx = 0; tag_corner_idx < 4; ++tag_corner_idx) {
+      remove |= iter->p[tag_corner_idx].first < detector_config_.min_border_distance_px;
+      remove |= iter->p[tag_corner_idx].first >
         static_cast<double>(image.cols) - detector_config_.min_border_distance_px;
-      remove |= iter->p[j].second < detector_config_.min_border_distance_px;
-      remove |= iter->p[j].second >
+      remove |= iter->p[tag_corner_idx].second < detector_config_.min_border_distance_px;
+      remove |= iter->p[tag_corner_idx].second >
         static_cast<double>(image.rows) - detector_config_.min_border_distance_px;
     }
 
@@ -112,42 +114,42 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
 
   // Check if enough tags have been found.
   if (detections.size() < detector_config_.min_visible_tags_for_valid_obs) {
-    // Detection failed; returnn nullptr.
+    // Detection failed; return nullptr.
     return TargetObservation::Ptr();
   }
 
-  //sort detections by tagId
+  // Sort detections by tagId.
   std::sort(detections.begin(), detections.end(), AprilTags::TagDetection::sortByIdCompare);
 
   // Check for duplicate tag ids that would indicate Apriltags not belonging to calibration target.
   if (detections.size() > 1) {
-    for (size_t i = 0; i < detections.size() - 1; i++)
-      if (detections[i].id == detections[i + 1].id) {
+    for (size_t tag_idx = 0; tag_idx < detections.size() - 1; ++tag_idx)
+      if (detections[tag_idx].id == detections[tag_idx + 1].id) {
         // Show image of duplicate Apriltag.
         cv::destroyAllWindows();
         cv::namedWindow("Wild Apriltag detected. Hide them!");
         cvStartWindowThread();
 
-        cv::Mat imageCopy = image.clone();
-        cv::cvtColor(imageCopy, imageCopy, CV_GRAY2RGB);
+        cv::Mat image_copy = image.clone();
+        cv::cvtColor(image_copy, image_copy, CV_GRAY2RGB);
 
-        // Mark duplicate tags in image.
-        for (int j = 0; i < detections.size() - 1; i++) {
-          if (detections[j].id == detections[j + 1].id) {
-            detections[j].draw(imageCopy);
-            detections[j + 1].draw(imageCopy);
+        // Mark all duplicate tags in the image.
+        for (size_t inner_tag_idx = 0; inner_tag_idx < detections.size() - 1; ++inner_tag_idx) {
+          if (detections[inner_tag_idx].id == detections[inner_tag_idx + 1].id) {
+            detections[inner_tag_idx].draw(image_copy);
+            detections[inner_tag_idx + 1].draw(image_copy);
           }
         }
 
-        cv::putText(imageCopy, "Duplicate Apriltags detected. Hide them.", cv::Point(50, 50),
+        cv::putText(image_copy, "Duplicate Apriltags detected. Hide them.", cv::Point(50, 50),
                     CV_FONT_HERSHEY_SIMPLEX, 0.8, CV_RGB(255, 0, 0), 2, 8, false);
-        cv::putText(imageCopy, "Press enter to exit...", cv::Point(50, 80),
+        cv::putText(image_copy, "Press enter to exit...", cv::Point(50, 80),
                     CV_FONT_HERSHEY_SIMPLEX, 0.8, CV_RGB(255, 0, 0), 2, 8, false);
-        cv::imshow("Duplicate Apriltags detected. Hide them", imageCopy);
+        cv::imshow("Duplicate Apriltags detected. Hide them", image_copy);
         cv::waitKey();
 
         LOG(WARNING) << "Found apriltag not belonging to calibration board. Check the image for "
-                     << "the tag and hide it.\n";
+                     << "the tag and hide it.";
         return TargetObservation::Ptr();
       }
   }
@@ -161,11 +163,13 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
   //    y     | TAG 0 |  | TAG 1 |
   //   ^      0-------1  4-------5
   //   |-->x
-  cv::Mat tag_corners(4 * detections.size(), 2, CV_32F);
-  for (unsigned i = 0; i < detections.size(); i++) {
-    for (unsigned j = 0; j < 4; j++) {
-      tag_corners.at<float>(4 * i + j, 0) = detections[i].p[j].first;
-      tag_corners.at<float>(4 * i + j, 1) = detections[i].p[j].second;
+  cv::Mat tag_corners(4u * detections.size(), 2, CV_32F);
+  for (size_t tag_idx = 0; tag_idx < detections.size(); tag_idx++) {
+    for (size_t tag_corner_idx = 0; tag_corner_idx < 4; tag_corner_idx++) {
+      tag_corners.at<float>(4u * tag_idx + tag_corner_idx, 0) =
+          detections[tag_idx].p[tag_corner_idx].first;
+      tag_corners.at<float>(4u * tag_idx + tag_corner_idx, 1) =
+          detections[tag_idx].p[tag_corner_idx].second;
     }
   }
 
@@ -191,12 +195,12 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
   Eigen::Matrix2Xd image_corners(2, target_->size());
   size_t out_point_idx = 0u;
 
-  for (size_t i = 0; i < detections.size(); i++) {
-    const unsigned int tag_id = detections[i].id;
+  for (size_t tag_idx = 0; tag_idx < detections.size(); ++tag_idx) {
+    const unsigned int tag_id = detections[tag_idx].id;
 
     // Calculate the grid idx for all four tag corners given the tagId and cols.
     const size_t cols = target_->cols();
-    unsigned int base_idx =
+    const unsigned int base_idx =
         static_cast<int>(tag_id / (cols / 2)) * cols * 2 + (tag_id % (cols / 2)) * 2;
     unsigned int point_indices_tag[] = {base_idx,
                                         base_idx + 1,
@@ -204,16 +208,18 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
                                         base_idx + static_cast<unsigned int>(cols)};
 
     // Add four points per tag
-    for (int j = 0; j < 4; j++) {
-      const Eigen::Vector2d corner_refined(tag_corners.row(4 * i + j).at<float>(0),
-                                           tag_corners.row(4 * i + j).at<float>(1));
-      const Eigen::Vector2d corner_raw(tag_corners_raw.row(4 * i + j).at<float>(0),
-                                       tag_corners_raw.row(4 * i + j).at<float>(1));
+    for (int tag_corner_idx = 0; tag_corner_idx < 4; tag_corner_idx++) {
+      const Eigen::Vector2d corner_refined(
+          tag_corners.row(4 * tag_idx + tag_corner_idx).at<float>(0),
+          tag_corners.row(4 * tag_idx + tag_corner_idx).at<float>(1));
+      const Eigen::Vector2d corner_raw(
+          tag_corners_raw.row(4 * tag_idx + tag_corner_idx).at<float>(0),
+          tag_corners_raw.row(4 * tag_idx + tag_corner_idx).at<float>(1));
 
       // Add corner points if it has not moved to far in the subpix refinement.
       const double subpix_displacement_squarred = (corner_refined - corner_raw).squaredNorm();
       if (subpix_displacement_squarred <= detector_config_.max_subpixel_refine_displacement_px_sq) {
-        corner_ids(out_point_idx) = point_indices_tag[j];
+        corner_ids(out_point_idx) = point_indices_tag[tag_corner_idx];
         image_corners.col(out_point_idx) = corner_refined;
         ++out_point_idx;
       }

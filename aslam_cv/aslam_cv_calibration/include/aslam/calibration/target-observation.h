@@ -18,11 +18,11 @@ class TargetObservation  {
   ASLAM_POINTER_TYPEDEFS(TargetObservation);
 
   TargetObservation(const TargetBase::Ptr& target,
-      const Eigen::VectorXi& corner_ids,
-      const Eigen::Matrix2Xd& image_corners) :
-        target_(target),
-        corner_ids_(corner_ids),
-        image_corners_(image_corners) {
+                    const Eigen::VectorXi& corner_ids,
+                    const Eigen::Matrix2Xd& image_corners)
+   : target_(target),
+     corner_ids_(corner_ids),
+     image_corners_(image_corners) {
     CHECK(target);
     CHECK_EQ(corner_ids.rows(), image_corners.cols());
     buildIndex();
