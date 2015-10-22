@@ -7,27 +7,27 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-set(HEADERS
-  include/kaze/fed.h
-  include/kaze/KAZE.h
-  include/kaze/KAZEConfig.h
-  include/kaze/nldiffusion_functions.h
-  include/kaze/utils.h
-)
+add_definitions(-std=c++11)
 
-set(SOURCES
+cs_add_library(${PROJECT_NAME}_kaze   
   src/kaze/fed.cpp
   src/kaze/KAZE.cpp
   src/kaze/nldiffusion_functions.cpp
   src/kaze/utils.cpp
 )
 
-cs_add_library(${PROJECT_NAME} ${SOURCES})
+cs_add_library(${PROJECT_NAME}_lsd 
+  src/lsd/lsd-opencv.cc
+)
 
-add_doxygen(NOT_AUTOMATIC)
+cs_add_library(${PROJECT_NAME} 
+  src/line-segment-detector.cc
+)
 
-add_definitions(-std=c++11)
-SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
+target_link_libraries(${PROJECT_NAME}
+  ${PROJECT_NAME}_kaze 
+  ${PROJECT_NAME}_lsd
+)
 
 ##########
 # EXPORT #
