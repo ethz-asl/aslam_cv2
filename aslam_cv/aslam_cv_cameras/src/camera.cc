@@ -194,9 +194,9 @@ void Camera::project3Vectorized(
   out_keypoints->resize(Eigen::NoChange, points_3d.cols());
   out_results->resize(points_3d.cols(), ProjectionResult::Status::UNINITIALIZED);
   Eigen::Vector2d projection;
-  for(int i = 0; i < points_3d.cols(); ++i) {
+  for (int i = 0; i < points_3d.cols(); ++i) {
     (*out_results)[i] = project3(points_3d.col(i), &projection);
-   out_keypoints->col(i) = projection;
+    out_keypoints->col(i) = projection;
   }
 }
 
