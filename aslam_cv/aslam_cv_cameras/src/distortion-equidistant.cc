@@ -147,7 +147,7 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
   CHECK_NOTNULL(point);
 
   const int n = 30;  // Max. number of iterations
-  const double tolerance = 1e-10; // Abort tolerance for iteration
+  const double tolerance = 1e-6; // Abort tolerance for iteration
 
   Eigen::Vector2d& y = *point;
   Eigen::Vector2d ybar = y;
@@ -155,7 +155,7 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
   Eigen::Vector2d y_tmp;
 
   // Handle special case around image center.
-  if (y.squaredNorm() < 1e-15)
+  if (y.squaredNorm() < 1e-6)
     return; // Point remains unchanged.
 
   int i;
