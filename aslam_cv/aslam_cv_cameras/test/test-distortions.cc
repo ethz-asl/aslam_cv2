@@ -45,6 +45,19 @@ TYPED_TEST_CASE(TestDistortionsNotNull, ImplementationsNoNull);
 ///////////////////////////////////////////////
 // Test cases
 ///////////////////////////////////////////////
+TYPED_TEST(TestDistortions, DistortAndUndistortUsingInternalParametersRandom) {
+  const size_t kNumSamples = 1e5;
+  for (double i = 0; i < kNumSamples; ++i) {
+    Eigen::Vector2d keypoint = 5 * Eigen::Vector2d::Random();
+    Eigen::Vector2d keypoint2 = keypoint;
+
+    this->distortion_->distort(&keypoint2);
+    this->distortion_->undistort(&keypoint2);
+
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-5));
+  }
+}
+
 TYPED_TEST(TestDistortions, DistortAndUndistortUsingInternalParameters) {
   // Box on the normalized image plane corresponds to
   // a pinhole camera with a resolution of 2000x2000, f=200 and c=1000.
@@ -58,7 +71,7 @@ TYPED_TEST(TestDistortions, DistortAndUndistortUsingInternalParameters) {
       this->distortion_->distort(&keypoint2);
       this->distortion_->undistort(&keypoint2);
 
-      EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-9));
+      EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-5));
     }
   }
 }
@@ -81,7 +94,7 @@ TYPED_TEST(TestDistortions, DistortAndUndistortUsingExternalParameters) {
       this->distortion_->distortUsingExternalCoefficients(&dist_coeff, &keypoint2, nullptr);
       this->distortion_->undistortUsingExternalCoefficients(dist_coeff, &keypoint2);
 
-      EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-9));
+      EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-5));
     }
   }
 }
@@ -133,7 +146,7 @@ TYPED_TEST(TestDistortions, JacobianWrtKeypoint) {
   Eigen::Vector2d keypoint(0.3, -0.2);
   Eigen::VectorXd dist_coeffs = this->distortion_->getParameters();
 
-  TEST_JACOBIAN_FINITE_DIFFERENCE(Point3dJacobianFunctor, keypoint, 1e-6, 1e-4,
+  TEST_JACOBIAN_FINITE_DIFFERENCE(Point3dJacobianFunctor, keypoint, 1e-5, 1e-4,
                                   *(this->distortion_), dist_coeffs);
 }
 
@@ -180,7 +193,7 @@ TYPED_TEST(TestDistortionsNotNull, JacobianWrtDistortion) {
   Eigen::VectorXd dist_coeffs = this->distortion_->getParameters();
 
   TEST_JACOBIAN_FINITE_DIFFERENCE(DistortionJacobianFunctor<TypeParam::parameterCount()>,
-                                  dist_coeffs, 1e-6, 1e-4, *(this->distortion_), keypoint);
+                                  dist_coeffs, 1e-5, 1e-4, *(this->distortion_), keypoint);
 }
 
 ///////
