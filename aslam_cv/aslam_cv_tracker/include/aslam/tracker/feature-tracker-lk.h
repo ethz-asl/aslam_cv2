@@ -29,7 +29,6 @@ struct LkTrackerSettings {
   /// Threshold when to detect new keypoints.
   size_t min_feature_count;
 
-
   /// The algorithm calculates the minimum eigen value of a 2x2 normal matrix of optical flow
   /// equations (this matrix is called a spatial gradient matrix in [Bouguet00]), divided by number
   /// of pixels in a window; if this value is less than kMinEigThreshold, then a corresponding
