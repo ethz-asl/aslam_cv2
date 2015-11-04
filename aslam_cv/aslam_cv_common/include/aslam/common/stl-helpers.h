@@ -68,7 +68,7 @@ void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& in
 template<typename ElementType, typename Allocator>
 void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
                          std::vector<ElementType, Allocator>* output) {
-  drawNRandomElements(input, output, false);
+  drawNRandomElements(N, input, output, false);
 }
 
 // Remove all elements except the N greatest elements. An optional action can be provided
