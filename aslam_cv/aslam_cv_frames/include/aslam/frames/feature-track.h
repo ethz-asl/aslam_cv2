@@ -15,7 +15,9 @@ class FeatureTrack {
 
   FeatureTrack() = delete;
 
-  explicit FeatureTrack(size_t track_id) : track_id_(track_id) {}
+  explicit FeatureTrack(size_t track_id) : track_id_(track_id) {
+    keypoint_identifiers_.reserve(50u);
+  }
 
   FeatureTrack(size_t track_id, size_t num_reserve_keypoints) : FeatureTrack(track_id) {
     keypoint_identifiers_.reserve(num_reserve_keypoints);
