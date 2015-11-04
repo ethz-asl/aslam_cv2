@@ -36,7 +36,7 @@ double median(RandAccessIter begin, RandAccessIter end) {
 template<typename ElementType, typename Allocator>
 void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
                          std::vector<ElementType, Allocator>* output,
-                         bool use_fixed_seed = false) {
+                         bool use_fixed_seed) {
   CHECK_NOTNULL(output)->clear();
   CHECK_GT(N, 0u);
   const size_t num_input_elements = input.size();
@@ -63,6 +63,12 @@ void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& in
     CHECK_LT(idx, num_input_elements);
     output->emplace_back(input[idx]);
   }
+}
+
+template<typename ElementType, typename Allocator>
+void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
+                         std::vector<ElementType, Allocator>* output) {
+  drawNRandomElements(input, output, false);
 }
 
 // Remove all elements except the N greatest elements. An optional action can be provided
