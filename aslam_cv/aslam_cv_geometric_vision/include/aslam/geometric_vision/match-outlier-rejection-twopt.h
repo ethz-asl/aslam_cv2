@@ -18,6 +18,7 @@ namespace gv {
 /// @param[in]  frame_k    Previous frame.
 /// @param[in]  q_Ckp1_Ck  Rotation taking points from the camera frame k to the camera frame k+1.
 /// @param[in]  matches_kp1_k The matches between the frames.
+/// @param[in]  fix_random_seed Use a fixed random seed for RANSAC.
 /// @param[in]  ransac_threshold  RANSAC threshold to consider a sample as inlier.
 ///                               The threshold is defined as:  1 - cos(max_ray_disparity_angle).
 /// @param[in]  ransac_max_iterations Max. RANSAC iterations.
@@ -28,7 +29,8 @@ bool rejectOutlierKeypointMatchesTwopt(const aslam::VisualFrame& frame_kp1,
                                        const aslam::VisualFrame& frame_k,
                                        const aslam::Quaternion& q_Ckp1_Ck,
                                        const aslam::MatchesWithScore& matches_kp1_k,
-                                       double ransac_threshold, size_t ransac_max_iterations,
+                                       bool fix_random_seed, double ransac_threshold,
+                                       size_t ransac_max_iterations,
                                        aslam::MatchesWithScore* inlier_matches_kp1_k,
                                        aslam::MatchesWithScore* outlier_matches_kp1_k);
 }  // namespace gv
