@@ -35,7 +35,8 @@ double median(RandAccessIter begin, RandAccessIter end) {
 
 template<typename ElementType, typename Allocator>
 void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
-                         std::vector<ElementType, Allocator>* output) {
+                         std::vector<ElementType, Allocator>* output,
+                         bool use_fixed_seed = false) {
   CHECK_NOTNULL(output)->clear();
   CHECK_GT(N, 0u);
   const size_t num_input_elements = input.size();
@@ -45,7 +46,9 @@ void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& in
   }
 
   // Draw random indices.
-  unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+  const unsigned int seed =
+      use_fixed_seed ? 0u : std::chrono::system_clock::now().time_since_epoch().count();
+
   std::default_random_engine generator(seed);
   std::uniform_int_distribution<int> distribution(0, N);
 
