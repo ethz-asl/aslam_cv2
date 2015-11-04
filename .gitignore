@@ -29,3 +29,6 @@
 
 # MacOS Desktop Services Store
 .DS_Store
+
+.vi_command_history
+mapapi-discovery.txt
