@@ -40,4 +40,26 @@ TEST(StlHelpers, erase_indices_aligned) {
   }
 }
 
+TEST(StlHelpers, draw_random) {
+  Aligned<std::vector, Eigen::Vector3i>::type test_vector;
+  test_vector.push_back(Eigen::Vector3i::Constant(0));
+  test_vector.push_back(Eigen::Vector3i::Constant(1));
+  test_vector.push_back(Eigen::Vector3i::Constant(2));
+  test_vector.push_back(Eigen::Vector3i::Constant(3));
+
+  Aligned<std::vector, Eigen::Vector3i>::type output;
+
+  const size_t kNum = 3;
+  aslam::common::drawNRandomElements(kNum, test_vector, &output, true);
+  EXPECT_EQ(output.size(), kNum);
+
+  output.clear();
+  aslam::common::drawNRandomElements(kNum, test_vector, &output, false);
+  EXPECT_EQ(output.size(), kNum);
+
+  output.clear();
+  aslam::common::drawNRandomElements(kNum, test_vector, &output);
+  EXPECT_EQ(output.size(), kNum);
+}
+
 ASLAM_UNITTEST_ENTRYPOINT

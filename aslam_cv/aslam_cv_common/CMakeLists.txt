@@ -28,6 +28,8 @@ set(HEADERS
   include/aslam/common/opencv-predicates.h
   include/aslam/common/pose-types.h
   include/aslam/common/predicates.h
+  include/aslam/common/reader-first-reader-writer-lock.h
+  include/aslam/common/reader-writer-lock.h
   include/aslam/common/stl-helpers.h
   include/aslam/common/thread-pool.h
   include/aslam/common/time.h
@@ -45,12 +47,14 @@ set(SOURCES
   src/channel.cc
   src/channel-serialization.cc
   src/hash-id.cc
+  src/reader-first-reader-writer-lock.cc
+  src/reader-writer-lock.cc
   src/statistics.cc
   src/thread-pool.cc
   src/timer.cc
 )
 
-cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+cs_add_library(${PROJECT_NAME} ${SOURCES})
 
 add_doxygen(NOT_AUTOMATIC)
 
@@ -92,6 +96,9 @@ target_link_libraries(test_thread-pool ${PROJECT_NAME})
 
 catkin_add_gtest(test_time test/test-time.cc)
 target_link_libraries(test_time ${PROJECT_NAME}) 
+
+catkin_add_gtest(test_reader_writer_lock_test test/reader_writer_lock_test.cc)
+target_link_libraries(test_reader_writer_lock_test ${PROJECT_NAME})
 
 ##########
 # EXPORT #
