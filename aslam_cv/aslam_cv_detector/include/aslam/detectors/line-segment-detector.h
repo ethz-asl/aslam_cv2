@@ -1,10 +1,10 @@
 #ifndef ASLAM_CV_DETECTORS_LSD
 #define ASLAM_CV_DETECTORS_LSD
+
 #include <memory>
 
-#include <Eigen/Core>
-#include <aslam/common/channel.h>
 #include <aslam/common/macros.h>
+#include <Eigen/Core>
 #include <lsd/lsd-opencv.h>
 
 #include "aslam/detectors/line.h"
@@ -26,6 +26,7 @@ class LineSegmentDetector {
 
   void detect(const cv::Mat& image, Lines* lines);
 
+  /// Draw a list of lines onto a color(!) image.
   void drawLines(const Lines& lines, cv::Mat* image);
 
  private:
