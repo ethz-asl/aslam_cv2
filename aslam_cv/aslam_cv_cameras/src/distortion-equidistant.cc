@@ -32,7 +32,7 @@ void EquidistantDistortion::distortUsingExternalCoefficients(
 
   double x2 = x*x;
   double y2 = y*y;
-  double r = point->norm();
+  double r = sqrt(x2 + y2);
 
   // Handle special case around image center.
   if (r < 1e-10) {
