@@ -148,6 +148,8 @@ public:
   /// Create a copy of this NCamera with all distortion models removed. All internal cameras
   /// get cloned and new IDs will be assigned to the cloned NCamera and all contained cameras.
   aslam::NCamera::Ptr cloneRigWithoutDistortion() const;
+
+  std::string getComparisonString(const NCamera& other) const;
 private:
   /// Internal consistency checks and initialization.
   void initInternal();
