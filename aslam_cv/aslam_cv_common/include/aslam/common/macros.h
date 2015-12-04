@@ -28,4 +28,14 @@ template<typename T, typename U> struct ArgumentType<T(U)> { typedef U Type; };
     return member_variable.end();                                       \
   }
 
+namespace aslam {
+namespace common {
+namespace macros {
+
+constexpr double kEpsilon = 1e-9;
+
+}  // namespace macros
+}  // namespace common
+}  // namespace aslam
+
 #endif  // ASLAM_COMMON_MACROS_H_
