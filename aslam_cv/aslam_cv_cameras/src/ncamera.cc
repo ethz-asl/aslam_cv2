@@ -253,7 +253,7 @@ bool NCamera::operator==(const NCamera& other) const {
     for (size_t i = 0; i < getNumCameras(); ++i) {
       same &= aslam::checkSharedEqual(cameras_[i], other.cameras_[i]);
       same &= ((T_C_B_[i].getTransformationMatrix() - other.T_C_B_[i].getTransformationMatrix())
-          .cwiseAbs().maxCoeff() < 1e-16);
+          .cwiseAbs().maxCoeff() < common::macros::kEpsilon);
     }
   }
   return same;
@@ -283,7 +283,7 @@ std::string NCamera::getComparisonString(const NCamera& other) const {
     for (size_t i = 0; i < getNumCameras(); ++i) {
       double max_coeff_diff = (T_C_B_[i].getTransformationMatrix() -
             other.T_C_B_[i].getTransformationMatrix()).cwiseAbs().maxCoeff();
-      if (max_coeff_diff >= 1e-16) {
+      if (max_coeff_diff >= common::macros::kEpsilon) {
         ss << "The maximum coefficient of camera transformation " << i
             << " differs by " << max_coeff_diff << std::endl;
         ss << "The transformation matrices are:\n" << T_C_B_[i] << "\nand\n"
