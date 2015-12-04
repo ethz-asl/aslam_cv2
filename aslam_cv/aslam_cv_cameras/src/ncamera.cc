@@ -286,9 +286,12 @@ std::string NCamera::getComparisonString(const NCamera& other) const {
       if (max_coeff_diff >= 1e-16) {
         ss << "The maximum coefficient of camera transformation " << i
             << " differs by " << max_coeff_diff << std::endl;
+        ss << "The transformation matrices are:\n" << T_C_B_[i] << "\nand\n"
+            << other.T_C_B_[i] << std::endl;
       }
       if (cameras_[i].get() != other.cameras_[i].get()) {
-        ss << "A different camera is assigned at position " << i << std::endl;
+        ss << "A different camera object is assigned at position " << i
+            << std::endl;
       }
       if (cameras_[i] && other.cameras_[i] &&
           !(*cameras_[i] == *other.cameras_[i])) {
