@@ -289,12 +289,7 @@ std::string NCamera::getComparisonString(const NCamera& other) const {
         ss << "The transformation matrices are:\n" << T_C_B_[i] << "\nand\n"
             << other.T_C_B_[i] << std::endl;
       }
-      if (cameras_[i].get() != other.cameras_[i].get()) {
-        ss << "A different camera object is assigned at position " << i
-            << std::endl;
-      }
-      if (cameras_[i] && other.cameras_[i] &&
-          !(*cameras_[i] == *other.cameras_[i])) {
+      if (!aslam::checkSharedEqual(cameras_[i], other.cameras_[i])) {
         ss << "Camera " << i << " differs" << std::endl;
       }
     }
