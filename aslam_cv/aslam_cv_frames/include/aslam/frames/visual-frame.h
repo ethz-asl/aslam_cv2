@@ -349,7 +349,7 @@ class VisualFrame  {
   static VisualFrame::Ptr createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camera,
                                                      int64_t timestamp_nanoseconds);
 
-  void discardUntrackedObservations();
+  void discardUntrackedObservations(std::vector<size_t>* discarded_indices);
 
  private:
   /// Timestamp in nanoseconds.
