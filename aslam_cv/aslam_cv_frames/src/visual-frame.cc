@@ -454,61 +454,50 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   return frame;
 }
 
-void VisualFrame::discardUntrackedObservations() {
+void VisualFrame::discardUntrackedObservations(
+    std::vector<size_t>* discarded_indices) {
+  CHECK_NOTNULL(discarded_indices)->clear();
   CHECK(hasTrackIds());
-  LOG(INFO) << 1;
   const Eigen::VectorXi& track_ids = getTrackIds();
-  LOG(INFO) << 1;
   const int original_count = track_ids.rows();
-  LOG(INFO) << 1;
-  std::vector<size_t> untracked_indices;
   for (int i = 0; i < original_count; ++i) {
     if (track_ids(i) == -1) {
-      untracked_indices.emplace_back(i);
+      discarded_indices->emplace_back(i);
     }
   }
-  LOG(INFO) << 1;
-  if (untracked_indices.empty()) {
+  if (discarded_indices->empty()) {
     return;
   }
-  LOG(INFO) << 1;
 
   if (hasKeypointMeasurements()) {
     common::stl_helpers::eraseIndicesFromContainer(
-        untracked_indices, original_count, getKeypointMeasurementsMutable());
+        *discarded_indices, original_count, getKeypointMeasurementsMutable());
   }
-  LOG(INFO) << 1;
   if (hasKeypointMeasurementUncertainties()) {
     common::stl_helpers::eraseIndicesFromContainer(
-        untracked_indices, original_count,
+        *discarded_indices, original_count,
         getKeypointMeasurementUncertaintiesMutable());
   }
-  LOG(INFO) << 1;
   if (hasKeypointOrientations()) {
     common::stl_helpers::eraseIndicesFromContainer(
-        untracked_indices, original_count, getKeypointOrientationsMutable());
+        *discarded_indices, original_count, getKeypointOrientationsMutable());
   }
-  LOG(INFO) << 1;
   if (hasKeypointScores()) {
     common::stl_helpers::eraseIndicesFromContainer(
-        untracked_indices, original_count, getKeypointScoresMutable());
+        *discarded_indices, original_count, getKeypointScoresMutable());
   }
-  LOG(INFO) << 1;
   if (hasKeypointScales()) {
     common::stl_helpers::eraseIndicesFromContainer(
-        untracked_indices, original_count, getKeypointScalesMutable());
+        *discarded_indices, original_count, getKeypointScalesMutable());
   }
-  LOG(INFO) << 1;
   if (hasDescriptors()) {
     common::stl_helpers::OneDimensionAdapter<unsigned char,
     common::stl_helpers::kColumns> adapter(getDescriptorsMutable());
     common::stl_helpers::eraseIndicesFromContainer(
-        untracked_indices, original_count, &adapter);
+        *discarded_indices, original_count, &adapter);
   }
-  LOG(INFO) << 1;
   common::stl_helpers::eraseIndicesFromContainer(
-      untracked_indices, original_count, getTrackIdsMutable());
-  LOG(INFO) << 1;
+      *discarded_indices, original_count, getTrackIdsMutable());
 }
 
 }  // namespace aslam

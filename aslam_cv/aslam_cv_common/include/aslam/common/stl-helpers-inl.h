@@ -108,34 +108,23 @@ void eraseIndicesFromContainer(
     const std::vector<size_t>& ordered_indices_to_erase,
     const size_t expected_initial_count,
     ContainerType* container) {
-  LOG(INFO) << 1;
   CHECK_NOTNULL(container);
-  LOG(INFO) << 1;
   CHECK_EQ(dynamicSize(*container), expected_initial_count);
-  LOG(INFO) << 1;
   CHECK_LT(ordered_indices_to_erase.back(), expected_initial_count);
-  LOG(INFO) << 1;
 
   if (ordered_indices_to_erase.empty()) {
     return;
   }
-  LOG(INFO) << 1;
 
   const size_t erase_count = ordered_indices_to_erase.size();
-  LOG(INFO) << 1;
   CHECK_LE(erase_count, expected_initial_count);
-  LOG(INFO) << 1;
 
   const size_t remaining_count = expected_initial_count - erase_count;
-  LOG(INFO) << 1;
   ContainerType result;
-  LOG(INFO) << 1;
   resizeDynamicDimension(remaining_count, &result);
-  LOG(INFO) << 1;
 
   int result_fill_index = 0;
   int container_block_start = 0;
-  LOG(INFO) << 1;
   for (size_t i = 0u; i < ordered_indices_to_erase.size(); ++i) {
     CHECK_GE(ordered_indices_to_erase[i], container_block_start);
     const int block_size = ordered_indices_to_erase[i] - container_block_start;
@@ -146,15 +135,23 @@ void eraseIndicesFromContainer(
     result_fill_index += block_size;
     container_block_start = ordered_indices_to_erase[i] + 1;
   }
-  LOG(INFO) << 1;
   const int last_block_size = expected_initial_count - container_block_start;
-  LOG(INFO) << 1;
   copyMiddle(container_block_start, result_fill_index, last_block_size,
              container, &result);
-  LOG(INFO) << 1;
 
   container->swap(result);
-  LOG(INFO) << 1;
+}
+
+template<typename ElementType, typename Allocator>
+void eraseIndicesFromContainer(
+    const std::vector<size_t>& ordered_indices_to_erase,
+    const size_t expected_initial_count,
+    std::vector<ElementType, Allocator>* container) {
+  CHECK_NOTNULL(container);
+  CHECK_EQ(expected_initial_count, container->size());
+  std::vector<ElementType, Allocator> result =
+      eraseIndicesFromVector(*container, ordered_indices_to_erase);
+  container->swap(result);
 }
 
 }  // namespace stl_helpers
