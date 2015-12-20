@@ -51,33 +51,39 @@ void copyMiddle(
       source->matrix->middleRows(source_start, size);
 }
 
+// The reference is necessary for proper functioning of OneDimensionAdapter
+// resizing.
 template <typename ScalarType, int Rows>
-void resizeDynamicDimension(
+void resizeDynamicDimensionLike(
     const int new_size,
+    const Eigen::Matrix<ScalarType, Rows, Eigen::Dynamic>& /*reference*/,
     Eigen::Matrix<ScalarType, Rows, Eigen::Dynamic>* matrix) {
   CHECK_NOTNULL(matrix);
   matrix->resize(Eigen::NoChange, new_size);
 }
 template <typename ScalarType, int Cols>
-void resizeDynamicDimension(
+void resizeDynamicDimensionLike(
     const int new_size,
+    const Eigen::Matrix<ScalarType, Eigen::Dynamic, Cols>& /*reference*/,
     Eigen::Matrix<ScalarType, Eigen::Dynamic, Cols>* matrix) {
   CHECK_NOTNULL(matrix);
   matrix->resize(new_size, Eigen::NoChange);
 }
 template <typename ScalarType>
-void resizeDynamicDimension(
+void resizeDynamicDimensionLike(
     const int new_size,
+    const OneDimensionAdapter<ScalarType, kColumns>& reference,
     OneDimensionAdapter<ScalarType, kColumns>* matrix) {
   CHECK_NOTNULL(matrix);
-  matrix->matrix->resize(Eigen::NoChange, new_size);
+  matrix->matrix->resize(reference.matrix->rows(), new_size);
 }
 template <typename ScalarType>
-void resizeDynamicDimension(
+void resizeDynamicDimensionLike(
     const int new_size,
+    const OneDimensionAdapter<ScalarType, kRows>& reference,
     OneDimensionAdapter<ScalarType, kRows>* matrix) {
   CHECK_NOTNULL(matrix);
-  matrix->matrix->resize(new_size, Eigen::NoChange);
+  matrix->matrix->resize(new_size, reference.matrix->cols());
 }
 
 
@@ -119,9 +125,12 @@ void eraseIndicesFromContainer(
   const size_t erase_count = ordered_indices_to_erase.size();
   CHECK_LE(erase_count, expected_initial_count);
 
+  LOG_IF(WARNING, erase_count == expected_initial_count)
+  << "All items will be removed!";
+
   const size_t remaining_count = expected_initial_count - erase_count;
   ContainerType result;
-  resizeDynamicDimension(remaining_count, &result);
+  resizeDynamicDimensionLike(remaining_count, *container, &result);
 
   int result_fill_index = 0;
   int container_block_start = 0;
