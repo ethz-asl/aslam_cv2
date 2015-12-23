@@ -192,6 +192,47 @@ TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPoints) {
   EXPECT_EQ(grid.getGridCell(15.0, 7.5)[0].id, 7u);
 }
 
+TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPointsRandom) {
+  const double kMinDistanceBetweenPoints = 5.0;
+  const double kWidth = 752.0;
+  const double kHeight = 480.0;
+  WeightedOccupancyGrid grid(kHeight, kWidth, kMinDistanceBetweenPoints,
+                             kMinDistanceBetweenPoints);
+
+  // Generate some random points.
+  const size_t kNumRandomPoints = 1e3;
+  Eigen::Matrix2Xd random_points(2, kNumRandomPoints);
+  random_points.setRandom();
+  random_points = (random_points.array() + 1.0) / 2.0;
+  random_points.row(0) *= kHeight;
+  random_points.row(1) *= kWidth;
+
+  const double kCrazyHugeScore = 10.0;
+  for (int idx = 0; idx < kNumRandomPoints; ++idx) {
+    grid.addPointOrReplaceWeakestNearestPoints(
+        Point(random_points(0,idx), random_points(1, idx),
+              kCrazyHugeScore, idx), kMinDistanceBetweenPoints);
+  }
+  const size_t initial_num_points = grid.getNumPoints();
+
+  // Let's add the same points again but with a lower score.
+  Eigen::VectorXd random_score(kNumRandomPoints);
+  random_score.setRandom();
+
+  const int kIndexSecondAddition = 1e6;
+  for (int idx = 0; idx < kNumRandomPoints; ++idx) {
+    grid.addPointOrReplaceWeakestNearestPoints(
+        Point(random_points(0,idx), random_points(1,idx),
+              random_score(idx), kIndexSecondAddition), kMinDistanceBetweenPoints);
+  }
+
+  // Make sure no points got removed.
+  EXPECT_EQ(grid.getNumPoints(), initial_num_points);
+  WeightedOccupancyGrid::PointList points;
+  grid.getAllPointsInGrid(&points);
+  EXPECT_EQ(points.size(), grid.getNumPoints());
+}
+
 TEST(OccupancyGrid, GetOccupancyMask) {
   // Create a grid with some points.
   const double kGridSize = 100.0;

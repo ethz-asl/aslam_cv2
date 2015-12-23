@@ -76,7 +76,7 @@ bool WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestIfCellFull(
     return true;
   }
 
-  // Replace the point with the lowest weight if the cell is full.
+  // Replace the point with the lowest weight if the cell is full and the
   // added point has a higher weight.
   if (cell.size() >= max_points_per_cell) {
     typename PointList::iterator it_min_weight = std::min_element(cell.begin(), cell.end());
@@ -115,9 +115,8 @@ void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
   typedef std::unordered_map<PointList* /*cell*/,
                              std::vector<size_t> /*point index*/> PointIdentifierMap;
   PointIdentifierMap distance_violating_points;
-
-  for (size_t i_row = i_row_min; i_row < i_row_max; ++i_row) {
-    for (size_t j_col = j_col_min; j_col < j_col_max; ++j_col) {
+  for (size_t i_row = i_row_min; i_row <= i_row_max; ++i_row) {
+    for (size_t j_col = j_col_min; j_col <= j_col_max; ++j_col) {
       PointList& cell = getGridCell(GridCoordinates(i_row, j_col));
 
       // Add all points of this cell to the violation list if it is too close to the input point.
@@ -149,42 +148,44 @@ void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
   distance_violating_points[&input_cell].emplace_back(input_cell.size() - 1);
 
   // Find the point with the highest score among all conflicting points.
-  WeightType highest_score = std::numeric_limits<WeightType>::lowest();
-
-  PointList* cell_highest_score = nullptr;
-  size_t index_highest_score = 0u;
+  WeightType highest_weight = std::numeric_limits<WeightType>::lowest();
+  PointList* highest_weight_cell = nullptr;
+  int highest_weight_violator_idx = -1;
 
   for (const typename PointIdentifierMap::value_type& cell_indices_pair :
         distance_violating_points) {
-    PointList& cell_to_check = *CHECK_NOTNULL(cell_indices_pair.first);
-    const std::vector<size_t>& indices_to_remove_from_cell = cell_indices_pair.second;
+    PointList& cell = *CHECK_NOTNULL(cell_indices_pair.first);
+    const std::vector<size_t>& point_indices = cell_indices_pair.second;
 
-    for (size_t cell_point_index = 0u; cell_point_index < indices_to_remove_from_cell.size();
-         ++cell_point_index) {
-      CHECK_LT(cell_point_index, cell_to_check.size());
+    for (size_t violator_index = 0u; violator_index < point_indices.size();
+         ++violator_index) {
       const WeightType point_weight =
-          cell_to_check[indices_to_remove_from_cell[cell_point_index]].weight;
+          cell[point_indices[violator_index]].weight;
 
-      if (point_weight >= highest_score) {
-        highest_score = point_weight;
-        index_highest_score = cell_point_index;
-        cell_highest_score = CHECK_NOTNULL(&cell_to_check);
+      if (point_weight > highest_weight) {
+        highest_weight = point_weight;
+        highest_weight_cell = CHECK_NOTNULL(&cell);
+        highest_weight_violator_idx = violator_index;
       }
     }
   }
+  CHECK_GT(highest_weight, std::numeric_limits<WeightType>::lowest());
+  CHECK_NOTNULL(highest_weight_cell);
+  CHECK_GE(highest_weight_violator_idx, 0);
+  CHECK_LT(highest_weight_violator_idx, distance_violating_points[highest_weight_cell].size());
 
-  // Remove the point with the highest score from the list of points to remove from the grid.
-  CHECK_NOTNULL(cell_highest_score);
-  CHECK_LT(index_highest_score, distance_violating_points[cell_highest_score].size());
-  distance_violating_points[cell_highest_score].erase(
-      distance_violating_points[cell_highest_score].begin() + index_highest_score);
+  // Exclude the point with the highest weight from the list of points to remove.
+  distance_violating_points[highest_weight_cell].erase(
+      distance_violating_points[highest_weight_cell].begin() + highest_weight_violator_idx);
 
-  // Remove the points from the grid.
+  // Now remove all the violating points from the grid.
   for (const typename PointIdentifierMap::value_type& cell_indices_pair :
       distance_violating_points) {
     PointList& cell = *CHECK_NOTNULL(cell_indices_pair.first);
     const std::vector<size_t>& indices_to_remove_from_cell = cell_indices_pair.second;
-    cell = aslam::common::eraseIndicesFromVector(cell, indices_to_remove_from_cell);
+    PointList reduced_cell =
+        aslam::common::eraseIndicesFromVector(cell, indices_to_remove_from_cell);
+    cell.swap(reduced_cell);
     current_num_points_ -= indices_to_remove_from_cell.size();
   }
 }
@@ -201,6 +202,9 @@ size_t WeightedOccupancyGrid<PointType>::getAllPointsInGrid(
       points->insert(points->end(), cell.begin(), cell.end());
     }
   }
+
+  // We just use this intermediate result to verify the internal state.
+  CHECK_EQ(points->size(), getNumPoints());
   return points->size();
 }
 
@@ -219,6 +223,16 @@ WeightedOccupancyGrid<PointType>::setConstantWeightForAllPointsInGrid(
 
 template<typename PointType>
 size_t WeightedOccupancyGrid<PointType>::getNumPoints() const {
+  //#ifdef DEBUG
+    size_t num_pts = 0;
+    for (const std::vector<PointList>& rows : grid_) {
+      for (const PointList& cell : rows) {
+        num_pts += cell.size();
+      }
+    }
+    CHECK_EQ(current_num_points_, num_pts);
+ // #endif
+
   return current_num_points_;
 }
 
@@ -328,7 +342,8 @@ template<typename PointType>
 inline typename WeightedOccupancyGrid<PointType>::GridCoordinates
 WeightedOccupancyGrid<PointType>::inputToGridCoordinates(
     CoordinatesType u_rows, CoordinatesType v_cols) {
-  CHECK(isValidInputCoordinate(u_rows, v_cols));
+  CHECK(isValidInputCoordinate(u_rows, v_cols))
+      << "u_rows: " << u_rows << ", v_cols: " << v_cols;
   const size_t grid_row = static_cast<size_t>(std::floor(u_rows / cell_size_rows_));
   const size_t grid_col = static_cast<size_t>(std::floor(v_cols / cell_size_cols_));
 
