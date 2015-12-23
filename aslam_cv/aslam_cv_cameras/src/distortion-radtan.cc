@@ -96,7 +96,7 @@ void RadTanDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd&
   CHECK_NOTNULL(point);
 
   const int n = 30;  // Max. number of iterations
-  const double tolerance = 1e-10; // Abort tolerance for iteration
+  const double tolerance = 1e-6; // Abort tolerance for iteration
 
   Eigen::Vector2d& y = *point;
   Eigen::Vector2d ybar = y;
