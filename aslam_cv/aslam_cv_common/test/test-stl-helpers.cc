@@ -27,7 +27,7 @@ TEST(StlHelpers, erase_indices_aligned) {
   test_vector.push_back(Eigen::Vector3i::Constant(1));
   test_vector.push_back(Eigen::Vector3i::Constant(2));
   test_vector.push_back(Eigen::Vector3i::Constant(3));
-  std::vector<size_t> indices_to_remove = {1, 2};
+  std::vector<size_t> indices_to_remove = {2, 1};
 
   Aligned<std::vector, Eigen::Vector3i>::type result_vector =
       aslam::common::eraseIndicesFromVector(test_vector, indices_to_remove);
