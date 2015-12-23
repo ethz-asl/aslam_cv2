@@ -47,7 +47,7 @@ TYPED_TEST_CASE(TestDistortionsNotNull, ImplementationsNoNull);
 ///////////////////////////////////////////////
 TYPED_TEST(TestDistortions, DistortAndUndistortUsingInternalParametersRandom) {
   const size_t kNumSamples = 1e5;
-  for (double i = 0; i < kNumSamples; ++i) {
+  for (int i = 0; i < kNumSamples; ++i) {
     Eigen::Vector2d keypoint = 5 * Eigen::Vector2d::Random();
     Eigen::Vector2d keypoint2 = keypoint;
 
