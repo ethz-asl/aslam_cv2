@@ -6,7 +6,7 @@
 #include <glog/logging.h>
 
 DEFINE_double(acv_inv_distortion_tolerance, 1e-8, "Convergence tolerance for iterated"
-    "inverse distortion functions.");
+              "inverse distortion functions.");
 
 namespace aslam {
 std::ostream& operator<<(std::ostream& out, const Distortion& distortion) {
