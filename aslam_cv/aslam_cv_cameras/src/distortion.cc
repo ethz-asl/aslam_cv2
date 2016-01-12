@@ -1,9 +1,12 @@
+#include "aslam/cameras/distortion.h"
+
 #include <iostream>
-#include <aslam/cameras/distortion.h>
+
+#include <gflags/gflags.h>
 #include <glog/logging.h>
 
-// TODO(slynen) Enable commented out PropertyTree support
-//#include <sm/PropertyTree.hpp>
+DEFINE_double(acv_inv_distortion_tolerance, 1e-8, "Convergence tolerance for iterated"
+    "inverse distortion functions.");
 
 namespace aslam {
 std::ostream& operator<<(std::ostream& out, const Distortion& distortion) {
@@ -15,9 +18,6 @@ Distortion::Distortion(const Eigen::VectorXd& dist_coeffs,
                        Type distortion_type)
     : distortion_coefficients_(dist_coeffs),
       distortion_type_(distortion_type) {}
-
-// TODO(slynen) Enable commented out PropertyTree support
-//Distortion::Distortion(const sm::PropertyTree& /*property_tree*/) { }
 
 bool Distortion::operator==(const Distortion& rhs) const {
   //check for same distortion type
