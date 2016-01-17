@@ -84,7 +84,7 @@ void EquidistantDistortion::distortUsingExternalCoefficients(
         * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0))
     / ((x2 + y2) * (x2 + y2 + 1.0))
     - x * y * theta * 1.0 / pow(x2 + y2, 3.0 / 2.0)
-    * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0);
+    * (k1 * theta2+ k2 * theta4 + k3 * theta6 + k4 * theta8 + 1.0);
 
     const double dvf_dv = theta * 1.0 / r * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0)
     + y * theta * 1.0 / r * ((k2 * y * theta3 * 1.0 / r * 4.0)
@@ -92,10 +92,10 @@ void EquidistantDistortion::distortUsingExternalCoefficients(
         / (x2 + y2 + 1.0) + (k4 * y * theta7* 1.0 / r * 8.0)
         / (x2 + y2 + 1.0) + (k1 * y * theta * 1.0 / r * 2.0)
         / (x2 + y2 + 1.0)) + ((y2)
-        * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0))
+        * (k1 * theta2+ k2 * theta4 + k3 * theta6+ k4 * theta8 + 1.0))
     / ((x2 + y2) * (x2 + y2 + 1.0))
     - (y2) * theta * 1.0 / pow(x2 + y2, 3.0 / 2.0)
-    * (k1 * theta2+ k2 * theta4+ k3 * theta6+ k4 * theta8 + 1.0);
+    * (k1 * theta2+ k2 * theta4 + k3 * theta6+ k4 * theta8 + 1.0);
 
     *out_jacobian << duf_du, duf_dv,
                      dvf_du, dvf_dv;
@@ -147,7 +147,6 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
   CHECK_NOTNULL(point);
 
   const int n = 30;  // Max. number of iterations
-  const double tolerance = 1e-10; // Abort tolerance for iteration
 
   Eigen::Vector2d& y = *point;
   Eigen::Vector2d ybar = y;
@@ -155,7 +154,7 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
   Eigen::Vector2d y_tmp;
 
   // Handle special case around image center.
-  if (y.squaredNorm() < 1e-15)
+  if (y.squaredNorm() < 1e-6)
     return; // Point remains unchanged.
 
   int i;
@@ -165,7 +164,7 @@ void EquidistantDistortion::undistortUsingExternalCoefficients(const Eigen::Vect
     Eigen::Vector2d e(y - y_tmp);
     Eigen::Vector2d du = (F.transpose() * F).inverse() * F.transpose() * e;
     ybar += du;
-    if (e.dot(e) <= tolerance)
+    if (e.dot(e) <= FLAGS_acv_inv_distortion_tolerance)
       break;
   }
   LOG_IF(WARNING, i >= n) << "Did not converge with max. iterations.";

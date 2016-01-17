@@ -1,13 +1,11 @@
 #ifndef ASLAM_CAMERAS_DISTORTION_H_
 #define ASLAM_CAMERAS_DISTORTION_H_
 
-#include <Eigen/Dense>
 #include <aslam/common/macros.h>
+#include <Eigen/Dense>
+#include <gflags/gflags.h>
 
-  // TODO(slynen) Enable commented out PropertyTree support
-//namespace sm {
-//class PropertyTree;
-//}
+DECLARE_double(acv_inv_distortion_tolerance);
 
 namespace aslam {
 
@@ -28,9 +26,6 @@ class Distortion {
     kFisheye = 2,
     kRadTan = 3
   };
-
-  // TODO(slynen) Enable commented out PropertyTree support
-  //  Distortion(const sm::PropertyTree& property_tree);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
