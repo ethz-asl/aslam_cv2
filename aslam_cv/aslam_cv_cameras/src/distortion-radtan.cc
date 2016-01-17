@@ -96,7 +96,6 @@ void RadTanDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd&
   CHECK_NOTNULL(point);
 
   const int n = 30;  // Max. number of iterations
-  const double tolerance = 1e-10; // Abort tolerance for iteration
 
   Eigen::Vector2d& y = *point;
   Eigen::Vector2d ybar = y;
@@ -110,7 +109,7 @@ void RadTanDistortion::undistortUsingExternalCoefficients(const Eigen::VectorXd&
     Eigen::Vector2d e(y - y_tmp);
     Eigen::Vector2d du = (F.transpose() * F).inverse() * F.transpose() * e;
     ybar += du;
-    if (e.dot(e) <= tolerance)
+    if (e.dot(e) <= FLAGS_acv_inv_distortion_tolerance)
       break;
   }
   LOG_IF(WARNING, i >= n) << "Did not converge with max. iterations.";
