@@ -7,8 +7,8 @@ namespace aslam {
 namespace common {
 namespace stl_helpers {
 
-// Not declared in header on purpose. This should be like a "private" function
-// (though it's public in practice).
+namespace internal {
+
 template <typename ScalarType, int Rows>
 void copyMiddle(
     const int source_start, const int destination_start, const int size,
@@ -108,6 +108,7 @@ size_t dynamicSize(
   return matrix.matrix->rows();
 }
 
+}  // namespace internal
 
 template <typename ContainerType>
 void eraseIndicesFromContainer(
@@ -115,7 +116,7 @@ void eraseIndicesFromContainer(
     const size_t expected_initial_count,
     ContainerType* container) {
   CHECK_NOTNULL(container);
-  CHECK_EQ(dynamicSize(*container), expected_initial_count);
+  CHECK_EQ(internal::dynamicSize(*container), expected_initial_count);
   CHECK_LT(ordered_indices_to_erase.back(), expected_initial_count);
 
   if (ordered_indices_to_erase.empty()) {
@@ -130,7 +131,7 @@ void eraseIndicesFromContainer(
 
   const size_t remaining_count = expected_initial_count - erase_count;
   ContainerType result;
-  resizeDynamicDimensionLike(remaining_count, *container, &result);
+  internal::resizeDynamicDimensionLike(remaining_count, *container, &result);
 
   int result_fill_index = 0;
   int container_block_start = 0;
@@ -138,15 +139,15 @@ void eraseIndicesFromContainer(
     CHECK_GE(ordered_indices_to_erase[i], container_block_start);
     const int block_size = ordered_indices_to_erase[i] - container_block_start;
 
-    copyMiddle(container_block_start, result_fill_index, block_size, container,
-               &result);
+    internal::copyMiddle(container_block_start, result_fill_index, block_size,
+                         container, &result);
 
     result_fill_index += block_size;
     container_block_start = ordered_indices_to_erase[i] + 1;
   }
   const int last_block_size = expected_initial_count - container_block_start;
-  copyMiddle(container_block_start, result_fill_index, last_block_size,
-             container, &result);
+  internal::copyMiddle(container_block_start, result_fill_index,
+                       last_block_size, container, &result);
 
   container->swap(result);
 }
