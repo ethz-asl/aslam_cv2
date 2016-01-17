@@ -1,9 +1,9 @@
+#include "aslam/frames/visual-frame.h"
+
 #include <memory>
 #include <aslam/common/channel-definitions.h>
 #include <aslam/common/stl-helpers.h>
 #include <aslam/common/time.h>
-
-#include "aslam/frames/visual-frame.h"
 
 namespace aslam {
 VisualFrame::VisualFrame()
@@ -460,8 +460,9 @@ void VisualFrame::discardUntrackedObservations(
   CHECK(hasTrackIds());
   const Eigen::VectorXi& track_ids = getTrackIds();
   const int original_count = track_ids.rows();
+  discarded_indices->reserve(original_count);
   for (int i = 0; i < original_count; ++i) {
-    if (track_ids(i) == -1) {
+    if (track_ids(i) < 0) {
       discarded_indices->emplace_back(i);
     }
   }
