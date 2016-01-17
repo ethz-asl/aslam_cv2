@@ -32,7 +32,7 @@ namespace aslam {
 namespace common {
 namespace macros {
 
-constexpr double kEpsilon = 1e-9;
+constexpr double kEpsilon = 1e-8;
 
 }  // namespace macros
 }  // namespace common
