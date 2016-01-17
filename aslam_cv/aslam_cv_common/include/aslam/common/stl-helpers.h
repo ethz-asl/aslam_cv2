@@ -166,7 +166,44 @@ inline std::vector<ElementType, Allocator> eraseIndicesFromVector(
   return reduced_vector;
 }
 
+namespace stl_helpers {
+
+constexpr int kColumns = 0;
+constexpr int kRows = 1;
+
+// Helps to pass the supplied dynamic matrix to functions taking containers
+// with only one dimension, such as the below eraseIndicesFromContainer().
+template <typename ScalarType, int StaticDimension>
+struct OneDimensionAdapter {
+  typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic>
+  DynamicMatrix;
+  DynamicMatrix* matrix;
+  const bool allocated_self;
+
+  OneDimensionAdapter(DynamicMatrix* _matrix)
+  : matrix(CHECK_NOTNULL(_matrix)), allocated_self(false) {}
+  OneDimensionAdapter() : matrix(new DynamicMatrix), allocated_self(true) {}
+  ~OneDimensionAdapter() {
+    if (allocated_self) {
+      delete matrix;
+    }
+  }
+
+  void swap(OneDimensionAdapter& other) {
+    matrix->swap(*other.matrix);
+  }
+};
+
+// Different implementations are available in the inline header.
+template <typename ContainerType>
+void eraseIndicesFromContainer(
+    const std::vector<size_t>& ordered_indices_to_erase,
+    const size_t expected_initial_count, ContainerType* container);
+
+}  // namespace stl_helpers
 }  // namespace common
 }  // namespace aslam
+
+#include "./stl-helpers-inl.h"
 
 #endif  // ASLAM_STL_HELPERS_H_

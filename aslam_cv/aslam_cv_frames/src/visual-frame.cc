@@ -1,6 +1,8 @@
+#include "aslam/frames/visual-frame.h"
+
 #include <memory>
-#include <aslam/frames/visual-frame.h>
 #include <aslam/common/channel-definitions.h>
+#include <aslam/common/stl-helpers.h>
 #include <aslam/common/time.h>
 
 namespace aslam {
@@ -451,4 +453,52 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   frame->setId(id);
   return frame;
 }
+
+void VisualFrame::discardUntrackedObservations(
+    std::vector<size_t>* discarded_indices) {
+  CHECK_NOTNULL(discarded_indices)->clear();
+  CHECK(hasTrackIds());
+  const Eigen::VectorXi& track_ids = getTrackIds();
+  const int original_count = track_ids.rows();
+  discarded_indices->reserve(original_count);
+  for (int i = 0; i < original_count; ++i) {
+    if (track_ids(i) < 0) {
+      discarded_indices->emplace_back(i);
+    }
+  }
+  if (discarded_indices->empty()) {
+    return;
+  }
+
+  if (hasKeypointMeasurements()) {
+    common::stl_helpers::eraseIndicesFromContainer(
+        *discarded_indices, original_count, getKeypointMeasurementsMutable());
+  }
+  if (hasKeypointMeasurementUncertainties()) {
+    common::stl_helpers::eraseIndicesFromContainer(
+        *discarded_indices, original_count,
+        getKeypointMeasurementUncertaintiesMutable());
+  }
+  if (hasKeypointOrientations()) {
+    common::stl_helpers::eraseIndicesFromContainer(
+        *discarded_indices, original_count, getKeypointOrientationsMutable());
+  }
+  if (hasKeypointScores()) {
+    common::stl_helpers::eraseIndicesFromContainer(
+        *discarded_indices, original_count, getKeypointScoresMutable());
+  }
+  if (hasKeypointScales()) {
+    common::stl_helpers::eraseIndicesFromContainer(
+        *discarded_indices, original_count, getKeypointScalesMutable());
+  }
+  if (hasDescriptors()) {
+    common::stl_helpers::OneDimensionAdapter<unsigned char,
+    common::stl_helpers::kColumns> adapter(getDescriptorsMutable());
+    common::stl_helpers::eraseIndicesFromContainer(
+        *discarded_indices, original_count, &adapter);
+  }
+  common::stl_helpers::eraseIndicesFromContainer(
+      *discarded_indices, original_count, getTrackIdsMutable());
+}
+
 }  // namespace aslam
