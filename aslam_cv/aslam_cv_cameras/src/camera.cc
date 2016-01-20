@@ -11,9 +11,6 @@
 //#include <sm/PropertyTree.hpp>
 namespace aslam {
 
-ad
-asd
-
 std::ostream& operator<< (std::ostream& out, const ProjectionResult& state) {
   std::string enum_str;
   typedef ProjectionResult::Status Status;
@@ -37,6 +34,7 @@ Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& 
       image_width_(image_width),
       image_height_(image_height),
       intrinsics_(intrinsics),
+      intrinsics_initialized_(false),
       camera_type_(camera_type),
       distortion_(std::move(distortion)) {
   CHECK_NOTNULL(distortion_.get());
@@ -50,6 +48,7 @@ Camera::Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t
       image_width_(image_width),
       image_height_(image_height),
       intrinsics_(intrinsics),
+      intrinsics_initialized_(false),
       camera_type_(camera_type),
       distortion_(new NullDistortion()) {}
 
@@ -91,6 +90,10 @@ bool Camera::saveToYaml(const std::string& yaml_file) const {
     return false;
   }
   return true;
+}
+
+bool Camera::initializeIntrinsics() { /// (DuboisF)
+  return intrinsics_initialized_;
 }
 
 const ProjectionResult Camera::project3(const Eigen::Ref<const Eigen::Vector3d>& point_3d,

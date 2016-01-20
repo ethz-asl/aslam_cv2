@@ -8,7 +8,7 @@
 #include <Eigen/Core>
 #include <glog/logging.h>
 
-#include "aslam/calibration/target-base.h"
+#include <aslam/calibration/target-base.h>
 
 namespace aslam {
 namespace calibration {

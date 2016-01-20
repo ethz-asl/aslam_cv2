@@ -162,9 +162,10 @@ class Camera {
     image_width_(other.image_width_),
     image_height_(other.image_height_),
     intrinsics_(other.intrinsics_),
+    intrinsics_initialized_(false),
     camera_type_(other.camera_type_) {
     CHECK(other.distortion_);
-  distortion_.reset(other.distortion_->clone());
+    distortion_.reset(other.distortion_->clone());
   };
 
   void operator=(const Camera&) = delete;
@@ -472,6 +473,9 @@ class Camera {
     intrinsics_ = params;
   }
 
+  /// Function to initialize Intrinsics vector. (DuboisF)
+  virtual bool initializeIntrinsics();
+
   /// Function to check whether the given intrinsic parameters are valid for this model.
   virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) = 0;
 
@@ -540,6 +544,9 @@ class Camera {
   cv::Mat_<uint8_t> mask_;
 
  protected:
+  /// \brief Status of intrinsics initialization (DuboisF).
+  bool intrinsics_initialized_;
+
   /// Parameter vector for the intrinsic parameters of the model.
   Eigen::VectorXd intrinsics_;
 
