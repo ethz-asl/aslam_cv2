@@ -11,6 +11,9 @@
 //#include <sm/PropertyTree.hpp>
 namespace aslam {
 
+ad
+asd
+
 std::ostream& operator<< (std::ostream& out, const ProjectionResult& state) {
   std::string enum_str;
   typedef ProjectionResult::Status Status;
