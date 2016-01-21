@@ -2,7 +2,6 @@
 #define ASLAM_CAMERAS_PINHOLE_CAMERA_H_
 
 #include <aslam/cameras/camera.h>
-#include <aslam/cameras/camera-pinhole-helpers.h> /// (DuboisF)
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/crtp-clone.h>
 #include <aslam/common/types.h>
@@ -245,94 +244,6 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
 
   /// Static function that checks whether the given intrinsic parameters are valid for this model.
   static bool areParametersValid(const Eigen::VectorXd& parameters);
-
-  /// Function to initialize Intrinsics vector. (DuboisF) TODO: change code
-  /// \brief initialize the intrinsics based on a list of views of a gridded calibration target
-  /// \return true on success
-  /// \brief initialize the intrinsics based on one view of a gridded calibration target
-  /// These functions are based on functions from Lionel Heng and the excellent camodocal
-  /// https://github.com/hengli/camodocal
-  //this algorithm can be used with high distortion lenses
-//  bool initializeIntrinsics(std::vector<aslam::calibration::TargetObservation::Ptr> target_observations) {
-//    SM_DEFINE_EXCEPTION(Exception, std::runtime_error);
-//    SM_ASSERT_TRUE(Exception, target_observations.size() != 0, "Need minimal one observation");
-//
-//    // First, initialize the image center at the center of the image.
-//    intrinsics_[Parameters::kCu] = (target_observations[0].imCols() - 1.0) / 2.0;
-//    intrinsics_[Parameters::kCv] = (target_observations[0].imRows() - 1.0) / 2.0;
-//    //_ru = target_observations[0].imCols();
-//    //_rv = target_observations[0].imRows();
-//    distortion_.reset(new NullDistortion);
-//
-//    //process all images
-//    size_t nImages = target_observations.size();
-//
-//    // Initialize focal length
-//    // C. Hughes, P. Denny, M. Glavin, and E. Jones,
-//    // Equidistant Fish-Eye Calibration and Rectification by Vanishing Point
-//    // Extraction, PAMI 2010
-//    // Find circles from rows of chessboard corners, and for each pair
-//    // of circles, find vanishing points: v1 and v2.
-//    // f = ||v1 - v2|| / PI;
-//    std::vector<double> f_guesses;
-//
-//    for (size_t i=0; i<nImages; ++i) {
-//      const aslam::calibration::TargetObservation::Ptr& obs = target_observations.at(i);
-//      SM_ASSERT_TRUE(Exception, obs->getTarget(), "The TargetObservation has no target object");
-//      ConstPtr & target = *obs->getTarget();
-//
-//      std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d>> center(target.rows());
-//      double radius[target.rows()];
-//      bool skipImage=false;
-//
-//      for (size_t r=0; r<target.rows(); ++r) {
-//        std::vector<cv::Point2d> circle;
-//        for (size_t c=0; c<target.cols(); ++c) {
-//          Eigen::Vector2d imagePoint;
-//          Eigen::Vector3d gridPoint;
-//
-//          if (obs.imageGridPoint(r, c, imagePoint))
-//            circle.push_back(cv::Point2f(imagePoint[0], imagePoint[1]));
-//          else
-//            //skip this image if the board view is not complete
-//            skipImage=true;
-//        }
-//        PinholeHelpers::fitCircle(circle, center[r](0), center[r](1), radius[r]);
-//      }
-//
-//      if(skipImage)
-//        continue;
-//
-//      for (size_t j=0; j<target.rows(); ++j)
-//      {
-//        for (size_t k=j+1; k<target.cols(); ++k)
-//        {
-//          // find distance between pair of vanishing points which
-//          // correspond to intersection points of 2 circles
-//          std::vector < cv::Point2d > ipts;
-//          ipts = PinholeHelpers::intersectCircles(center[j](0), center[j](1),
-//                                                  radius[j], center[k](0), center[k](1), radius[k]);
-//          if (ipts.size()<2)
-//            continue;
-//
-//           double f_guess = cv::norm(ipts.at(0) - ipts.at(1)) / M_PI;
-//           f_guesses.push_back(f_guess);
-//        }
-//      }
-//    }
-//
-//    //get the median of the guesses
-//    if(f_guesses.empty())
-//      return intrinsics_initialized_ = false;
-//    double f0 = PinholeHelpers::medianOfVectorElements(f_guesses);
-//
-//    //set the estimate
-//    intrinsics_[Parameters::kFu] = f0;
-//    intrinsics_[Parameters::kFv] = f0;
-//    //updateTemporaries();
-//
-//    return intrinsics_initialized_ = true;
-//  }
 
   /// Function to check whether the given intrinsic parameters are valid for this model.
   virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
