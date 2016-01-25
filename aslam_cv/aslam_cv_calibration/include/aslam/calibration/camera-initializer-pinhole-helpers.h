@@ -1,3 +1,6 @@
+#ifndef ASLAM_CALIBRATION_CAMERA_INITIALIZER_PINHOLE_HELPERS_H
+#define ASLAM_CALIBRATION_CAMERA_INITIALIZER_PINHOLE_HELPERS_H
+
 class PinholeHelpers {
  public:
 
@@ -10,7 +13,7 @@ class PinholeHelpers {
     return sqrt(square(a) + square(b));
   }
 
-  static std::vector<cv::Point2d> intersectCircles(double x1, double y1, double r1,
+  static std::vector<cv::Point2d> * intersectCircles(double x1, double y1, double r1,
                                             double x2, double y2, double r2) {
     std::vector<cv::Point2d> ipts;
 
@@ -33,13 +36,13 @@ class PinholeHelpers {
 
     if (h < 1e-10) {
       // Two circles touch at one point.
-      ipts.emplace_back(cv::Point2d(x3, y3));
+      ipts.emplace_back(x3, y3);
       return ipts;
     }
 
-    ipts.emplace_back(cv::Point2d(x3 + h * (y2 - y1) / d, y3 - h * (x2 - x1) / d));
-    ipts.emplace_back(cv::Point2d(x3 - h * (y2 - y1) / d, y3 + h * (x2 - x1) / d));
-    return ipts;
+    ipts.emplace_back(x3 + h * (y2 - y1) / d, y3 - h * (x2 - x1) / d);
+    ipts.emplace_back(x3 - h * (y2 - y1) / d, y3 + h * (x2 - x1) / d);
+    return &ipts;
   }
 
   static void fitCircle(const std::vector<cv::Point2d>& points, double& center_x,
@@ -94,3 +97,5 @@ class PinholeHelpers {
   }
 
 }; // class PinholeHelpers
+
+#endif  // ASLAM_CALIBRATION_CAMERA_INITIALIZER_PINHOLE_HELPERS_H
