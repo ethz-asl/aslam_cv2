@@ -37,8 +37,8 @@ class CameraInitializer  {
    CHECK_NOTNULL(obs.getTarget()) << "No target found";
 
    // First, initialize the image center at the center of the image.
-   camera->get()->Parameters::kCu;intrinsics_[Parameters::kCu] = (obs.getTarget()->cols() - 1.0) / 2.0;
-   camera->get()->intrinsics_[3] = (obs.getTarget()->rows() - 1.0) / 2.0;
+   camera->get()->intrinsics_[camera->get()->Parameters::kCu] = (obs.getTarget()->cols() - 1.0) / 2.0;
+   camera->get()->intrinsics_[camera->get()->Parameters::kCv] = (obs.getTarget()->rows() - 1.0) / 2.0;
    //_ru = obs.target_->cols();
    //_rv = obs.target_->rows();
    camera->get()->distortion_.reset(new NullDistortion);
@@ -100,8 +100,8 @@ class CameraInitializer  {
    double f0 = aslam::common::median(f_guesses.begin(), f_guesses.end());
 
    //Sets the estimate.
-   camera->get()->intrinsics_[0] = f0;
-   camera->get()->intrinsics_[1] = f0;
+   camera->get()->intrinsics_[camera->get()->Parameters::kFu] = f0;
+   camera->get()->intrinsics_[camera->get()->Parameters::kFv] = f0;
 
    return true;
   }
