@@ -1,5 +1,7 @@
 #include <aslam/cameras/camera-factory.h>
 
+#include <glog/logging.h>
+
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
@@ -16,7 +18,7 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
                          const Eigen::VectorXd& distortion_parameters,
                          Camera::Type camera_type,
                          Distortion::Type distortion_type) {
-  CHECK(id.isValid());
+  CHECK(id.isValid()) << "Invalid camera id.";
 
   Distortion::UniquePtr distortion;
   switch(distortion_type) {
