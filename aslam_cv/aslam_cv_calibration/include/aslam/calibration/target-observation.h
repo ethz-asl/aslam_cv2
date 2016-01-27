@@ -3,6 +3,8 @@
 
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
+
 
 #include <aslam/common/macros.h>
 #include <Eigen/Core>
@@ -18,9 +20,13 @@ class TargetObservation  {
   ASLAM_POINTER_TYPEDEFS(TargetObservation);
 
   TargetObservation(const TargetBase::Ptr& target,
+                    const uint32_t image_height,
+                    const uint32_t image_width,
                     const Eigen::VectorXi& corner_ids,
                     const Eigen::Matrix2Xd& image_corners)
    : target_(target),
+     image_height(0),
+     image_width(0),
      corner_ids_(corner_ids),
      image_corners_(image_corners) {
     CHECK(target);
@@ -32,6 +38,33 @@ class TargetObservation  {
 
   TargetBase::Ptr getTarget() { return target_; };
   TargetBase::ConstPtr getTarget() const { return target_; };
+
+  uint32_t getImageWidth() { return image_width; };
+  uint32_t getImageHeight() { return image_height; };
+
+  /// Checks whether id contained in target's id set.
+  bool completeImage(size_t r, size_t c, Eigen::Vector2d & outPoint) {
+    CHECK(target_) << "The target is not set";
+
+    size_t corner_id = target_->gridCoordinatesToPoint(r, c);
+
+    // Construct temporary vector.
+    std::vector<int> ids_vector;
+    ids_vector.resize(corner_ids_.size());
+    Eigen::VectorXi::Map(&ids_vector[0], corner_ids_.size()) = corner_ids_;
+
+    // Copy id vector into unordered list.
+    std::unordered_set<int> ids_set;
+    std::copy(ids_vector.begin(), ids_vector.end(), std::inserter(ids_set, ids_set.end()));
+
+    if (ids_set.count(corner_id) == 1) {
+      outPoint = getObservedCorners().row(corner_id);
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
 
   size_t numObservedCorners() const {
     return corner_ids_.size();
@@ -71,6 +104,8 @@ class TargetObservation  {
   };
 
   const TargetBase::Ptr target_;
+  const uint32_t image_height;
+  const uint32_t image_width;
   const Eigen::VectorXi corner_ids_;
   const Eigen::Matrix2Xd image_corners_;
 

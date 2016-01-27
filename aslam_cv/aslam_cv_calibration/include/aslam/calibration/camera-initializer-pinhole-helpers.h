@@ -1,6 +1,12 @@
 #ifndef ASLAM_CALIBRATION_CAMERA_INITIALIZER_PINHOLE_HELPERS_H
 #define ASLAM_CALIBRATION_CAMERA_INITIALIZER_PINHOLE_HELPERS_H
 
+#include <opencv2/core/eigen.hpp>
+#include <Eigen/Core>
+
+namespace aslam {
+namespace calibration {
+
 class PinholeHelpers {
  public:
 
@@ -20,12 +26,12 @@ class PinholeHelpers {
     double d = hypot(x1 - x2, y1 - y2);
     if (d > r1 + r2) {
       // Circles do not intersect.
-      return ipts;
+      return &ipts;
     }
 
     if (d < fabs(r1 - r2)) {
       // One circle is contained within the other.
-      return ipts;
+      return &ipts;
     }
 
     double a = (square(r1) - square(r2) + square(d)) / (2.0 * d);
@@ -37,7 +43,7 @@ class PinholeHelpers {
     if (h < 1e-10) {
       // Two circles touch at one point.
       ipts.emplace_back(x3, y3);
-      return ipts;
+      return &ipts;
     }
 
     ipts.emplace_back(x3 + h * (y2 - y1) / d, y3 - h * (x2 - x1) / d);
@@ -45,8 +51,9 @@ class PinholeHelpers {
     return &ipts;
   }
 
-  static void fitCircle(const std::vector<cv::Point2d>& points, double& center_x,
-                        double& center_y, double& radius) {
+  static void fitCircle(const std::vector<cv::Point2d>& points,
+                        double& center_x, double& center_y,
+                        double& radius) {
     // D. Umbach, and K. Jones, A Few Methods for Fitting Circles to Data,
     // IEEE Transactions on Instrumentation and Measurement, 2000
     // We use the modified least squares method.
@@ -97,5 +104,8 @@ class PinholeHelpers {
   }
 
 }; // class PinholeHelpers
+
+}  // namespace calibration
+}  // namespace aslam
 
 #endif  // ASLAM_CALIBRATION_CAMERA_INITIALIZER_PINHOLE_HELPERS_H
