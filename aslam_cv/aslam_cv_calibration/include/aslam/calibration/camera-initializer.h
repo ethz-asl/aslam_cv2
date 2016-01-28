@@ -49,9 +49,7 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera>(
   std::vector<double> f_guesses;
 
   for (size_t i=0; i<nImages; ++i) {
-    std::cout << "Image: " << i << " of " << nImages << "\n";
     TargetObservation::Ptr obs = observations.at(i);
-    LOG(INFO) << "Target size= " << obs->getTarget()->size();
     CHECK(!obs->getTarget()->size() == 0) << "The TargetObservation has no target object.";
     const TargetBase current_target = *obs->getTarget();
 
@@ -65,17 +63,17 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera>(
         Eigen::Vector2d image_point;
         Eigen::Vector3d grid_point;
 
-        if (obs->completeImage(r, c, image_point)) {
+        if (obs->checkIdinImage(r, c, image_point)) {
           circle.emplace_back(cv::Point2d(image_point(0), image_point(1)));
         }
         else {
-          //Skips this image if the board view is not complete.
+          // Skips this image if corner id not part of image id set.
           skip_image = true;
         }
       }
       PinholeHelpers::fitCircle(circle, center[r](0), center[r](1), radius[r]);
     }
-    std::cout << "(debug)skip_image= " << skip_image << "\n\n";
+
     if(skip_image){
       delete [] radius;
       continue;
