@@ -22,6 +22,12 @@ cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 add_doxygen(NOT_AUTOMATIC)
 
 ##########
+# GTESTS #
+##########
+catkin_add_gtest(test_ncamera test/test-ncamera.cc)
+target_link_libraries(test_ncamera ${PROJECT_NAME})
+
+##########
 # EXPORT #
 ##########
 cs_install()
