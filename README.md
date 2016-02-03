@@ -1,7 +1,9 @@
-aslam_cv2
-=========
+aslam_cv2_basic
+===============
 
 Refactored computer vision algorithms for the ASL.
+
+This constitutes the formerly private part of aslam_cv2 that can now be shared with RPG and other ASL partners.
 
 Before adding to this library, please read the following pages:
 
