@@ -117,6 +117,9 @@ class Accumulator {
   SampleType max_;
   SampleType most_recent_;
 };
+
+typedef Accumulator<double, double, -1> Accumulatord;
+
 }       // namespace statistics
 }       // namespace aslam
 
