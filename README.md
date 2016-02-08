@@ -1,5 +1,5 @@
-aslam_cv2
-=========
+aslam_cv2_basic
+===============
 
 Refactored computer vision algorithms for the ASL.
 
