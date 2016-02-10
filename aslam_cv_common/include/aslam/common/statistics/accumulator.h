@@ -8,9 +8,8 @@
 
 namespace aslam {
 namespace statistics {
-static const int kInfiniteWindowSize = std::numeric_limits<int>::max();
-// If the window size is set to -1, the vector will grow infinitely, otherwise,
-// the vector has a fixed size.
+static constexpr int kInfiniteWindowSize = std::numeric_limits<int>::max();
+
 template<typename SampleType, typename SumType, int WindowSize>
 class Accumulator {
  public:
@@ -118,7 +117,7 @@ class Accumulator {
   SampleType most_recent_;
 };
 
-typedef Accumulator<double, double, -1> Accumulatord;
+typedef Accumulator<double, double, kInfiniteWindowSize> Accumulatord;
 
 }       // namespace statistics
 }       // namespace aslam
