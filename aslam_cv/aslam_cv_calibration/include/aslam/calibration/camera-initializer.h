@@ -102,7 +102,7 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera>(
    if(f_guesses.empty()) { return false; }
    double f0 = aslam::common::median(f_guesses.begin(), f_guesses.end());
 
-   // Sets the first initrinsics estimate.
+   // Sets the first intrinsics estimate.
    intrinsics_vector.resize(aslam::PinholeCamera::parameterCount());
    intrinsics_vector(PinholeCamera::kFu) = f0;
    intrinsics_vector(PinholeCamera::kFv) = f0;

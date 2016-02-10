@@ -3,8 +3,6 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
-#include <geometric-vision/pnp-pose-estimator.h>
-
 #include <aslam/calibration/camera-initializer.h>
 #include <aslam/calibration/target-aprilgrid.h>
 #include <aslam/calibration/target-observation.h>
@@ -18,80 +16,71 @@
 namespace aslam {
 TEST(TestNCameraInitIntrinsics, testInitIntrinsics_pinhole) {
 
-  // Generate target_observations
-  std::vector<aslam::calibration::TargetObservation::Ptr> target_observations;
-  target_observations.reserve(3);
-  for (int i = 0; i < 3; ++i) {
+// Create a target April grid.
+  calibration::TargetAprilGrid::TargetConfiguration aprilgrid_config;
+  calibration::TargetAprilGrid::Ptr aprilgrid(
+      new calibration::TargetAprilGrid(aprilgrid_config));
 
-    calibration::TargetObservation::Ptr observation(  //TODO(duboisf):fill in parameters
-        calibration::TargetObservation(const calibration::TargetBase::Ptr& target,
-                                       const uint32_t im_height,
-                                       const uint32_t im_width,
-                                       const Eigen::VectorXi& corner_ids,
-                                       const Eigen::Matrix2Xd& image_corners));
+// Get all target grid points in the target frame.
+  Eigen::Matrix3Xd points_target_frame = aprilgrid->points();
 
-    // Only keep the observation if it was successful.
-    if (observation) {
-      target_observations.emplace_back(observation);
-    }
-  }
+// Create a random camera pose and the corresponding transformation TODO(duboisf): inputs?
+  kindr::minimal::QuatTransformationTemplate::Vector6 camera_pose_t_r(1, 2, 3, 0, 0, 0);
+  Transformation T_CT = kindr::minimal::QuatTransformationTemplate(camera_pose_t_r);
 
-  // Calculate intrinsics.
-  Eigen::VectorXd calc_intrinsics;
-  ASSERT_TRUE(calibration::initializeCameraIntrinsics<PinholeCamera>(calc_intrinsics, target_observations));
+// Setup random check parameters.
+  uint32_t im_width = 420;
+  uint32_t im_height = 380;
+  Eigen::VectorXd test_intrinsics(100, 200, 350, 250);  // order: FU, FV, CU, CV
+  Eigen::Vector4d null_distortion(0.0, 0.0, 0.0 , 0.0);
 
-  // Create test projection camera.
-  Camera::Ptr testCamera = aslam::createCamera(
-        aslam::CameraId::Random(),
-        calc_intrinsics,
-        target_observations[0]->getImageWidth(), target_observations[0]->getImageHeight(),
-        Eigen::Vector4d(0.0, 0.0, 0.0 , 0.0),
+// Create test projection camera (NullDistortion, given focal length and principal point).
+// TODO(duboisf): test different camera/distortion models
+  Camera::Ptr testCamera = createCamera(
+        CameraId::Random(),
+        test_intrinsics,
+        im_width, im_height,
+        null_distortion,
         Camera::Type::kPinhole,
         Distortion::Type::kRadTan);
-  ASSERT_NE(testCamera, nullptr);
+  ASSERT_NE(testCamera, nullptr) << "Test camera cannot be created.";
 
-  // Setup matching.
-  constexpr bool kRunNonlinearRefinement = true;
-  const double kPixelSigma = 1.0;
-  const int kMaxRansacIters = 200;
-  geometric_vision::PnpPoseEstimator pnp(kRunNonlinearRefinement);
+// Transform all points in the target frame T_p into the camera frame.
+  Eigen::Matrix3Xd  points_camera_frame = T_CT * points_target_frame;
 
-  size_t frame_id = 0;
-  for (const aslam::calibration::TargetObservation::Ptr& obs : target_observations) {
-    CHECK(obs);
-    const Eigen::Matrix2Xd& keypoints_measured = obs->getObservedCorners();
-    const Eigen::Matrix3Xd G_corner_positions = obs->getCorrespondingTargetPoints();
+// Project points into the image plane.
+  Eigen::Vector2d* image_points;
+  testCamera->project3(points_camera_frame, image_points);
 
-    aslam::Transformation T_G_C;
-    std::vector<int> inliers;
-    int num_iters = 0;
-    bool pnp_success = pnp.absolutePoseRansacPinholeCam(
-        keypoints_measured, G_corner_positions, kPixelSigma, kMaxRansacIters, testCamera, &T_G_C,
-        &inliers, &num_iters);
+// Combine image_points with TargetAprilGrid to a simulated TargetObservation.
 
-    // Reproject the corners.
-    Eigen::Matrix3Xd C_corner_positions =
-        T_G_C.inverse().transformVectorized(G_corner_positions);
+// Create target observation (one image). TODO
+  std::vector<aslam::calibration::TargetObservation::Ptr> target_observations;
+  target_observations.reserve(1);
 
-    Eigen::Matrix2Xd keypoints_reprojected;
-    std::vector<aslam::ProjectionResult> projection_result;
-    testCamera->project3Vectorized(C_corner_positions, &keypoints_reprojected, &projection_result);
+  Eigen::VectorXi corner_ids;
 
-    CHECK_EQ(obs->numObservedCorners(), static_cast<size_t>(keypoints_measured.cols()));
-    for (size_t idx = 0u; idx < obs->numObservedCorners(); ++idx) {
-      const bool pnp_inlier =
-          (std::find(inliers.begin(), inliers.end(), static_cast<int>(idx)) != inliers.end());
+  calibration::TargetObservation::Ptr target_observation;
+  target_observation->TargetObservation(
+      aprilgrid->TargetBase(aprilgrid->rows_, aprilgrid->cols_, aprilgrid->points_target_frame_),
+      im_height,
+      im_width,
+      corner_ids, // TODO
+      image_points);
 
-      // Test reprojection error.
-      EXPECT_EQ(keypoints_measured(0, idx), keypoints_reprojected(0, idx))
-        << frame_id << ", " << obs->getObservedCornerIds()(idx) << ", "
-        << keypoints_measured(0, idx) << ", " << keypoints_reprojected(0, idx) << "\n";
-      EXPECT_EQ(keypoints_measured(1, idx), keypoints_reprojected(1, idx))
-        << frame_id << ", " << obs->getObservedCornerIds()(idx) << ", "
-        << keypoints_measured(1, idx) << ", " << keypoints_reprojected(1, idx) << "\n";
-    }
-    ++frame_id;
-  }
+  target_observations.emplace_back(target_observation);
+
+// Initialize the intrinsics using this observation.
+  Eigen::VectorXd calc_intrinsics;
+  ASSERT_TRUE(calibration::initializeCameraIntrinsics<PinholeCamera>(calc_intrinsics,
+                                                                     target_observations))
+      << "Intrinsics initialization failed.";
+
+// Compare the result against the simulated values.
+  ASSERT_EQ(test_intrinsics, calc_intrinsics)
+      << "Intrinsics incorrect.\n"
+      << "(check) " << test_intrinsics << "  vs.  " << calc_intrinsics << " (calculated) \n\n";
+
 
 }
 }  // namespace aslam

@@ -19,7 +19,7 @@ namespace calibration {
 /// \brief Aprilgrid calibration target.
 ///        num_tag_rows:              number of tags in y-dir
 ///        num_tag_cols:              number of tags in x-dir
-///        tag_size_meter:            size of a t ag [m]
+///        tag_size_meter:            size of a tag [m]
 ///        tag_inbetween_space_meter: space between tags [m]
 ///
 ///        Corner ordering :
