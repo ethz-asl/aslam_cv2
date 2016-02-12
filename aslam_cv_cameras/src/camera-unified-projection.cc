@@ -5,7 +5,6 @@
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/types.h>
-#include <aslam/common/undistort-helpers.h>
 
 namespace aslam {
 std::ostream& operator<<(std::ostream& out,

@@ -5,33 +5,12 @@
 
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/common/types.h>
-#include <aslam/common/undistort-helpers.h>
-
-// TODO(slynen) Enable commented out PropertyTree support
-//#include <sm/PropertyTree.hpp>
 
 namespace aslam {
 std::ostream& operator<<(std::ostream& out, const PinholeCamera& camera) {
   camera.printParameters(out, std::string(""));
   return out;
 };
-
-// TODO(slynen) Enable commented out PropertyTree support
-//PinholeCamera::PinholeCamera(
-//    const sm::PropertyTree & config)
-//: Camera(config) {
-//  _fu = config.getDouble("fu");
-//  _fv = config.getDouble("fv");
-//  _cu = config.getDouble("cu");
-//  _cv = config.getDouble("cv");
-//  imageWidth() = config.getInt("ru");
-//  imageHeight() = config.getInt("rv");
-//
-//  //TODO(slynen): Load and instantiate correct distortion here.
-//  // distortion.(config, "distortion")
-//  CHECK(false) << "Loading of distortion from property tree not implemented.";
-//
-//}
 
 PinholeCamera::PinholeCamera()
     : Base(Eigen::Vector4d::Zero(), 0, 0, Camera::Type::kPinhole) {}
