@@ -119,8 +119,10 @@ TYPED_TEST(TestCameras, InitializeIntrinsics) {
     target_observations.emplace_back(target_observation);
 
     // Initialize the intrinsics using this observation.
-    ASSERT_TRUE(aslam::calibration::initializeCameraIntrinsics<PinholeCamera>(
-        calc_intrinsics, target_observations)) << "Intrinsics initialization failed.";
+    bool intrinsics_success =
+        aslam::calibration::initializeCameraIntrinsics<type_camera, type_distortion>
+        (calc_intrinsics, target_observations);
+    ASSERT_TRUE(intrinsics_success) << "Intrinsics initialization failed.";
 
     // Compare the result against the simulated values.
     EXPECT_TRUE(fabs(double(test_intrinsics(0) - calc_intrinsics(0))) / test_intrinsics(0)  < 0.1);
