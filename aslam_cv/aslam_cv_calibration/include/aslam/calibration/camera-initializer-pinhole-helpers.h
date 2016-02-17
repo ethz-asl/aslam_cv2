@@ -19,19 +19,19 @@ class PinholeHelpers {
     return sqrt(square(a) + square(b));
   }
 
-  static std::vector<cv::Point2d> * intersectCircles(double x1, double y1, double r1,
-                                            double x2, double y2, double r2) {
-    std::vector<cv::Point2d> ipts;
+  static void intersectCircles(std::vector<cv::Point2d>& ipts,
+                          double x1, double y1, double r1,
+                          double x2, double y2, double r2) {
 
     double d = hypot(x1 - x2, y1 - y2);
     if (d > r1 + r2) {
       // Circles do not intersect.
-      return &ipts;
+      return;
     }
 
     if (d < fabs(r1 - r2)) {
       // One circle is contained within the other.
-      return &ipts;
+      return;
     }
 
     double a = (square(r1) - square(r2) + square(d)) / (2.0 * d);
@@ -42,18 +42,17 @@ class PinholeHelpers {
 
     if (h < 1e-10) {
       // Two circles touch at one point.
-      ipts.emplace_back(x3, y3);
-      return &ipts;
+      ipts.emplace_back(cv::Point2d(x3, y3));
+      return;
     }
 
-    ipts.emplace_back(x3 + h * (y2 - y1) / d, y3 - h * (x2 - x1) / d);
-    ipts.emplace_back(x3 - h * (y2 - y1) / d, y3 + h * (x2 - x1) / d);
-    return &ipts;
+    ipts.emplace_back(cv::Point2d(x3 + h * (y2 - y1) / d, y3 - h * (x2 - x1) / d));
+    ipts.emplace_back(cv::Point2d(x3 - h * (y2 - y1) / d, y3 + h * (x2 - x1) / d));
+    return;
   }
 
   static void fitCircle(const std::vector<cv::Point2d>& points,
-                        double& center_x, double& center_y,
-                        double& radius) {
+                        double& center_x, double& center_y, double& radius) {
     // D. Umbach, and K. Jones, A Few Methods for Fitting Circles to Data,
     // IEEE Transactions on Instrumentation and Measurement, 2000
     // We use the modified least squares method.
@@ -86,10 +85,8 @@ class PinholeHelpers {
     double A = n * sum_xx - square(sum_x);
     double B = n * sum_xy - sum_x * sum_y;
     double C = n * sum_yy - square(sum_y);
-    double D = 0.5 *
-        (n * sum_xyy - sum_x * sum_yy + n * sum_xxx - sum_x * sum_xx);
-    double E = 0.5 *
-        (n * sum_xxy - sum_y * sum_xx + n * sum_yyy - sum_y * sum_yy);
+    double D = 0.5 * (n * sum_xyy - sum_x * sum_yy + n * sum_xxx - sum_x * sum_xx);
+    double E = 0.5 * (n * sum_xxy - sum_y * sum_xx + n * sum_yyy - sum_y * sum_yy);
 
     center_x = (D * C - B * E) / (A * C - square(B));
     center_y = (A * E - B * D) / (A * C - square(B));

@@ -43,22 +43,21 @@ class TargetObservation  {
   uint32_t getImageHeight() { return image_height; };
 
   /// Checks whether id contained in target's id set.
-  bool checkIdinImage(size_t r, size_t c, Eigen::Vector2d & outPoint) {
+  bool checkIdinImage(size_t r, size_t c) {
     CHECK(target_) << "The target is not set";
 
     size_t corner_id = target_->gridCoordinatesToPoint(r, c);
 
     // Construct temporary vector.
     std::vector<int> ids_vector;
-    ids_vector.resize(corner_ids_.size());
-    Eigen::VectorXi::Map(&ids_vector[0], corner_ids_.size()) = corner_ids_;
+    ids_vector.resize(numObservedCorners());
+    Eigen::VectorXi::Map(&ids_vector[0], numObservedCorners()) = corner_ids_;
 
     // Copy id vector into unordered list.
     std::unordered_set<int> ids_set;
     std::copy(ids_vector.begin(), ids_vector.end(), std::inserter(ids_set, ids_set.end()));
 
     if (ids_set.count(corner_id) == 1) {
-      outPoint = getObservedCorners().row(corner_id);
       return true;
     }
     else {
@@ -72,8 +71,8 @@ class TargetObservation  {
 
       // Construct temporary vector.
       std::vector<int> ids_vector;
-      ids_vector.resize(corner_ids_.size());
-      Eigen::VectorXi::Map(&ids_vector[0], corner_ids_.size()) = corner_ids_;
+      ids_vector.resize(numObservedCorners());
+      Eigen::VectorXi::Map(&ids_vector[0], numObservedCorners()) = corner_ids_;
 
       // Copy id vector into unordered list.
       std::unordered_set<int> ids_set;
@@ -93,6 +92,10 @@ class TargetObservation  {
 
   const Eigen::Matrix2Xd& getObservedCorners() const {
     return image_corners_;
+  }
+
+  const Eigen::Vector2d getObservedCorner(size_t idx) const {
+    return image_corners_.col(idx);
   }
 
   const Eigen::VectorXi& getObservedCornerIds() const {

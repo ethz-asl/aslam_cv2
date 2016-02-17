@@ -24,8 +24,8 @@ add_doxygen(NOT_AUTOMATIC)
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_ncamera test/test-ncamera.cc)
-target_link_libraries(test_ncamera ${PROJECT_NAME})
+catkin_add_gtest(test_initIntrinsics test/test-initIntrinsics.cc)
+target_link_libraries(test_initIntrinsics ${PROJECT_NAME})
 
 ##########
 # EXPORT #
