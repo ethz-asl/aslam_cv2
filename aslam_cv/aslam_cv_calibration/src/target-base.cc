@@ -38,6 +38,17 @@ size_t TargetBase::gridCoordinatesToPoint(size_t row_idx, size_t col_idx) const 
   return point_idx;
 }
 
+Eigen::VectorXi TargetBase::setCornerIds() const {   //for April tags, by now.
+  Eigen::VectorXi corner_ids(rows()*cols());
+  for (size_t tag_row_idx = 0; tag_row_idx < rows(); ++tag_row_idx) {
+    for (size_t tag_col_idx = 0; tag_col_idx < cols(); ++tag_col_idx) {
+      size_t tag_idx = tag_row_idx * rows() + tag_col_idx;
+      corner_ids(tag_idx) = tag_idx;
+    }
+  }
+  return corner_ids;
+}
+
 Eigen::Vector3d TargetBase::gridPoint(size_t row_idx, size_t col_idx) const {
   return points_target_frame_.col(gridCoordinatesToPoint(row_idx, col_idx));
 }
