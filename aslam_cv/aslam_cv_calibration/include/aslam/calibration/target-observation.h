@@ -69,16 +69,16 @@ class TargetObservation  {
     bool checkImagecomplete() {
       CHECK(target_) << "The target is not set";
 
-      // Construct temporary vector.
-      std::vector<int> ids_vector;
-      ids_vector.resize(numObservedCorners());
-      Eigen::VectorXi::Map(&ids_vector[0], numObservedCorners()) = corner_ids_;
+//      // Construct temporary vector.
+//      std::vector<int> ids_vector;
+//      ids_vector.resize(numObservedCorners());
+//      Eigen::VectorXi::Map(&ids_vector[0], numObservedCorners()) = corner_ids_;
+//
+//      // Copy id vector into unordered list.
+//      std::unordered_set<int> ids_set;
+//      std::copy(ids_vector.begin(), ids_vector.end(), std::inserter(ids_set, ids_set.end()));
 
-      // Copy id vector into unordered list.
-      std::unordered_set<int> ids_set;
-      std::copy(ids_vector.begin(), ids_vector.end(), std::inserter(ids_set, ids_set.end()));
-
-      if (ids_set.size() == numObservedCorners()) {
+      if (target_->size() == numObservedCorners()) {
         return true;
       }
       else {
