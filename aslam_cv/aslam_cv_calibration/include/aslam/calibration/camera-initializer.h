@@ -7,10 +7,18 @@
 
 #include <glog/logging.h>
 
-#include <aslam/calibration/camera-initializer-pinhole-helpers.h>
+#include <aslam/calibration/camera-initializer-helpers.h>
 #include <aslam/calibration/target-observation.h>
+
+#include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera-pinhole.h>
+#include <aslam/cameras/camera-unified-projection.h>
+#include <aslam/cameras/distortion.h>
+#include <aslam/cameras/distortion-equidistant.h>
+#include <aslam/cameras/distortion-fisheye.h>
+#include <aslam/cameras/distortion-radtan.h>
+
 #include <aslam/common/memory.h>
 #include <aslam/common/stl-helpers.h>
 
@@ -31,14 +39,11 @@ bool initializeCameraIntrinsics(
 /// https://github.com/hengli/camodocal.
 /// This algorithm can be used with high distortion lenses.
 template<>
-bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::RadTanDistortion>(
+bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::EquidistantDistortion>(
     Eigen::VectorXd& intrinsics_vector,
     std::vector<TargetObservation::Ptr> &observations) {
   CHECK_NOTNULL(&intrinsics_vector);
   CHECK(!observations.size() == 0) << "Need min. one observation.";
-
-  //process all images
-  size_t nImages = observations.size();
 
   // Initialize focal length
   // C. Hughes, P. Denny, M. Glavin, and E. Jones,
@@ -47,9 +52,17 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::RadTanDistortion>(
   // Find circles from rows of chessboard corners, and for each pair
   // of circles, find vanishing points: v1 and v2.
   // f = ||v1 - v2|| / PI;
+  //std::cout << "Pinhole - Equidistant\n\n";
+  //image centers
+   double cu = (observations.at(0)->getImageWidth() - 1.0) / 2.0;
+   double cv = (observations.at(0)->getImageHeight() - 1.0) / 2.0;
+
+  //process all images
+  size_t nImages = observations.size();
+
   std::vector<double> f_guesses;
 
-  for (size_t i=0; i<nImages; ++i) {
+  for (size_t i = 0; i < nImages; ++i) {
     TargetObservation::Ptr obs = observations.at(i);
     CHECK(!obs->getTarget()->size() == 0) << "The TargetObservation has no target object.";
     const TargetBase current_target = *obs->getTarget();
@@ -58,22 +71,23 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::RadTanDistortion>(
     double * radius = new double[current_target.rows()];
     bool skip_image = false;
 
-   std::vector<cv::Point2f> image_corners(obs->numObservedCorners());
-   for (size_t j = 0; j < image_corners.size(); ++j) {
-     image_corners.at(j) = cv::Point2f(obs->getObservedCorner(j)[0], obs->getObservedCorner(j)[1]);
-   }
+    std::vector<cv::Point2d> image_corners(obs->numObservedCorners());
+    for (size_t j = 0; j < image_corners.size(); ++j) {
+      image_corners.at(j) = cv::Point2d(obs->getObservedCorner(j)[0], obs->getObservedCorner(j)[1]);
+    }
+
     for (size_t r = 0; r < current_target.rows(); ++r) {
       std::vector<cv::Point2d> circle;
       for (size_t c = 0; c < current_target.cols(); ++c) {
-        if (obs->checkIdinImage(r, c)) {
-          circle.push_back(image_corners.at(r * current_target.cols() + c));
+        if (obs->checkImagecomplete()) {  //TODO(duboisf): allow also partial images? obs->checkIdinImage(r, c)
+          circle.emplace_back(cv::Point2d(image_corners.at(r * current_target.cols() + c)));
         }
         else {
           // Skips this image if corner id not part of image id set.
           skip_image = true;
         }
       }
-      PinholeHelpers::fitCircle(circle, center[r](0), center[r](1), radius[r]);
+      InitializerHelpers::fitCircle(circle, center[r](0), center[r](1), radius[r]);
     }
 
     if(skip_image){
@@ -86,7 +100,7 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::RadTanDistortion>(
         // Find the distance between pair of vanishing points which
         // correspond to intersection points of 2 circles.
         std::vector<cv::Point2d> ipts;
-        PinholeHelpers::intersectCircles(ipts,
+        InitializerHelpers::intersectCircles(ipts,
                                          center[j](0), center[j](1), radius[j],
                                          center[k](0), center[k](1), radius[k]);
         if (ipts.size() < 2) {
@@ -104,19 +118,20 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::RadTanDistortion>(
   // Gets the median of the guesses.
   if(f_guesses.empty()) { return false; }
   double f0 = aslam::common::median(f_guesses.begin(), f_guesses.end());
-  double f0_mean = aslam::common::mean(f_guesses.begin(), f_guesses.end());
-  double f0_std = aslam::common::stdev(f_guesses.begin(), f_guesses.end());
-  std::cout << "mean =  " << f0_mean << " / standard deviation =  " << f0_std << "\n\n";
+  //double f0_mean = aslam::common::mean(f_guesses.begin(), f_guesses.end());
+  //double f0_std = aslam::common::stdev(f_guesses.begin(), f_guesses.end());
+  //std::cout << "mean =  " << f0_mean << " / standard deviation =  " << f0_std << "\n\n";
 
   // Sets the first intrinsics estimate.
   intrinsics_vector.resize(aslam::PinholeCamera::parameterCount());
   intrinsics_vector(PinholeCamera::kFu) = f0;
   intrinsics_vector(PinholeCamera::kFv) = f0;
-  intrinsics_vector(PinholeCamera::kCu) = (observations.at(0)->getImageWidth() - 1.0) / 2.0;
-  intrinsics_vector(PinholeCamera::kCv) = (observations.at(0)->getImageHeight() - 1.0) / 2.0;
+  intrinsics_vector(PinholeCamera::kCu) = cu;
+  intrinsics_vector(PinholeCamera::kCv) = cv;
 
   return true;
 }
+
 
 
 /// Initializes the intrinsics vector based on one view of a gridded calibration target.
@@ -124,12 +139,18 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::RadTanDistortion>(
 /// These functions are based on functions from Lionel Heng and the excellent camodocal
 /// https://github.com/hengli/camodocal.
 template<>
-bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::EquidistantDistortion>(
+bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::RadTanDistortion>(
     Eigen::VectorXd& intrinsics_vector,
     std::vector<TargetObservation::Ptr> &observations) {
  CHECK_NOTNULL(&intrinsics_vector);
  CHECK(!observations.size() == 0) << "Need min. one observation.";
 
+ // Initialize intrinsics
+ // Z. Zhang
+ // A Flexible New Technique for Camera Calibration,
+ // Extraction, PAMI 2000
+ // Intrinsics estimation with image of absolute conic;
+ //std::cout << "Pinhole - RadTan\n\n";
  //image centers
  double cu = (observations.at(0)->getImageWidth() - 1.0) / 2.0;
  double cv = (observations.at(0)->getImageHeight() - 1.0) / 2.0;
@@ -137,26 +158,20 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::EquidistantDistorti
  //process all images
  size_t nImages = observations.size();
 
- // Initialize intrinsics
- // Z. Zhang
- // A Flexible New Technique for Camera Calibration,
- // Extraction, PAMI 2000
- // Intrinsics estimation with image of absolute conic
-
  cv::Mat A(nImages * 2, 2, CV_64F);
  cv::Mat b(nImages * 2, 1, CV_64F);
 
- for (size_t i=0; i<nImages; ++i) {
+ for (size_t i = 0; i < nImages; ++i) {
    TargetObservation::Ptr obs = observations.at(i);
    CHECK(!obs->getTarget()->size() == 0) << "The TargetObservation has no target object.";
    const TargetBase current_target = *obs->getTarget();
 
-   std::vector<cv::Point2f> image_corners(obs->numObservedCorners());
+   std::vector<cv::Point2f> image_corners(obs->numObservedCorners()); //TODO(duboisf): or skip if image not complete?
    for (size_t j = 0; j < image_corners.size(); ++j) {
      image_corners.at(j) = cv::Point2f(obs->getObservedCorner(j)[0], obs->getObservedCorner(j)[1]);
    }
 
-   std::vector<cv::Point2f> M(current_target.size());
+   std::vector<cv::Point2f> M(obs->numObservedCorners()); //current_target.size()
    for (size_t j = 0; j < M.size(); ++j) {
      M.at(j) = cv::Point2f(current_target.point(j)[0], current_target.point(j)[1]);
    }
@@ -207,11 +222,144 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::EquidistantDistorti
  intrinsics_vector.resize(aslam::PinholeCamera::parameterCount());
  intrinsics_vector(PinholeCamera::kFu) = sqrt(fabs(1.0 / f.at<double>(0)));
  intrinsics_vector(PinholeCamera::kFv) = sqrt(fabs(1.0 / f.at<double>(1)));
- intrinsics_vector(PinholeCamera::kCu) = (observations.at(0)->getImageWidth() - 1.0) / 2.0;
- intrinsics_vector(PinholeCamera::kCv) = (observations.at(0)->getImageHeight() - 1.0) / 2.0;
+ intrinsics_vector(PinholeCamera::kCu) = cu;
+ intrinsics_vector(PinholeCamera::kCv) = cv;
 
  return true;
 }
+
+
+
+///// Initializes the intrinsics vector based on one view of a gridded calibration target.
+///// On success it returns true.
+///// These functions are based on functions from Lionel Heng and the excellent camodocal
+///// https://github.com/hengli/camodocal.
+//template<>
+//bool initializeCameraIntrinsics<aslam::UnifiedProjectionCamera, aslam::RadTanDistortion>( //TODO(duboisf): duplicate for different Distortion models
+//    Eigen::VectorXd& intrinsics_vector,
+//    std::vector<TargetObservation::Ptr> &observations) {
+//  CHECK_NOTNULL(&intrinsics_vector);
+//  CHECK(!observations.size() == 0) << "Need min. one observation.";
+//
+//  // Initialize focal length
+//  // C. Mei, and P. Rives,
+//  // Single View Point Omnidirectional Camera Calibration from Planar Grids
+//  // EICRA 2007
+//  // Use non-radial line image and xi = 1
+//
+//  // First, initialize the image center at the center of the image.
+//  double xi = 1.0;
+//  double fu = 0.0;
+//  double fv = 0.0;
+//  double cu = (observations.at(0)->getImageWidth() - 1.0) / 2.0;
+//  double cv = (observations.at(0)->getImageHeight() - 1.0) / 2.0;
+//
+//  // Initialize some temporaries needed.
+//  double gamma0 = 0.0;
+//  double minReprojErr = std::numeric_limits<double>::max();
+//
+//  // Process all images.
+//  size_t nImages = observations.size();
+//
+//  // Go through all images and pick the best estimate (= lowest mean reproj. err)
+//  for (size_t i = 0; i < nImages; ++i) {
+//    TargetObservation::Ptr obs = observations.at(i);
+//    CHECK(!obs->getTarget()->size() == 0) << "The TargetObservation has no target object.";
+//    const TargetBase current_target = *obs->getTarget();
+//
+//
+//    std::vector<cv::Point2f> image_corners(obs->numObservedCorners());
+//    for (size_t j = 0; j < image_corners.size(); ++j) {
+//      image_corners.at(j) = cv::Point2f(obs->getObservedCorner(j)[0], obs->getObservedCorner(j)[1]);
+//    }
+//    // Check all corner rows of the target
+//    for (size_t r = 0; r < current_target.rows(); ++r) {
+//      // Grab all the valid corner points for this observation
+//      cv::Mat P(current_target.cols(), 4, CV_64F);
+//      size_t count = 0;
+//
+//      for (size_t c = 0; c < current_target.cols(); ++c) {
+//        if (obs->checkIdinImage(r, c)) {
+//          double u = image_corners.at(r * current_target.cols() + c)[0] - cu;
+//          double v = image_corners.at(r * current_target.cols() + c)[1] - cv;
+//          P.at<double>(count, 0) = u;
+//          P.at<double>(count, 1) = v;
+//          P.at<double>(count, 2) = 0.5;
+//          P.at<double>(count, 3) = -0.5 * (InitializerHelpers::square(u) + InitializerHelpers::square(v));
+//          ++count;
+//        }
+//      }
+//
+//      // min_corners is an arbitrary threshold for the number of corners.
+//      const size_t min_corners = 4;
+//      // Checks if this observation has enough valid corners.
+//      if (count > min_corners) {
+//        // Resize P to fit with the count of valid points.
+//        cv::Mat C;
+//        cv::SVD::solveZ(P.rowRange(0, count), C);
+//
+//        double t = InitializerHelpers::square(C.at<double>(0)) +
+//                   InitializerHelpers::square(C.at<double>(1)) + C.at<double>(2) * C.at<double>(3);
+//        if (t < 0) {
+//          //SM_DEBUG_STREAM("Skipping a bad SVD solution on row " << r);
+//          continue;
+//        }
+//
+//        // check that line image is not radial
+//        double d = sqrt(1.0 / t);
+//        double nx = C.at<double>(0) * d;
+//        double ny = C.at<double>(1) * d;
+//        if (hypot(nx, ny) > 0.95) {
+//          //SM_DEBUG_STREAM("Skipping a radial line on row " << r);
+//          continue;
+//        }
+//
+//        //calculate the focal length estimate
+//        double nz = sqrt(1.0 - InitializerHelpers::square(nx) - InitializerHelpers::square(ny));
+//        double gamma = fabs(C.at<double>(2) * d / nz);
+//
+//        //calculate the reprojection error using this estimate
+//        //SM_DEBUG_STREAM("Testing a focal length estimate of " << gamma);
+//        fu = gamma;
+//        fv = gamma;
+//
+//        sm::kinematics::Transformation T_target_camera;
+//        if (!estimateTransformation(obs, T_target_camera)) {
+//          //SM_DEBUG_STREAM("Skipping row " << r << " as the transformation estimation failed.");
+//          continue;
+//        }
+//
+//        double reprojErr = 0.0;
+//        size_t numReprojected = computeReprojectionError(obs, T_target_camera, reprojErr);
+//        if (numReprojected > min_corners) {
+//          double avgReprojErr = reprojErr / numReprojected;
+//          if (avgReprojErr < minReprojErr) {
+//            //SM_DEBUG_STREAM("Row " << r << " produced the new best estimate: " << avgReprojErr << " < " << minReprojErr);
+//            minReprojErr = avgReprojErr;
+//            gamma0 = gamma;
+//          }
+//        }
+//      }
+//      else {
+//        //SM_DEBUG_STREAM("Skipping row " << r << " because it only had " << count << " corners. Minimum: " << MIN_CORNERS);
+//      }
+//    }
+//  }
+//
+//  // set the parameters
+//  fu = gamma0;
+//  fv = gamma0;
+//
+//  // Sets the first intrinsics estimate.
+//  intrinsics_vector.resize(aslam::UnifiedProjectionCamera::parameterCount());
+//  intrinsics_vector(UnifiedProjectionCamera::kXi) = xi;
+//  intrinsics_vector(UnifiedProjectionCamera::kFu) = fu;
+//  intrinsics_vector(UnifiedProjectionCamera::kFv) = fv;
+//  intrinsics_vector(UnifiedProjectionCamera::kCu) = cu;
+//  intrinsics_vector(UnifiedProjectionCamera::kCv) = cv;
+//
+//  return true;
+//}
 
 }  // namespace calibration
 }  // namespace aslam

@@ -1,5 +1,5 @@
-#ifndef ASLAM_CALIBRATION_CAMERA_INITIALIZER_PINHOLE_HELPERS_H
-#define ASLAM_CALIBRATION_CAMERA_INITIALIZER_PINHOLE_HELPERS_H
+#ifndef ASLAM_CALIBRATION_CAMERA_INITIALIZER_HELPERS_H
+#define ASLAM_CALIBRATION_CAMERA_INITIALIZER_HELPERS_H
 
 #include <opencv2/core/eigen.hpp>
 #include <Eigen/Core>
@@ -7,7 +7,7 @@
 namespace aslam {
 namespace calibration {
 
-class PinholeHelpers {
+class InitializerHelpers {
  public:
 
   template<typename scalar>
@@ -100,9 +100,9 @@ class PinholeHelpers {
     radius = sum_r / n;
   }
 
-}; // class PinholeHelpers
+}; // class InitializerHelpers
 
 }  // namespace calibration
 }  // namespace aslam
 
-#endif  // ASLAM_CALIBRATION_CAMERA_INITIALIZER_PINHOLE_HELPERS_H
+#endif  // ASLAM_CALIBRATION_CAMERA_INITIALIZER_HELPERS_H
