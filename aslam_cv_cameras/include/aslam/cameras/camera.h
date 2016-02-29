@@ -164,7 +164,7 @@ class Camera {
     intrinsics_(other.intrinsics_),
     camera_type_(other.camera_type_) {
     CHECK(other.distortion_);
-  distortion_.reset(other.distortion_->clone());
+      distortion_.reset(other.distortion_->clone());
   };
 
   void operator=(const Camera&) = delete;
@@ -540,6 +540,7 @@ class Camera {
   cv::Mat_<uint8_t> mask_;
 
  protected:
+
   /// Parameter vector for the intrinsic parameters of the model.
   Eigen::VectorXd intrinsics_;
 
