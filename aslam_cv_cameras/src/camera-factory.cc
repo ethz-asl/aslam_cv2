@@ -18,7 +18,7 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
                          const Eigen::VectorXd& distortion_parameters,
                          Camera::Type camera_type,
                          Distortion::Type distortion_type) {
-  CHECK(id.isValid()) << "Invalid camera id.";
+  CHECK(id.isValid()) << "Invalid camera id: " << id.hexString();
 
   Distortion::UniquePtr distortion;
   switch(distortion_type) {

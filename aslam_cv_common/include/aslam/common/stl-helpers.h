@@ -36,38 +36,34 @@ double median(RandAccessIter begin, RandAccessIter end) {
 
 template<typename RandAccessIter>
 double mean(RandAccessIter begin, RandAccessIter end) {
-  CHECK(begin != end) << "No data provided to calculate the median.";
-  double N = end - begin;
+  CHECK(begin != end) << "No data provided to calculate the mean.";
+  const size_t n = end - begin;
   double mu = 0.0;
   RandAccessIter element_i = begin;
   while (element_i != end) {
     mu += *element_i;
     ++element_i;
   }
-  return mu / N;
+  return mu / n;
 }
 
 
 template<typename RandAccessIter>
-double stdev(RandAccessIter begin, RandAccessIter end) {
-  CHECK(begin != end) << "No data provided to calculate the median.";
-  double N = end - begin;
-  double mu = 0.0;
+double stddev(RandAccessIter begin, RandAccessIter end) {
+  CHECK(begin != end) << "No data provided to calculate the standard deviation.";
+  const size_t n = end - begin;
   RandAccessIter element_i = begin;
-  while (element_i != end) {
-    mu += *element_i;
-    ++element_i;
-  }
-  mu = mu / N;
+  double mu = aslam::common::mean(begin, end);
 
-  double summation = 0.0;
+  double sum = 0.0;
   element_i = begin;
   while (element_i != end) {
-    summation += (*element_i - mu) * (*element_i - mu);
+    sum += (*element_i - mu) * (*element_i - mu);
     ++element_i;
   }
 
-  return sqrt(summation / N);
+  CHECK_GE(sum, 0.0);
+  return sqrt(sum / n);
 }
 
 template<typename ElementType, typename Allocator>

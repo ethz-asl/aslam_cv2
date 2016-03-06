@@ -540,7 +540,6 @@ class Camera {
   cv::Mat_<uint8_t> mask_;
 
  protected:
-
   /// Parameter vector for the intrinsic parameters of the model.
   Eigen::VectorXd intrinsics_;
 
