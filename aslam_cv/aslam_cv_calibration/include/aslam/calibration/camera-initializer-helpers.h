@@ -10,18 +10,19 @@ namespace calibration {
 class InitializerHelpers {
  public:
 
-  template<typename scalar>
-  static inline scalar square(scalar x) {
-    return x*x;
+  template<typename Scalar>
+  static inline Scalar square(Scalar x) {
+    return x * x;
   }
 
   static inline double hypot(double a, double b) {
     return sqrt(square(a) + square(b));
   }
 
-  static void intersectCircles(std::vector<cv::Point2d>& ipts,
-                          double x1, double y1, double r1,
-                          double x2, double y2, double r2) {
+  static void intersectCircles(double x1, double y1, double r1,
+                               double x2, double y2, double r2,
+                               std::vector<cv::Point2d>* intersection_points) {
+    CHECK_NOTNULL(intersection_points);
 
     double d = hypot(x1 - x2, y1 - y2);
     if (d > r1 + r2) {
@@ -42,20 +43,24 @@ class InitializerHelpers {
 
     if (h < 1e-10) {
       // Two circles touch at one point.
-      ipts.emplace_back(cv::Point2d(x3, y3));
+      intersection_points->emplace_back(x3, y3);
       return;
     }
 
-    ipts.emplace_back(cv::Point2d(x3 + h * (y2 - y1) / d, y3 - h * (x2 - x1) / d));
-    ipts.emplace_back(cv::Point2d(x3 - h * (y2 - y1) / d, y3 + h * (x2 - x1) / d));
+    intersection_points->emplace_back(x3 + h * (y2 - y1) / d, y3 - h * (x2 - x1) / d);
+    intersection_points->emplace_back(x3 - h * (y2 - y1) / d, y3 + h * (x2 - x1) / d);
     return;
   }
 
+  // D. Umbach, and K. Jones, A Few Methods for Fitting Circles to Data,
+  // IEEE Transactions on Instrumentation and Measurement, 2000
+  // We use the modified least squares method.
   static void fitCircle(const std::vector<cv::Point2d>& points,
-                        double& center_x, double& center_y, double& radius) {
-    // D. Umbach, and K. Jones, A Few Methods for Fitting Circles to Data,
-    // IEEE Transactions on Instrumentation and Measurement, 2000
-    // We use the modified least squares method.
+                        double* center_x, double* center_y, double* radius) {
+    CHECK_NOTNULL(center_x);
+    CHECK_NOTNULL(center_y);
+    CHECK_NOTNULL(radius);
+
     double sum_x = 0.0;
     double sum_y = 0.0;
     double sum_xx = 0.0;
@@ -88,16 +93,16 @@ class InitializerHelpers {
     double D = 0.5 * (n * sum_xyy - sum_x * sum_yy + n * sum_xxx - sum_x * sum_xx);
     double E = 0.5 * (n * sum_xxy - sum_y * sum_xx + n * sum_yyy - sum_y * sum_yy);
 
-    center_x = (D * C - B * E) / (A * C - square(B));
-    center_y = (A * E - B * D) / (A * C - square(B));
+    *center_x = (D * C - B * E) / (A * C - square(B));
+    *center_y = (A * E - B * D) / (A * C - square(B));
 
     double sum_r = 0.0;
     for (int i = 0; i < n; ++i) {
       double x = points.at(i).x;
       double y = points.at(i).y;
-      sum_r += hypot(x - center_x, y - center_y);
+      sum_r += hypot(x - *center_x, y - *center_y);
     }
-    radius = sum_r / n;
+    *radius = sum_r / n;
   }
 
 }; // class InitializerHelpers

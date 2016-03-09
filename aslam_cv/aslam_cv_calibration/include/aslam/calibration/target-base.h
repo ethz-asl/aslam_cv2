@@ -44,9 +44,6 @@ class TargetBase {
   /// Get the point index from the grid coordinates.
   size_t gridCoordinatesToPoint(size_t row_idx, size_t col_idx) const;
 
-  /// Get all corner ids from the target expressed in the target frame.
-  Eigen::VectorXi setCornerIds() const;
-
   /// Number of rows in the calibration target.
   size_t rows() const { return rows_; };
   /// Number of columns in the calibration target.

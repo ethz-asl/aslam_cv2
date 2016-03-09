@@ -71,10 +71,6 @@ DetectorAprilGrid::DetectorAprilGrid(
 }
 
 TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& image) const {
-  // Extract image size.
-  uint32_t image_height = image.rows;
-  uint32_t image_width = image.cols;
-
   // Detect all Apriltags in the image.
   std::vector<AprilTags::TagDetection> detections = tag_detector_->extractTags(image);
 
@@ -232,7 +228,8 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
   corner_ids.conservativeResize(out_point_idx);
   image_corners.conservativeResize(Eigen::NoChange, out_point_idx);
 
-  return TargetObservation::Ptr(new TargetObservation(target_, image_height, image_width, corner_ids, image_corners));
+  return TargetObservation::Ptr(new TargetObservation(target_, image.rows, image.cols,
+                                                      corner_ids, image_corners));
 }
 
 }  // namespace calibration

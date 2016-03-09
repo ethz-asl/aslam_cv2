@@ -42,49 +42,15 @@ class TargetObservation  {
   uint32_t getImageWidth() { return image_width; };
   uint32_t getImageHeight() { return image_height; };
 
-  /// Checks whether id contained in target's id set.
-  bool checkIdinImage(size_t r, size_t c) {
-    CHECK(target_) << "The target is not set";
-
-    size_t corner_id = target_->gridCoordinatesToPoint(r, c);
-
-    // Construct temporary vector.
-    std::vector<int> ids_vector;
-    ids_vector.resize(numObservedCorners());
-    Eigen::VectorXi::Map(&ids_vector[0], numObservedCorners()) = corner_ids_;
-
-    // Copy id vector into unordered list.
-    std::unordered_set<int> ids_set;
-    std::copy(ids_vector.begin(), ids_vector.end(), std::inserter(ids_set, ids_set.end()));
-
-    if (ids_set.count(corner_id) == 1) {
-      return true;
-    }
-    else {
-      return false;
-    }
+  bool observedCornerId(size_t corner_id) {
+    CHECK_LT(corner_id, target_->size());
+    return (cornerid_to_index_map_.count(corner_id) == 1);
   }
 
-  /// Checks if all grid points are observed in image - image complete.
-    bool checkImagecomplete() {
-      CHECK(target_) << "The target is not set";
-
-//      // Construct temporary vector.
-//      std::vector<int> ids_vector;
-//      ids_vector.resize(numObservedCorners());
-//      Eigen::VectorXi::Map(&ids_vector[0], numObservedCorners()) = corner_ids_;
-//
-//      // Copy id vector into unordered list.
-//      std::unordered_set<int> ids_set;
-//      std::copy(ids_vector.begin(), ids_vector.end(), std::inserter(ids_set, ids_set.end()));
-
-      if (target_->size() == numObservedCorners()) {
-        return true;
-      }
-      else {
-        return false;
-      }
-    }
+  bool allCornersObservered() const {
+    CHECK(target_) << "The target is not set";
+    return (target_->size() == numObservedCorners());
+  }
 
   size_t numObservedCorners() const {
     return corner_ids_.size();
@@ -94,12 +60,18 @@ class TargetObservation  {
     return image_corners_;
   }
 
-  const Eigen::Vector2d getObservedCorner(size_t idx) const {
+  Eigen::Vector2d getObservedCorner(size_t idx) const {
+    CHECK_LT(idx, image_corners_.cols());
     return image_corners_.col(idx);
   }
 
   const Eigen::VectorXi& getObservedCornerIds() const {
     return corner_ids_;
+  }
+
+  size_t getObservedCornerId(int idx) const {
+    CHECK_LT(idx, corner_ids_.rows());
+    return corner_ids_(idx, 0);
   }
 
   void drawCornersIntoImage(cv::Mat* out_image) const {
