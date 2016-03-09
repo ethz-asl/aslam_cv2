@@ -98,6 +98,12 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
     return RadTanDistortion::UniquePtr(new RadTanDistortion(params));
   }
 
+  /// \brief Create a test distortion object for unit testing with null distortion.
+  static RadTanDistortion::UniquePtr createZeroTestDistortion() {
+    Eigen::VectorXd params(4); params << 0.0, 0.0, 0.0, 0.0;
+    return RadTanDistortion::UniquePtr(new RadTanDistortion(params));
+  }
+
   /// @}
 
   ///////////////////////////////////////////////////////////////////////////////
