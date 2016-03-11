@@ -46,7 +46,7 @@
 #endif  // __ARM_NEON__
 
 namespace aslam {
-namespace common_private {
+namespace common {
 
 #ifdef __GNUC__
 static const char __attribute__((aligned(16))) MASK_4bit[16] =
@@ -137,6 +137,6 @@ const int numberOf128BitWords) {
 }
 #endif  // __ARM_NEON__
 
-}  // namespace common_private
+}  // namespace common
 }  // namespace aslam
 #endif  // ASLAM_COMMON_HAMMING_INL_H_

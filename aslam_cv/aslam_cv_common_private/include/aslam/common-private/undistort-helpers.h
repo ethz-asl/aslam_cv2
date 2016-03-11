@@ -16,7 +16,7 @@
 //  getOptimalNewCameraMatrix: https://github.com/Itseez/opencv/blob/0ffc53bafea9052d1fac17e6fc6f0a07ddf9f789/modules/imgproc/src/undistort.cpp#L62
 //  buildUndistortMap: https://github.com/Itseez/opencv/blob/5f590ebed084a5002c9013e11c519dcb139d47e9/modules/calib3d/src/calibration.cpp#L3389
 namespace aslam {
-namespace common_private {
+namespace common {
 
 /// \brief: calculates the inner(min)/outer(max) rectangle on the undistorted image
 ///  @param[in] input_camera Input camera geometry
@@ -194,7 +194,7 @@ void buildUndistortMap(const InputDerivedCameraType& input_camera,
   }
 }
 
-} //namespace common_private
+} //namespace common
 } //namespace aslam
 
 #endif // ASLAM_UNDISTORT_HELPERS_H_

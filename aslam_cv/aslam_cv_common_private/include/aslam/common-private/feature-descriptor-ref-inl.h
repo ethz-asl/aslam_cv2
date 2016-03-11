@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace aslam {
-namespace common_private {
+namespace common {
 template <typename PointerType>
 inline FeatureDescriptorRefBase<
     PointerType, ReadOnlyAccessors>::FeatureDescriptorRefBase(PointerType* data,
@@ -215,7 +215,7 @@ void DescriptorMean(
   }
 }
 
-}  // namespace common_private
+}  // namespace common
 }  // namespace aslam
 
 #endif  // ASLAM_COMMON_FEATURE_DESCRIPTOR_REF_INL_H_

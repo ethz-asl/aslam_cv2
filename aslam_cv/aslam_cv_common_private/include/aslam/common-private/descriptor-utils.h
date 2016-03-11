@@ -9,7 +9,7 @@
 #include "aslam/common-private/hamming.h"
 
 namespace aslam {
-namespace common_private {
+namespace common {
 namespace descriptor_utils {
 
 constexpr size_t kBitsPerByte = 8u;
@@ -160,7 +160,7 @@ inline void pairwiseEuclidianDistances(const DescriptorsType& descriptors,
 }
 
 }  // namespace descriptor_utils
-}  // namespace common_private
+}  // namespace common
 }  // namespace aslam
 
 #endif  // VI_MAP_DESCRIPTOR_UTILS_H_
