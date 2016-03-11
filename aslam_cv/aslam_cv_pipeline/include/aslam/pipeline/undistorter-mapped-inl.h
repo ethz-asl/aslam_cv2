@@ -53,7 +53,7 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
 
   // Create the scaled output camera with removed distortion.
   const bool kUndistortToPinhole = false;
-  Eigen::Matrix3d output_camera_matrix = common_private::getOptimalNewCameraMatrix(
+  Eigen::Matrix3d output_camera_matrix = common::getOptimalNewCameraMatrix(
       *input_camera, alpha, scale, kUndistortToPinhole);
 
   Eigen::Matrix<double, CameraType::parameterCount(), 1> intrinsics;
@@ -86,7 +86,7 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
   CHECK(output_camera);
 
   cv::Mat map_u, map_v;
-  common_private::buildUndistortMap(*input_camera, *output_camera, CV_16SC2, map_u, map_v);
+  common::buildUndistortMap(*input_camera, *output_camera, CV_16SC2, map_u, map_v);
 
   return std::unique_ptr<MappedUndistorter>(
       new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));

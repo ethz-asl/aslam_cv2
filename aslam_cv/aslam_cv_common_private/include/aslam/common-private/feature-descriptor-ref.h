@@ -9,7 +9,7 @@
 #include "aslam/common-private/hamming.h"
 
 namespace aslam {
-namespace common_private {
+namespace common {
 enum AccessorLevels {
   // Read-only access via a member function.
   ReadOnlyAccessors,
@@ -157,7 +157,7 @@ inline void DescriptorMean(
     const std::vector<FeatureDescriptorRefBase<TYPE, ACCESSOR>*>& features,
     FeatureDescriptorRef* mean);
 
-}  // namespace common_private
+}  // namespace common
 }  // namespace aslam
 
 #include "./feature-descriptor-ref-inl.h"

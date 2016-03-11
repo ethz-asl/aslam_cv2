@@ -114,15 +114,15 @@ public:
     CHECK(valid_landmarks_[landmark_index]) << "The given landmark with index "
         << landmark_index << " is not valid.";
 
-    const common_private::FeatureDescriptorConstRef& apple_descriptor =
+    const common::FeatureDescriptorConstRef& apple_descriptor =
         frame_descriptors_[frame_keypoint_index];
-    const common_private::FeatureDescriptorConstRef& banana_descriptor =
+    const common::FeatureDescriptorConstRef& banana_descriptor =
         landmark_descriptors_[landmark_index];
 
     CHECK_NOTNULL(apple_descriptor.data());
     CHECK_NOTNULL(banana_descriptor.data());
 
-    return common_private::GetNumBitsDifferent(banana_descriptor, apple_descriptor);
+    return common::GetNumBitsDifferent(banana_descriptor, apple_descriptor);
   }
 
   /// \brief Gets called at the beginning of the matching problem.
@@ -148,10 +148,10 @@ private:
   aslam::Aligned<std::vector, Eigen::Vector2d>::type projected_landmark_keypoints_;
 
   /// The frame keypoint descriptors.
-  std::vector<common_private::FeatureDescriptorConstRef> frame_descriptors_;
+  std::vector<common::FeatureDescriptorConstRef> frame_descriptors_;
 
   /// The landmark descriptors.
-  std::vector<common_private::FeatureDescriptorConstRef> landmark_descriptors_;
+  std::vector<common::FeatureDescriptorConstRef> landmark_descriptors_;
 
   /// Descriptor size in bits and bytes.
   const size_t descriptor_size_bytes_;

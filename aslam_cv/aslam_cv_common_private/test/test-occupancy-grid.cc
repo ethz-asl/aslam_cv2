@@ -6,8 +6,8 @@
 
 #include "aslam/common-private/occupancy-grid.h"
 
-typedef aslam::common_private::WeightedKeypoint<double, double, size_t> Point;
-typedef aslam::common_private::WeightedOccupancyGrid<Point> WeightedOccupancyGrid;
+typedef aslam::common::WeightedKeypoint<double, double, size_t> Point;
+typedef aslam::common::WeightedOccupancyGrid<Point> WeightedOccupancyGrid;
 
 TEST(OccupancyGrid, addPointOrReplaceWeakestIfCellFull) {
   WeightedOccupancyGrid grid(2.0, 2.0, 1.0, 1.0);

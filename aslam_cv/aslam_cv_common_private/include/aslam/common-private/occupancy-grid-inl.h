@@ -8,7 +8,7 @@
 #include <opencv/highgui.h>
 
 namespace aslam {
-namespace common_private {
+namespace common {
 
 template<typename PointType>
 WeightedOccupancyGrid<PointType>::WeightedOccupancyGrid(
@@ -352,7 +352,7 @@ WeightedOccupancyGrid<PointType>::inputToGridCoordinates(
   return grid_coordinates;
 }
 
-}  // namespace common_private
+}  // namespace common
 }  // namespace aslam
 
 #endif  // ASLAM_FEATURE_TRACKER_OCCUPANCY_GRID_INL_H_

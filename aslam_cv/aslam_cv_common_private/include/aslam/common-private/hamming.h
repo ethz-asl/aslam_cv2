@@ -49,7 +49,7 @@
 #endif  // __ARM_NEON__
 
 namespace aslam {
-namespace common_private {
+namespace common {
 // Faster Hamming distance functor - uses SSE
 // bit count of A exclusive XOR'ed with B.
 class  Hamming {
@@ -117,7 +117,7 @@ class  Hamming {
     return evaluate(a, b, size);
   }
 };
-}  // namespace common_private
+}  // namespace common
 }  // namespace aslam
 
 #include "./hamming-inl.h"

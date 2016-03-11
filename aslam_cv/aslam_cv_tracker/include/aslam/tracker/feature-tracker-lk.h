@@ -48,8 +48,8 @@ class FeatureTrackerLk : public FeatureTracker {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
-  typedef aslam::common_private::WeightedKeypoint<double, double, int> WeightedKeypoint;
-  typedef aslam::common_private::WeightedOccupancyGrid<WeightedKeypoint> OccupancyGrid;
+  typedef aslam::common::WeightedKeypoint<double, double, int> WeightedKeypoint;
+  typedef aslam::common::WeightedOccupancyGrid<WeightedKeypoint> OccupancyGrid;
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators

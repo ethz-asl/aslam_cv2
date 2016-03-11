@@ -91,15 +91,15 @@ public:
     CHECK(valid_apples_[apple_index]) << "The given apple is not valid.";
     CHECK(valid_bananas_[banana_index]) << "The given banana is not valid.";
 
-    const common_private::FeatureDescriptorConstRef& apple_descriptor =
+    const common::FeatureDescriptorConstRef& apple_descriptor =
         apple_descriptors_[apple_index];
-    const common_private::FeatureDescriptorConstRef& banana_descriptor =
+    const common::FeatureDescriptorConstRef& banana_descriptor =
         banana_descriptors_[banana_index];
 
     CHECK_NOTNULL(apple_descriptor.data());
     CHECK_NOTNULL(banana_descriptor.data());
 
-    return common_private::GetNumBitsDifferent(banana_descriptor, apple_descriptor);
+    return common::GetNumBitsDifferent(banana_descriptor, apple_descriptor);
   }
 
   /// \brief Gets called at the beginning of the matching problem.
@@ -126,10 +126,10 @@ private:
   aslam::Aligned<std::vector, Eigen::Vector2d>::type A_projected_keypoints_banana_;
 
   /// The apple descriptors.
-  std::vector<common_private::FeatureDescriptorConstRef> apple_descriptors_;
+  std::vector<common::FeatureDescriptorConstRef> apple_descriptors_;
 
   /// The banana descriptors.
-  std::vector<common_private::FeatureDescriptorConstRef> banana_descriptors_;
+  std::vector<common::FeatureDescriptorConstRef> banana_descriptors_;
 
   /// Descriptor size in bytes.
   size_t descriptor_size_byes_;

@@ -9,7 +9,7 @@
 #include <opencv2/core/core.hpp>
 
 namespace aslam {
-namespace common_private {
+namespace common {
 
 template<typename CoordinatesType = double, typename WeightType = double, typename PointId = int>
 struct WeightedKeypoint {
@@ -136,7 +136,7 @@ class WeightedOccupancyGrid {
   std::vector<std::vector<PointList>> grid_;
 };
 
-}  // namespace common_private
+}  // namespace common
 }  // namespace aslam
 #include "./occupancy-grid-inl.h"
 #endif  // ASLAM_FEATURE_TRACKER_OCCUPANCY_GRID_H_

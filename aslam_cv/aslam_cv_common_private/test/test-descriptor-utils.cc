@@ -6,7 +6,7 @@
 #include "aslam/common-private/descriptor-utils.h"
 
 namespace aslam {
-namespace common_private {
+namespace common {
 namespace descriptor_utils {
 
 TEST(ViwlsGraph, DescriptorMedianTestSingleDescriptor) {
@@ -125,7 +125,7 @@ TEST(ViwlsGraph, DescriptorMeanStdDeviationTestSameDescriptors) {
 }
 
 }  // namespace descriptor_utils
-}  // namespace common_private
+}  // namespace common
 }  // namespace aslam
 
 ASLAM_UNITTEST_ENTRYPOINT
