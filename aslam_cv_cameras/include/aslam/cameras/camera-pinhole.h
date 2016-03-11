@@ -2,9 +2,9 @@
 #define ASLAM_CAMERAS_PINHOLE_CAMERA_H_
 
 #include <aslam/cameras/camera.h>
+#include <aslam/cameras/distortion.h>
 #include <aslam/common/crtp-clone.h>
 #include <aslam/common/types.h>
-#include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 
 namespace aslam {
@@ -198,6 +198,17 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
     return camera;
   }
 
+  /// \brief Create a test camera object for intrinsics unit testing. (with null distortion)
+    template<typename DistortionType>
+    static PinholeCamera::Ptr createIntrinsicsTestCamera() {
+      aslam::Distortion::UniquePtr zeros = DistortionType::createZeroTestDistortion();
+      aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 400, 319.5, 239.5, 640, 480, zeros));
+      aslam::CameraId id;
+      id.randomize();
+      camera->setId(id);
+      return camera;
+    }
+
   /// \brief Create a test camera object for unit testing. (without distortion)
   static PinholeCamera::Ptr createTestCamera() {
     aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 300, 320, 240, 640, 480));
@@ -245,7 +256,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// Static function that checks whether the given intrinsic parameters are valid for this model.
   static bool areParametersValid(const Eigen::VectorXd& parameters);
 
-  /// Function to check whether the given intrinic parameters are valid for this model.
+  /// Function to check whether the given intrinsic parameters are valid for this model.
   virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
 
   /// Print the internal parameters of the camera in a human-readable form

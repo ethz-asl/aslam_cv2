@@ -110,6 +110,12 @@ class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDis
     return EquidistantDistortion::UniquePtr(new EquidistantDistortion(params));
   }
 
+  /// \brief Create a test distortion object for unit testing with null distortion.
+  static EquidistantDistortion::UniquePtr createZeroTestDistortion() {
+    Eigen::VectorXd params(4); params << 0.0, 0.0, 0.0, 0.0;
+    return EquidistantDistortion::UniquePtr(new EquidistantDistortion(params));
+  }
+
   /// @}
 
   ///////////////////////////////////////////////////////////////////////////////
