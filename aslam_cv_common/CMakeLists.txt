@@ -83,11 +83,6 @@ catkin_add_gtest(test_lockable_container
 )
 target_link_libraries(test_lockable_container ${PROJECT_NAME}) 
 
-catkin_add_gtest(test_occupancy_grid 
-  test/test-occupancy-grid.cc
-)
-target_link_libraries(test_occupancy_grid ${PROJECT_NAME})
-
 catkin_add_gtest(test_stl_helpers test/test-stl-helpers.cc)
 target_link_libraries(test_stl_helpers ${PROJECT_NAME})
 
