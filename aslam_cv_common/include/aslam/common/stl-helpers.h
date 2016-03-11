@@ -33,6 +33,39 @@ double median(RandAccessIter begin, RandAccessIter end) {
   return (target_high_value + *target_low) / 2.0;
 }
 
+
+template<typename RandAccessIter>
+double mean(RandAccessIter begin, RandAccessIter end) {
+  CHECK(begin != end) << "No data provided to calculate the mean.";
+  const size_t n = end - begin;
+  double mu = 0.0;
+  RandAccessIter element_i = begin;
+  while (element_i != end) {
+    mu += *element_i;
+    ++element_i;
+  }
+  return mu / n;
+}
+
+
+template<typename RandAccessIter>
+double stddev(RandAccessIter begin, RandAccessIter end) {
+  CHECK(begin != end) << "No data provided to calculate the standard deviation.";
+  const size_t n = end - begin;
+  RandAccessIter element_i = begin;
+  double mu = aslam::common::mean(begin, end);
+
+  double sum = 0.0;
+  element_i = begin;
+  while (element_i != end) {
+    sum += (*element_i - mu) * (*element_i - mu);
+    ++element_i;
+  }
+
+  CHECK_GE(sum, 0.0);
+  return sqrt(sum / n);
+}
+
 template<typename ElementType, typename Allocator>
 void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
                          std::vector<ElementType, Allocator>* output,
