@@ -4,7 +4,7 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
-#include <aslam/calibration/camera-initializer.h>
+#include <aslam/calibration/focallength-initializers.h>
 #include <aslam/calibration/target-aprilgrid.h>
 #include <aslam/calibration/target-observation.h>
 #include <aslam/cameras/camera.h>
@@ -29,8 +29,8 @@ using testing::Types;
 typedef Types<
     //CameraDistortion<aslam::PinholeCamera,aslam::FisheyeDistortion>,
     CameraDistortion<aslam::PinholeCamera, aslam::EquidistantDistortion>,
-    CameraDistortion<aslam::PinholeCamera, aslam::RadTanDistortion>
-    //CameraDistortion<aslam::PinholeCamera,aslam::NullDistortion>
+    CameraDistortion<aslam::PinholeCamera, aslam::RadTanDistortion>,
+    CameraDistortion<aslam::PinholeCamera,aslam::NullDistortion>
     //CameraDistortion<aslam::UnifiedProjectionCamera,aslam::FisheyeDistortion>,
     //CameraDistortion<aslam::UnifiedProjectionCamera,aslam::EquidistantDistortion>,
     //CameraDistortion<aslam::UnifiedProjectionCamera,aslam::RadTanDistortion>,
@@ -47,7 +47,15 @@ class TestCameras : public testing::Test {
   typedef typename CameraDistortion::CameraType CameraType;
   typedef typename CameraDistortion::DistortionType DistortionType;
  protected:
-  TestCameras() : camera_(CameraType::template createTestCamera<DistortionType>()) {};
+  TestCameras() : camera_(CameraType::template createTestCamera<DistortionType>()) {
+    // Make sure the focal length are the same in both directions, as the
+    // initializers assume that.
+    CHECK(camera_);
+    Eigen::VectorXd intrinsics = camera_->getParameters();
+    intrinsics[aslam::PinholeCamera::kFu] =
+        intrinsics[aslam::PinholeCamera::kFv];
+    camera_->setParameters(intrinsics);
+  };
   virtual ~TestCameras() {};
 
   bool runInitialization(
@@ -55,7 +63,7 @@ class TestCameras : public testing::Test {
       Eigen::VectorXd* intrinsics_vector) const {
     CHECK_NOTNULL(intrinsics_vector);
 
-    return aslam::calibration::initializeCameraIntrinsics<CameraType, DistortionType>(
+    return aslam::calibration::FocalLengthInitializer<CameraType, DistortionType>::initialize(
         observations, intrinsics_vector);
   }
 
