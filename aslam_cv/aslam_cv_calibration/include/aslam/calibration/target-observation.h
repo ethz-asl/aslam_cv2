@@ -5,10 +5,10 @@
 #include <unordered_map>
 #include <unordered_set>
 
-
 #include <aslam/common/macros.h>
 #include <Eigen/Core>
 #include <glog/logging.h>
+#include <opencv2/highgui/highgui.hpp>
 
 #include "aslam/calibration/target-base.h"
 

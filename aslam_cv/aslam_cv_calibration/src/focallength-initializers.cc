@@ -1,40 +1,20 @@
-#ifndef ASLAM_CALIBRATION_CAMERA_INITIALIZER_H
-#define ASLAM_CALIBRATION_CAMERA_INITIALIZER_H
+#include <vector>
 
-#include <Eigen/Core>
-#include <Eigen/StdVector>
-#include <opencv2/calib3d/calib3d.hpp>
-
-#include <glog/logging.h>
-
-#include <aslam/calibration/camera-initializer-helpers.h>
-#include <aslam/calibration/target-observation.h>
-
-#include <aslam/cameras/camera.h>
-#include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera-pinhole.h>
-#include <aslam/cameras/camera-unified-projection.h>
-#include <aslam/cameras/distortion.h>
-#include <aslam/cameras/distortion-equidistant.h>
-#include <aslam/cameras/distortion-fisheye.h>
-#include <aslam/cameras/distortion-radtan.h>
-
 #include <aslam/common/memory.h>
 #include <aslam/common/stl-helpers.h>
+#include <Eigen/Core>
+#include <Eigen/StdVector>
+#include <glog/logging.h>
+#include <opencv2/calib3d/calib3d.hpp>
+
+#include "aslam/calibration/target-observation.h"
+#include "aslam/calibration/helpers.h"
 
 namespace aslam {
 namespace calibration {
 
-// Catch all template to fail on unimplemented projection / distortion model combinations.
-template<typename CameraType, typename DistortionType>
-bool initializeCameraIntrinsics(
-    const std::vector<TargetObservation::Ptr>& observations,
-    Eigen::VectorXd* intrinsics) {
- LOG(FATAL) << "Initialization not implemented for this camera type";
- return false;
-}
-
-// Initializes the intrinsics vector based on one view of a gridded calibration target.
+// Initializes the intrinsics vector based on one views of a calibration targets.
 // On success it returns true. These functions are based on functions from Lionel Heng and
 // the excellent camodocal: https://github.com/hengli/camodocal.
 // This algorithm can be used with high distortion lenses.
@@ -45,8 +25,7 @@ bool initializeCameraIntrinsics(
 // Find circles from rows of chessboard corners, and for each pair
 // of circles, find vanishing points: v1 and v2.
 // f = ||v1 - v2|| / PI;
-template<>
-bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::EquidistantDistortion>(
+bool initFocalLengthVanishingPoints(
     const std::vector<TargetObservation::Ptr>& observations, Eigen::VectorXd* intrinsics) {
   CHECK_NOTNULL(intrinsics);
   CHECK(!observations.empty()) << "Need at least one observation.";
@@ -128,10 +107,8 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::EquidistantDistorti
 // A Flexible New Technique for Camera Calibration,
 // Extraction, PAMI 2000
 // Intrinsics estimation with image of absolute conic;
-template<>
-bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::RadTanDistortion>(
-    const std::vector<TargetObservation::Ptr>& observations,
-    Eigen::VectorXd* intrinsics) {
+bool initFocalLengthAbsoluteConic(
+  const std::vector<TargetObservation::Ptr>& observations, Eigen::VectorXd* intrinsics) {
  CHECK_NOTNULL(intrinsics);
  CHECK(!observations.empty()) << "Need at least one observation.";
 
@@ -219,5 +196,3 @@ bool initializeCameraIntrinsics<aslam::PinholeCamera, aslam::RadTanDistortion>(
 
 }  // namespace calibration
 }  // namespace aslam
-
-#endif  // ASLAM_CALIBRATION_CAMERA_INITIALIZER_H
