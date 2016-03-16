@@ -200,8 +200,10 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
 
     // Calculate the grid idx for all four tag corners given the tagId and cols.
     const size_t cols = target_->cols();
+    //const unsigned int base_idx =
+    //    static_cast<int>(tag_id / (cols / 2)) * cols * 2 + (tag_id % (cols / 2)) * 2;
     const unsigned int base_idx =
-        static_cast<int>(tag_id / (cols / 2)) * cols * 2 + (tag_id % (cols / 2)) * 2;
+        tag_id * 2 + static_cast<int>(tag_id / (cols / 2)) * cols;
     unsigned int point_indices_tag[] = {base_idx,
                                         base_idx + 1,
                                         base_idx + static_cast<unsigned int>(cols + 1),
