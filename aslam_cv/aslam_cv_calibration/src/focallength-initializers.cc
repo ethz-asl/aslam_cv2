@@ -51,13 +51,22 @@ bool initFocalLengthVanishingPoints(
     aslam::Aligned<std::vector, Eigen::Vector2d>::type center(current_target->rows());
     std::vector<double> radius(current_target->rows());
 
+    //Exchange indices per values in cornerIds
+    Eigen::VectorXi corner_ids_original = obs->getObservedCornerIds();
+    Eigen::VectorXi corner_ids_modified(corner_ids_original.size());
+
+    for (size_t indx = 0; indx < corner_ids_original.size(); ++indx){
+      int val = corner_ids_original(indx);
+      corner_ids_modified(val)=indx;
+    }
+
     for (size_t r = 0u; r < current_target->rows(); ++r) {
       std::vector<cv::Point2d> points_on_circle;
       for (size_t c = 0u; c < current_target->cols(); ++c) {
         const size_t corner_idx = r * current_target->cols() + c;
         points_on_circle.emplace_back(
-            obs->getObservedCorner(corner_idx)[0],
-            obs->getObservedCorner(corner_idx)[1]);
+            obs->getObservedCorner(corner_ids_modified(corner_idx))[0],
+            obs->getObservedCorner(corner_ids_modified(corner_idx))[1]);
       }
       InitializerHelpers::fitCircle(points_on_circle, &center[r](0), &center[r](1), &radius[r]);
     }
@@ -77,7 +86,12 @@ bool initFocalLengthVanishingPoints(
                                              &intersection_points);
         if (intersection_points.size() >= 2) {
           const double f_guess = cv::norm(intersection_points[0] - intersection_points[1]) / M_PI;
-          f_guesses.emplace_back(f_guess);
+
+          double reprojErr = reprojectionError(objectPoints, obs->getObservedCorners(), rvecs, tvecs, cv::noArray()); // TODO(duboisf)!
+          if (reprojErr < minReprojErr) {
+            minReprojErr = reprojErr;
+            f_guesses.emplace_back(f_guess);
+          }
         }
       }
     }
