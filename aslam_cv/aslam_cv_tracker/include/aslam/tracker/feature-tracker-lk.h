@@ -6,9 +6,9 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/common/memory.h>
+#include <aslam/common-private/occupancy-grid.h>
 #include <aslam/matcher/match.h>
 #include <aslam/tracker/feature-tracker.h>
-#include <aslam/common/occupancy-grid.h>
 #include <Eigen/Core>
 #include <gflags/gflags.h>
 #include <opencv2/video/tracking.hpp>
@@ -48,8 +48,8 @@ class FeatureTrackerLk : public FeatureTracker {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
-  typedef aslam::WeightedKeypoint<double, double, int> WeightedKeypoint;
-  typedef aslam::WeightedOccupancyGrid<WeightedKeypoint> OccupancyGrid;
+  typedef aslam::common::WeightedKeypoint<double, double, int> WeightedKeypoint;
+  typedef aslam::common::WeightedOccupancyGrid<WeightedKeypoint> OccupancyGrid;
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
