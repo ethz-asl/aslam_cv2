@@ -30,10 +30,10 @@ Eigen::Matrix3Xd TargetAprilGrid::createGridPoints(
   /// \brief initialize an april grid
   ///   point ordering: (e.g. 2x2 grid)
   ///          12-----13  14-----15
-  ///          | TAG 3 |  | TAG 4 |
+  ///          | TAG 2 |  | TAG 3 |
   ///          8-------9  10-----11
   ///          4-------5  6-------7
-  ///    y     | TAG 1 |  | TAG 2 |
+  ///    y     | TAG 0 |  | TAG 1 |
   ///   ^      0-------1  2-------3
   ///   |-->x
   const double tag_size = target_config.tag_size_meter;
@@ -200,8 +200,6 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
 
     // Calculate the grid idx for all four tag corners given the tagId and cols.
     const size_t cols = target_->cols();
-    //const unsigned int base_idx =
-    //    static_cast<int>(tag_id / (cols / 2)) * cols * 2 + (tag_id % (cols / 2)) * 2;
     const unsigned int base_idx =
         tag_id * 2 + static_cast<int>(tag_id / (cols / 2)) * cols;
     unsigned int point_indices_tag[] = {base_idx,
