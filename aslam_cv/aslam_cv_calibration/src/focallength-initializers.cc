@@ -86,12 +86,7 @@ bool initFocalLengthVanishingPoints(
                                              &intersection_points);
         if (intersection_points.size() >= 2) {
           const double f_guess = cv::norm(intersection_points[0] - intersection_points[1]) / M_PI;
-
-          double reprojErr = reprojectionError(objectPoints, obs->getObservedCorners(), rvecs, tvecs, cv::noArray()); // TODO(duboisf)!
-          if (reprojErr < minReprojErr) {
-            minReprojErr = reprojErr;
-            f_guesses.emplace_back(f_guess);
-          }
+          f_guesses.emplace_back(f_guess);
         }
       }
     }
@@ -144,6 +139,15 @@ bool initFocalLengthAbsoluteConic(
      continue;
    }
 
+   //Exchange indices per values in cornerIds
+   Eigen::VectorXi corner_ids_original = obs->getObservedCornerIds();
+   Eigen::VectorXi corner_ids_modified(corner_ids_original.size());
+
+   for (size_t indx = 0; indx < corner_ids_original.size(); ++indx){
+     int val = corner_ids_original(indx);
+     corner_ids_modified(val)=indx;
+   }
+
    std::vector<cv::Point2f> image_corners(obs->numObservedCorners());
    std::vector<cv::Point2f> M(obs->numObservedCorners());
 
@@ -151,9 +155,8 @@ bool initFocalLengthAbsoluteConic(
      image_corners[j] = cv::Point2f(obs->getObservedCorner(j)[0],
                                     obs->getObservedCorner(j)[1]);
 
-     const size_t corner_id = obs->getObservedCornerId(j);
-     M[j] = cv::Point2f(current_target->point(corner_id)[0],
-                        current_target->point(corner_id)[1]);
+     M[j] = cv::Point2f(current_target->point(corner_ids_modified(j))[0],
+                        current_target->point(corner_ids_modified(j))[1]);
    }
 
    cv::Mat H = cv::findHomography(M, image_corners);
