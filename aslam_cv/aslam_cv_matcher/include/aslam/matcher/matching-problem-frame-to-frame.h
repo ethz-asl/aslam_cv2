@@ -12,7 +12,7 @@
 
 #include <aslam/common/macros.h>
 #include <aslam/common/pose-types.h>
-#include <aslam/common/feature-descriptor-ref.h>
+#include <aslam/common-private/feature-descriptor-ref.h>
 #include <Eigen/Core>
 
 #include "aslam/matcher/matching-problem.h"
@@ -91,8 +91,10 @@ public:
     CHECK(valid_apples_[apple_index]) << "The given apple is not valid.";
     CHECK(valid_bananas_[banana_index]) << "The given banana is not valid.";
 
-    const common::FeatureDescriptorConstRef& apple_descriptor = apple_descriptors_[apple_index];
-    const common::FeatureDescriptorConstRef& banana_descriptor = banana_descriptors_[banana_index];
+    const common::FeatureDescriptorConstRef& apple_descriptor =
+        apple_descriptors_[apple_index];
+    const common::FeatureDescriptorConstRef& banana_descriptor =
+        banana_descriptors_[banana_index];
 
     CHECK_NOTNULL(apple_descriptor.data());
     CHECK_NOTNULL(banana_descriptor.data());
