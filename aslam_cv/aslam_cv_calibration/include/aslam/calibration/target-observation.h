@@ -69,6 +69,18 @@ class TargetObservation  {
     return corner_ids_;
   }
 
+  bool getObservedCornerById(int corner_id, Eigen::Vector2d* obs_corner) const {
+    CHECK_LT(corner_id, corner_ids_.rows());
+
+    for(int i = 0; i < corner_ids_.rows(); ++i){
+      if (corner_id == corner_ids_(i)){
+        *obs_corner = this->getObservedCorner(i);
+        return true;
+      }
+    }
+    return false;
+  }
+
   size_t getObservedCornerId(int idx) const {
     CHECK_LT(idx, corner_ids_.rows());
     return corner_ids_(idx, 0);

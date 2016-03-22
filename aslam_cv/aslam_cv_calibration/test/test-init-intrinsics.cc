@@ -108,7 +108,8 @@ aslam::calibration::TargetObservation::Ptr simulateTargetObservation(
                                                 visible_image_points));
 }
 
-TYPED_TEST(TestCameras, InitializeIntrinsics) {
+// Tests are temporally disabled due to possible malfunction. Further checks required.
+TYPED_TEST(TestCameras, DISABLED_InitializeIntrinsics) {
   CHECK(this->camera_);
 
   // Create a target April grid.
