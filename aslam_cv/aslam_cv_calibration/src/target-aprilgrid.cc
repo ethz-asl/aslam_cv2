@@ -216,7 +216,7 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
           tag_corners_raw.row(4 * tag_idx + tag_corner_idx).at<float>(0),
           tag_corners_raw.row(4 * tag_idx + tag_corner_idx).at<float>(1));
 
-      // Add corner points if it has not moved to far in the subpix refinement.
+      // Add corner points if it has not moved too far in the subpix refinement.
       const double subpix_displacement_squarred = (corner_refined - corner_raw).squaredNorm();
       if (subpix_displacement_squarred <= detector_config_.max_subpixel_refine_displacement_px_sq) {
         corner_ids(out_point_idx) = point_indices_tag[tag_corner_idx];

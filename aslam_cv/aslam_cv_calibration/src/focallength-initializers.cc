@@ -51,22 +51,17 @@ bool initFocalLengthVanishingPoints(
     aslam::Aligned<std::vector, Eigen::Vector2d>::type center(current_target->rows());
     std::vector<double> radius(current_target->rows());
 
-    //Exchange indices per values in cornerIds
-    Eigen::VectorXi corner_ids_original = obs->getObservedCornerIds();
-    Eigen::VectorXi corner_ids_modified(corner_ids_original.size());
-
-    for (size_t indx = 0; indx < corner_ids_original.size(); ++indx){
-      int val = corner_ids_original(indx);
-      corner_ids_modified(val)=indx;
-    }
-
     for (size_t r = 0u; r < current_target->rows(); ++r) {
       std::vector<cv::Point2d> points_on_circle;
       for (size_t c = 0u; c < current_target->cols(); ++c) {
         const size_t corner_idx = r * current_target->cols() + c;
-        points_on_circle.emplace_back(
-            obs->getObservedCorner(corner_ids_modified(corner_idx))[0],
-            obs->getObservedCorner(corner_ids_modified(corner_idx))[1]);
+        Eigen::Vector2d obs_corner;
+        bool success = obs->getObservedCornerById(corner_idx, &obs_corner);
+        if (success == true){
+          points_on_circle.emplace_back(
+              obs_corner[0],
+              obs_corner[1]);
+        }
       }
       InitializerHelpers::fitCircle(points_on_circle, &center[r](0), &center[r](1), &radius[r]);
     }
@@ -139,24 +134,18 @@ bool initFocalLengthAbsoluteConic(
      continue;
    }
 
-   //Exchange indices per values in cornerIds
-   Eigen::VectorXi corner_ids_original = obs->getObservedCornerIds();
-   Eigen::VectorXi corner_ids_modified(corner_ids_original.size());
-
-   for (size_t indx = 0; indx < corner_ids_original.size(); ++indx){
-     int val = corner_ids_original(indx);
-     corner_ids_modified(val)=indx;
-   }
-
    std::vector<cv::Point2f> image_corners(obs->numObservedCorners());
    std::vector<cv::Point2f> M(obs->numObservedCorners());
 
    for (size_t j = 0; j < image_corners.size(); ++j) {
-     image_corners[j] = cv::Point2f(obs->getObservedCorner(j)[0],
-                                    obs->getObservedCorner(j)[1]);
-
-     M[j] = cv::Point2f(current_target->point(corner_ids_modified(j))[0],
-                        current_target->point(corner_ids_modified(j))[1]);
+     Eigen::Vector2d obs_corner;
+     bool success = obs->getObservedCornerById(j, &obs_corner);
+     if (success == true){
+       image_corners[j] = cv::Point2f(obs_corner[0],
+                                      obs_corner[1]);
+       M[j] = cv::Point2f(current_target->point(j)[0],
+                          current_target->point(j)[1]);
+     }
    }
 
    cv::Mat H = cv::findHomography(M, image_corners);
