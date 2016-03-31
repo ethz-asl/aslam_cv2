@@ -10,7 +10,8 @@
 namespace aslam {
 class VisualFrame;
 
-namespace gv {
+namespace geometric_vision {
+
 /// \brief Runs a 2-pt RANSAC scheme over the specified match list to separate matches into
 ///        out-/inliers. The bearing vectors are unrotated using a given rotation q_Ckp1_Ck
 ///        and a model is used that only estimates the translational motion.
@@ -34,5 +35,6 @@ bool rejectOutlierKeypointMatchesTwopt(const aslam::VisualFrame& frame_kp1,
                                        aslam::MatchesWithScore* inlier_matches_kp1_k,
                                        aslam::MatchesWithScore* outlier_matches_kp1_k);
 }  // namespace gv
+
 }  // namespace aslam
 #endif  // ASLAM_MATCH_OUTLIER_REJECTION_TWOPT_H_
