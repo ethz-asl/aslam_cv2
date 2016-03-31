@@ -12,6 +12,7 @@
   <depend>aslam_cv_cameras</depend>
   <depend>aslam_cv_common</depend>
   <depend>aslam_cv_frames</depend>
+  <depend>aslam_cv_geometric_vision</depend>
   <depend>aslam_cv_matcher</depend>
   <depend>cv_bridge</depend>
   <depend>doxygen_catkin</depend>
