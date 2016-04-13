@@ -14,12 +14,19 @@ set(HEADERS
 )
 
 set(SOURCES
+  src/focallength-initializers.cc
   src/target-aprilgrid.cc
   src/target-base.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 add_doxygen(NOT_AUTOMATIC)
+
+##########
+# GTESTS #
+##########
+catkin_add_gtest(test_init_intrinsics test/test-init-intrinsics.cc)
+target_link_libraries(test_init_intrinsics ${PROJECT_NAME})
 
 ##########
 # EXPORT #

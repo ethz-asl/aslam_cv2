@@ -19,15 +19,15 @@ namespace calibration {
 /// \brief Aprilgrid calibration target.
 ///        num_tag_rows:              number of tags in y-dir
 ///        num_tag_cols:              number of tags in x-dir
-///        tag_size_meter:            size of a t ag [m]
+///        tag_size_meter:            size of a tag [m]
 ///        tag_inbetween_space_meter: space between tags [m]
 ///
 ///        Corner ordering :
 ///          12-----13  14-----15
-///          | TAG 3 |  | TAG 4 |
+///          | TAG 2 |  | TAG 3 |
 ///          8-------9  10-----11
 ///          4-------5  6-------7
-///    y     | TAG 1 |  | TAG 2 |
+///    y     | TAG 0 |  | TAG 1 |
 ///   ^      0-------1  2-------3
 ///   |-->x
 class TargetAprilGrid : public TargetBase {
