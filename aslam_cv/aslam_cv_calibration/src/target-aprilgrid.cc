@@ -30,10 +30,10 @@ Eigen::Matrix3Xd TargetAprilGrid::createGridPoints(
   /// \brief initialize an april grid
   ///   point ordering: (e.g. 2x2 grid)
   ///          12-----13  14-----15
-  ///          | TAG 3 |  | TAG 4 |
+  ///          | TAG 2 |  | TAG 3 |
   ///          8-------9  10-----11
   ///          4-------5  6-------7
-  ///    y     | TAG 1 |  | TAG 2 |
+  ///    y     | TAG 0 |  | TAG 1 |
   ///   ^      0-------1  2-------3
   ///   |-->x
   const double tag_size = target_config.tag_size_meter;
@@ -89,7 +89,7 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
         static_cast<double>(image.rows) - detector_config_.min_border_distance_px;
     }
 
-    // Flag for removal if tag deteftion is marked as bad.
+    // Flag for removal if tag detection is marked as bad.
     if (iter->good != 1) {
       remove |= true;
     }
@@ -201,7 +201,7 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
     // Calculate the grid idx for all four tag corners given the tagId and cols.
     const size_t cols = target_->cols();
     const unsigned int base_idx =
-        static_cast<int>(tag_id / (cols / 2)) * cols * 2 + (tag_id % (cols / 2)) * 2;
+        tag_id * 2 + static_cast<int>(tag_id / (cols / 2)) * cols;
     unsigned int point_indices_tag[] = {base_idx,
                                         base_idx + 1,
                                         base_idx + static_cast<unsigned int>(cols + 1),
@@ -216,7 +216,7 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
           tag_corners_raw.row(4 * tag_idx + tag_corner_idx).at<float>(0),
           tag_corners_raw.row(4 * tag_idx + tag_corner_idx).at<float>(1));
 
-      // Add corner points if it has not moved to far in the subpix refinement.
+      // Add corner points if it has not moved too far in the subpix refinement.
       const double subpix_displacement_squarred = (corner_refined - corner_raw).squaredNorm();
       if (subpix_displacement_squarred <= detector_config_.max_subpixel_refine_displacement_px_sq) {
         corner_ids(out_point_idx) = point_indices_tag[tag_corner_idx];
@@ -228,7 +228,8 @@ TargetObservation::Ptr DetectorAprilGrid::detectTargetInImage(const cv::Mat& ima
   corner_ids.conservativeResize(out_point_idx);
   image_corners.conservativeResize(Eigen::NoChange, out_point_idx);
 
-  return TargetObservation::Ptr(new TargetObservation(target_, corner_ids, image_corners));
+  return TargetObservation::Ptr(new TargetObservation(target_, image.rows, image.cols,
+                                                      corner_ids, image_corners));
 }
 
 }  // namespace calibration

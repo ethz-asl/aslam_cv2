@@ -3,10 +3,12 @@
 
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <aslam/common/macros.h>
 #include <Eigen/Core>
 #include <glog/logging.h>
+#include <opencv2/highgui/highgui.hpp>
 
 #include "aslam/calibration/target-base.h"
 
@@ -18,9 +20,13 @@ class TargetObservation  {
   ASLAM_POINTER_TYPEDEFS(TargetObservation);
 
   TargetObservation(const TargetBase::Ptr& target,
+                    const uint32_t im_height,
+                    const uint32_t im_width,
                     const Eigen::VectorXi& corner_ids,
                     const Eigen::Matrix2Xd& image_corners)
    : target_(target),
+     image_height(im_height),
+     image_width(im_width),
      corner_ids_(corner_ids),
      image_corners_(image_corners) {
     CHECK(target);
@@ -33,6 +39,19 @@ class TargetObservation  {
   TargetBase::Ptr getTarget() { return target_; };
   TargetBase::ConstPtr getTarget() const { return target_; };
 
+  uint32_t getImageWidth() { return image_width; };
+  uint32_t getImageHeight() { return image_height; };
+
+  bool observedCornerId(size_t corner_id) {
+    CHECK_LT(corner_id, target_->size());
+    return (cornerid_to_index_map_.count(corner_id) == 1);
+  }
+
+  bool allCornersObservered() const {
+    CHECK(target_) << "The target is not set";
+    return (target_->size() == numObservedCorners());
+  }
+
   size_t numObservedCorners() const {
     return corner_ids_.size();
   }
@@ -41,8 +60,30 @@ class TargetObservation  {
     return image_corners_;
   }
 
+  Eigen::Vector2d getObservedCorner(size_t idx) const {
+    CHECK_LT(idx, image_corners_.cols());
+    return image_corners_.col(idx);
+  }
+
   const Eigen::VectorXi& getObservedCornerIds() const {
     return corner_ids_;
+  }
+
+  bool getObservedCornerById(int corner_id, Eigen::Vector2d* obs_corner) const {
+    CHECK_LT(corner_id, corner_ids_.rows());
+
+    for(int i = 0; i < corner_ids_.rows(); ++i){
+      if (corner_id == corner_ids_(i)){
+        *obs_corner = this->getObservedCorner(i);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  size_t getObservedCornerId(int idx) const {
+    CHECK_LT(idx, corner_ids_.rows());
+    return corner_ids_(idx, 0);
   }
 
   void drawCornersIntoImage(cv::Mat* out_image) const {
@@ -71,6 +112,8 @@ class TargetObservation  {
   };
 
   const TargetBase::Ptr target_;
+  const uint32_t image_height;
+  const uint32_t image_width;
   const Eigen::VectorXi corner_ids_;
   const Eigen::Matrix2Xd image_corners_;
 
