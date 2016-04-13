@@ -10,7 +10,8 @@
 #include <opengv/sac_problems/relative_pose/TranslationOnlySacProblem.hpp>
 
 namespace aslam {
-namespace gv {
+namespace geometric_vision {
+
 bool rejectOutlierKeypointMatchesTwopt(const aslam::VisualFrame& frame_kp1,
                                        const aslam::VisualFrame& frame_k,
                                        const aslam::Quaternion& q_Ckp1_Ck,
