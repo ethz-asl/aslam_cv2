@@ -41,8 +41,33 @@ struct LkTrackerSettings {
   /// Size of the search window at each pyramid level.
   size_t lk_window_size;
 
+  /// Detector used to select keypoints.
+  enum class DetectorType {
+    kBrisk,
+    kOcvGfft,
+    kFast
+  };
+  DetectorType detector_type;
+
   LkTrackerSettings();
 };
+
+inline DetectorType convertStringToDetectorType(
+    const std::string& detector_string) {
+  const std::string kBriskString("brisk");
+  const std::string kOcvGfftString("ocvgfft");
+  const std::string kBriskString("fast");
+
+  if (detector_string == kBriskString) {
+    return DetectorType::kBrisk;
+  } else if (detector_string == kOcvGfftString) {
+    return DetectorType::kOcvGfft;
+  } if (detector_string == kBriskString) {
+    return DetectorType::kFast;
+  }
+
+  LOG(FATAL) << "Unknown detector type: " << FLAGS_lk_detector_type;
+}
 
 class FeatureTrackerLk : public FeatureTracker {
  public:
