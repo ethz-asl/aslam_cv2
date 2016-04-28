@@ -8,7 +8,11 @@
 #include <opencv/highgui.h>
 
 DEFINE_bool(lk_show_detection_mask, false, "Draw the detection mask.");
-DEFINE_string(lk_detector_type, "fast", "Keypoint detector type.");
+DEFINE_string(lk_detector_type, "brisk", "Keypoint detector type.");
+DEFINE_int32(lk_fast_detector_threshold, 1, "Threshold on difference between"
+    "intensity of the central pixel and pixels of a circle around this pixel.");
+DEFINE_bool(lk_fast_detector_nonmaxsuppression, true,
+            "Use non-maximum suppression for detection.");
 DEFINE_uint64(lk_brisk_octaves, 1, "Brisk detector number of octaves.");
 DEFINE_uint64(lk_brisk_uniformity_radius_px, 0, "Brisk detector uniformity radius.");
 DEFINE_uint64(lk_brisk_absolute_threshold, 45, "Brisk detector absolute threshold.");
@@ -27,7 +31,9 @@ namespace aslam {
 static constexpr double kKeypointUncertaintyPx = 0.8;
 
 LkTrackerSettings::LkTrackerSettings()
-    : brisk_detector_octaves(FLAGS_lk_brisk_octaves),
+    : fast_detector_threshold(FLAGS_lk_fast_detector_threshold),
+      fast_detector_nonmaxsuppression(FLAGS_lk_fast_detector_nonmaxsuppression),
+      brisk_detector_octaves(FLAGS_lk_brisk_octaves),
       brisk_detector_uniformity_radius_px(FLAGS_lk_brisk_uniformity_radius_px),
       brisk_detector_absolute_threshold(FLAGS_lk_brisk_absolute_threshold),
       min_distance_between_features_px(FLAGS_lk_min_distance_between_features_px),
@@ -36,7 +42,7 @@ LkTrackerSettings::LkTrackerSettings()
       lk_min_eigen_threshold(FLAGS_lk_min_eigen_threshold),
       lk_max_pyramid_level(FLAGS_lk_max_pyramid_level),
       lk_window_size(FLAGS_lk_window_size),
-      detector_type(convertStringToDetectorType(lk_detector_type)) {
+      detector_type(convertStringToDetectorType(FLAGS_lk_detector_type)) {
   CHECK_GT(min_distance_between_features_px, 1.0);
   CHECK_GT(min_feature_count, 0u);
   CHECK_GT(max_feature_count, min_feature_count);
@@ -380,7 +386,7 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
 
   std::vector<cv::KeyPoint> keypoints_cv;
   switch (settings_.detector_type) {
-    case LkTrackerSettings::DetectorType::kBrisk: {
+    case LkTrackerSettings::DetectorType::kBriskDetector: {
       // The detector needs to be reconstructed in each iteration as brisk doesn't provide an
       // interface to change the number of detected keypoints.
       brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator> detector(
@@ -391,6 +397,7 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
       // Detect new keypoints in the unmasked image area.
       keypoints_cv.reserve(num_keypoints_to_detect);
       detector.detect(image_kp1, keypoints_cv, detection_mask);
+      break;
     }
 
     case LkTrackerSettings::DetectorType::kOcvGfft: {
@@ -416,21 +423,21 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
         keypoint.response = score;
         score -= 1.0;
       }
+      break;
     }
 
-    case LkTrackerSettings::DetectorType::kFast: {
-      // The detector needs to be reconstructed in each iteration as brisk doesn't provide an
-      // interface to change the number of detected keypoints.
-      cv::FeatureDetector<cv::>
-
-      // Detect new keypoints in the unmasked image area.
-      keypoints_cv.reserve(num_keypoints_to_detect);
-      detector.detect(image_kp1, keypoints_cv, detection_mask);
-
+    case LkTrackerSettings::DetectorType::kOcvFast: {
+      // Stefan Leutenegger suggests using TYPE_9_16 in his BRISK paper.
+      static constexpr int kMask = cv::FastFeatureDetector::TYPE_9_16;
+      // Currently, no detection mask is applied directly at detection.
+      cv::FASTX(image_kp1, keypoints_cv, settings_.fast_detector_threshold,
+                settings_.fast_detector_nonmaxsuppression, kMask);
+      cv::KeyPointsFilter::retainBest(keypoints_cv, num_keypoints_to_detect);
+      break;
     }
 
     default: {
-      LOG(FATAL) << "Unhandeled detector type.";
+      LOG(FATAL) << "Unhandled detector type.";
     }
   }
 

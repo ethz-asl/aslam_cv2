@@ -13,61 +13,67 @@
 #include <gflags/gflags.h>
 #include <opencv2/video/tracking.hpp>
 
+DECLARE_string(lk_detector_type);
+
 namespace aslam {
 class VisualFrame;
 
 struct LkTrackerSettings {
+  /// Detector used to select keypoints.
+  enum class DetectorType {
+    kBriskDetector,
+    kOcvGfft,
+    kOcvFast
+  };
+  const DetectorType detector_type;
+
   /// Brisk Harris detector settings.
-  size_t brisk_detector_octaves;
-  size_t brisk_detector_uniformity_radius_px;
-  size_t brisk_detector_absolute_threshold;
+  const size_t brisk_detector_octaves;
+  const size_t brisk_detector_uniformity_radius_px;
+  const size_t brisk_detector_absolute_threshold;
+
+  /// FAST detector settings.
+  const int fast_detector_threshold;
+  const bool fast_detector_nonmaxsuppression;
 
   /// Min. distance between the detected keypoints.
-  double min_distance_between_features_px;
+  const double min_distance_between_features_px;
   /// Maximum number of keypoint to detect.
-  size_t max_feature_count;
+  const size_t max_feature_count;
   /// Threshold when to detect new keypoints.
-  size_t min_feature_count;
+  const size_t min_feature_count;
 
   /// The algorithm calculates the minimum eigen value of a 2x2 normal matrix of optical flow
   /// equations (this matrix is called a spatial gradient matrix in [Bouguet00]), divided by number
   /// of pixels in a window; if this value is less than kMinEigThreshold, then a corresponding
   /// feature is filtered out and its flow is not processed, so it allows to remove bad points and
   /// get a performance boost.
-  double lk_min_eigen_threshold;
+  const double lk_min_eigen_threshold;
   /// Maximal pyramid level number. If set to 0, pyramids are not used (single level), if set to 1,
   /// two levels are used, and so on.
-  size_t lk_max_pyramid_level;
+  const size_t lk_max_pyramid_level;
   /// Size of the search window at each pyramid level.
-  size_t lk_window_size;
-
-  /// Detector used to select keypoints.
-  enum class DetectorType {
-    kBrisk,
-    kOcvGfft,
-    kFast
-  };
-  DetectorType detector_type;
+  const size_t lk_window_size;
 
   LkTrackerSettings();
-};
 
-inline DetectorType convertStringToDetectorType(
-    const std::string& detector_string) {
-  const std::string kBriskString("brisk");
-  const std::string kOcvGfftString("ocvgfft");
-  const std::string kBriskString("fast");
+  DetectorType convertStringToDetectorType(
+      const std::string& detector_string) {
+    const std::string kBriskString("brisk");
+    const std::string kOcvGfftString("ocvgfft");
+    const std::string kOcvFastString("ocvfast");
 
-  if (detector_string == kBriskString) {
-    return DetectorType::kBrisk;
-  } else if (detector_string == kOcvGfftString) {
-    return DetectorType::kOcvGfft;
-  } if (detector_string == kBriskString) {
-    return DetectorType::kFast;
+    if (detector_string == kBriskString) {
+      return DetectorType::kBriskDetector;
+    } else if (detector_string == kOcvGfftString) {
+      return DetectorType::kOcvGfft;
+    } if (detector_string == kOcvFastString) {
+      return DetectorType::kOcvFast;
+    }
+
+    LOG(FATAL) << "Unknown detector type: " << FLAGS_lk_detector_type;
   }
-
-  LOG(FATAL) << "Unknown detector type: " << FLAGS_lk_detector_type;
-}
+};
 
 class FeatureTrackerLk : public FeatureTracker {
  public:
