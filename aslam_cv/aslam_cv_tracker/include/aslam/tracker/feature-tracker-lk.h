@@ -27,14 +27,14 @@ struct LkTrackerSettings {
   };
   const DetectorType detector_type;
 
+  /// FAST detector settings.
+  const int fast_detector_threshold;
+  const bool fast_detector_nonmaxsuppression;
+
   /// Brisk Harris detector settings.
   const size_t brisk_detector_octaves;
   const size_t brisk_detector_uniformity_radius_px;
   const size_t brisk_detector_absolute_threshold;
-
-  /// FAST detector settings.
-  const int fast_detector_threshold;
-  const bool fast_detector_nonmaxsuppression;
 
   /// Min. distance between the detected keypoints.
   const double min_distance_between_features_px;

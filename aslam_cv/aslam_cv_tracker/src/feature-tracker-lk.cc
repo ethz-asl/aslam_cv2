@@ -31,7 +31,8 @@ namespace aslam {
 static constexpr double kKeypointUncertaintyPx = 0.8;
 
 LkTrackerSettings::LkTrackerSettings()
-    : fast_detector_threshold(FLAGS_lk_fast_detector_threshold),
+    : detector_type(convertStringToDetectorType(FLAGS_lk_detector_type)),
+      fast_detector_threshold(FLAGS_lk_fast_detector_threshold),
       fast_detector_nonmaxsuppression(FLAGS_lk_fast_detector_nonmaxsuppression),
       brisk_detector_octaves(FLAGS_lk_brisk_octaves),
       brisk_detector_uniformity_radius_px(FLAGS_lk_brisk_uniformity_radius_px),
@@ -41,8 +42,7 @@ LkTrackerSettings::LkTrackerSettings()
       min_feature_count(FLAGS_lk_min_feature_count),
       lk_min_eigen_threshold(FLAGS_lk_min_eigen_threshold),
       lk_max_pyramid_level(FLAGS_lk_max_pyramid_level),
-      lk_window_size(FLAGS_lk_window_size),
-      detector_type(convertStringToDetectorType(FLAGS_lk_detector_type)) {
+      lk_window_size(FLAGS_lk_window_size) {
   CHECK_GT(min_distance_between_features_px, 1.0);
   CHECK_GT(min_feature_count, 0u);
   CHECK_GT(max_feature_count, min_feature_count);
