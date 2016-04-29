@@ -69,6 +69,13 @@ class HashId {
   }
 
   /**
+   * Returns a short hexadecimal tag.
+   */
+  inline const std::string shortHex() const {
+    return hexString().substr(0u, 2u);
+  }
+
+  /**
    * Deserialize from hexadecimal string. Serialization and Deserialization
    * could be made more performant by using blobs.
    */
