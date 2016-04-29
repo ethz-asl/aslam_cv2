@@ -8,8 +8,8 @@
 #include <opencv/highgui.h>
 
 DEFINE_bool(lk_show_detection_mask, false, "Draw the detection mask.");
-DEFINE_string(lk_detector_type, "brisk", "Keypoint detector type.");
-DEFINE_int32(lk_fast_detector_threshold, 25, "Threshold on difference between"
+DEFINE_string(lk_detector_type, "ocvfreak", "Keypoint detector type.");
+DEFINE_int32(lk_fast_detector_threshold, 20, "Threshold on difference between"
     "intensity of the central pixel and pixels of a circle around this pixel.");
 DEFINE_bool(lk_fast_detector_nonmaxsuppression, true,
             "Use non-maximum suppression for detection.");
