@@ -23,9 +23,15 @@ struct LkTrackerSettings {
   enum class DetectorType {
     kBriskDetector,
     kOcvGfft,
-    kOcvFast
+    kOcvFast,
+    kOcvBrisk
   };
   const DetectorType detector_type;
+
+  /// BRISK (OpenCV) detector settings.
+  const int ocv_brisk_detector_octaves;
+  const float ocv_brisk_detector_patternScale;
+  const int ocv_brisk_detector_threshold;
 
   /// FAST detector settings.
   const int fast_detector_threshold;
@@ -59,18 +65,15 @@ struct LkTrackerSettings {
 
   DetectorType convertStringToDetectorType(
       const std::string& detector_string) {
-    const std::string kBriskString("brisk");
-    const std::string kOcvGfftString("ocvgfft");
-    const std::string kOcvFastString("ocvfast");
-
-    if (detector_string == kBriskString) {
+    if (detector_string == "brisk") {
       return DetectorType::kBriskDetector;
-    } else if (detector_string == kOcvGfftString) {
+    } else if (detector_string == "ocvgfft") {
       return DetectorType::kOcvGfft;
-    } if (detector_string == kOcvFastString) {
+    } else if (detector_string == "ocvfast") {
       return DetectorType::kOcvFast;
+    } else if (detector_string == "ocvbrisk") {
+      return DetectorType::kOcvBrisk;
     }
-
     LOG(FATAL) << "Unknown detector type: " << FLAGS_lk_detector_type;
   }
 };
@@ -157,6 +160,9 @@ class FeatureTrackerLk : public FeatureTracker {
   /// window moves by less than criteria.epsilon).
   const cv::TermCriteria kTerminationCriteria = cv::TermCriteria(
       cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
+
+  /// Pointer to keypoint detector.
+  cv::Ptr<cv::FeatureDetector> detector_;
 
   /// @}
 
