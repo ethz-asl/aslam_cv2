@@ -11,7 +11,7 @@ DEFINE_bool(lk_show_detection_mask, false, "Draw the detection mask.");
 DEFINE_string(lk_detector_type, "ocvbrisk", "Keypoint detector type.");
 DEFINE_int32(lk_ocv_brisk_detector_threshold, 20, "Threshold on difference between"
     "intensity of the central pixel and pixels of a circle around this pixel.");
-DEFINE_int32(lk_ocv_brisk_detector_octaves, 4,
+DEFINE_int32(lk_ocv_brisk_detector_octaves, 3,
              "Detection octaves. Use 0 to do single scale.");
 DEFINE_double(lk_ocv_brisk_detector_patternScale, 1.0,
             "Scale applied to the pattern used for"
