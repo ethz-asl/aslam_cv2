@@ -18,6 +18,8 @@ DECLARE_string(lk_detector_type);
 namespace aslam {
 class VisualFrame;
 
+static constexpr double kKeypointUncertaintyPx = 0.8;
+
 struct LkTrackerSettings {
   /// Detector used to select keypoints.
   enum class DetectorType {

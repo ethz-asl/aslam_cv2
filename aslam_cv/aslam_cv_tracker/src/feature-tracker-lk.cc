@@ -9,12 +9,12 @@
 
 DEFINE_bool(lk_show_detection_mask, false, "Draw the detection mask.");
 DEFINE_string(lk_detector_type, "ocvbrisk", "Keypoint detector type.");
-DEFINE_int32(lk_ocv_brisk_detector_threshold, 20, "Threshold on difference between"
+DEFINE_int32(lk_ocv_brisk_detector_threshold, 20, "Threshold on difference between "
     "intensity of the central pixel and pixels of a circle around this pixel.");
 DEFINE_int32(lk_ocv_brisk_detector_octaves, 0,
              "Detection octaves. Use 0 to do single scale.");
 DEFINE_double(lk_ocv_brisk_detector_patternScale, 1.0,
-            "Scale applied to the pattern used for"
+            "Scale applied to the pattern used for "
             "sampling the neighbourhood of a keypoint.");
 DEFINE_uint64(lk_brisk_octaves, 1, "Brisk detector number of octaves.");
 DEFINE_uint64(lk_brisk_uniformity_radius_px, 0, "Brisk detector uniformity radius.");
@@ -31,8 +31,6 @@ DEFINE_uint64(lk_window_size, 21, "Size of the search window at each pyramid lev
 
 namespace aslam {
 
-static constexpr double kKeypointUncertaintyPx = 0.8;
-
 LkTrackerSettings::LkTrackerSettings()
     : detector_type(convertStringToDetectorType(FLAGS_lk_detector_type)),
       ocv_brisk_detector_octaves(FLAGS_lk_ocv_brisk_detector_octaves),
@@ -47,6 +45,10 @@ LkTrackerSettings::LkTrackerSettings()
       lk_min_eigen_threshold(FLAGS_lk_min_eigen_threshold),
       lk_max_pyramid_level(FLAGS_lk_max_pyramid_level),
       lk_window_size(FLAGS_lk_window_size) {
+  CHECK_GE(ocv_brisk_detector_octaves, 0);
+  CHECK_GE(ocv_brisk_detector_patternScale, 1.0f);
+  CHECK_GE(ocv_brisk_detector_threshold, 0);
+  CHECK_GE(brisk_detector_octaves, 1);
   CHECK_GT(min_distance_between_features_px, 1.0);
   CHECK_GT(min_feature_count, 0u);
   CHECK_GT(max_feature_count, min_feature_count);
