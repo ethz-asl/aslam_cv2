@@ -64,8 +64,6 @@ struct LkTrackerSettings {
       return DetectorType::kBriskDetector;
     } else if (detector_string == "ocvgfft") {
       return DetectorType::kOcvGfft;
-    } else if (detector_string == "ocvfast") {
-      return DetectorType::kOcvFast;
     } else if (detector_string == "ocvbrisk") {
       return DetectorType::kOcvBrisk;
     }
