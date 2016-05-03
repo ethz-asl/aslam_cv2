@@ -23,7 +23,6 @@ struct LkTrackerSettings {
   enum class DetectorType {
     kBriskDetector,
     kOcvGfft,
-    kOcvFast,
     kOcvBrisk
   };
   const DetectorType detector_type;
@@ -33,11 +32,7 @@ struct LkTrackerSettings {
   const float ocv_brisk_detector_patternScale;
   const int ocv_brisk_detector_threshold;
 
-  /// FAST detector settings.
-  const int fast_detector_threshold;
-  const bool fast_detector_nonmaxsuppression;
-
-  /// Brisk Harris detector settings.
+  /// BRISK Harris detector settings.
   const size_t brisk_detector_octaves;
   const size_t brisk_detector_uniformity_radius_px;
   const size_t brisk_detector_absolute_threshold;

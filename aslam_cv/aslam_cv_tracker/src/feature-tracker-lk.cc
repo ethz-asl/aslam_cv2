@@ -11,15 +11,11 @@ DEFINE_bool(lk_show_detection_mask, false, "Draw the detection mask.");
 DEFINE_string(lk_detector_type, "ocvbrisk", "Keypoint detector type.");
 DEFINE_int32(lk_ocv_brisk_detector_threshold, 20, "Threshold on difference between"
     "intensity of the central pixel and pixels of a circle around this pixel.");
-DEFINE_int32(lk_ocv_brisk_detector_octaves, 3,
+DEFINE_int32(lk_ocv_brisk_detector_octaves, 0,
              "Detection octaves. Use 0 to do single scale.");
 DEFINE_double(lk_ocv_brisk_detector_patternScale, 1.0,
             "Scale applied to the pattern used for"
             "sampling the neighbourhood of a keypoint.");
-DEFINE_int32(lk_fast_detector_threshold, 20, "Threshold on difference between"
-    "intensity of the central pixel and pixels of a circle around this pixel.");
-DEFINE_bool(lk_fast_detector_nonmaxsuppression, true,
-            "Use non-maximum suppression for detection.");
 DEFINE_uint64(lk_brisk_octaves, 1, "Brisk detector number of octaves.");
 DEFINE_uint64(lk_brisk_uniformity_radius_px, 0, "Brisk detector uniformity radius.");
 DEFINE_uint64(lk_brisk_absolute_threshold, 45, "Brisk detector absolute threshold.");
@@ -42,8 +38,6 @@ LkTrackerSettings::LkTrackerSettings()
       ocv_brisk_detector_octaves(FLAGS_lk_ocv_brisk_detector_octaves),
       ocv_brisk_detector_patternScale(FLAGS_lk_ocv_brisk_detector_patternScale),
       ocv_brisk_detector_threshold(FLAGS_lk_ocv_brisk_detector_threshold),
-      fast_detector_threshold(FLAGS_lk_fast_detector_threshold),
-      fast_detector_nonmaxsuppression(FLAGS_lk_fast_detector_nonmaxsuppression),
       brisk_detector_octaves(FLAGS_lk_brisk_octaves),
       brisk_detector_uniformity_radius_px(FLAGS_lk_brisk_uniformity_radius_px),
       brisk_detector_absolute_threshold(FLAGS_lk_brisk_absolute_threshold),
@@ -79,9 +73,11 @@ void FeatureTrackerLk::initialize(const aslam::Camera& camera) {
                                       camera.imageWidth() - 2 * kMinDistanceToImageBorderPx - 1,
                                       camera.imageHeight() - 2 * kMinDistanceToImageBorderPx - 1));
   region_of_interest = cv::Scalar(255);
-  detector_ = new cv::BRISK(settings_.ocv_brisk_detector_threshold,
-                            settings_.ocv_brisk_detector_octaves,
-                            settings_.ocv_brisk_detector_patternScale);
+  if (settings_.detector_type == settings_.DetectorType::kOcvBrisk) {
+    detector_ = new cv::BRISK(settings_.ocv_brisk_detector_threshold,
+                              settings_.ocv_brisk_detector_octaves,
+                              settings_.ocv_brisk_detector_patternScale);
+  }
 }
 
 void FeatureTrackerLk::initializeKeypointsInEmptyVisualFrame(
@@ -398,6 +394,11 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
 
   std::vector<cv::KeyPoint> keypoints_cv;
   switch (settings_.detector_type) {
+    case LkTrackerSettings::DetectorType::kOcvBrisk: {
+      detector_->detect(image_kp1, keypoints_cv, detection_mask);
+      cv::KeyPointsFilter::retainBest(keypoints_cv, num_keypoints_to_detect);
+      break;
+    }
     case LkTrackerSettings::DetectorType::kBriskDetector: {
       // The detector needs to be reconstructed in each iteration as brisk doesn't provide an
       // interface to change the number of detected keypoints.
@@ -411,7 +412,6 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
       detector.detect(image_kp1, keypoints_cv, detection_mask);
       break;
     }
-
     case LkTrackerSettings::DetectorType::kOcvGfft: {
       static constexpr double kGoodFeaturesToTrackQualityLevel = 0.001;
       const cv::Size kSubPixelWinSize = cv::Size(10, 10);
@@ -437,23 +437,6 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
       }
       break;
     }
-
-    case LkTrackerSettings::DetectorType::kOcvFast: {
-      // Stefan Leutenegger suggests using TYPE_9_16 in his BRISK paper.
-      static constexpr int type = cv::FastFeatureDetector::TYPE_9_16;
-      // Currently, no detection mask is applied directly at detection.
-      cv::FASTX(image_kp1, keypoints_cv, settings_.fast_detector_threshold,
-                settings_.fast_detector_nonmaxsuppression, type);
-      cv::KeyPointsFilter::retainBest(keypoints_cv, num_keypoints_to_detect);
-      break;
-    }
-
-    case LkTrackerSettings::DetectorType::kOcvBrisk: {
-      detector_->detect(image_kp1, keypoints_cv, detection_mask);
-      cv::KeyPointsFilter::retainBest(keypoints_cv, num_keypoints_to_detect);
-      break;
-    }
-
     default: {
       LOG(FATAL) << "Unhandled detector type.";
     }
