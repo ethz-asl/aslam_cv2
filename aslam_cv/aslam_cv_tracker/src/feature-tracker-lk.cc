@@ -56,6 +56,18 @@ LkTrackerSettings::LkTrackerSettings()
   CHECK_GT(lk_window_size, 0u);
 }
 
+LkTrackerSettings::DetectorType LkTrackerSettings::convertStringToDetectorType(
+    const std::string& detector_string) {
+  if (detector_string == "brisk") {
+    return DetectorType::kBriskDetector;
+  } else if (detector_string == "ocvgfft") {
+    return DetectorType::kOcvGfft;
+  } else if (detector_string == "ocvbrisk") {
+    return DetectorType::kOcvBrisk;
+  }
+  LOG(FATAL) << "Unknown detector type: " << FLAGS_lk_detector_type;
+}
+
 FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera, const LkTrackerSettings& settings)
     : lk_window_size_(settings.lk_window_size, settings.lk_window_size),
       camera_(camera),
