@@ -87,7 +87,7 @@ void FeatureTrackerLk::initialize(const aslam::Camera& camera) {
                                       camera.imageWidth() - 2 * kMinDistanceToImageBorderPx - 1,
                                       camera.imageHeight() - 2 * kMinDistanceToImageBorderPx - 1));
   region_of_interest = cv::Scalar(255);
-  if (settings_.detector_type == settings_.DetectorType::kOcvBrisk) {
+  if (settings_.detector_type == LkTrackerSettings::DetectorType::kOcvBrisk) {
     detector_ = new cv::BRISK(settings_.ocv_brisk_detector_threshold,
                               settings_.ocv_brisk_detector_octaves,
                               settings_.ocv_brisk_detector_patternScale);
