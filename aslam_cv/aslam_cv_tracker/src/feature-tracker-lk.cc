@@ -46,7 +46,7 @@ LkTrackerSettings::LkTrackerSettings()
       lk_max_pyramid_level(FLAGS_lk_max_pyramid_level),
       lk_window_size(FLAGS_lk_window_size) {
   CHECK_GE(ocv_brisk_detector_octaves, 0);
-  CHECK_GE(ocv_brisk_detector_patternScale, 1.0f);
+  CHECK_GT(ocv_brisk_detector_patternScale, 0.0f);
   CHECK_GE(ocv_brisk_detector_threshold, 0);
   CHECK_GE(brisk_detector_octaves, 1);
   CHECK_GT(min_distance_between_features_px, 1.0);
