@@ -16,7 +16,7 @@ class VisualFrame;
 
 namespace aslam {
 /// \class FeatureTracker
-/// \brief Base class defining the interface for feature trackers and providing visualization.
+/// \brief Base class defining the interface for feature trackers.
 class FeatureTracker {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
