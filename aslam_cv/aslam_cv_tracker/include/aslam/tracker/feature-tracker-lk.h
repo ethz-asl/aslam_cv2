@@ -13,11 +13,34 @@
 #include <gflags/gflags.h>
 #include <opencv2/video/tracking.hpp>
 
+DECLARE_string(lk_detector_type);
+
 namespace aslam {
 class VisualFrame;
 
+static constexpr double kKeypointUncertaintyPx = 0.8;
+
 struct LkTrackerSettings {
-  /// Brisk Harris detector settings.
+  /// Detector used to select keypoints.
+  enum class DetectorType {
+    kBriskDetector,
+    kOcvGfft,
+    kOcvBrisk
+  };
+
+  LkTrackerSettings();
+
+  DetectorType convertStringToDetectorType(
+      const std::string& detector_string);
+
+  DetectorType detector_type;
+
+  /// BRISK (OpenCV) detector settings.
+  int ocv_brisk_detector_octaves;
+  float ocv_brisk_detector_patternScale;
+  int ocv_brisk_detector_threshold;
+
+  /// BRISK Harris detector settings.
   size_t brisk_detector_octaves;
   size_t brisk_detector_uniformity_radius_px;
   size_t brisk_detector_absolute_threshold;
@@ -40,8 +63,6 @@ struct LkTrackerSettings {
   size_t lk_max_pyramid_level;
   /// Size of the search window at each pyramid level.
   size_t lk_window_size;
-
-  LkTrackerSettings();
 };
 
 class FeatureTrackerLk : public FeatureTracker {
@@ -126,6 +147,9 @@ class FeatureTrackerLk : public FeatureTracker {
   /// window moves by less than criteria.epsilon).
   const cv::TermCriteria kTerminationCriteria = cv::TermCriteria(
       cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
+
+  /// Pointer to keypoint detector.
+  cv::Ptr<cv::FeatureDetector> detector_;
 
   /// @}
 

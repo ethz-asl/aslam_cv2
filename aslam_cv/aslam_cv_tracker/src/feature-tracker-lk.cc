@@ -8,8 +8,14 @@
 #include <opencv/highgui.h>
 
 DEFINE_bool(lk_show_detection_mask, false, "Draw the detection mask.");
-DEFINE_bool(lk_use_brisk_harris, true, "Use the BRISK Harris implementation?");
-
+DEFINE_string(lk_detector_type, "ocvbrisk", "Keypoint detector type.");
+DEFINE_int32(lk_ocv_brisk_detector_threshold, 20, "Threshold on difference between "
+    "intensity of the central pixel and pixels of a circle around this pixel.");
+DEFINE_int32(lk_ocv_brisk_detector_octaves, 0,
+             "Detection octaves. Use 0 to do single scale.");
+DEFINE_double(lk_ocv_brisk_detector_patternScale, 1.0,
+            "Scale applied to the pattern used for "
+            "sampling the neighbourhood of a keypoint.");
 DEFINE_uint64(lk_brisk_octaves, 1, "Brisk detector number of octaves.");
 DEFINE_uint64(lk_brisk_uniformity_radius_px, 0, "Brisk detector uniformity radius.");
 DEFINE_uint64(lk_brisk_absolute_threshold, 45, "Brisk detector absolute threshold.");
@@ -25,10 +31,12 @@ DEFINE_uint64(lk_window_size, 21, "Size of the search window at each pyramid lev
 
 namespace aslam {
 
-static constexpr double kKeypointUncertaintyPx = 0.8;
-
 LkTrackerSettings::LkTrackerSettings()
-    : brisk_detector_octaves(FLAGS_lk_brisk_octaves),
+    : detector_type(convertStringToDetectorType(FLAGS_lk_detector_type)),
+      ocv_brisk_detector_octaves(FLAGS_lk_ocv_brisk_detector_octaves),
+      ocv_brisk_detector_patternScale(FLAGS_lk_ocv_brisk_detector_patternScale),
+      ocv_brisk_detector_threshold(FLAGS_lk_ocv_brisk_detector_threshold),
+      brisk_detector_octaves(FLAGS_lk_brisk_octaves),
       brisk_detector_uniformity_radius_px(FLAGS_lk_brisk_uniformity_radius_px),
       brisk_detector_absolute_threshold(FLAGS_lk_brisk_absolute_threshold),
       min_distance_between_features_px(FLAGS_lk_min_distance_between_features_px),
@@ -37,11 +45,27 @@ LkTrackerSettings::LkTrackerSettings()
       lk_min_eigen_threshold(FLAGS_lk_min_eigen_threshold),
       lk_max_pyramid_level(FLAGS_lk_max_pyramid_level),
       lk_window_size(FLAGS_lk_window_size) {
+  CHECK_GE(ocv_brisk_detector_octaves, 0);
+  CHECK_GT(ocv_brisk_detector_patternScale, 0.0f);
+  CHECK_GE(ocv_brisk_detector_threshold, 0);
+  CHECK_GE(brisk_detector_octaves, 1);
   CHECK_GT(min_distance_between_features_px, 1.0);
   CHECK_GT(min_feature_count, 0u);
   CHECK_GT(max_feature_count, min_feature_count);
   CHECK_GT(lk_min_eigen_threshold, 0.0);
   CHECK_GT(lk_window_size, 0u);
+}
+
+LkTrackerSettings::DetectorType LkTrackerSettings::convertStringToDetectorType(
+    const std::string& detector_string) {
+  if (detector_string == "brisk") {
+    return DetectorType::kBriskDetector;
+  } else if (detector_string == "ocvgfft") {
+    return DetectorType::kOcvGfft;
+  } else if (detector_string == "ocvbrisk") {
+    return DetectorType::kOcvBrisk;
+  }
+  LOG(FATAL) << "Unknown detector type: " << FLAGS_lk_detector_type;
 }
 
 FeatureTrackerLk::FeatureTrackerLk(const aslam::Camera& camera, const LkTrackerSettings& settings)
@@ -63,6 +87,11 @@ void FeatureTrackerLk::initialize(const aslam::Camera& camera) {
                                       camera.imageWidth() - 2 * kMinDistanceToImageBorderPx - 1,
                                       camera.imageHeight() - 2 * kMinDistanceToImageBorderPx - 1));
   region_of_interest = cv::Scalar(255);
+  if (settings_.detector_type == LkTrackerSettings::DetectorType::kOcvBrisk) {
+    detector_ = new cv::BRISK(settings_.ocv_brisk_detector_threshold,
+                              settings_.ocv_brisk_detector_octaves,
+                              settings_.ocv_brisk_detector_patternScale);
+  }
 }
 
 void FeatureTrackerLk::initializeKeypointsInEmptyVisualFrame(
@@ -301,7 +330,6 @@ void FeatureTrackerLk::track(
     ++keypoint_idx_kp1;
   }
 
-  const double kKeypointUncertaintyPx = 0.8;
   insertAdditionalKeypointsToVisualFrame(new_keypoints_kp1, kKeypointUncertaintyPx, frame_kp1);
 
   // Reset the list of keypoints to abort tracking.
@@ -379,38 +407,52 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
   }
 
   std::vector<cv::KeyPoint> keypoints_cv;
-  if (FLAGS_lk_use_brisk_harris) {
-    // The detector needs to be reconstructed in each iteration as brisk doesn't provide an
-    // interface to change the number of detected keypoints.
-    brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator> detector(
-        settings_.brisk_detector_octaves, settings_.brisk_detector_uniformity_radius_px,
-        settings_.brisk_detector_absolute_threshold, num_keypoints_to_detect);
+  switch (settings_.detector_type) {
+    case LkTrackerSettings::DetectorType::kOcvBrisk: {
+      detector_->detect(image_kp1, keypoints_cv, detection_mask);
+      cv::KeyPointsFilter::retainBest(keypoints_cv, num_keypoints_to_detect);
+      break;
+    }
+    case LkTrackerSettings::DetectorType::kBriskDetector: {
+      // The detector needs to be reconstructed in each iteration as brisk doesn't provide an
+      // interface to change the number of detected keypoints.
+      brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator> detector(
+          settings_.brisk_detector_octaves,
+          settings_.brisk_detector_uniformity_radius_px,
+          settings_.brisk_detector_absolute_threshold, num_keypoints_to_detect);
 
-    // Detect new keypoints in the unmasked image area.
-    keypoints_cv.reserve(num_keypoints_to_detect);
-    detector.detect(image_kp1, keypoints_cv, detection_mask);
-  } else {
-    static constexpr double kGoodFeaturesToTrackQualityLevel = 0.001;
-    const cv::Size kSubPixelWinSize = cv::Size(10, 10);
-    const cv::Size kSubPixelZeroZone = cv::Size(-1, -1);
+      // Detect new keypoints in the unmasked image area.
+      keypoints_cv.reserve(num_keypoints_to_detect);
+      detector.detect(image_kp1, keypoints_cv, detection_mask);
+      break;
+    }
+    case LkTrackerSettings::DetectorType::kOcvGfft: {
+      static constexpr double kGoodFeaturesToTrackQualityLevel = 0.001;
+      const cv::Size kSubPixelWinSize = cv::Size(10, 10);
+      const cv::Size kSubPixelZeroZone = cv::Size(-1, -1);
 
-    std::vector<cv::Point2f> points_cv;
-    cv::goodFeaturesToTrack(image_kp1, points_cv, num_keypoints_to_detect,
-                            kGoodFeaturesToTrackQualityLevel,
-                            settings_.min_distance_between_features_px, detection_mask);
+      std::vector<cv::Point2f> points_cv;
+      cv::goodFeaturesToTrack(image_kp1, points_cv, num_keypoints_to_detect,
+                              kGoodFeaturesToTrackQualityLevel,
+                              settings_.min_distance_between_features_px, detection_mask);
 
-    aslam::timing::Timer timer_subpix("FeatureTrackerLk: detection - cornerSubPix");
-    cv::cornerSubPix(image_kp1, points_cv, kSubPixelWinSize, kSubPixelZeroZone,
-                     kTerminationCriteria);
-    timer_subpix.Stop();
+      aslam::timing::Timer timer_subpix("FeatureTrackerLk: detection - cornerSubPix");
+      cv::cornerSubPix(image_kp1, points_cv, kSubPixelWinSize, kSubPixelZeroZone,
+                       kTerminationCriteria);
+      timer_subpix.Stop();
 
-    // Convert to Keypoint datatype and set a constant score as the gfft detector does not
-    // provide any score but the keypoints are sorted by descending detector response.
-    cv::KeyPoint::convert(points_cv, keypoints_cv);
-    double score = 1.0;
-    for (cv::KeyPoint& keypoint : keypoints_cv) {
-      keypoint.response = score;
-      score -= 1.0;
+      // Convert to Keypoint datatype and set a constant score as the gfft detector does not
+      // provide any score but the keypoints are sorted by descending detector response.
+      cv::KeyPoint::convert(points_cv, keypoints_cv);
+      double score = 1.0;
+      for (cv::KeyPoint& keypoint : keypoints_cv) {
+        keypoint.response = score;
+        score -= 1.0;
+      }
+      break;
+    }
+    default: {
+      LOG(FATAL) << "Unhandled detector type.";
     }
   }
 
