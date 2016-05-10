@@ -17,6 +17,7 @@ set(HEADERS
 set(SOURCES
   src/feature-tracker-lk.cc
   src/feature-tracker-descriptor-matcher.cc
+  src/feature-tracker-gyro.cc
   src/track-manager.cc
   src/tracking-helpers.cc
 )
