@@ -241,8 +241,8 @@ TEST_F(LandmarksToFrameMatcherTest, MatchRandomly) {
   const Descriptors frame_descriptors = Descriptors::Random(kDescriptorSizeBytes, kNumKeypoints);
   const Descriptors landmark_descriptors = frame_descriptors;
 
-  setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, C_p_landmarks,
-                           landmark_descriptors);
+  setKeypointsAndLandmarks(
+      frame_keypoints, frame_descriptors, C_p_landmarks, landmark_descriptors);
 
   aslam::MatchesWithScore matches_A_B;
   match(&matches_A_B);

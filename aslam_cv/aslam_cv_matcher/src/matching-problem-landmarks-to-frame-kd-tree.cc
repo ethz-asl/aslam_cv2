@@ -128,7 +128,7 @@ bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   CHECK_EQ(valid_landmark_index, valid_landmark_index_to_landmark_index_map_.size());
   C_valid_projected_landmarks_.conservativeResize(2, valid_landmark_index);
   VLOG(3) << "Computed all projections of landmarks into the visual frame. (valid/invalid) ("
-      << valid_landmark_index << "/" << (num_landmarks - valid_landmark_index) << ")";
+          << valid_landmark_index << "/" << (num_landmarks - valid_landmark_index) << ")";
 
   // Only create the Nabo index if we have more than zero valid keypoints.
   if (valid_keypoint_index > 0u) {
@@ -185,9 +185,10 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
     const size_t landmark_index = valid_landmark_index_to_landmark_index_map_[knn_landmark_idx];
     CHECK_LT(landmark_index, numBananas());
 
-    for (int nn_idx = 0; nn_idx < num_neighbors; ++nn_idx) {
-      const int knn_keypoint_index = indices(nn_idx, knn_landmark_idx);
-      const double distance_image_space_pixels = distances(nn_idx, knn_landmark_idx);
+    for (int nearest_neighbor_idx = 0; nearest_neighbor_idx < num_neighbors;
+        ++nearest_neighbor_idx) {
+      const int knn_keypoint_index = indices(nearest_neighbor_idx, knn_landmark_idx);
+      const double distance_image_space_pixels = distances(nearest_neighbor_idx, knn_landmark_idx);
 
       if (knn_keypoint_index == -1 ||
           distance_image_space_pixels == std::numeric_limits<double>::infinity()) {
@@ -228,9 +229,8 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
 NeighborCellCountingGrid::NeighborCellCountingGrid(
     double min_x, double max_x, double min_y, double max_y,
     size_t num_bins_x, size_t num_bins_y)
-    : min_x_(min_x), max_x_(max_x), min_y_(min_y), max_y_(max_y),
-      num_bins_x_(num_bins_x), num_bins_y_(num_bins_y),
-      max_neighbor_count_(0) {
+    : min_x_(min_x), max_x_(max_x), min_y_(min_y), max_y_(max_y), num_bins_x_(num_bins_x),
+      num_bins_y_(num_bins_y), max_neighbor_count_(0) {
   CHECK_GT(max_x_, min_x_);
   CHECK_GT(max_y_, min_y_);
 
