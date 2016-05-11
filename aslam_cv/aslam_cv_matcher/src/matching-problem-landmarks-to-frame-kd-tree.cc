@@ -72,7 +72,7 @@ bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   Camera::ConstPtr camera = frame_.getCameraGeometry();
   CHECK(camera);
 
-  VLOG(3) << "Adding " << num_keypoints << " keypoints to the LUT.";
+  VLOG(3) << "Adding " << num_keypoints << " keypoints to the KD-tree.";
   size_t valid_keypoint_index = 0u;
   valid_keypoints_ = Eigen::MatrixXd::Zero(2, num_keypoints);
 
@@ -103,7 +103,7 @@ bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   }
   CHECK_EQ(valid_keypoint_index, valid_keypoint_index_to_keypoint_index_map_.size());
   valid_keypoints_.conservativeResize(2, valid_keypoint_index);
-  VLOG(3) << "Built LUT for valid keypoints (" << valid_keypoint_index << ").";
+  VLOG(3) << "Num valid keypoints: " << valid_keypoint_index;
 
   C_valid_projected_landmarks_ = Eigen::MatrixXd(2, num_landmarks);
 
@@ -159,7 +159,7 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
   size_t num_matches = 0u;
 
   CHECK(image_space_counting_grid_);
-  const int num_neighbors = image_space_counting_grid_->getMaxNeighborCellCount();
+  const int num_neighbors = image_space_counting_grid_->getMaxNeighborhoodCellCount();
   CHECK_GT(num_neighbors, 0);
   VLOG(3) << "Querying for " << num_neighbors << " num neighbors.";
   Eigen::MatrixXi indices = Eigen::MatrixXi::Constant(num_neighbors, num_valid_landmarks, -1);

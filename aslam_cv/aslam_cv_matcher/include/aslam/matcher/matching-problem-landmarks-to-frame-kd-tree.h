@@ -43,7 +43,7 @@ class NeighborCellCountingGrid {
 
   // Returns the maximum number of elements in any cell and its directly adjacent
   // adjacent cells.
-  inline int getMaxNeighborCellCount() const {
+  inline int getMaxNeighborhoodCellCount() const {
     return max_neighbor_count_;
   }
 
