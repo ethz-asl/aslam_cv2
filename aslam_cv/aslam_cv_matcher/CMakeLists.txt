@@ -25,7 +25,7 @@ set(SOURCES
   src/match.cc
   src/matching-problem.cc
   src/match-visualization.cc
-  src/matching-problem-frame-to-frame.cc  
+  src/matching-problem-frame-to-frame.cc
   src/matching-problem-landmarks-to-frame.cc
   src/matching-problem-landmarks-to-frame-kd-tree.cc
 )

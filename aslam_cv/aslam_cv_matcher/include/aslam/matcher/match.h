@@ -27,7 +27,7 @@ struct MatchWithScore {
   friend class MatchingProblemLandmarksToFrame;
   friend class SimpleTrackManager;
   friend class UniformTrackManager;
-  template<typename MatchingProblem> friend class MatchingEngineGreedy  ;
+  template<typename MatchingProblem> friend class MatchingEngineGreedy;
   friend void convertMatches(const MatchesWithScore&, Matches*);
   friend void convertMatches(const MatchesWithScore&, OpenCvMatches*);
   /// \brief Initialize to an invalid match.
