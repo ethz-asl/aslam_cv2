@@ -113,8 +113,6 @@ bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
     // Collect all apple candidates for every banana.
     for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
       // Sorts the candidates in descending order.
-      //LOG(INFO) << "Num candidates for banana " << index_banana
-      //    << ": " << candidates_[index_banana].size();
       std::sort(candidates_[index_banana].begin(), candidates_[index_banana].end(),
                 std::greater<typename MatchingProblem::Candidate>());
 
@@ -128,7 +126,6 @@ bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
 
     // Assign the exclusive matches to the match vector.
     for (const typename MatchingProblem::Candidate& candidate : temporary_matches_)  {
-      //LOG(INFO) << "Apple index for temporary match: " << candidate.index_apple;
       if (candidate.index_apple >= 0) {
         CHECK_LT(candidate.index_apple, static_cast<int>(num_apples));
         CHECK_GE(candidate.index_banana, 0);

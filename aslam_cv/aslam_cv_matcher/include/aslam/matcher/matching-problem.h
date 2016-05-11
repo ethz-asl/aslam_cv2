@@ -87,7 +87,7 @@ public:
   ///                                    match for each element of Bananas.
   virtual inline void getCandidates(CandidatesList* candidates_for_bananas) = 0;
 
-  /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
+  /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables...
   virtual bool doSetup() = 0;
 
   const bool store_tested_pairs_;

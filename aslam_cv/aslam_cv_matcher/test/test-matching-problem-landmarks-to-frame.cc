@@ -112,9 +112,11 @@ class LandmarksToFrameMatcherTest : public testing::Test {
     permutation_matrix_landmarks_.setIdentity();
 
     std::random_shuffle(permutation_matrix_keypoints_.indices().data(),
-                        permutation_matrix_keypoints_.indices().data() + permutation_matrix_keypoints_.indices().size());
+                        permutation_matrix_keypoints_.indices().data() +
+                        permutation_matrix_keypoints_.indices().size());
     std::random_shuffle(permutation_matrix_landmarks_.indices().data(),
-                        permutation_matrix_landmarks_.indices().data() + permutation_matrix_landmarks_.indices().size());
+                        permutation_matrix_landmarks_.indices().data() +
+                        permutation_matrix_landmarks_.indices().size());
 
     CHECK_EQ(permutation_matrix_keypoints_.cols(), frame_keypoints->cols());
     CHECK_EQ(permutation_matrix_keypoints_.rows(), frame_keypoints->cols());
@@ -248,7 +250,8 @@ TEST_F(LandmarksToFrameMatcherTest, MatchRandomly) {
   ASSERT_EQ(kNumKeypoints, matches_A_B.size());
 
   for (const aslam::MatchWithScore& match : matches_A_B) {
-    EXPECT_EQ(aslam::MatchingProblemLandmarksToFrame::getKeypointIndex(match), aslam::MatchingProblemLandmarksToFrame::getLandmarkIndex(match));
+    EXPECT_EQ(aslam::MatchingProblemLandmarksToFrame::getKeypointIndex(match),
+              aslam::MatchingProblemLandmarksToFrame::getLandmarkIndex(match));
     EXPECT_DOUBLE_EQ(1.0, match.getScore());
   }
 }
@@ -385,8 +388,8 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseOfSearchBand) {
   Eigen::Matrix2Xd frame_keypoints;
   Eigen::Matrix3Xd projected_keypoints;
 
-  createRandomKeypointsAndLandmarksWithinSearchRegion(kNumKeypoints, kScalingFactor, &frame_keypoints,
-                                                      &projected_keypoints);
+  createRandomKeypointsAndLandmarksWithinSearchRegion(
+      kNumKeypoints, kScalingFactor, &frame_keypoints, &projected_keypoints);
 
   Eigen::Matrix<unsigned char, kNumKeypoints, 1> selection_vector =
       Eigen::Matrix<unsigned char, kNumKeypoints, 1>::Random();
