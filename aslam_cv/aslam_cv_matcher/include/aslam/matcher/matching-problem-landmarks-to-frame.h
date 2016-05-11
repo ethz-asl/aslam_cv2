@@ -144,16 +144,16 @@ protected:
   /// Half width of the vertical band used for match lookup in pixels.
   int vertical_band_halfwidth_pixels_;
 
-  /// Pairs with descriptor distance >= hamming_distance_threshold_ are
-  /// excluded from matches.
-  int hamming_distance_threshold_;
-
   /// The height of the visual frame.
   size_t image_height_frame_;
 
   /// Pairs with image space distance >= image_space_distance_threshold_pixels_ are
   /// excluded from matches.
   double image_space_distance_threshold_pixels_;
+
+  /// Pairs with descriptor distance >= hamming_distance_threshold_ are
+  /// excluded from matches.
+  int hamming_distance_threshold_;
 private:
   /// The landmarks projected into the visual frame.
   aslam::Aligned<std::vector, Eigen::Vector2d>::type projected_landmark_keypoints_;

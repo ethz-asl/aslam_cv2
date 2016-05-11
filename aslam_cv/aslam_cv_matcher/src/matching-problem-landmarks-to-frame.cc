@@ -208,7 +208,8 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
       CHECK_LT(static_cast<int>(frame_keypoint_index), keypoints_frame.cols());
       const Eigen::Vector2d& frame_keypoint = keypoints_frame.col(frame_keypoint_index);
 
-      const double squared_image_space_distance = (frame_keypoint - keypoint_landmark).squaredNorm();
+      const double squared_image_space_distance =
+          (frame_keypoint - keypoint_landmark).squaredNorm();
 
       if (squared_image_space_distance <
           (image_space_distance_threshold_pixels_ * image_space_distance_threshold_pixels_)) {

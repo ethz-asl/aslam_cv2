@@ -202,7 +202,8 @@ TEST(TestMatcherExclusive, ExclusiveMatcher) {
   match_problem.sortMatches();
 
   for (auto &match : matches) {
-    EXPECT_EQ(SimpleMatchProblem::getIndexBanana(match), banana_index_for_apple[SimpleMatchProblem::getIndexApple(match)]);
+    EXPECT_EQ(SimpleMatchProblem::getIndexBanana(match),
+              banana_index_for_apple[SimpleMatchProblem::getIndexApple(match)]);
   }
 }
 
@@ -247,7 +248,8 @@ TEST(TestMatcher, GreedyMatcher) {
   mp.sortMatches();
 
   for (auto &match : matches) {
-    EXPECT_EQ(SimpleMatchProblem::getIndexApple(match), ind_a_of_b[SimpleMatchProblem::getIndexBanana(match)]);
+    EXPECT_EQ(SimpleMatchProblem::getIndexApple(match),
+              ind_a_of_b[SimpleMatchProblem::getIndexBanana(match)]);
   }
 }
 

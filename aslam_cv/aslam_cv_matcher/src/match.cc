@@ -25,7 +25,8 @@ void convertMatches(const MatchesWithScore& matches_with_score_A_B, OpenCvMatche
   for (MatchWithScore match : matches_with_score_A_B) {
     CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
     CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
-    matches_A_B->emplace_back(cv::DMatch(match.getIndexApple(), match.getIndexBanana(), static_cast<float>(match.getScore())));
+    matches_A_B->emplace_back(cv::DMatch(match.getIndexApple(), match.getIndexBanana(),
+                                         static_cast<float>(match.getScore())));
   }
   CHECK_EQ(matches_with_score_A_B.size(), matches_A_B->size());
 }

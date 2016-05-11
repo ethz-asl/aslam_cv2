@@ -113,8 +113,8 @@ public:
   }
 
   /// \brief Gets called at the beginning of the matching problem.
-  /// Creates a y-coordinate LUT for all apple keypoints and projects all banana keypoints into the
-  /// apple frame.
+  /// Creates a y-coordinate LUT for all apple keypoints and projects all banana keypoints into
+  /// the apple frame.
   virtual bool doSetup();
 
 private:

@@ -113,9 +113,11 @@ class LandmarksToFrameKDTreeMatcherTest : public testing::Test {
     permutation_matrix_landmarks_.setIdentity();
 
     std::random_shuffle(permutation_matrix_keypoints_.indices().data(),
-                        permutation_matrix_keypoints_.indices().data() + permutation_matrix_keypoints_.indices().size());
+                        permutation_matrix_keypoints_.indices().data() +
+                        permutation_matrix_keypoints_.indices().size());
     std::random_shuffle(permutation_matrix_landmarks_.indices().data(),
-                        permutation_matrix_landmarks_.indices().data() + permutation_matrix_landmarks_.indices().size());
+                        permutation_matrix_landmarks_.indices().data() +
+                        permutation_matrix_landmarks_.indices().size());
 
     CHECK_EQ(permutation_matrix_keypoints_.cols(), frame_keypoints->cols());
     CHECK_EQ(permutation_matrix_keypoints_.rows(), frame_keypoints->cols());
@@ -249,7 +251,8 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchRandomly) {
   ASSERT_EQ(kNumKeypoints, matches_A_B.size());
 
   for (const aslam::MatchWithScore& match : matches_A_B) {
-    EXPECT_EQ(aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match), aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match));
+    EXPECT_EQ(aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match),
+              aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match));
     EXPECT_DOUBLE_EQ(1.0, match.getScore());
   }
 }
@@ -287,8 +290,10 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchRandomlyWithRandomOrder) {
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
     const aslam::MatchWithScore& match = matches_A_B[match_index];
-    const int keypoint_index = aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match);
-    const int landmark_index = aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match);
+    const int keypoint_index =
+        aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match);
+    const int landmark_index =
+        aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match);
     CHECK_LT(keypoint_index, kNumKeypoints);
     CHECK_LT(landmark_index, kNumKeypoints);
 
@@ -362,8 +367,10 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchesBecauseOfHammingDistance
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
     const aslam::MatchWithScore& match = matches_A_B[match_index];
-    const int keypoint_index = aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match);
-    const int landmark_index = aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match);
+    const int keypoint_index =
+        aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match);
+    const int landmark_index =
+        aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match);
     CHECK_LT(keypoint_index, kNumKeypoints);
     CHECK_LT(landmark_index, kNumKeypoints);
 
@@ -386,8 +393,8 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchBecauseOfSearchBand) {
   Eigen::Matrix2Xd frame_keypoints;
   Eigen::Matrix3Xd projected_keypoints;
 
-  createRandomKeypointsAndLandmarksWithinSearchRegion(kNumKeypoints, kScalingFactor, &frame_keypoints,
-                                                      &projected_keypoints);
+  createRandomKeypointsAndLandmarksWithinSearchRegion(
+      kNumKeypoints, kScalingFactor, &frame_keypoints, &projected_keypoints);
 
   Eigen::Matrix<unsigned char, kNumKeypoints, 1> selection_vector =
       Eigen::Matrix<unsigned char, kNumKeypoints, 1>::Random();
@@ -443,8 +450,10 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchBecauseOfSearchBand) {
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
     const aslam::MatchWithScore& match = matches_A_B[match_index];
-    const int keypoint_index = aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match);
-    const int landmark_index = aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match);
+    const int keypoint_index =
+        aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match);
+    const int landmark_index =
+        aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match);
     CHECK_LT(keypoint_index, kNumKeypoints);
     CHECK_LT(landmark_index, kNumKeypoints);
 
@@ -503,8 +512,10 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchBecauseLandmarksBehindCame
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
     const aslam::MatchWithScore& match = matches_A_B[match_index];
-    const int keypoint_index = aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match);
-    const int landmark_index = aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match);
+    const int keypoint_index =
+        aslam::MatchingProblemLandmarksToFrameKDTree::getKeypointIndex(match);
+    const int landmark_index =
+        aslam::MatchingProblemLandmarksToFrameKDTree::getLandmarkIndex(match);
     CHECK_LT(keypoint_index, kNumKeypoints);
     CHECK_LT(landmark_index, kNumKeypoints);
 

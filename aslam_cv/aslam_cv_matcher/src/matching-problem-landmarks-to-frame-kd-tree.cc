@@ -20,9 +20,6 @@ MatchingProblemLandmarksToFrameKDTree::MatchingProblemLandmarksToFrameKDTree(
 
 bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   aslam::timing::Timer method_timer("MatchingProblemLandmarksToFrameKDTree::doSetup()");
-  // TODO(mbuerki): Separate descriptor copy step for landmarks and frame keypoints
-  //                such as to support matching the same landmarks to multiple
-  //                frames and vice versa.
   CHECK_GT(image_height_frame_, 0u) << "The visual frame has zero image rows.";
 
   const size_t num_keypoints = numApples();
@@ -172,19 +169,20 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
   const double kSearchRadius = image_space_distance_threshold_pixels_;
   const unsigned kOptionFlags = Nabo::NNSearchD::ALLOW_SELF_MATCH;
 
-  aslam::timing::Timer knn_timer("MatchingProblemLandmarksToFrameKDTree::getCandidates - knn search");
-
+  aslam::timing::Timer knn_timer(
+      "MatchingProblemLandmarksToFrameKDTree::getCandidates - knn search");
   CHECK(nn_index_);
   nn_index_->knn(
       C_valid_projected_landmarks_, indices, distances,
       num_neighbors, kSearchNNEpsilon, kOptionFlags, kSearchRadius);
   knn_timer.Stop();
 
-  aslam::timing::Timer knn_post_processing_timer("MatchingProblemLandmarksToFrameKDTree::getCandidates - post-process knn search.");
+  aslam::timing::Timer knn_post_processing_timer(
+      "MatchingProblemLandmarksToFrameKDTree::getCandidates - post-process knn search.");
   for (int knn_landmark_idx = 0; knn_landmark_idx < num_valid_landmarks; ++knn_landmark_idx) {
-    CHECK_LT(static_cast<size_t>(knn_landmark_idx), valid_landmark_index_to_landmark_index_map_.size());
-    const size_t landmark_index =
-        valid_landmark_index_to_landmark_index_map_[knn_landmark_idx];
+    CHECK_LT(static_cast<size_t>(knn_landmark_idx),
+             valid_landmark_index_to_landmark_index_map_.size());
+    const size_t landmark_index = valid_landmark_index_to_landmark_index_map_[knn_landmark_idx];
     CHECK_LT(landmark_index, numBananas());
 
     for (int nn_idx = 0; nn_idx < num_neighbors; ++nn_idx) {
@@ -254,7 +252,8 @@ void NeighborCellCountingGrid::addElementToGrid(double x, double y) {
   incrementCount(coordinate);
 }
 
-NeighborCellCountingGrid::Coordinate NeighborCellCountingGrid::elementToCoordinate(double x, double y) const {
+NeighborCellCountingGrid::Coordinate NeighborCellCountingGrid::elementToCoordinate(
+    double x, double y) const {
   CHECK_GE(x, min_x_);
   CHECK_LE(x, max_x_);
   CHECK_GE(y, min_y_);
@@ -292,8 +291,8 @@ void NeighborCellCountingGrid::incrementCount(const Coordinate& coordinate) {
       CHECK_LT(x_coordinate_shifted, grid_count_.cols());
       CHECK_GE(y_coordinate_shifted, 0);
       CHECK_LT(y_coordinate_shifted, grid_count_.rows());
-      const Coordinate neighbor_coordinate = std::make_pair(static_cast<size_t>(x_coordinate_shifted),
-                                                           static_cast<size_t>(y_coordinate_shifted));
+      const Coordinate neighbor_coordinate = std::make_pair(
+          static_cast<size_t>(x_coordinate_shifted), static_cast<size_t>(y_coordinate_shifted));
 
       const int new_neighbor_cell_count =
           ++grid_neighboring_cell_count_(neighbor_coordinate.second, neighbor_coordinate.first);
