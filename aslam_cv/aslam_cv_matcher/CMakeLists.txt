@@ -17,13 +17,17 @@ set(HEADERS
   include/aslam/matcher/matching-problem.h
   include/aslam/matcher/matching-problem-frame-to-frame.h
   include/aslam/matcher/matching-problem-landmarks-to-frame.h
+  include/aslam/matcher/matching-problem-landmarks-to-frame-kd-tree.h
+  include/aslam/matcher/matching-problem-types.h
 )
 
 set(SOURCES
   src/match.cc
+  src/matching-problem.cc
   src/match-visualization.cc
-  src/matching-problem-frame-to-frame.cc
+  src/matching-problem-frame-to-frame.cc  
   src/matching-problem-landmarks-to-frame.cc
+  src/matching-problem-landmarks-to-frame-kd-tree.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -45,6 +49,8 @@ target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
 catkin_add_gtest(test_matching_problem_landmarks_to_frame test/test-matching-problem-landmarks-to-frame.cc)
 target_link_libraries(test_matching_problem_landmarks_to_frame ${PROJECT_NAME})
 
+catkin_add_gtest(test_matching_problem_landmarks_to_frame_kd_tree test/test-matching-problem-landmarks-to-frame-kd-tree.cc)
+target_link_libraries(test_matching_problem_landmarks_to_frame_kd_tree ${PROJECT_NAME})
 ##########
 # EXPORT #
 ##########

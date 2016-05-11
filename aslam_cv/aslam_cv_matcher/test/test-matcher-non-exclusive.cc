@@ -80,9 +80,9 @@ TEST_F(MatcherTest, MatchIdentity) {
   ASSERT_EQ(1u, matches_A_B.size());
 
   aslam::MatchWithScore match = matches_A_B[0];
-  EXPECT_EQ(0, match.getIndexApple());
-  EXPECT_EQ(0, match.getIndexBanana());
-  EXPECT_DOUBLE_EQ(1.0, match.score);
+  EXPECT_EQ(0, aslam::MatchingProblemFrameToFrame::getKeypointIndexAppleFrame(match));
+  EXPECT_EQ(0, aslam::MatchingProblemFrameToFrame::getKeypointIndexBananaFrame(match));
+  EXPECT_DOUBLE_EQ(1.0, match.getScore());
 }
 
 TEST_F(MatcherTest, MatchRotation) {
@@ -130,9 +130,9 @@ TEST_F(MatcherTest, MatchRotation) {
 
   ASSERT_EQ(1u, matches_A_B.size());
   aslam::MatchWithScore match = matches_A_B[0];
-  EXPECT_EQ(0, match.getIndexApple());
-  EXPECT_EQ(0, match.getIndexBanana());
-  EXPECT_DOUBLE_EQ(1.0, match.score);
+  EXPECT_EQ(0, aslam::MatchingProblemFrameToFrame::getKeypointIndexAppleFrame(match));
+  EXPECT_EQ(0, aslam::MatchingProblemFrameToFrame::getKeypointIndexBananaFrame(match));
+  EXPECT_DOUBLE_EQ(1.0, match.getScore());
 }
 
 TEST_F(MatcherTest, TestImageSpaceBorderOut) {

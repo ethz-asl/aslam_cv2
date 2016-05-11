@@ -5,6 +5,7 @@
 
 #include <aslam/common/pose-types.h>
 #include <aslam/common/stl-helpers.h>
+#include <Eigen/Core>
 #include <opencv2/features2d/features2d.hpp>
 
 namespace aslam {
@@ -14,7 +15,21 @@ class VisualNFrame;
 /// \brief A struct to encapsulate a match between two lists and associated
 ///        matching score. There are two lists, A and B and the matches are
 ///        indices into these lists.
+struct MatchWithScore;
+typedef std::vector<MatchWithScore> MatchesWithScore;
+typedef std::pair<size_t, size_t> Match;
+typedef std::vector<Match> Matches;
+typedef std::vector<cv::DMatch> OpenCvMatches;
+
 struct MatchWithScore {
+  friend class SimpleMatchProblem;
+  friend class MatchingProblemFrameToFrame;
+  friend class MatchingProblemLandmarksToFrame;
+  friend class SimpleTrackManager;
+  friend class UniformTrackManager;
+  template<typename MatchingProblem> friend class MatchingEngineGreedy  ;
+  friend void convertMatches(const MatchesWithScore&, Matches*);
+  friend void convertMatches(const MatchesWithScore&, OpenCvMatches*);
   /// \brief Initialize to an invalid match.
   MatchWithScore()
       : correspondence {-1, -1}, score(0.0) {}
@@ -22,16 +37,6 @@ struct MatchWithScore {
   /// \brief Initialize with correspondences and a score.
   MatchWithScore(int index_apple, int index_banana, double _score)
       : correspondence {index_apple, index_banana}, score(_score) {}
-
-  /// \brief Get the index into list A.
-  int getIndexApple() const {
-    return correspondence[0];
-  }
-
-  /// \brief Get the index into list B.
-  int getIndexBanana() const {
-    return correspondence[1];
-  }
 
   void setIndexApple(int index_apple) {
     correspondence[0] = index_apple;
@@ -63,14 +68,20 @@ struct MatchWithScore {
            (this->score == other.score);
   }
 
+ private:
+  /// \brief Get the index into list A.
+  int getIndexApple() const {
+    return correspondence[0];
+  }
+
+  /// \brief Get the index into list B.
+  int getIndexBanana() const {
+    return correspondence[1];
+  }
+
   int correspondence[2];
   double score;
 };
-
-typedef std::vector<MatchWithScore> MatchesWithScore;
-typedef std::pair<size_t, size_t> Match;
-typedef std::vector<Match> Matches;
-typedef std::vector<cv::DMatch> OpenCvMatches;
 
 /// Convert MatchesWithScore to Matches.
 void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);

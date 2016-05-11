@@ -56,24 +56,34 @@ public:
                               int hamming_distance_threshold);
   virtual ~MatchingProblemFrameToFrame() {};
 
+  static inline int getKeypointIndexAppleFrame(const MatchWithScore& match) {
+    return match.getIndexApple();
+  }
+
+  static inline int getKeypointIndexBananaFrame(const MatchWithScore& match) {
+    return match.getIndexBanana();
+  }
+
   virtual size_t numApples() const;
   virtual size_t numBananas() const;
 
   /// Get a short list of candidates in list a for index b
   ///
-  /// Return all indices of list a for n^2 matching; or use something
-  /// smarter like nabo to get nearest neighbors. Can also be used to
-  /// mask out invalid elements in the lists, or an invalid b, by
-  /// returning and empty candidate list.  
-  ///
-  /// The score for each candidate is a rough score that can be used
-  /// for sorting, pre-filtering, and will be explicitly recomputed
-  /// using the computeScore function.
-  ///
-  /// \param[in] banana_index The index of b queried for candidates.
-  /// \param[out] candidates  Candidates from the Apples-list that could potentially match this
-  ///                         element of Bananas.
-  virtual void getAppleCandidatesForBanana(int banana_index, Candidates* candidates);
+  /// \param[in] frame_banana_keypoint_index The index of b queried for candidates.
+  /// \param[out] candidates  Candidates from the apple frame keypoints that could
+  ///                         potentially match the given keypoint from the banana frame.
+  void getAppleCandidatesForBanana(int frame_banana_keypoint_index, Candidates* candidates);
+
+  /// Retrieves match candidates for each banana frame keypoint.
+  virtual inline void getCandidates(CandidatesList* candidates_for_frame_banana_keypoints) {
+    CHECK_NOTNULL(candidates_for_frame_banana_keypoints)->clear();
+    const size_t num_bananas = numBananas();
+    candidates_for_frame_banana_keypoints->resize(num_bananas);
+    for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
+      getAppleCandidatesForBanana(
+          banana_idx, &(*candidates_for_frame_banana_keypoints)[banana_idx]);
+    }
+  }
 
   inline double computeMatchScore(int hamming_distance) {
     return static_cast<double>(384 - hamming_distance) / 384.0;

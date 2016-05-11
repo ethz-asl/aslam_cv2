@@ -193,9 +193,9 @@ TEST_F(LandmarksToFrameMatcherTest, MatchIdentity) {
   ASSERT_EQ(1u, matches_A_B.size());
 
   aslam::MatchWithScore match = matches_A_B[0];
-  EXPECT_EQ(0, match.getIndexApple());
-  EXPECT_EQ(0, match.getIndexBanana());
-  EXPECT_DOUBLE_EQ(1.0, match.score);
+  EXPECT_EQ(0, aslam::MatchingProblemLandmarksToFrame::getKeypointIndex(match));
+  EXPECT_EQ(0, aslam::MatchingProblemLandmarksToFrame::getLandmarkIndex(match));
+  EXPECT_DOUBLE_EQ(1.0, match.getScore());
 }
 
 TEST_F(LandmarksToFrameMatcherTest, MatchIdentityWithScale) {
@@ -221,9 +221,9 @@ TEST_F(LandmarksToFrameMatcherTest, MatchIdentityWithScale) {
   ASSERT_EQ(1u, matches_A_B.size());
 
   aslam::MatchWithScore match = matches_A_B[0];
-  EXPECT_EQ(0, match.getIndexApple());
-  EXPECT_EQ(0, match.getIndexBanana());
-  EXPECT_DOUBLE_EQ(1.0, match.score);
+  EXPECT_EQ(0, aslam::MatchingProblemLandmarksToFrame::getKeypointIndex(match));
+  EXPECT_EQ(0, aslam::MatchingProblemLandmarksToFrame::getLandmarkIndex(match));
+  EXPECT_DOUBLE_EQ(1.0, match.getScore());
 }
 
 TEST_F(LandmarksToFrameMatcherTest, MatchRandomly) {
@@ -248,8 +248,8 @@ TEST_F(LandmarksToFrameMatcherTest, MatchRandomly) {
   ASSERT_EQ(kNumKeypoints, matches_A_B.size());
 
   for (const aslam::MatchWithScore& match : matches_A_B) {
-    EXPECT_EQ(match.getIndexApple(), match.getIndexBanana());
-    EXPECT_DOUBLE_EQ(1.0, match.score);
+    EXPECT_EQ(aslam::MatchingProblemLandmarksToFrame::getKeypointIndex(match), aslam::MatchingProblemLandmarksToFrame::getLandmarkIndex(match));
+    EXPECT_DOUBLE_EQ(1.0, match.getScore());
   }
 }
 
@@ -286,15 +286,15 @@ TEST_F(LandmarksToFrameMatcherTest, MatchRandomlyWithRandomOrder) {
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
     const aslam::MatchWithScore& match = matches_A_B[match_index];
-    const int keypoint_index = match.getIndexApple();
-    const int landmark_index = match.getIndexBanana();
+    const int keypoint_index = aslam::MatchingProblemLandmarksToFrame::getKeypointIndex(match);
+    const int landmark_index = aslam::MatchingProblemLandmarksToFrame::getLandmarkIndex(match);
     CHECK_LT(keypoint_index, kNumKeypoints);
     CHECK_LT(landmark_index, kNumKeypoints);
 
     result_matrix_keypoints(keypoint_index, match_index) = 1;
     result_matrix_landmarks(landmark_index, match_index) = 1;
 
-    EXPECT_DOUBLE_EQ(1.0, match.score);
+    EXPECT_DOUBLE_EQ(1.0, match.getScore());
   }
 
   result_matrix_keypoints = permutation_matrix_keypoints_.toDenseMatrix() * result_matrix_keypoints;
@@ -361,15 +361,15 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchesBecauseOfHammingDistance) {
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
     const aslam::MatchWithScore& match = matches_A_B[match_index];
-    const int keypoint_index = match.getIndexApple();
-    const int landmark_index = match.getIndexBanana();
+    const int keypoint_index = aslam::MatchingProblemLandmarksToFrame::getKeypointIndex(match);
+    const int landmark_index = aslam::MatchingProblemLandmarksToFrame::getLandmarkIndex(match);
     CHECK_LT(keypoint_index, kNumKeypoints);
     CHECK_LT(landmark_index, kNumKeypoints);
 
     result_matrix_keypoints(keypoint_index, match_index) = 1;
     result_matrix_landmarks(landmark_index, match_index) = 1;
 
-    EXPECT_DOUBLE_EQ(1.0, match.score);
+    EXPECT_DOUBLE_EQ(1.0, match.getScore());
   }
 
   result_matrix_keypoints = permutation_matrix_keypoints_ * result_matrix_keypoints;
@@ -442,15 +442,15 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseOfSearchBand) {
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
     const aslam::MatchWithScore& match = matches_A_B[match_index];
-    const int keypoint_index = match.getIndexApple();
-    const int landmark_index = match.getIndexBanana();
+    const int keypoint_index = aslam::MatchingProblemLandmarksToFrame::getKeypointIndex(match);
+    const int landmark_index = aslam::MatchingProblemLandmarksToFrame::getLandmarkIndex(match);
     CHECK_LT(keypoint_index, kNumKeypoints);
     CHECK_LT(landmark_index, kNumKeypoints);
 
     result_matrix_keypoints(keypoint_index, match_index) = 1;
     result_matrix_landmarks(landmark_index, match_index) = 1;
 
-    EXPECT_DOUBLE_EQ(1.0, match.score);
+    EXPECT_DOUBLE_EQ(1.0, match.getScore());
   }
 
   result_matrix_keypoints = permutation_matrix_keypoints_ * result_matrix_keypoints;
@@ -502,15 +502,15 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseLandmarksBehindCamera) {
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
     const aslam::MatchWithScore& match = matches_A_B[match_index];
-    const int keypoint_index = match.getIndexApple();
-    const int landmark_index = match.getIndexBanana();
+    const int keypoint_index = aslam::MatchingProblemLandmarksToFrame::getKeypointIndex(match);
+    const int landmark_index = aslam::MatchingProblemLandmarksToFrame::getLandmarkIndex(match);
     CHECK_LT(keypoint_index, kNumKeypoints);
     CHECK_LT(landmark_index, kNumKeypoints);
 
     result_matrix_keypoints(keypoint_index, match_index) = 1;
     result_matrix_landmarks(landmark_index, match_index) = 1;
 
-    EXPECT_DOUBLE_EQ(1.0, match.score);
+    EXPECT_DOUBLE_EQ(1.0, match.getScore());
   }
 
   result_matrix_keypoints = permutation_matrix_keypoints_ * result_matrix_keypoints;
