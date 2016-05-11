@@ -60,17 +60,18 @@ public:
   };
 
   typedef std::vector<Candidate> Candidates;
+  typedef std::vector<Candidates> CandidatesList;
 
   ASLAM_POINTER_TYPEDEFS(MatchingProblem);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblem);
 
-  MatchingProblem() {};
+  MatchingProblem();
   virtual ~MatchingProblem() {};
 
   virtual size_t numApples() const = 0;
   virtual size_t numBananas() const = 0;
 
-  /// Get a short list of candidates in list a for index b
+  /// Get a short list of candidates for all indices b.
   ///
   /// Return all indices of list a for n^2 matching; or use something
   /// smarter like nabo to get nearest neighbors.  Can also be used to
@@ -82,11 +83,15 @@ public:
   /// using the computeScore function.
   ///
   /// \param[in] b The index of b queried for candidates.
-  /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
-  virtual void getAppleCandidatesForBanana(int /*b*/, Candidates* candidates) = 0;
+  /// \param[out] candidates_for_bananas Candidates from the Apples-list that could potentially
+  ///                                    match for each element of Bananas.
+  virtual inline void getCandidates(CandidatesList* candidates_for_bananas) = 0;
 
   /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
   virtual bool doSetup() = 0;
+
+  const bool store_tested_pairs_;
+  CandidatesList all_tested_pairs_;
 };
 }
 #endif //ASLAM_CV_MATCHING_PROBLEM_H_

@@ -17,8 +17,7 @@ MatchingProblemLandmarksToFrame::MatchingProblemLandmarksToFrame(
   : landmarks_(landmarks), frame_(frame),
     descriptor_size_bytes_(frame.getDescriptorSizeBytes()),
     descriptor_size_bits_(static_cast<int>(frame.getDescriptorSizeBytes() * 8u)),
-    squared_image_space_distance_threshold_pixels_squared_(image_space_distance_threshold_pixels *
-                                                           image_space_distance_threshold_pixels),
+    image_space_distance_threshold_pixels_(image_space_distance_threshold_pixels),
     hamming_distance_threshold_(hamming_distance_threshold) {
   CHECK_GT(hamming_distance_threshold, 0) << "Descriptor distance needs to be positive.";
   CHECK_GT(image_space_distance_threshold_pixels, 0.0)
@@ -211,17 +210,16 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
 
       const double squared_image_space_distance = (frame_keypoint - keypoint_landmark).squaredNorm();
 
-      if (squared_image_space_distance < squared_image_space_distance_threshold_pixels_squared_) {
+      if (squared_image_space_distance <
+          (image_space_distance_threshold_pixels_ * image_space_distance_threshold_pixels_)) {
         // This one is within the radius. Compute the descriptor distance.
         const int hamming_distance = computeHammingDistance(landmark_index, frame_keypoint_index);
 
         if (hamming_distance < hamming_distance_threshold_) {
           CHECK_GE(hamming_distance, 0);
           int priority = 0;
-          candidates->emplace_back(frame_keypoint_index,
-                                   landmark_index,
-                                   computeMatchScore(hamming_distance),
-                                   priority);
+          candidates->emplace_back(
+              frame_keypoint_index, landmark_index, computeMatchScore(hamming_distance), priority);
         } else {
           aslam::statistics::StatsCollector outside_hamming(
               "aslam::MatchingProblemLandmarksToFrame: Hamming distance too big");

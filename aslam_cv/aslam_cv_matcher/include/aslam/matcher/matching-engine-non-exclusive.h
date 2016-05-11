@@ -41,10 +41,13 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
   if (problem->doSetup()) {
     size_t num_bananas = problem->numBananas();
 
-    for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
-      typename MatchingProblem::Candidates candidates;
+    typename MatchingProblem::CandidatesList candidates_for_bananas;
+    problem->getCandidates(&candidates_for_bananas);
+    CHECK_EQ(candidates_for_bananas.size(), num_bananas);
 
-      problem->getAppleCandidatesForBanana(index_banana, &candidates);
+    for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
+      const typename MatchingProblem::Candidates& candidates =
+          candidates_for_bananas[index_banana];
 
       auto best_candidate = candidates.begin();
       for (auto it = candidates.begin(); it != candidates.end(); ++it) {

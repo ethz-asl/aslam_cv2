@@ -7,6 +7,9 @@
 #include <aslam/matcher/matching-engine-exclusive.h>
 #include <aslam/matcher/matching-engine-greedy.h>
 #include <aslam/matcher/matching-problem.h>
+#include <gtest/gtest.h>
+
+namespace aslam {
 
 class SimpleMatchProblem : public aslam::MatchingProblem {
 
@@ -16,9 +19,15 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
   aslam::Matches matches_A_B_;
 
  public:
-  SimpleMatchProblem() {
+  SimpleMatchProblem() {}
+  ~SimpleMatchProblem() {}
+
+  static inline int getIndexApple(const aslam::MatchWithScore& match) {
+    return match.getIndexApple();
   }
-  ~SimpleMatchProblem() {
+
+  static inline int getIndexBanana(const aslam::MatchWithScore& match) {
+    return match.getIndexBanana();
   }
 
   virtual size_t numApples() const {
@@ -47,7 +56,7 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
     std::sort(matches_A_B_.begin(),matches_A_B_.end());
   }
 
-  virtual void getAppleCandidatesForBanana(int b, Candidates* candidates) {
+  void getAppleCandidatesForBanana(int b, Candidates* candidates) {
      CHECK_NOTNULL(candidates);
      candidates->clear();
 
@@ -57,9 +66,16 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
        candidates->emplace_back(index_apple, b, score, 0);
      }
    };
-};
 
-namespace aslam {
+  virtual void getCandidates(CandidatesList* candidates_for_bananas) {
+    CHECK_NOTNULL(candidates_for_bananas)->clear();
+    const size_t num_bananas = numBananas();
+    candidates_for_bananas->resize(num_bananas);
+    for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
+      getAppleCandidatesForBanana(banana_idx, &(*candidates_for_bananas)[banana_idx]);
+    }
+  }
+};
 
 TEST(PriorityMatchingTest, TestAssignBest) {
   ////////////////////
@@ -146,8 +162,6 @@ TEST(PriorityMatchingTest, TestAssignBest) {
   EXPECT_EQ(matching_engine.temporary_matches_[3].index_banana, -1);
 }
 
-}  // namespace aslam
-
 TEST(TestMatcherExclusive, EmptyMatch) {
   SimpleMatchProblem mp;
   aslam::MatchingEngineExclusive<SimpleMatchProblem> me;
@@ -188,7 +202,7 @@ TEST(TestMatcherExclusive, ExclusiveMatcher) {
   match_problem.sortMatches();
 
   for (auto &match : matches) {
-    EXPECT_EQ(match.getIndexBanana(), banana_index_for_apple[match.getIndexApple()]);
+    EXPECT_EQ(SimpleMatchProblem::getIndexBanana(match), banana_index_for_apple[SimpleMatchProblem::getIndexApple(match)]);
   }
 }
 
@@ -233,8 +247,10 @@ TEST(TestMatcher, GreedyMatcher) {
   mp.sortMatches();
 
   for (auto &match : matches) {
-    EXPECT_EQ(match.getIndexApple(), ind_a_of_b[match.getIndexBanana()]);
+    EXPECT_EQ(SimpleMatchProblem::getIndexApple(match), ind_a_of_b[SimpleMatchProblem::getIndexBanana(match)]);
   }
 }
+
+}  // namespace aslam
 
 ASLAM_UNITTEST_ENTRYPOINT
