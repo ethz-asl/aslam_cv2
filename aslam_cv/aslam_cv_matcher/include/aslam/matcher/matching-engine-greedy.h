@@ -76,6 +76,6 @@ bool MatchingEngineGreedy<MatchingProblem>::match(MatchingProblem* problem,
   return status;
 }
 
-}
+}  // namespace aslam
 
 #endif //ASLAM_CV_MATCHINGENGINE_GREEDY_H_
