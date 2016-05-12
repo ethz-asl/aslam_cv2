@@ -24,6 +24,9 @@ namespace aslam {
 class VisualFrame;
 
 // 2D grid that computes the maximum number of elements in adjacent cells on the fly.
+// This is used to evaluate the maximum possible number of nearest neighbor keypoints
+// the KD-tree search has to consider and allows to greatly reduce the time needed
+// to execute the search.
 class NeighborCellCountingGrid {
  public:
   ASLAM_POINTER_TYPEDEFS(NeighborCellCountingGrid);
@@ -41,20 +44,18 @@ class NeighborCellCountingGrid {
   void addElementToGrid(const Eigen::Vector2d& element);
   void addElementToGrid(double x, double y);
 
-  // Returns the maximum number of elements in any cell and its directly adjacent
-  // adjacent cells.
+  // Returns the maximum number of elements in any cell and its directly adjacent cells.
   inline int getMaxNeighborhoodCellCount() const {
     return max_neighbor_count_;
   }
 
  private:
-  typedef std::pair<size_t, size_t> Coordinate;
+  typedef Eigen::Vector2i Coordinate;
 
-  Coordinate elementToCoordinate(double x, double y) const;
+  Coordinate elementToGridCoordinate(double x_position, double y_position) const;
 
-  void incrementCount(const Coordinate& coordinate);
+  void incrementCellCount(const Coordinate& coordinate);
 
-  Eigen::MatrixXi grid_count_;
   Eigen::MatrixXi grid_neighboring_cell_count_;
 
   const double min_x_, max_x_, min_y_, max_y_;
@@ -80,7 +81,10 @@ class MatchingProblemLandmarksToFrameKDTree : public MatchingProblemLandmarksToF
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrameKDTree);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrameKDTree);
-  friend class LandmarksToFrame;
+  typedef MatchingProblemLandmarksToFrame::MatchWithScore MatchWithScore;
+  typedef MatchingProblemLandmarksToFrame::MatchesWithScore MatchesWithScore;
+  typedef MatchingProblemLandmarksToFrame::Match Match;
+  typedef MatchingProblemLandmarksToFrame::Matches Matches;
 
   MatchingProblemLandmarksToFrameKDTree() = delete;
 
@@ -92,8 +96,7 @@ public:
   ///                                                         a keypoint and a projected landmark
   ///                                                         to become match candidates.
   /// @param[in]  hamming_distance_threshold                  Max hamming distance for a keypoint
-  ///                                                         and a projected landmark
-  ///                                                         to become candidates.
+  ///                                                         and a landmark to become candidates.
   MatchingProblemLandmarksToFrameKDTree(
       const VisualFrame& frame, const LandmarkWithDescriptorList& landmarks,
       double image_space_distance_threshold_pixels, int hamming_distance_threshold);
@@ -115,14 +118,14 @@ public:
 
 private:
   Eigen::MatrixXd valid_keypoints_;
-  std::vector<size_t> valid_keypoint_index_to_keypoint_index_map_;
+  std::vector<size_t> valid_keypoint_index_to_keypoint_index_;
 
-  Eigen::Matrix2Xd C_valid_projected_landmarks_;
-  std::vector<size_t> valid_landmark_index_to_landmark_index_map_;
+  Eigen::Matrix2Xd p_valid_projected_landmarks_;
+  std::vector<size_t> valid_landmark_index_to_landmark_index_;
 
   NeighborCellCountingGrid::UniquePtr image_space_counting_grid_;
 
   std::shared_ptr<Nabo::NNSearchD> nn_index_;
 };
 }  // namespace aslam
-#endif  //ASLAM_CV_MATCHING_PROBLEM_LANDMARKS_TO_FRAME_KD_TREE_H_
+#endif  // ASLAM_CV_MATCHING_PROBLEM_LANDMARKS_TO_FRAME_KD_TREE_H_

@@ -19,16 +19,10 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
   aslam::Matches matches_A_B_;
 
  public:
+  ASLAM_ADD_MATCH_TYPEDEFS(SimpleMatchProblem, getIndexApple, getIndexBanana);
+
   SimpleMatchProblem() {}
   ~SimpleMatchProblem() {}
-
-  static inline int getIndexApple(const aslam::MatchWithScore& match) {
-    return match.getIndexApple();
-  }
-
-  static inline int getIndexBanana(const aslam::MatchWithScore& match) {
-    return match.getIndexBanana();
-  }
 
   virtual size_t numApples() const {
     return apples_.size();
@@ -166,7 +160,7 @@ TEST(TestMatcherExclusive, EmptyMatch) {
   SimpleMatchProblem mp;
   aslam::MatchingEngineExclusive<SimpleMatchProblem> me;
 
-  aslam::MatchesWithScore matches;
+  SimpleMatchProblem::MatchesWithScore matches;
   me.match(&mp, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -188,7 +182,7 @@ TEST(TestMatcherExclusive, ExclusiveMatcher) {
   match_problem.setApples(apples.begin(), apples.end());
   EXPECT_EQ(5u, match_problem.numApples());
 
-  aslam::MatchesWithScore matches;
+  SimpleMatchProblem::MatchesWithScore matches;
   matching_engine.match(&match_problem, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -201,9 +195,8 @@ TEST(TestMatcherExclusive, ExclusiveMatcher) {
 
   match_problem.sortMatches();
 
-  for (auto &match : matches) {
-    EXPECT_EQ(SimpleMatchProblem::getIndexBanana(match),
-              banana_index_for_apple[SimpleMatchProblem::getIndexApple(match)]);
+  for (const SimpleMatchProblem::MatchWithScore &match : matches) {
+    EXPECT_EQ(match.getIndexBanana(), banana_index_for_apple[match.getIndexApple()]);
   }
 }
 
@@ -211,7 +204,7 @@ TEST(TestMatcher, EmptyMatch) {
   SimpleMatchProblem mp;
   aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
-  aslam::MatchesWithScore matches;
+  SimpleMatchProblem::MatchesWithScore matches;
   me.match(&mp, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -234,7 +227,7 @@ TEST(TestMatcher, GreedyMatcher) {
   mp.setApples(apples.begin(), apples.end());
   EXPECT_EQ(5u, mp.numApples());
 
-  aslam::MatchesWithScore matches;
+  SimpleMatchProblem::MatchesWithScore matches;
   me.match(&mp, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -246,10 +239,13 @@ TEST(TestMatcher, GreedyMatcher) {
   EXPECT_EQ(5u, matches.size());
 
   mp.sortMatches();
+  for (const SimpleMatchProblem::MatchWithScore& match : matches) {
+    LOG(INFO) << "Sorted: index apple: " << match.getIndexApple() << " index banana: " << match.getIndexBanana() << " score: " << match.getScore();
+  }
 
-  for (auto &match : matches) {
-    EXPECT_EQ(SimpleMatchProblem::getIndexApple(match),
-              ind_a_of_b[SimpleMatchProblem::getIndexBanana(match)]);
+  for (const SimpleMatchProblem::MatchWithScore& match : matches) {
+    LOG(INFO) << "Match index apple: " << match.getIndexApple() << " index banana: " << match.getIndexBanana();
+    EXPECT_EQ(match.getIndexApple(), ind_a_of_b[match.getIndexBanana()]);
   }
 }
 

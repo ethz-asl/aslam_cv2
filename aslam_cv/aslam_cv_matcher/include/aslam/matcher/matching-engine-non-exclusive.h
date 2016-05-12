@@ -28,12 +28,13 @@ class MatchingEngineNonExclusive : public MatchingEngine<MatchingProblem> {
 
   MatchingEngineNonExclusive() {};
   virtual ~MatchingEngineNonExclusive() {};
-  virtual bool match(MatchingProblem* problem, typename aslam::MatchesWithScore* matches_A_B);
+  virtual bool match(MatchingProblem* problem,
+                     typename MatchingProblem::MatchesWithScore* matches_A_B);
 };
 
 template<typename MatchingProblem>
-bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem,
-                                                        aslam::MatchesWithScore* matches_A_B) {
+bool MatchingEngineNonExclusive<MatchingProblem>::match(
+    MatchingProblem* problem, typename MatchingProblem::MatchesWithScore* matches_A_B) {
   CHECK_NOTNULL(problem);
   CHECK_NOTNULL(matches_A_B);
   matches_A_B->clear();
@@ -45,14 +46,15 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
     problem->getCandidates(&candidates_for_bananas);
     CHECK_EQ(candidates_for_bananas.size(), num_bananas);
 
-    for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
+    for (size_t index_banana = 0u; index_banana < num_bananas; ++index_banana) {
       const typename MatchingProblem::Candidates& candidates =
           candidates_for_bananas[index_banana];
 
-      auto best_candidate = candidates.begin();
-      for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-        if ((*it) > (*best_candidate)) {
-          best_candidate = it;
+      typename MatchingProblem::Candidates::const_iterator best_candidate = candidates.begin();
+      for (typename MatchingProblem::Candidates::const_iterator candidate_iterator =
+          candidates.begin(); candidate_iterator != candidates.end(); ++candidate_iterator) {
+        if (*candidate_iterator > *best_candidate) {
+          best_candidate = candidate_iterator;
         }
       }
 
@@ -68,4 +70,4 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(MatchingProblem* problem
 }
 
 }  // namespace aslam
-#endif //ASLAM_CV_MATCHINGENGINE_NON_EXCLUSIVE_H_
+#endif // ASLAM_CV_MATCHING_ENGINE_NON_EXCLUSIVE_H_

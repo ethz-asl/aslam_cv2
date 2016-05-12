@@ -42,8 +42,8 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
 
   const size_t num_frame_keypoints = numApples();
   const size_t num_landmarks = numBananas();
-  valid_frame_keypoints_.resize(num_frame_keypoints, false);
-  valid_landmarks_.resize(num_landmarks, false);
+  is_frame_keypoint_valid_.resize(num_frame_keypoints, false);
+  is_landmark_valid_.resize(num_landmarks, false);
 
   // First, create descriptor wrappers for all descriptors.
   const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& frame_descriptors =
@@ -88,7 +88,7 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
     const Eigen::Vector2d& keypoint = C_keypoints_frame.col(keypoint_idx);
     if (camera->isMasked(keypoint)) {
       // This keypoint is masked out and hence not valid.
-      valid_frame_keypoints_[keypoint_idx] = false;
+      is_frame_keypoint_valid_[keypoint_idx] = false;
     } else {
       size_t y_coordinate = static_cast<size_t>(std::floor(keypoint(1)));
       CHECK_LT(y_coordinate, image_height_frame_) << "The y coordinate for keypoint "
@@ -97,7 +97,7 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
       //y_coordinate_to_keypoint_index_map_.insert(std::make_pair(y_coordinate, keypoint_idx));
       y_coordinate_to_keypoint_index_map_.emplace(y_coordinate, keypoint_idx);
 
-      valid_frame_keypoints_[keypoint_idx] = true;
+      is_frame_keypoint_valid_[keypoint_idx] = true;
       ++num_added;
     }
   }
@@ -115,13 +115,13 @@ bool MatchingProblemLandmarksToFrame::doSetup() {
         &projected_landmark_keypoints_[landmark_idx]);
 
     if (projection_result.isKeypointVisible()) {
-      valid_landmarks_[landmark_idx] = true;
+      is_landmark_valid_[landmark_idx] = true;
       ++num_valid;
     } else {
       VLOG(5) << "Projection of landmark " << landmark_idx << " is invalid. "
           << std::endl << projection_result;
       projected_landmark_keypoints_[landmark_idx].setZero();
-      valid_landmarks_[landmark_idx] = false;
+      is_landmark_valid_[landmark_idx] = false;
       ++num_invalid;
     }
   }
@@ -140,7 +140,7 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
       << " and the number of apples in the apple LUT differs. This can happen if 1. the visual "
       << "frame was altered between calling setup() and getAppleCandidatesForBanana(...) or 2. "
       << "if the setup() function did not build a valid LUT for the visual frame keypoints.";
-  CHECK_LT(landmark_index, static_cast<int>(valid_landmarks_.size()))
+  CHECK_LT(landmark_index, static_cast<int>(is_landmark_valid_.size()))
     << "No valid flag for the landmark with index " << landmark_index << ".";
   CHECK_LT(landmark_index, static_cast<int>(projected_landmark_keypoints_.size()))
     << "No projected keypoint for the landmark with index " << landmark_index << ".";
@@ -154,7 +154,7 @@ void MatchingProblemLandmarksToFrame::getAppleCandidatesForBanana(
 
   const Eigen::Matrix2Xd& keypoints_frame = frame_.getKeypointMeasurements();
 
-  if (valid_landmarks_[landmark_index]) {
+  if (is_landmark_valid_[landmark_index]) {
     const Eigen::Vector2d& keypoint_landmark = projected_landmark_keypoints_[landmark_index];
 
     // Get the y coordinate of the projected landmark keypoint in the visual frame.
