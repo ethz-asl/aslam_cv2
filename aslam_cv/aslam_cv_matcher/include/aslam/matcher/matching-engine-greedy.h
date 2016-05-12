@@ -54,9 +54,9 @@ bool MatchingEngineGreedy<MatchingProblem>::match(
   matches_A_B->reserve(total_num_candidates);
   for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
     // compute the score for each candidate and put in queue
-    for (const typename MatchingProblem::Candidate& candidate_for_banana : candidates[b]) {
+    for (const typename MatchingProblem::Candidate& candidate_for_banana : candidates[banana_idx]) {
       matches_A_B->emplace_back(
-          candidate_for_banana.index_apple, banana_idx, candidate_for_b.score);
+          candidate_for_banana.index_apple, banana_idx, candidate_for_banana.score);
     }
   }
   // Reverse sort with reverse iterators.
@@ -66,7 +66,7 @@ bool MatchingEngineGreedy<MatchingProblem>::match(
   std::vector<unsigned char> is_apple_assigned(num_apples, false);
 
   typename MatchingProblem::MatchesWithScore::iterator match_out = matches_A_B->begin();
-  for (const typename MatchingProblem::MatchWithScore& match : matches_A_B) {
+  for (const typename MatchingProblem::MatchWithScore& match : *matches_A_B) {
     const int apple_index = match.getIndexApple();
 
     if (!is_apple_assigned[apple_index]) {

@@ -1,6 +1,6 @@
-#include <math.h>
-#include <vector>
 #include <algorithm>
+#include <cmath>
+#include <vector>
 
 #include <aslam/common/entrypoint.h>
 #include <aslam/matcher/match.h>
