@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <aslam/common/macros.h>
+#include <aslam/common/memory.h>
 #include <glog/logging.h>
 
 namespace aslam {

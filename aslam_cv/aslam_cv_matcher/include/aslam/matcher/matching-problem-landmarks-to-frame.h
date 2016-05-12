@@ -77,14 +77,14 @@ public:
         << "No descriptor for keypoint with index " << frame_keypoint_index << ".";
     CHECK_LT(landmark_index, static_cast<int>(landmark_descriptors_.size()))
         << "No descriptor for landmark with index " << landmark_index << ".";
-    CHECK_LT(frame_keypoint_index, static_cast<int>(valid_frame_keypoints_.size()))
+    CHECK_LT(frame_keypoint_index, static_cast<int>(is_frame_keypoint_valid_.size()))
         << "No valid flag for keypoint with index " << frame_keypoint_index << ".";
-    CHECK_LT(landmark_index, static_cast<int>(valid_landmarks_.size()))
+    CHECK_LT(landmark_index, static_cast<int>(is_landmark_valid_.size()))
         << "No valid flag for landmark with index " << landmark_index << ".";
-    CHECK(valid_frame_keypoints_[frame_keypoint_index])
+    CHECK(is_frame_keypoint_valid_[frame_keypoint_index])
         << "The given frame keypoint with index " << frame_keypoint_index
         << " is not valid.";
-    CHECK(valid_landmarks_[landmark_index]) << "The given landmark with index "
+    CHECK(is_landmark_valid_[landmark_index]) << "The given landmark with index "
         << landmark_index << " is not valid.";
 
     const common::FeatureDescriptorConstRef& apple_descriptor =

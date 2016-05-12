@@ -208,27 +208,29 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
       }
       CHECK_GE(knn_keypoint_index, 0);
 
-      CHECK_LT(knn_keypoint_index, valid_keypoint_index_to_keypoint_index_.size());
-      const size_t keypoint_index =
-          valid_keypoint_index_to_keypoint_index_[knn_keypoint_index];
-      CHECK_LT(keypoint_index, numApples());
+      if (distance_image_space_pixels < image_space_distance_threshold_pixels_) {
+        CHECK_LT(knn_keypoint_index, valid_keypoint_index_to_keypoint_index_.size());
+        const size_t keypoint_index =
+            valid_keypoint_index_to_keypoint_index_[knn_keypoint_index];
+        CHECK_LT(keypoint_index, numApples());
 
-      const int hamming_distance = computeHammingDistance(landmark_index, keypoint_index);
-      CHECK_GE(hamming_distance, 0);
+        const int hamming_distance = computeHammingDistance(landmark_index, keypoint_index);
+        CHECK_GE(hamming_distance, 0);
 
-      const int kPriority = 0;
+        const int kPriority = 0;
 
-      if (FLAGS_matcher_store_all_tested_pairs) {
-        CHECK_LT(landmark_index, all_tested_pairs_.size());
-        all_tested_pairs_[landmark_index].emplace_back(
-            keypoint_index, landmark_index, computeMatchScore(hamming_distance), kPriority);
-      }
+        if (FLAGS_matcher_store_all_tested_pairs) {
+          CHECK_LT(landmark_index, all_tested_pairs_.size());
+          all_tested_pairs_[landmark_index].emplace_back(
+              keypoint_index, landmark_index, computeMatchScore(hamming_distance), kPriority);
+        }
 
-      if (hamming_distance < hamming_distance_threshold_) {
-        CHECK_LT(landmark_index, candidates_for_landmarks->size());
-        (*candidates_for_landmarks)[landmark_index].emplace_back(
-            keypoint_index, landmark_index, computeMatchScore(hamming_distance), kPriority);
-        ++num_matches;
+        if (hamming_distance < hamming_distance_threshold_) {
+          CHECK_LT(landmark_index, candidates_for_landmarks->size());
+          (*candidates_for_landmarks)[landmark_index].emplace_back(
+              keypoint_index, landmark_index, computeMatchScore(hamming_distance), kPriority);
+          ++num_matches;
+        }
       }
     }
   }
@@ -292,8 +294,9 @@ void NeighborCellCountingGrid::incrementCellCount(const Coordinate& coordinate) 
   const int num_rows = grid_neighboring_cell_count_.rows();
   const int coordinate_x = coordinate(0);
   const int coordinate_y = coordinate(1);
-  CHECK_LT(coordinate_x, static_cast<size_t>(num_cols));
-  CHECK_LT(coordinate_y, static_cast<size_t>(num_rows));
+  CHECK_LT(coordinate_x, num_cols);
+  CHECK_LT(coordinate_y, num_rows);
+
   for (int x_shift = -1; x_shift <= 1; ++x_shift) {
     const int x_coordinate_shifted = coordinate_x + x_shift;
     if (x_coordinate_shifted < 0 || x_coordinate_shifted >= num_cols) {
@@ -310,12 +313,12 @@ void NeighborCellCountingGrid::incrementCellCount(const Coordinate& coordinate) 
       CHECK_GE(x_coordinate_shifted, 0);
       CHECK_LT(x_coordinate_shifted, num_cols);
       CHECK_GE(y_coordinate_shifted, 0);
-      CHECK_LT(y_coordinate_shifted, num_cols);
+      CHECK_LT(y_coordinate_shifted, num_rows);
       const Coordinate neighbor_coordinate =
           Eigen::Vector2i(x_coordinate_shifted, y_coordinate_shifted);
 
       const int new_neighbor_cell_count =
-          ++grid_neighboring_cell_count_(neighbor_coordinate.second, neighbor_coordinate.first);
+          ++grid_neighboring_cell_count_(neighbor_coordinate(1), neighbor_coordinate(0));
       max_neighbor_count_ = std::max(max_neighbor_count_, new_neighbor_cell_count);
     }
   }

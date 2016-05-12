@@ -66,8 +66,8 @@ class LandmarksToFrameKDTreeMatcherTest : public testing::Test {
       const double keypoint_x = static_cast<double>(uniform_dist_image_width(random_engine));
       const double keypoint_y = static_cast<double>(uniform_dist_image_height(random_engine));
 
-      *frame_keypoints(0, keypoint_index) = keypoint_x;
-      *frame_keypoints(1, keypoint_index) = keypoint_y;
+      (*frame_keypoints)(0, keypoint_index) = keypoint_x;
+      (*frame_keypoints)(1, keypoint_index) = keypoint_y;
 
       const double shift_translation_pixels = uniform_dist_image_space(random_engine);
 

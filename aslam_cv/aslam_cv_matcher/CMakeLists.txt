@@ -54,6 +54,10 @@ target_link_libraries(test_matching_problem_landmarks_to_frame ${PROJECT_NAME})
 catkin_add_gtest(test_matching_problem_landmarks_to_frame_kd_tree 
   test/test-matching-problem-landmarks-to-frame-kd-tree.cc)
 target_link_libraries(test_matching_problem_landmarks_to_frame_kd_tree ${PROJECT_NAME})
+
+catkin_add_gtest(test_neighborhood_grid test/test-neighborhood-grid.cc)
+target_link_libraries(test_neighborhood_grid ${PROJECT_NAME})
+
 ##########
 # EXPORT #
 ##########
