@@ -11,12 +11,13 @@
 #include <vector>
 
 #include <aslam/common/macros.h>
+#include <aslam/common/memory.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common-private/feature-descriptor-ref.h>
 #include <Eigen/Core>
 
+#include "aslam/matcher/match.h"
 #include "aslam/matcher/matching-problem.h"
-#include "match.h"
 
 namespace aslam {
 class VisualFrame;
@@ -34,6 +35,8 @@ class MatchingProblemFrameToFrame : public MatchingProblem {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemFrameToFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemFrameToFrame);
+  ASLAM_ADD_MATCH_TYPEDEFS(
+      MatchingProblemFrameToFrame, getKeypointIndexAppleFrame, getKeypointIndexBananaFrame);
   friend class MatcherTest;
 
   MatchingProblemFrameToFrame() = delete;
@@ -56,14 +59,6 @@ public:
                               int hamming_distance_threshold);
   virtual ~MatchingProblemFrameToFrame() {};
 
-  static inline int getKeypointIndexAppleFrame(const MatchWithScore& match) {
-    return match.getIndexApple();
-  }
-
-  static inline int getKeypointIndexBananaFrame(const MatchWithScore& match) {
-    return match.getIndexBanana();
-  }
-
   virtual size_t numApples() const;
   virtual size_t numBananas() const;
 
@@ -72,18 +67,7 @@ public:
   /// \param[in] frame_banana_keypoint_index The index of b queried for candidates.
   /// \param[out] candidates  Candidates from the apple frame keypoints that could
   ///                         potentially match the given keypoint from the banana frame.
-  void getAppleCandidatesForBanana(int frame_banana_keypoint_index, Candidates* candidates);
-
-  /// Retrieves match candidates for each banana frame keypoint.
-  virtual inline void getCandidates(CandidatesList* candidates_for_frame_banana_keypoints) {
-    CHECK_NOTNULL(candidates_for_frame_banana_keypoints)->clear();
-    const size_t num_bananas = numBananas();
-    candidates_for_frame_banana_keypoints->resize(num_bananas);
-    for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
-      getAppleCandidatesForBanana(
-          banana_idx, &(*candidates_for_frame_banana_keypoints)[banana_idx]);
-    }
-  }
+  virtual void getAppleCandidatesForBanana(int frame_banana_keypoint_index, Candidates* candidates);
 
   inline double computeMatchScore(int hamming_distance) {
     return static_cast<double>(384 - hamming_distance) / 384.0;

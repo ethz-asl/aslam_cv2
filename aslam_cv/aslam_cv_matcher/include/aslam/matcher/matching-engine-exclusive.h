@@ -38,7 +38,8 @@ class MatchingEngineExclusive : public MatchingEngine<MatchingProblem> {
   MatchingEngineExclusive() {};
   virtual ~MatchingEngineExclusive() {};
 
-  virtual bool match(MatchingProblem* problem, typename aslam::MatchesWithScore* matches_A_B);
+  virtual bool match(MatchingProblem* problem,
+                     typename MatchingProblem::MatchesWithScore* matches_A_B);
 
 private:
   /// \brief Recursively assigns the next best apple to the given banana.
@@ -90,8 +91,8 @@ private:
 };
 
 template<typename MatchingProblem>
-bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
-                                                     aslam::MatchesWithScore* matches_A_B) {
+bool MatchingEngineExclusive<MatchingProblem>::match(
+    MatchingProblem* problem, typename MatchingProblem::MatchesWithScore* matches_A_B) {
   aslam::timing::Timer method_timer("MatchingEngineExclusive<MatchingProblem>::match()");
 
   CHECK_NOTNULL(problem);
