@@ -104,7 +104,10 @@ bool MatchingEngineExclusive<MatchingProblem>::match(
     const size_t num_apples = problem->numApples();
 
     problem->getCandidates(&candidates_);
-    CHECK_EQ(candidates_.size(), num_bananas);
+    CHECK_EQ(candidates_.size(), num_bananas) << "The size of the candidates list does not "
+        << "match the number of bananas of the problem. getCandidates(...) of the given matching "
+        << "problem is supposed to return a vector of candidates for each banana and hence the "
+        << "size of the returned vector must match the number of bananas.";
 
     temporary_matches_.clear();
     temporary_matches_.resize(num_apples);

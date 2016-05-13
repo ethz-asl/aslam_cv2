@@ -10,37 +10,6 @@
 #include "aslam/matcher/matching-problem-landmarks-to-frame.h"
 
 namespace aslam {
-/*
-template<>
-void convertMatches<MatchingProblemFrameToFrame>(
-    const MatchingProblemFrameToFrame::MatchesWithScore& matches_with_score_A_B,
-    MatchingProblemFrameToFrame::Matches* matches_A_B) {
-  CHECK_NOTNULL(matches_A_B)->clear();
-  matches_A_B->reserve(matches_with_score_A_B.size());
-  for (const MatchingProblemFrameToFrame::MatchWithScore& match : matches_with_score_A_B) {
-    CHECK_GE(match.getKeypointIndexAppleFrame(), 0) << "Apple keypoint index is negative.";
-    CHECK_GE(match.getKeypointIndexBananaFrame(), 0) << "Banana keypoint index is negative.";
-    matches_A_B->emplace_back(static_cast<size_t>(match.getKeypointIndexAppleFrame()),
-                              static_cast<size_t>(match.getKeypointIndexBananaFrame()));
-  }
-  CHECK_EQ(matches_with_score_A_B.size(), matches_A_B->size());
-}
-
-template<>
-void convertMatches<MatchingProblemLandmarksToFrame>(
-    const MatchingProblemLandmarksToFrame::MatchesWithScore& matches_with_score_A_B,
-    MatchingProblemLandmarksToFrame::Matches* matches_A_B) {
-  CHECK_NOTNULL(matches_A_B)->clear();
-  matches_A_B->reserve(matches_with_score_A_B.size());
-  for (const MatchingProblemLandmarksToFrame::MatchWithScore& match : matches_with_score_A_B) {
-    CHECK_GE(match.getKeypointIndex(), 0) << "The match keypoint index is negative.";
-    CHECK_GE(match.getLandmarkIndex(), 0) << "The match landmark index is negative.";
-    matches_A_B->emplace_back(static_cast<size_t>(match.getKeypointIndex()),
-                              static_cast<size_t>(match.getLandmarkIndex()));
-  }
-  CHECK_EQ(matches_with_score_A_B.size(), matches_A_B->size());
-}*/
-
 /// Convert MatchesWithScore to Matches.
 template<typename MatchingProblem>
 void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_with_score_A_B,
@@ -48,8 +17,8 @@ void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_wi
   CHECK_NOTNULL(matches_A_B)->clear();
   matches_A_B->reserve(matches_with_score_A_B.size());
   for (const typename MatchingProblem::MatchWithScore& match : matches_with_score_A_B) {
-    CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
-    CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
+    CHECK_GE(match.getIndexApple(), 0) << "The apple index is negative.";
+    CHECK_GE(match.getIndexBanana(), 0) << "The banana index is negative.";
     matches_A_B->emplace_back(static_cast<size_t> (match.getIndexApple()),
                               static_cast<size_t> (match.getIndexBanana()));
   }
@@ -63,8 +32,8 @@ void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_wi
   CHECK_NOTNULL(matches_A_B)->clear();
   matches_A_B->reserve(matches_with_score_A_B.size());
   for (const typename MatchingProblem::MatchWithScore& match : matches_with_score_A_B) {
-    CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
-    CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
+    CHECK_GE(match.getIndexApple(), 0) << "The apple index is negative.";
+    CHECK_GE(match.getIndexBanana(), 0) << "The banana index is negative.";
     matches_A_B->emplace_back(cv::DMatch(match.getIndexApple(), match.getIndexBanana(),
                                          static_cast<float>(match.getScore())));
   }

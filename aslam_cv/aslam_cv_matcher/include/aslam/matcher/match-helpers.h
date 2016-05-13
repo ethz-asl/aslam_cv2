@@ -3,7 +3,6 @@
 
 namespace aslam {
 
-
 /// Convert MatchesWithScore to Matches.
 template<typename MatchingProblem>
 void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_with_score_A_B,

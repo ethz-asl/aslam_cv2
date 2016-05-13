@@ -35,7 +35,7 @@ class MatchingProblemFrameToFrame : public MatchingProblem {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemFrameToFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemFrameToFrame);
-  ASLAM_ADD_MATCH_TYPEDEFS(
+  ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(
       MatchingProblemFrameToFrame, getKeypointIndexAppleFrame, getKeypointIndexBananaFrame);
   friend class MatcherTest;
 

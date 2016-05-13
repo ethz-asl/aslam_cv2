@@ -19,7 +19,7 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
   aslam::Matches matches_A_B_;
 
  public:
-  ASLAM_ADD_MATCH_TYPEDEFS(SimpleMatchProblem, getIndexApple, getIndexBanana);
+  ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(SimpleMatchProblem, getIndexApple, getIndexBanana);
 
   SimpleMatchProblem() {}
   ~SimpleMatchProblem() {}
