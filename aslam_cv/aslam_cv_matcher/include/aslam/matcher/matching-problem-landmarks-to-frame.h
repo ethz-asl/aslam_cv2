@@ -27,8 +27,7 @@ typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, 1> Descriptor;
 struct LandmarkWithDescriptor {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   LandmarkWithDescriptor() = delete;
-  LandmarkWithDescriptor(const Eigen::Vector3d& p_C_landmark,
-                         const Descriptor& descriptor)
+  LandmarkWithDescriptor(const Eigen::Vector3d& p_C_landmark, const Descriptor& descriptor)
     : p_C_landmark_(p_C_landmark), descriptor_(descriptor) {}
   virtual ~LandmarkWithDescriptor() = default;
 
