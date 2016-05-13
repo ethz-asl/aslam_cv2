@@ -21,7 +21,6 @@ set(HEADERS
   include/aslam/matcher/matching-problem-landmarks-to-frame.h
   include/aslam/matcher/matching-problem-landmarks-to-frame-kd-tree.h
   include/aslam/matcher/matching-problem-landmarks-to-frame-multimap.h
-  include/aslam/matcher/matching-problem-types.h
 )
 
 set(SOURCES
