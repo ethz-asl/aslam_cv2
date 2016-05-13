@@ -2,7 +2,6 @@
 
 #include <aslam/common/statistics/statistics.h>
 #include <aslam/frames/visual-frame.h>
-#include <aslam/frames/visual-nframe.h>
 #include <glog/logging.h>
 
 #include "aslam/matcher/matching-problem-landmarks-to-frame-multimap.h"
@@ -23,7 +22,6 @@ MatchingProblemLandmarksToFrameMultimap::MatchingProblemLandmarksToFrameMultimap
   // The vertical search band must be at least twice the image space distance.
   vertical_band_halfwidth_pixels_ = static_cast<int>(
       std::ceil(image_space_distance_threshold_pixels));
-
   CHECK(frame.getCameraGeometry()) << "The camera of the visual frame is NULL.";
   image_height_frame_ = frame.getCameraGeometry()->imageHeight();
   CHECK_GT(image_height_frame_, 0u) << "The visual frame has zero image rows.";
@@ -208,6 +206,7 @@ void MatchingProblemLandmarksToFrameMultimap::getAppleCandidatesForBanana(
       if (squared_image_space_distance < squared_image_space_distance_threshold_pixels_squared_) {
         // This one is within the radius. Compute the descriptor distance.
         const int hamming_distance = computeHammingDistance(landmark_index, frame_keypoint_index);
+        CHECK_LE(hamming_distance, descriptor_size_bits_);
 
         if (hamming_distance < hamming_distance_threshold_) {
           CHECK_GE(hamming_distance, 0);

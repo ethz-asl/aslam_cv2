@@ -256,7 +256,7 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchRandomly) {
     EXPECT_DOUBLE_EQ(1.0, match.getScore());
   }
 }
-/*
+
 TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchRandomlyWithRandomOrder) {
   const size_t kNumKeypoints = 2000u;
   const double kScalingFactor = 1e5;
@@ -322,9 +322,8 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchesBecauseOfHammingDistance
   Descriptors landmark_descriptors = frame_descriptors;
 
   Eigen::Matrix<unsigned char, kNumKeypoints, 1> selection_vector =
-      Eigen::Matrix<unsigned char, kNumKeypoints, 1>::Random();
+      Eigen::Matrix<unsigned char, kNumKeypoints, 1>::Constant(255u);
 
-  selection_vector.setConstant(255u);
   selection_vector(1) = 0u;
 
   const int kNumBytesDifferent = 2;
@@ -332,7 +331,6 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchesBecauseOfHammingDistance
   CHECK_LT(kNumBytesDifferent, frame_descriptors.rows());
   CHECK_LT(kNumBytesDifferent, landmark_descriptors.rows());
 
-  unsigned char kCharThreshold = 128;
   size_t num_made_invalid = 0u;
 
   for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
@@ -526,5 +524,5 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchBecauseLandmarksBehindCame
 
   ASSERT_TRUE(EIGEN_MATRIX_NEAR(result_matrix_keypoints, result_matrix_keypoints, 1e-8));
 }
-*/
+
 ASLAM_UNITTEST_ENTRYPOINT

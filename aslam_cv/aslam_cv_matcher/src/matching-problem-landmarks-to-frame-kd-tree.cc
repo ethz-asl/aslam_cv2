@@ -1,9 +1,5 @@
-#include <algorithm>
-
-#include <aslam/common/statistics/statistics.h>
 #include <aslam/common/timer.h>
 #include <aslam/frames/visual-frame.h>
-#include <aslam/frames/visual-nframe.h>
 #include <glog/logging.h>
 
 #include "aslam/matcher/matching-problem-landmarks-to-frame-kd-tree.h"
@@ -166,7 +162,7 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
   candidates_for_landmarks->resize(numBananas());
 
   if (!nn_index_) {
-    // No valid keypoints available - meaning no matches can be formed.
+    LOG(WARNING) << "No valid keypoints available in the KD-tree index. No matches can be formed.";
     return;
   }
 
@@ -209,7 +205,8 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
           distances_squared(nearest_neighbor_idx, knn_landmark_idx);
 
       if (knn_keypoint_index == -1) {
-        CHECK_EQ(distance_squared_image_space_pixels_squared,  std::numeric_limits<double>::infinity());
+        CHECK_EQ(
+            distance_squared_image_space_pixels_squared, std::numeric_limits<double>::infinity());
         break;  // No more results.
       }
       CHECK_GE(knn_keypoint_index, 0);
@@ -223,6 +220,7 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
 
         const int hamming_distance = computeHammingDistance(landmark_index, keypoint_index);
         CHECK_GE(hamming_distance, 0);
+        CHECK_LE(hamming_distance, descriptor_size_bits_);
 
         const int kPriority = 0;
 
