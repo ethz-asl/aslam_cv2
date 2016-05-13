@@ -50,7 +50,7 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
     std::sort(matches_A_B_.begin(),matches_A_B_.end());
   }
 
-  void getAppleCandidatesForBanana(int b, Candidates* candidates) {
+  virtual void getAppleCandidatesForBanana(int b, Candidates* candidates) {
      CHECK_NOTNULL(candidates);
      candidates->clear();
 
@@ -60,15 +60,6 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
        candidates->emplace_back(index_apple, b, score, 0);
      }
    };
-
-  virtual void getCandidates(CandidatesList* candidates_for_bananas) {
-    CHECK_NOTNULL(candidates_for_bananas)->clear();
-    const size_t num_bananas = numBananas();
-    candidates_for_bananas->resize(num_bananas);
-    for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
-      getAppleCandidatesForBanana(banana_idx, &(*candidates_for_bananas)[banana_idx]);
-    }
-  }
 };
 
 TEST(PriorityMatchingTest, TestAssignBest) {
@@ -239,12 +230,8 @@ TEST(TestMatcher, GreedyMatcher) {
   EXPECT_EQ(5u, matches.size());
 
   mp.sortMatches();
-  for (const SimpleMatchProblem::MatchWithScore& match : matches) {
-    LOG(INFO) << "Sorted: index apple: " << match.getIndexApple() << " index banana: " << match.getIndexBanana() << " score: " << match.getScore();
-  }
 
   for (const SimpleMatchProblem::MatchWithScore& match : matches) {
-    LOG(INFO) << "Match index apple: " << match.getIndexApple() << " index banana: " << match.getIndexBanana();
     EXPECT_EQ(match.getIndexApple(), ind_a_of_b[match.getIndexBanana()]);
   }
 }

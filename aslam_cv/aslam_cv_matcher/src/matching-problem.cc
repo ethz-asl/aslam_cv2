@@ -1,5 +1,3 @@
-#include "aslam/matcher/matching-problem.h"
-
 #include <gflags/gflags.h>
 
 DEFINE_bool(matcher_store_all_tested_pairs, false, "If true, every tested match pair, regardless"
