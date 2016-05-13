@@ -18,7 +18,6 @@
 
 #include "aslam/matcher/match.h"
 #include "aslam/matcher/matching-problem-landmarks-to-frame.h"
-#include "aslam/matcher/matching-problem-types.h"
 
 namespace aslam {
 class VisualFrame;
