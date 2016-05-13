@@ -9,7 +9,7 @@
 #include <aslam/frames/visual-frame.h>
 #include <aslam/matcher/match.h>
 #include <aslam/matcher/matching-engine-non-exclusive.h>
-#include <aslam/matcher/matching-problem-landmarks-to-frame.h>
+#include <aslam/matcher/matching-problem-landmarks-to-frame-multimap.h>
 #include <eigen-checks/gtest.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -32,10 +32,10 @@ class LandmarksToFrameMatcherTest : public testing::Test {
     hamming_distance_threshold_ = 1;
   }
 
-  inline void match(aslam::MatchingProblemLandmarksToFrame::MatchesWithScore* matches_A_B) {
+  inline void match(aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore* matches_A_B) {
     CHECK_NOTNULL(matches_A_B);
-    aslam::MatchingProblemLandmarksToFrame::Ptr matching_problem =
-        aslam::aligned_shared<aslam::MatchingProblemLandmarksToFrame>(
+    aslam::MatchingProblemLandmarksToFrameMultimap::Ptr matching_problem =
+        aslam::aligned_shared<aslam::MatchingProblemLandmarksToFrameMultimap>(
             *frame_, landmarks_, image_space_distance_threshold_pixels_,
             hamming_distance_threshold_);
 
@@ -156,7 +156,7 @@ class LandmarksToFrameMatcherTest : public testing::Test {
   aslam::VisualFrame::Ptr frame_;
   aslam::LandmarkWithDescriptorList landmarks_;
 
-  aslam::MatchingEngineNonExclusive<aslam::MatchingProblemLandmarksToFrame> matching_engine_;
+  aslam::MatchingEngineNonExclusive<aslam::MatchingProblemLandmarksToFrameMultimap> matching_engine_;
 
   aslam::PinholeCamera::Ptr camera_;
 
@@ -165,9 +165,9 @@ class LandmarksToFrameMatcherTest : public testing::Test {
 };
 
 TEST_F(LandmarksToFrameMatcherTest, EmptyMatch) {
-  aslam::MatchingEngineNonExclusive<aslam::MatchingProblemLandmarksToFrame> matching_engine;
+  aslam::MatchingEngineNonExclusive<aslam::MatchingProblemLandmarksToFrameMultimap> matching_engine;
 
-  aslam::MatchingProblemLandmarksToFrame::MatchesWithScore matches_A_B;
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   EXPECT_TRUE(matches_A_B.empty());
@@ -189,12 +189,12 @@ TEST_F(LandmarksToFrameMatcherTest, MatchIdentity) {
 
   landmarks_.emplace_back(projected_keypoint, landmark_descriptors.col(0));
 
-  aslam::MatchingProblemLandmarksToFrame::MatchesWithScore matches_A_B;
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   ASSERT_EQ(1u, matches_A_B.size());
 
-  aslam::MatchingProblemLandmarksToFrame::MatchWithScore match = matches_A_B[0];
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchWithScore match = matches_A_B[0];
   EXPECT_EQ(0, match.getKeypointIndex());
   EXPECT_EQ(0, match.getLandmarkIndex());
   EXPECT_DOUBLE_EQ(1.0, match.getScore());
@@ -218,12 +218,12 @@ TEST_F(LandmarksToFrameMatcherTest, MatchIdentityWithScale) {
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoint,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrame::MatchesWithScore matches_A_B;
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   ASSERT_EQ(1u, matches_A_B.size());
 
-  aslam::MatchingProblemLandmarksToFrame::MatchWithScore match = matches_A_B[0];
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchWithScore match = matches_A_B[0];
   EXPECT_EQ(0, match.getKeypointIndex());
   EXPECT_EQ(0, match.getLandmarkIndex());
   EXPECT_DOUBLE_EQ(1.0, match.getScore());
@@ -245,12 +245,12 @@ TEST_F(LandmarksToFrameMatcherTest, MatchRandomly) {
   setKeypointsAndLandmarks(
       frame_keypoints, frame_descriptors, p_C_landmarks, landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrame::MatchesWithScore matches_A_B;
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   ASSERT_EQ(kNumKeypoints, matches_A_B.size());
 
-  for (const aslam::MatchingProblemLandmarksToFrame::MatchWithScore& match : matches_A_B) {
+  for (const aslam::MatchingProblemLandmarksToFrameMultimap::MatchWithScore& match : matches_A_B) {
     EXPECT_EQ(match.getKeypointIndex(),
               match.getLandmarkIndex());
     EXPECT_DOUBLE_EQ(1.0, match.getScore());
@@ -276,7 +276,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchRandomlyWithRandomOrder) {
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, p_C_landmarks,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrame::MatchesWithScore matches_A_B;
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore matches_A_B;
   match(&matches_A_B);
   const size_t num_matches = matches_A_B.size();
 
@@ -289,7 +289,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchRandomlyWithRandomOrder) {
   result_matrix_landmarks.setZero();
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
-    const aslam::MatchingProblemLandmarksToFrame::MatchWithScore& match = matches_A_B[match_index];
+    const aslam::MatchingProblemLandmarksToFrameMultimap::MatchWithScore& match = matches_A_B[match_index];
     const int keypoint_index = match.getKeypointIndex();
     const int landmark_index = match.getLandmarkIndex();
     CHECK_LT(keypoint_index, kNumKeypoints);
@@ -351,7 +351,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchesBecauseOfHammingDistance) {
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoints,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrame::MatchesWithScore matches_A_B;
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   const size_t num_matches = matches_A_B.size();
@@ -364,7 +364,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchesBecauseOfHammingDistance) {
   result_matrix_landmarks.setZero();
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
-    const aslam::MatchingProblemLandmarksToFrame::MatchWithScore& match = matches_A_B[match_index];
+    const aslam::MatchingProblemLandmarksToFrameMultimap::MatchWithScore& match = matches_A_B[match_index];
     const int keypoint_index = match.getKeypointIndex();
     const int landmark_index = match.getLandmarkIndex();
     CHECK_LT(keypoint_index, kNumKeypoints);
@@ -432,7 +432,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseOfSearchBand) {
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoints,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrame::MatchesWithScore matches_A_B;
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   const size_t num_matches = matches_A_B.size();
@@ -445,7 +445,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseOfSearchBand) {
   result_matrix_landmarks.setZero();
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
-    const aslam::MatchingProblemLandmarksToFrame::MatchWithScore& match = matches_A_B[match_index];
+    const aslam::MatchingProblemLandmarksToFrameMultimap::MatchWithScore& match = matches_A_B[match_index];
     const int keypoint_index = match.getKeypointIndex();
     const int landmark_index = match.getLandmarkIndex();
     CHECK_LT(keypoint_index, kNumKeypoints);
@@ -493,7 +493,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseLandmarksBehindCamera) {
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoints,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrame::MatchesWithScore matches_A_B;
+  aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore matches_A_B;
   match(&matches_A_B);
   const size_t num_matches = matches_A_B.size();
   ASSERT_EQ(num_matches, kNumKeypoints - num_made_invalid);
@@ -505,7 +505,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseLandmarksBehindCamera) {
   result_matrix_landmarks.setZero();
 
   for (size_t match_index = 0u; match_index < num_matches; ++match_index) {
-    const aslam::MatchingProblemLandmarksToFrame::MatchWithScore& match = matches_A_B[match_index];
+    const aslam::MatchingProblemLandmarksToFrameMultimap::MatchWithScore& match = matches_A_B[match_index];
     const int keypoint_index = match.getKeypointIndex();
     const int landmark_index = match.getLandmarkIndex();
     CHECK_LT(keypoint_index, kNumKeypoints);

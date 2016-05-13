@@ -90,10 +90,14 @@ bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   const double image_width = static_cast<double>(camera->imageWidth());
   CHECK_GT(image_height, 0.0);
 
+  CHECK_GT(squared_image_space_distance_threshold_pixels_squared_, 0.0);
+  const double image_space_distance_threshold_pixels =
+      std::sqrt(squared_image_space_distance_threshold_pixels_squared_);
+
   const size_t num_bins_x =
-      static_cast<size_t>(std::floor(image_width / image_space_distance_threshold_pixels_));
+      static_cast<size_t>(std::floor(image_width / image_space_distance_threshold_pixels));
   const size_t num_bins_y =
-      static_cast<size_t>(std::floor(image_height / image_space_distance_threshold_pixels_));
+      static_cast<size_t>(std::floor(image_height / image_space_distance_threshold_pixels));
 
   const double kImageRangeBeginX = 0.0;
   const double kImageRangeBeginY= 0.0;
@@ -173,20 +177,21 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
   CHECK(image_space_counting_grid_);
   const int num_neighbors = image_space_counting_grid_->getMaxNeighborhoodCellCount();
   CHECK_GT(num_neighbors, 0);
-  VLOG(3) << "Querying for " << num_neighbors << " num neighbors.";
+  LOG(INFO) << "Querying for " << num_neighbors << " num neighbors.";
   Eigen::MatrixXi indices = Eigen::MatrixXi::Constant(num_neighbors, num_valid_landmarks, -1);
-  Eigen::MatrixXd distances = Eigen::MatrixXd::Constant(
+  Eigen::MatrixXd distances_squared = Eigen::MatrixXd::Constant(
       num_neighbors, num_valid_landmarks, std::numeric_limits<double>::infinity());
   const double kSearchNNEpsilon = 0.0;
-  const double kSearchRadius = image_space_distance_threshold_pixels_;
+  CHECK_GT(squared_image_space_distance_threshold_pixels_squared_, 0.0);
+  const double kSearchRadius = std::sqrt(squared_image_space_distance_threshold_pixels_squared_);
   const unsigned kOptionFlags = Nabo::NNSearchD::ALLOW_SELF_MATCH;
 
   aslam::timing::Timer knn_timer(
       "MatchingProblemLandmarksToFrameKDTree::getCandidates - knn search");
   CHECK(nn_index_);
   nn_index_->knn(
-      p_valid_projected_landmarks_, indices, distances,
-      num_neighbors, kSearchNNEpsilon, kOptionFlags, kSearchRadius);
+      p_valid_projected_landmarks_, indices, distances_squared, num_neighbors, kSearchNNEpsilon,
+      kOptionFlags, kSearchRadius);
   knn_timer.Stop();
 
   aslam::timing::Timer knn_post_processing_timer(
@@ -200,15 +205,17 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
     for (int nearest_neighbor_idx = 0; nearest_neighbor_idx < num_neighbors;
         ++nearest_neighbor_idx) {
       const int knn_keypoint_index = indices(nearest_neighbor_idx, knn_landmark_idx);
-      const double distance_image_space_pixels = distances(nearest_neighbor_idx, knn_landmark_idx);
+      const double distance_squared_image_space_pixels_squared =
+          distances_squared(nearest_neighbor_idx, knn_landmark_idx);
 
       if (knn_keypoint_index == -1) {
-        CHECK_EQ(distance_image_space_pixels,  std::numeric_limits<double>::infinity());
+        CHECK_EQ(distance_squared_image_space_pixels_squared,  std::numeric_limits<double>::infinity());
         break;  // No more results.
       }
       CHECK_GE(knn_keypoint_index, 0);
 
-      if (distance_image_space_pixels < image_space_distance_threshold_pixels_) {
+      if (distance_squared_image_space_pixels_squared <
+          squared_image_space_distance_threshold_pixels_squared_) {
         CHECK_LT(knn_keypoint_index, valid_keypoint_index_to_keypoint_index_.size());
         const size_t keypoint_index =
             valid_keypoint_index_to_keypoint_index_[knn_keypoint_index];

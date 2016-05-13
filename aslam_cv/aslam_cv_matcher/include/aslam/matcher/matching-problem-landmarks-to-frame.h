@@ -37,7 +37,6 @@ class MatchingProblemLandmarksToFrame : public MatchingProblem {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrame);
-  ASLAM_ADD_MATCH_TYPEDEFS(MatchingProblemLandmarksToFrame, getKeypointIndex, getLandmarkIndex);
 
   MatchingProblemLandmarksToFrame() = delete;
 
@@ -60,13 +59,7 @@ public:
   virtual size_t numApples() const;
   virtual size_t numBananas() const;
 
-  /// Get a short list of keypoint candidates for a given landmark index.
-  ///
-  /// \param[in]  landmark_index  The landmark index queried for candidates.
-  /// \param[out] candidates      Candidates from the frame keypoint list that could
-  ///                             potentially match the given landmark.
-  void getAppleCandidatesForBanana(int landmark_index, Candidates* candidates);
-
+protected:
   inline double computeMatchScore(int hamming_distance) {
     return static_cast<double>(descriptor_size_bits_ - hamming_distance) /
         static_cast<double>(descriptor_size_bits_);
@@ -98,12 +91,6 @@ public:
     return common::GetNumBitsDifferent(banana_descriptor, apple_descriptor);
   }
 
-  /// \brief Gets called at the beginning of the matching problem.
-  /// Creates a y-coordinate LUT for all frame keypoints and projects all landmark into the
-  /// frame.
-  virtual bool doSetup();
-
-protected:
   /// The landmarks to be matched.
   LandmarkWithDescriptorList landmarks_;
   /// The visual frame the landmarks are matched against.
@@ -124,26 +111,16 @@ protected:
   const size_t descriptor_size_bytes_;
   const int descriptor_size_bits_;
 
-  /// Half width of the vertical band used for match lookup in pixels.
-  int vertical_band_halfwidth_pixels_;
-
   /// The height of the visual frame.
   size_t image_height_frame_;
 
   /// Pairs with image space distance >= image_space_distance_threshold_pixels_ are
   /// excluded from matches.
-  double image_space_distance_threshold_pixels_;
+  double squared_image_space_distance_threshold_pixels_squared_;
 
   /// Pairs with descriptor distance >= hamming_distance_threshold_ are
   /// excluded from matches.
   int hamming_distance_threshold_;
-
-private:
-  /// The landmarks projected into the visual frame.
-  aslam::Aligned<std::vector, Eigen::Vector2d>::type projected_landmark_keypoints_;
-  /// Map mapping y coordinates in the image plane onto keypoint indices of the
-  /// visual frame keypoints.
-  std::multimap<size_t, size_t> y_coordinate_to_keypoint_index_map_;
 };
 }  // namespace aslam
-#endif  //ASLAM_CV_MATCHING_PROBLEM_LANDMARKS_TO_FRAME_H_
+#endif  // ASLAM_CV_MATCHING_PROBLEM_LANDMARKS_TO_FRAME_H_

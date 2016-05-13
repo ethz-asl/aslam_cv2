@@ -34,51 +34,54 @@ bool MatchingEngineGreedy<MatchingProblem>::match(
   CHECK_NOTNULL(problem);
   CHECK_NOTNULL(matches_A_B);
   matches_A_B->clear();
-  const bool status = problem->doSetup();
-  const size_t num_apples = problem->numApples();
-  const size_t num_bananas = problem->numBananas();
+  if (problem->doSetup()) {
+    const size_t num_apples = problem->numApples();
+    const size_t num_bananas = problem->numBananas();
 
-  typename MatchingProblem::CandidatesList candidates;
+    typename MatchingProblem::CandidatesList candidates;
+    problem->getCandidates(&candidates);
+    CHECK_EQ(candidates.size(), num_bananas) << "The size of the candidates list does not "
+        << "match the number of bananas of the problem. getCandidates(...) of the given matching "
+        << "problem is supposed to return a vector of candidates for each banana and hence the "
+        << "size of the returned vector must match the number of bananas.";
 
-  problem->getCandidates(&candidates);
-  CHECK_EQ(candidates.size(), num_bananas) << "The size of the candidates list does not "
-      << "match the number of bananas of the problem. getCandidates(...) of the given matching "
-      << "problem is supposed to return a vector of candidates for each banana and hence the "
-      << "size of the returned vector must match the number of bananas.";
-
-  size_t total_num_candidates = 0u;
-  for (const typename MatchingProblem::Candidates& candidates_for_banana : candidates) {
-    total_num_candidates += candidates_for_banana.size();
-  }
-
-  matches_A_B->reserve(total_num_candidates);
-  for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
-    // compute the score for each candidate and put in queue
-    for (const typename MatchingProblem::Candidate& candidate_for_banana : candidates[banana_idx]) {
-      matches_A_B->emplace_back(
-          candidate_for_banana.index_apple, banana_idx, candidate_for_banana.score);
+    size_t total_num_candidates = 0u;
+    for (const typename MatchingProblem::Candidates& candidates_for_banana : candidates) {
+      total_num_candidates += candidates_for_banana.size();
     }
-  }
-  // Reverse sort with reverse iterators.
-  std::sort(matches_A_B->rbegin(), matches_A_B->rend());
 
-  // Compress in place the best unique match.
-  std::vector<unsigned char> is_apple_assigned(num_apples, false);
-
-  typename MatchingProblem::MatchesWithScore::iterator match_out = matches_A_B->begin();
-  for (const typename MatchingProblem::MatchWithScore& match : *matches_A_B) {
-    const int apple_index = match.getIndexApple();
-
-    if (!is_apple_assigned[apple_index]) {
-      is_apple_assigned[apple_index] = true;
-      *match_out++ = match;
+    matches_A_B->reserve(total_num_candidates);
+    for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
+      // compute the score for each candidate and put in queue
+      for (const typename MatchingProblem::Candidate& candidate_for_banana : candidates[banana_idx]) {
+        matches_A_B->emplace_back(
+            candidate_for_banana.index_apple, banana_idx, candidate_for_banana.score);
+      }
     }
+    // Reverse sort with reverse iterators.
+    std::sort(matches_A_B->rbegin(), matches_A_B->rend());
+
+    // Compress the best unique match in place.
+    std::vector<unsigned char> is_apple_assigned(num_apples, false);
+
+    typename MatchingProblem::MatchesWithScore::iterator match_out = matches_A_B->begin();
+    for (const typename MatchingProblem::MatchWithScore& match : *matches_A_B) {
+      const int apple_index = match.getIndexApple();
+
+      if (!is_apple_assigned[apple_index]) {
+        is_apple_assigned[apple_index] = true;
+        *match_out++ = match;
+      }
+    }
+
+    // Trim the end of the vector.
+    matches_A_B->erase(match_out, matches_A_B->end());
+  } else {
+    LOG(WARNING) << "problem->doSetup() failed.";
+    return false;
   }
 
-  // trim end of vector
-  matches_A_B->erase(match_out, matches_A_B->end());
-
-  return status;
+  return true;
 }
 
 }  // namespace aslam

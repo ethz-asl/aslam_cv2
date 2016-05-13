@@ -88,7 +88,8 @@ struct MatchWithScore {
 // getAppleIndexAlias and getBananaIndexAlias specify function aliases for retrieving the apple
 // and banana index respectively of a match. These aliases should depend on how the apples and
 // bananas are associated within the context of the given matching problem.
-#define ASLAM_ADD_MATCH_TYPEDEFS(MatchingProblemClass, getAppleIndexAlias, getBananaIndexAlias)   \
+#define ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(                                                    \
+    MatchingProblemClass, getAppleIndexAlias, getBananaIndexAlias)                                \
   struct MatchingProblemClass ## MatchWithScore : public aslam::MatchWithScore {                  \
     MatchingProblemClass ## MatchWithScore(int index_apple, int index_banana, double _score)      \
         : aslam::MatchWithScore(index_apple, index_banana, _score) {}                             \
@@ -105,8 +106,8 @@ struct MatchWithScore {
   struct MatchingProblemClass ## Match : public aslam::Match {                                    \
     MatchingProblemClass ## Match(size_t first_, size_t second_) : aslam::Match(first_, second_){}\
     virtual ~MatchingProblemClass ## Match() = default;                                           \
-    size_t getKeypointIndexAppleFrame() const { return first; }                                   \
-    size_t getKeypointIndexBananaFrame() const { return second; }                                 \
+    size_t getAppleIndexAlias() const { return first; }                                           \
+    size_t getBananaIndexAlias() const { return second; }                                         \
   };                                                                                              \
   typedef MatchingProblemClass ## Match Match;                                                    \
   typedef Aligned<std::vector, MatchingProblemClass ## Match>::type Matches;                      \

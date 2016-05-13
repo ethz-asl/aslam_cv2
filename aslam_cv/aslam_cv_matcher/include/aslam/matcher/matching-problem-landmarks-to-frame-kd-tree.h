@@ -6,7 +6,6 @@
 ///
 /// @}
 
-#include <map>
 #include <memory>
 #include <vector>
 
@@ -74,19 +73,17 @@ typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, 1> Descriptor;
 /// The problem is assumed to have a list of landmarks (3D points + descriptors)
 /// and a visual frame with keypoints and descriptors. The landmarks are then
 /// matched against the keypoints in the frame based on image space distance
-/// and descriptor distance. The landmarks are expected to be expressed in the
-/// camera frame of the visual frame.
+/// and descriptor distance using a KD-tree. The landmarks are expected to be expressed
+/// in the camera frame of the visual frame.
 ///
 /// Coordinate Frames:
-///   C: camera frame of the visual frame.
+///   C: Camera frame of the given visual frame.
 class MatchingProblemLandmarksToFrameKDTree : public MatchingProblemLandmarksToFrame {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrameKDTree);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrameKDTree);
-  typedef MatchingProblemLandmarksToFrame::MatchWithScore MatchWithScore;
-  typedef MatchingProblemLandmarksToFrame::MatchesWithScore MatchesWithScore;
-  typedef MatchingProblemLandmarksToFrame::Match Match;
-  typedef MatchingProblemLandmarksToFrame::Matches Matches;
+  ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(
+      MatchingProblemLandmarksToFrameMultimap, getKeypointIndex, getLandmarkIndex);
 
   MatchingProblemLandmarksToFrameKDTree() = delete;
 
