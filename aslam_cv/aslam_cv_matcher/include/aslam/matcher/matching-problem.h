@@ -18,11 +18,12 @@ namespace aslam {
 ///
 /// \brief defines the specifics of a matching problem
 ///
-/// NOTE: IF YOU CREATE A NEW MATCHING PROBLEM INHERITING FROM THIS CLASS,
-/// MAKE SURE NOT TO FORGET TO ADD THE
-/// ASLAM_ADD_MATCH_TYPEDEFS(
-///    NewMatchingProblemName, alias_for_getAppleIndex, alias_for_getBananaIndex)
-/// MACRO IN THE PUBLIC CLASS BODY!
+/// IMPORTANT NOTE: If you create a new matching problem inheriting from this class, make sure
+/// not to forget to add the
+/// ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(
+///    NewMatchingProblemClassName, alias_for_getAppleIndex, alias_for_getBananaIndex)
+/// macro in the public class body! Otherwise, no matches type will be available for the
+/// new problem and compilation will fail.
 ///
 /// The problem is assumed to have two lists (Apples and Bananas) whose elements
 /// can be referenced by a linear index. The problem defines the score
