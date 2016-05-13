@@ -14,6 +14,7 @@
 #include <aslam/common/pose-types.h>
 #include <aslam/common-private/feature-descriptor-ref.h>
 #include <Eigen/Core>
+#include <gtest/gtest.h>
 #include <nabo/nabo.h>
 
 #include "aslam/matcher/match.h"
@@ -32,6 +33,7 @@ class NeighborCellCountingGrid {
   ASLAM_POINTER_TYPEDEFS(NeighborCellCountingGrid);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(NeighborCellCountingGrid);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  FRIEND_TEST(TestNeighborhoodGrid, TestSimpleHandcrafted);
 
   NeighborCellCountingGrid() = delete;
 

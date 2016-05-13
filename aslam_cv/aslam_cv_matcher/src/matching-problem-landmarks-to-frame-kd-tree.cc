@@ -249,17 +249,17 @@ NeighborCellCountingGrid::NeighborCellCountingGrid(
   CHECK_GT(num_bins_x_, 0u);
   CHECK_GT(num_bins_y_, 0u);
 
-  interval_x_ = (max_x_ - min_x_) / static_cast<double>(num_bins_x);
+  interval_x_ = (max_x_ - min_x_) / static_cast<double>(num_bins_x_);
   CHECK_GT(interval_x_, 0.0);
 
-  interval_y_ = (max_y_ - min_y_) / static_cast<double>(num_bins_y);
+  interval_y_ = (max_y_ - min_y_) / static_cast<double>(num_bins_y_);
   CHECK_GT(interval_y_, 0.0);
 
-  grid_neighboring_cell_count_ = Eigen::MatrixXi::Zero(num_bins_y, num_bins_x);
+  grid_neighboring_cell_count_ = Eigen::MatrixXi::Zero(num_bins_y_, num_bins_x_);
 }
 
 void NeighborCellCountingGrid::addElementToGrid(const Eigen::Vector2d& element) {
-  elementToGridCoordinate(element(0), element(1));
+  addElementToGrid(element(0), element(1));
 }
 
 void NeighborCellCountingGrid::addElementToGrid(double x, double y) {
