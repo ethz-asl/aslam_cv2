@@ -72,8 +72,8 @@ private:
     }
   }
 
-  /// \brief List of sorted candidates for a given banana. (i.e. candidates_[banana_index] refers to
-  ///        a list of apples sorted wrt. the matching score (note: it's sorted bottom-up, so
+  /// \brief List of sorted candidates for a given banana. (i.e. candidates_[banana_index] refers
+  ///        to a list of apples sorted wrt. the matching score (note: it's sorted bottom-up, so
   ///        .begin() points to the worst apple match for this banana. use .rbegin() instead to get
   ///        best candidate.)
   typename MatchingProblem::CandidatesList candidates_;

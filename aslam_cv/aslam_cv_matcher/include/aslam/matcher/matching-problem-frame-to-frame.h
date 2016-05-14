@@ -25,8 +25,8 @@ class VisualFrame;
 /// \class MatchingProblem
 /// \brief Defines the specifics of a matching problem.
 /// The problem is assumed to have two visual frames (apple_frame and banana_frame) filled with
-/// keypoints and binary descriptors and a rotation matrix taking vectors from the banana frame into
-/// the apple frame. The problem matches banana features against apple features.
+/// keypoints and binary descriptors and a rotation matrix taking vectors from the banana frame
+/// into the apple frame. The problem matches banana features against apple features.
 ///
 /// Coordinate Frames:
 ///   A:  apple frame
@@ -48,8 +48,9 @@ public:
   /// @param[in]  q_A_B                                       Quaternion taking vectors from
   ///                                                         the banana frame into the
   ///                                                         apple frame.
-  /// @param[in]  image_space_distance_threshold_pixels       Max image space distance threshold for
-  ///                                                         two pairs to become match candidates.
+  /// @param[in]  image_space_distance_threshold_pixels       Max image space distance threshold
+  ///                                                         for two pairs to become match
+  ///                                                         candidates.
   /// @param[in]  hamming_distance_threshold                  Max hamming distance for two pairs
   ///                                                         to become candidates.
   MatchingProblemFrameToFrame(const VisualFrame& apple_frame,

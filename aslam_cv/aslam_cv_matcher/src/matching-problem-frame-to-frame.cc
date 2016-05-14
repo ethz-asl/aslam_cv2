@@ -49,10 +49,10 @@ bool MatchingProblemFrameToFrame::doSetup() {
 
   size_t num_apple_descriptors = static_cast<size_t>(apple_descriptors.cols());
   size_t num_banana_descriptors = static_cast<size_t>(banana_descriptors.cols());
-  CHECK_EQ(num_apple_descriptors, num_apple_keypoints) << "Mismatch between the number of apple "
-      "descriptors and the number of apple keypoints.";
-  CHECK_EQ(num_banana_descriptors, num_banana_keypoints) << "Mismatch between the number of banana "
-      "descriptors and the number of banana keypoints.";
+  CHECK_EQ(num_apple_descriptors, num_apple_keypoints) << "Mismatch between the number of apple"
+      " descriptors and the number of apple keypoints.";
+  CHECK_EQ(num_banana_descriptors, num_banana_keypoints) << "Mismatch between the number of banana"
+      " descriptors and the number of banana keypoints.";
 
   apple_descriptors_.clear();
   banana_descriptors_.clear();
