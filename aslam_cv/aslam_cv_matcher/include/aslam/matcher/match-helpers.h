@@ -16,8 +16,9 @@ void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_wi
 
 /// Convert MatchesWithScore to cv::DMatches.
 template<typename MatchWithScore>
-void convertMatches(const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
-                    OpenCvMatches* matches_A_B);
+void convertMatches(
+    const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
+    OpenCvMatches* matches_A_B);
 
 /// Get number of matches for a rig match list. (outer vector = cameras, inner vector = match list)
 template<typename MatchType>

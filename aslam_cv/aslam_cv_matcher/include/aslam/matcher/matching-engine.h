@@ -20,7 +20,8 @@ class MatchingEngine {
   MatchingEngine() {};
   virtual ~MatchingEngine() {};
 
-  virtual bool match(MatchingProblem* problem, typename MatchingProblem::MatchesWithScore* matches_A_B) = 0;
+  virtual bool match(
+      MatchingProblem* problem, typename MatchingProblem::MatchesWithScore* matches_A_B) = 0;
 
   virtual bool match(MatchingProblem* problem, typename MatchingProblem::Matches* matches_A_B) {
     CHECK_NOTNULL(problem);

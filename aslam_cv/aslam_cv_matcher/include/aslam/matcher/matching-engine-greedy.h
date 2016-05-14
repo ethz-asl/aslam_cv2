@@ -53,7 +53,8 @@ bool MatchingEngineGreedy<MatchingProblem>::match(
     matches_A_B->reserve(total_num_candidates);
     for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
       // compute the score for each candidate and put in queue
-      for (const typename MatchingProblem::Candidate& candidate_for_banana : candidates[banana_idx]) {
+      for (const typename MatchingProblem::Candidate& candidate_for_banana :
+          candidates[banana_idx]) {
         matches_A_B->emplace_back(
             candidate_for_banana.index_apple, banana_idx, candidate_for_banana.score);
       }

@@ -44,10 +44,10 @@ bool MatchingEngineNonExclusive<MatchingProblem>::match(
 
     typename MatchingProblem::CandidatesList candidates_for_bananas;
     problem->getCandidates(&candidates_for_bananas);
-    CHECK_EQ(candidates_for_bananas.size(), num_bananas) << "The size of the candidates list does not "
-        << "match the number of bananas of the problem. getCandidates(...) of the given matching "
-        << "problem is supposed to return a vector of candidates for each banana and hence the "
-        << "size of the returned vector must match the number of bananas.";
+    CHECK_EQ(candidates_for_bananas.size(), num_bananas) << "The size of the candidates list does "
+        << "not match the number of bananas of the problem. getCandidates(...) of the given "
+        << "matching problem is supposed to return a vector of candidates for each banana and "
+        << "hence the size of the returned vector must match the number of bananas.";
     for (size_t index_banana = 0u; index_banana < num_bananas; ++index_banana) {
       const typename MatchingProblem::Candidates& candidates =
           candidates_for_bananas[index_banana];
