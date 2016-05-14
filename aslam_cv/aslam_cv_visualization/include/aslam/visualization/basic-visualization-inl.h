@@ -24,8 +24,8 @@ void visualizeMatches(const aslam::VisualFrame& frame_kp1,
 
   CHECK_NOTNULL(match_image.data);
 
-  drawKeypointMatches(frame_kp1, frame_k, matches, cv::Scalar(255, 255, 0), cv::Scalar(255, 0, 255),
-                      &match_image);
+  drawKeypointMatches(
+      frame_kp1, frame_k, matches, cv::Scalar(255, 255, 0), cv::Scalar(255, 0, 255), &match_image);
 }
 
 }  // namespace aslam_cv_visualization

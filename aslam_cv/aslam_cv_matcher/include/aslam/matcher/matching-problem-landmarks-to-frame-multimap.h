@@ -45,9 +45,9 @@ public:
   ///
   /// @param[in]  frame                                       Visual frame.
   /// @param[in]  landmarks                                   List of landmarks with descriptors.
-  /// @param[in]  image_space_distance_threshold_pixels       Max image space distance threshold for
-  ///                                                         a keypoint and a projected landmark
-  ///                                                         to become match candidates.
+  /// @param[in]  image_space_distance_threshold_pixels       Max image space distance threshold
+  ///                                                         for a keypoint and a projected
+  ///                                                         landmark to become match candidates.
   /// @param[in]  hamming_distance_threshold                  Max hamming distance for a keypoint
   ///                                                         and a projected landmark
   ///                                                         to become candidates.

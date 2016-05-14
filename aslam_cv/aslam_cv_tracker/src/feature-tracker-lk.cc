@@ -233,7 +233,8 @@ void FeatureTrackerLk::track(
   size_t num_failed_tracking = 0u;
   size_t num_outside_image = 0u;
   size_t num_external_abort = 0u;
-  for (size_t keypoint_idx_k = 0u; keypoint_idx_k < tracked_keypoints_kp1.size(); ++keypoint_idx_k) {
+  for (size_t keypoint_idx_k = 0u; keypoint_idx_k < tracked_keypoints_kp1.size();
+      ++keypoint_idx_k) {
     // Drop keypoint if the tracking was unsuccessful.
     if (!tracking_success[keypoint_idx_k]) {
       ++num_failed_tracking;

@@ -11,8 +11,8 @@
 namespace aslam {
 
 std::unique_ptr<NeighborCellCountingGrid> createRandomGrid(
-    double* min_x_ptr, double* max_x_ptr, double* min_y_ptr, double* max_y_ptr, size_t* num_bins_x_ptr,
-    size_t* num_bins_y_ptr) {
+    double* min_x_ptr, double* max_x_ptr, double* min_y_ptr, double* max_y_ptr,
+    size_t* num_bins_x_ptr,  size_t* num_bins_y_ptr) {
   double& min_x = *CHECK_NOTNULL(min_x_ptr);
   double& max_x = *CHECK_NOTNULL(max_x_ptr);
   double& min_y = *CHECK_NOTNULL(min_y_ptr);
@@ -384,7 +384,8 @@ TEST(TestNeighborhoodGrid, TestLargeRandom) {
 
     CHECK(knn_index);
     knn_index->knn(
-        elements, indices, distances, kNumNeighborsToSearch, kSearchNNEpsilon, kOptionFlags, kRadius);
+        elements, indices, distances, kNumNeighborsToSearch, kSearchNNEpsilon, kOptionFlags,
+        kRadius);
 
     size_t max_num_neighbors = 0u;
     for (int element_idx = 0; element_idx < kNumElementsToAdd; ++element_idx) {
