@@ -93,7 +93,7 @@ class FeatureTrackerLk : public FeatureTracker {
   virtual void track(
       const aslam::Quaternion& q_Ckp1_Ck, const aslam::VisualFrame& frame_k,
       aslam::VisualFrame* frame_kp1,
-      aslam::MatchesWithScore* matches_with_score_kp1_k) override;
+      aslam::MatchingProblemFrameToFrame::MatchesWithScore* matches_with_score_kp1_k) override;
 
   /// Takes a visual frame with no keypoints, and initializes new keypoints.
   /// Uses the class settings and an occupancy grid.

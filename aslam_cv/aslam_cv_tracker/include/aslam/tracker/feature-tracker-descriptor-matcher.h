@@ -28,13 +28,12 @@ class FeatureTrackerDescriptorMatching : public FeatureTracker {
   /// @param[in] frame_k Frame at time step k.
   /// @param[in,out] frame_kp1 Frame at time step k+1.
   /// @param[out] matches_with_score_kp1_k Detected matches from frame k to frame k+1.
-  virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
-                     const aslam::VisualFrame& frame_k,
-                     aslam::VisualFrame* frame_kp1,
-                     aslam::MatchesWithScore* matches_with_score_kp1_k);
+  virtual void track(
+      const Quaternion& q_Ckp1_Ck, const VisualFrame& frame_k, VisualFrame* frame_kp1,
+      MatchingProblemFrameToFrame::MatchesWithScore* matches_with_score_kp1_k) override;
 
  private:
-  aslam::MatchingEngineExclusive<aslam::MatchingProblemFrameToFrame> matching_engines_;
+  MatchingEngineExclusive<MatchingProblemFrameToFrame> matching_engines_;
 
   /// Max. image space distance for keypoint matches.
   static constexpr double kImageSpaceDistanceThreshold = 50.0;

@@ -82,7 +82,7 @@ public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrameKDTree);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrameKDTree);
   ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(
-      MatchingProblemLandmarksToFrameMultimap, getKeypointIndex, getLandmarkIndex);
+      MatchingProblemLandmarksToFrameKDTree, getKeypointIndex, getLandmarkIndex);
 
   MatchingProblemLandmarksToFrameKDTree() = delete;
 

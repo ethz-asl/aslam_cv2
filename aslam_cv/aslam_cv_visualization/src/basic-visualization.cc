@@ -1,5 +1,7 @@
 #include <algorithm>
 
+#include <aslam/matcher/match-helpers.h>
+
 #include "aslam/frames/feature-track.h"
 #include "aslam/frames/keypoint-identifier.h"
 #include "aslam/visualization/basic-visualization.h"
@@ -161,6 +163,7 @@ void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
   }
 }
 
+/*
 void visualizeMatches(const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
                       const aslam::MatchesWithScore& matches_with_scores, cv::Mat* image) {
   CHECK_NOTNULL(image);
@@ -178,7 +181,7 @@ void visualizeMatches(const aslam::VisualFrame& frame_kp1, const aslam::VisualFr
 
   drawKeypointMatches(frame_kp1, frame_k, matches, cv::Scalar(255, 255, 0), cv::Scalar(255, 0, 255),
                       &match_image);
-}
+}*/
 
 void drawFeatureTrackPatches(const aslam::FeatureTrack& track, size_t keypoint_neighborhood_px,
                              size_t num_cols, cv::Mat* image) {

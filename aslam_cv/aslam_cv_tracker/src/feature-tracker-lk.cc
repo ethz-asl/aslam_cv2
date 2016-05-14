@@ -180,7 +180,7 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
 void FeatureTrackerLk::track(
     const aslam::Quaternion& q_Ckp1_Ck, const aslam::VisualFrame& frame_k,
     aslam::VisualFrame* frame_kp1,
-    aslam::MatchesWithScore* matches_with_score_kp1_k) {
+    aslam::MatchingProblemFrameToFrame::MatchesWithScore* matches_with_score_kp1_k) {
   aslam::timing::Timer timer_tracking("FeatureTrackerLk: track");
   CHECK_NOTNULL(frame_kp1);
   CHECK_NOTNULL(matches_with_score_kp1_k)->clear();

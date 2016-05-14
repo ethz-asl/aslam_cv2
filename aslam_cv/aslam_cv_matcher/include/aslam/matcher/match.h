@@ -25,9 +25,14 @@ typedef Aligned<std::vector, Matches>::type MatchesList;
 typedef Aligned<std::vector, cv::DMatch>::type OpenCvMatches;
 
 struct MatchWithScore {
-  template<typename MatchingProblem> friend void convertMatches(
-      const typename MatchingProblem::MatchesWithScore&,
-      typename MatchingProblem::Matches*);
+  template<typename MatchWithScore, typename Match>
+  friend void convertMatches(
+      const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
+      typename Aligned<std::vector, Match>::type* matches_A_B);
+  template<typename MatchWithScore>
+  friend void convertMatches(
+      const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
+      OpenCvMatches* matches_A_B);
 
   /// \brief Initialize to an invalid match.
   MatchWithScore() : correspondence {-1, -1}, score(0.0) {}
@@ -104,6 +109,7 @@ struct MatchWithScore {
   typedef MatchingProblemClass ## MatchWithScore MatchWithScore;                                  \
   typedef Aligned<std::vector, MatchingProblemClass ## MatchWithScore>::type MatchesWithScore;    \
   struct MatchingProblemClass ## Match : public aslam::Match {                                    \
+    MatchingProblemClass ## Match() = default;                                                    \
     MatchingProblemClass ## Match(size_t first_, size_t second_) : aslam::Match(first_, second_){}\
     virtual ~MatchingProblemClass ## Match() = default;                                           \
     size_t getAppleIndexAlias() const { return first; }                                           \

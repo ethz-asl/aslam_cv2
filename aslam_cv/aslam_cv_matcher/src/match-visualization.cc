@@ -42,7 +42,7 @@ void drawVisualFrameKeyPointsAndMatches(const VisualFrame& frame_A,
   getCvKeyPointsFromVisualFrame(frame_B, &cv_key_points_B);
 
   // Extract matches
-  std::vector<cv::DMatch> cv_matches_A_B;
+  aslam::OpenCvMatches cv_matches_A_B;
   if(!matches_A_B.empty()) {
     cv_matches_A_B.reserve(matches_A_B.size());
     for(const Match& match: matches_A_B) {
@@ -78,7 +78,7 @@ void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
   }
 
   // Extract matches
-  std::vector<cv::DMatch> cv_matches_A_B;
+  aslam::OpenCvMatches cv_matches_A_B;
   if(!matches_A_B.empty()) {
     cv_matches_A_B.reserve(matches_A_B.size());
     for(const Match& match: matches_A_B) {
@@ -94,7 +94,7 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
                              const std::vector<cv::KeyPoint>& key_points_A,
                              const cv::Mat& image_B,
                              const std::vector<cv::KeyPoint>& key_points_B,
-                             const std::vector<cv::DMatch>& matches_A_B,
+                             const aslam::OpenCvMatches& matches_A_B,
                              FeatureVisualizationType type,
                              cv::Mat* image_w_feature_matches) {
   CHECK_NOTNULL(image_w_feature_matches);

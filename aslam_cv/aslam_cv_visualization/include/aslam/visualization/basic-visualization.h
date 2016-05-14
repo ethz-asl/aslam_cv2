@@ -38,9 +38,10 @@ typedef std::vector<ImagePositionOffset> Offsets;
 void visualizeKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::Mat* image);
 
 /// Takes two frames and list of matches between them and draws the raw images and the matches.
+template<typename MatchesWithScore>
 void visualizeMatches(const aslam::VisualFrame& frame_kp1,
                       const aslam::VisualFrame& frame_k,
-                      const aslam::MatchesWithScore& matches,
+                      const MatchesWithScore& matches,
                       cv::Mat* image);
 
 ////////////////////////////////////////////////
@@ -75,5 +76,7 @@ bool drawFeatureTracksPatches(const aslam::FeatureTracks& tracks, size_t neighbo
 bool drawFeatureTracks(const aslam::FeatureTracks& tracks, cv::Mat* image);
 
 }  // namespace aslam_cv_visualization
+
+#include "./basic-visualization-inl.h"
 
 #endif  // ASLAM_VISUALIZATION_BASIC_VISUALIZATION_H_
