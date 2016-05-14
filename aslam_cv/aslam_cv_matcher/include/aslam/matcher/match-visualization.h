@@ -39,7 +39,7 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
                              const std::vector<cv::KeyPoint>& key_points_A,
                              const cv::Mat& image_B,
                              const std::vector<cv::KeyPoint>& key_points_B,
-                             const std::vector<cv::DMatch>& matches_A_B,
+                             const aslam::OpenCvMatches& matches_A_B,
                              FeatureVisualizationType type,
                              cv::Mat* image_w_feature_matches);
 

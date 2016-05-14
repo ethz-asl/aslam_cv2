@@ -20,9 +20,9 @@ namespace aslam {
     return CHECK_NOTNULL(frame->getTrackIdsMutable());
   }
 
-  void SimpleTrackManager::applyMatchesToFrames(const MatchesWithScore& matches_A_B,
-                                                VisualFrame* apple_frame,
-                                                VisualFrame* banana_frame) {
+  void SimpleTrackManager::applyMatchesToFrames(
+      const MatchingProblemFrameToFrame::MatchesWithScore& matches_A_B,
+      VisualFrame* apple_frame, VisualFrame* banana_frame) {
     CHECK_NOTNULL(apple_frame);
     CHECK_NOTNULL(banana_frame);
 
@@ -36,12 +36,12 @@ namespace aslam {
     std::unordered_set<int> consumed_apples;
     std::unordered_set<int> consumed_bananas;
 
-    for (const MatchWithScore& match : matches_A_B) {
-      int index_apple = match.getIndexApple();
+    for (const MatchingProblemFrameToFrame::MatchWithScore& match : matches_A_B) {
+      int index_apple = match.getKeypointIndexAppleFrame();
       CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
       CHECK_GE(index_apple, 0);
 
-      int index_banana = match.getIndexBanana();
+      int index_banana = match.getKeypointIndexBananaFrame();
       CHECK_LT(index_banana, static_cast<int>(num_banana_track_ids));
       CHECK_GE(index_banana, 0);
 
@@ -79,9 +79,9 @@ namespace aslam {
     }
   }
 
-  void UniformTrackManager::applyMatchesToFrames(const MatchesWithScore& matches_A_B,
-                                                 VisualFrame* apple_frame,
-                                                 VisualFrame* banana_frame) {
+  void UniformTrackManager::applyMatchesToFrames(
+      const MatchingProblemFrameToFrame::MatchesWithScore& matches_A_B,
+      VisualFrame* apple_frame, VisualFrame* banana_frame) {
     CHECK_NOTNULL(apple_frame);
     CHECK_NOTNULL(banana_frame);
 
@@ -124,13 +124,14 @@ namespace aslam {
           return bin_index;
         };
 
-    std::set<MatchWithScore, std::greater<MatchWithScore> > candidates_for_new_tracks;
+    std::set<MatchingProblemFrameToFrame::MatchWithScore, std::greater<MatchWithScore>>
+      candidates_for_new_tracks;
 
-    for (const MatchWithScore& match : matches_A_B) {
-      int index_apple = match.getIndexApple();
+    for (const MatchingProblemFrameToFrame::MatchWithScore& match : matches_A_B) {
+      int index_apple = match.getKeypointIndexAppleFrame();
       CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
 
-      int index_banana = match.getIndexBanana();
+      int index_banana = match.getKeypointIndexBananaFrame();
       CHECK_LT(index_banana, static_cast<int>(num_banana_track_ids));
 
       addToSetsAndCheckExclusiveness(index_apple,
@@ -143,14 +144,14 @@ namespace aslam {
 
       if ((track_id_apple) < 0 && (track_id_banana < 0)) {
         // Both track ids are < 0. Candidate for a new track.
-        MatchWithScore match_scored_by_keypoint_strenght = match;
-        double apple_keypoint_score =
+        MatchingProblemFrameToFrame::MatchWithScore match_scored_by_keypoint_strenght = match;
+        const double apple_keypoint_score =
             apple_frame->getKeypointScores()(index_apple);
-        double banana_keypoint_score =
+        const double banana_keypoint_score =
             banana_frame->getKeypointScores()(index_banana);
-        match_scored_by_keypoint_strenght.score =
-            0.5 * (apple_keypoint_score + banana_keypoint_score);
-        candidates_for_new_tracks.insert(match_scored_by_keypoint_strenght);
+        match_scored_by_keypoint_strenght.setScore(
+            0.5 * (apple_keypoint_score + banana_keypoint_score));
+        candidates_for_new_tracks.emplace(match_scored_by_keypoint_strenght);
       } else {
         // Either one of the track ids is >= 0.
         if (track_id_apple != track_id_banana) {
@@ -177,7 +178,8 @@ namespace aslam {
     }
     // Push some number of very strong new track candidates.
     size_t num_very_strong_candidates_pushed = 0u;
-    auto iterator_matches_fo_new_tracks = candidates_for_new_tracks.begin();
+    std::set<MatchingProblemFrameToFrame::MatchWithScore, std::greater<MatchWithScore>>::
+      const_iterator iterator_matches_fo_new_tracks = candidates_for_new_tracks.begin();
     for (; (iterator_matches_fo_new_tracks != candidates_for_new_tracks.end())
         &&  (num_very_strong_candidates_pushed <
             number_of_very_strong_new_tracks_to_force_push_);
@@ -185,13 +187,13 @@ namespace aslam {
               ++num_very_strong_candidates_pushed) {
       // The matches are sorted. If we get below the unconditional threshold,
       // we can stop.
-      if (iterator_matches_fo_new_tracks->score <
+      if (iterator_matches_fo_new_tracks->getScore() <
           match_score_very_strong_new_tracks_threshold_) break;
 
-      int index_apple = iterator_matches_fo_new_tracks->getIndexApple();
+      int index_apple = iterator_matches_fo_new_tracks->getKeypointIndexAppleFrame();
       CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
 
-      int index_banana = iterator_matches_fo_new_tracks->getIndexBanana();
+      int index_banana = iterator_matches_fo_new_tracks->getKeypointIndexBananaFrame();
       CHECK_LT(index_banana, static_cast<int>(num_banana_track_ids));
 
       // Increment the corresponding bucket.
@@ -209,10 +211,10 @@ namespace aslam {
     // Fill the buckets with the renmaining candidates.
     for (; iterator_matches_fo_new_tracks != candidates_for_new_tracks.end();
         ++iterator_matches_fo_new_tracks) {
-      int index_apple = iterator_matches_fo_new_tracks->getIndexApple();
+      int index_apple = iterator_matches_fo_new_tracks->getKeypointIndexAppleFrame();
       CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
 
-      int index_banana = iterator_matches_fo_new_tracks->getIndexBanana();
+      int index_banana = iterator_matches_fo_new_tracks->getKeypointIndexBananaFrame();
       CHECK_LT(index_banana, static_cast<int>(num_banana_track_ids));
 
       // Get the bucket index and check if there is still space left.

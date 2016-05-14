@@ -7,6 +7,7 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/matcher/match.h>
+#include <aslam/matcher/matching-problem-frame-to-frame.h>
 #include <Eigen/Dense>
 #include <glog/logging.h>
 
@@ -31,9 +32,10 @@ class FeatureTracker {
   /// Track features and return the matches. The matches are not written to the TrackId channels
   /// and should be written to the track id channels using a TrackManager (after e.g. outlier
   /// filtering).
-  virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
-                     const aslam::VisualFrame& frame_k, aslam::VisualFrame* frame_kp1,
-                     aslam::MatchesWithScore* matches_with_score_kp1_k) = 0;
+  virtual void track(
+      const aslam::Quaternion& q_Ckp1_Ck,
+      const aslam::VisualFrame& frame_k, aslam::VisualFrame* frame_kp1,
+      aslam::MatchingProblemFrameToFrame::MatchesWithScore* matches_with_score_kp1_k) = 0;
 
   /// Set a list of keypoint indices that should be aborted during the next call to track.
   /// The vector is swapped and invalidates the source vector.

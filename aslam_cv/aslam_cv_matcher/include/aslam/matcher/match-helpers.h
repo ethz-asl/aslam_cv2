@@ -1,7 +1,13 @@
 #ifndef ASLAM_MATCHER_MATCH_HELPERS_H_
 #define ASLAM_MATCHER_MATCH_HELPERS_H_
 
+#include "aslam/matcher/match.h"
+
 namespace aslam {
+inline void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);
+
+template<typename MatchesWithScore>
+void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);
 
 /// Convert MatchesWithScore to Matches.
 template<typename MatchingProblem>
@@ -9,8 +15,8 @@ void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_wi
                     typename MatchingProblem::Matches* matches_A_B);
 
 /// Convert MatchesWithScore to cv::DMatches.
-template<typename MatchingProblem>
-void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_with_score_A_B,
+template<typename MatchWithScore>
+void convertMatches(const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
                     OpenCvMatches* matches_A_B);
 
 /// Get number of matches for a rig match list. (outer vector = cameras, inner vector = match list)
