@@ -108,6 +108,7 @@ struct MatchWithScore {
   };                                                                                              \
   typedef MatchingProblemClass ## MatchWithScore MatchWithScore;                                  \
   typedef Aligned<std::vector, MatchingProblemClass ## MatchWithScore>::type MatchesWithScore;    \
+  typedef Aligned<std::vector, MatchesWithScore>::type MatchesWithScoreList;                      \
   struct MatchingProblemClass ## Match : public aslam::Match {                                    \
     MatchingProblemClass ## Match() = default;                                                    \
     MatchingProblemClass ## Match(size_t first_, size_t second_) : aslam::Match(first_, second_){}\
@@ -117,5 +118,6 @@ struct MatchWithScore {
   };                                                                                              \
   typedef MatchingProblemClass ## Match Match;                                                    \
   typedef Aligned<std::vector, MatchingProblemClass ## Match>::type Matches;                      \
+  typedef Aligned<std::vector, Matches>::type MatchesList;                                        \
 
 #endif // ASLAM_MATCH_H_
