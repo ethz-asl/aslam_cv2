@@ -83,8 +83,8 @@ void insertKeypointsIntoVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
                                     aslam::VisualFrame* frame) {
   CHECK_NOTNULL(frame);
   CHECK_GT(fixed_keypoint_uncertainty_px, 0.0);
-  CHECK_EQ(new_keypoints.size(), new_keypoint_scores.size());
-  CHECK_EQ(new_keypoints.size(), new_keypoint_scales.size());
+  CHECK_EQ(new_keypoints.cols(), new_keypoint_scores.size());
+  CHECK_EQ(new_keypoints.cols(), new_keypoint_scales.size());
   const size_t num_new_keypoints = static_cast<size_t>(new_keypoints.cols());
 
   frame->setKeypointMeasurements(new_keypoints);
