@@ -76,8 +76,33 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
   }
 }
 
+void insertKeypointsIntoVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
+                                    const Eigen::VectorXd& new_keypoint_scores,
+                                    const Eigen::VectorXd& new_keypoint_scales,
+                                    const double& fixed_keypoint_uncertainty_px,
+                                    aslam::VisualFrame* frame) {
+  CHECK_NOTNULL(frame);
+  CHECK_GT(fixed_keypoint_uncertainty_px, 0.0);
+  CHECK_EQ(new_keypoints.size(), new_keypoint_scores.size());
+  CHECK_EQ(new_keypoints.size(), new_keypoint_scales.size());
+  const size_t num_new_keypoints = static_cast<size_t>(new_keypoints.cols());
+
+  frame->setKeypointMeasurements(new_keypoints);
+  frame->setKeypointScores(new_keypoint_scores);
+  frame->setKeypointScales(new_keypoint_scales);
+
+  Eigen::VectorXd uncertainties(num_new_keypoints);
+  uncertainties.setConstant(fixed_keypoint_uncertainty_px);
+  frame->setKeypointMeasurementUncertainties(uncertainties);
+
+  // Set invalid track ids.
+  Eigen::VectorXi track_ids(num_new_keypoints);
+  track_ids.setConstant(-1);
+  frame->setTrackIds(track_ids);
+}
+
 void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
-                                            double fixed_keypoint_uncertainty_px,
+                                            const double& fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame) {
   CHECK_NOTNULL(frame);
   CHECK_GT(fixed_keypoint_uncertainty_px, 0.0);
@@ -127,7 +152,7 @@ void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoint
 }
 
 void insertAdditionalKeypointsToVisualFrame(const Verctor2dList& keypoints,
-                                            double fixed_keypoint_uncertainty_px,
+                                            const double& fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame) {
   // Convert std::vector to Eigen vector.
   const size_t num_new_keypoints = keypoints.size();
