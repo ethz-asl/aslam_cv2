@@ -27,12 +27,19 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
                                 Eigen::Matrix2Xd* predicted_keypoints_kp1,
                                 std::vector<unsigned char>* prediction_success);
 
+/// Insert a list of keypoints into a VisualFrame.
+void insertKeypointsIntoVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
+                                    const Eigen::VectorXd& new_keypoint_scores,
+                                    const Eigen::VectorXd& new_keypoint_scales,
+                                    const double& fixed_keypoint_uncertainty_px,
+                                    aslam::VisualFrame* frame);
+
 /// Append a list of kepoints to a VisualFrame.
 void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
-                                            double fixed_keypoint_uncertainty_px,
+                                            const double& fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame);
 void insertAdditionalKeypointsToVisualFrame(const Verctor2dList& keypoints,
-                                            double fixed_keypoint_uncertainty_px,
+                                            const double& fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame);
 
 }  // namespace aslam
