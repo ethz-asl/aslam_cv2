@@ -33,7 +33,7 @@ class LandmarksToFrameMatcherTest : public testing::Test {
   }
 
   inline void match(
-      aslam::MatchingProblemLandmarksToFrameMultimap::MatchesWithScore* matches_A_B) {
+      aslam::LandmarksToFrameMatchesWithScore* matches_A_B) {
     CHECK_NOTNULL(matches_A_B);
     aslam::MatchingProblemLandmarksToFrameMultimap::Ptr matching_problem =
         aslam::aligned_shared<aslam::MatchingProblemLandmarksToFrameMultimap>(

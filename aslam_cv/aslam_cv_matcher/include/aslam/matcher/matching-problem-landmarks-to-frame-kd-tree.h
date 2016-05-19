@@ -31,6 +31,7 @@ class NeighborCellCountingGrid {
   ASLAM_POINTER_TYPEDEFS(NeighborCellCountingGrid);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(NeighborCellCountingGrid);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   FRIEND_TEST(TestNeighborhoodGrid, TestSimpleHandcrafted);
 
   NeighborCellCountingGrid() = delete;
@@ -81,8 +82,7 @@ class MatchingProblemLandmarksToFrameKDTree : public MatchingProblemLandmarksToF
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrameKDTree);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrameKDTree);
-  ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(
-      MatchingProblemLandmarksToFrameKDTree, getKeypointIndex, getLandmarkIndex);
+  ASLAM_ADD_MATCH_TYPEDEFS(LandmarksToFrame);
 
   MatchingProblemLandmarksToFrameKDTree() = delete;
 

@@ -60,6 +60,7 @@ class MatchingProblemLandmarksToFrame : public MatchingProblem {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrame);
+  //ASLAM_ADD_MATCH_TYPEDEFS(LandmarksToFrame);
 
   MatchingProblemLandmarksToFrame() = delete;
 

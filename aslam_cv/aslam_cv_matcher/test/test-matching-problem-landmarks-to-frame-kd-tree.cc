@@ -33,7 +33,7 @@ class LandmarksToFrameKDTreeMatcherTest : public testing::Test {
     hamming_distance_threshold_ = 1;
   }
 
-  inline void match(aslam::MatchingProblemLandmarksToFrameKDTree::MatchesWithScore* matches_A_B) {
+  inline void match(aslam::LandmarksToFrameMatchesWithScore* matches_A_B) {
     CHECK_NOTNULL(matches_A_B);
     aslam::MatchingProblemLandmarksToFrameKDTree::Ptr matching_problem =
         aslam::aligned_shared<aslam::MatchingProblemLandmarksToFrameKDTree>(
@@ -168,7 +168,7 @@ class LandmarksToFrameKDTreeMatcherTest : public testing::Test {
 TEST_F(LandmarksToFrameKDTreeMatcherTest, EmptyMatch) {
   aslam::MatchingEngineNonExclusive<aslam::MatchingProblemLandmarksToFrameKDTree> matching_engine;
 
-  aslam::MatchingProblemLandmarksToFrameKDTree::MatchesWithScore matches_A_B;
+  aslam::LandmarksToFrameMatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   EXPECT_TRUE(matches_A_B.empty());
@@ -190,7 +190,7 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchIdentity) {
 
   landmarks_.emplace_back(projected_keypoint, landmark_descriptors.col(0));
 
-  aslam::MatchingProblemLandmarksToFrameKDTree::MatchesWithScore matches_A_B;
+  aslam::LandmarksToFrameMatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   ASSERT_EQ(1u, matches_A_B.size());
@@ -219,7 +219,7 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchIdentityWithScale) {
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoint,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrameKDTree::MatchesWithScore matches_A_B;
+  aslam::LandmarksToFrameMatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   ASSERT_EQ(1u, matches_A_B.size());
@@ -246,7 +246,7 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchRandomly) {
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, p_C_landmarks,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrameKDTree::MatchesWithScore matches_A_B;
+  aslam::LandmarksToFrameMatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   ASSERT_EQ(kNumKeypoints, matches_A_B.size());
@@ -276,7 +276,7 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchRandomlyWithRandomOrder) {
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, p_C_landmarks,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrameKDTree::MatchesWithScore matches_A_B;
+  aslam::LandmarksToFrameMatchesWithScore matches_A_B;
   match(&matches_A_B);
   const size_t num_matches = matches_A_B.size();
 
@@ -350,7 +350,7 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchesBecauseOfHammingDistance
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoints,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrameKDTree::MatchesWithScore matches_A_B;
+  aslam::LandmarksToFrameMatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   const size_t num_matches = matches_A_B.size();
@@ -432,7 +432,7 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchBecauseOfSearchBand) {
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoints,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrameKDTree::MatchesWithScore matches_A_B;
+  aslam::LandmarksToFrameMatchesWithScore matches_A_B;
   match(&matches_A_B);
 
   const size_t num_matches = matches_A_B.size();
@@ -494,7 +494,7 @@ TEST_F(LandmarksToFrameKDTreeMatcherTest, MatchNoMatchBecauseLandmarksBehindCame
   setKeypointsAndLandmarks(frame_keypoints, frame_descriptors, projected_keypoints,
                            landmark_descriptors);
 
-  aslam::MatchingProblemLandmarksToFrameKDTree::MatchesWithScore matches_A_B;
+  aslam::LandmarksToFrameMatchesWithScore matches_A_B;
   match(&matches_A_B);
   const size_t num_matches = matches_A_B.size();
   ASSERT_EQ(num_matches, kNumKeypoints - num_made_invalid);

@@ -5,7 +5,6 @@
 #include <vector>
 
 #include <aslam/common/macros.h>
-#include <aslam/matcher/match.h>
 #include <glog/logging.h>
 
 #include "aslam/matcher/matching-engine.h"

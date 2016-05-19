@@ -36,8 +36,7 @@ class MatchingProblemLandmarksToFrameMultimap : public MatchingProblemLandmarksT
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrameMultimap);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrameMultimap);
-  ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(
-      MatchingProblemLandmarksToFrameMultimap, getKeypointIndex, getLandmarkIndex);
+  ASLAM_ADD_MATCH_TYPEDEFS(LandmarksToFrame);
 
   MatchingProblemLandmarksToFrameMultimap() = delete;
 

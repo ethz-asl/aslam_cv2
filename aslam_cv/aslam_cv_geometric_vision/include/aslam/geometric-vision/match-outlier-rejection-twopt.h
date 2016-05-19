@@ -6,7 +6,6 @@
 
 #include <aslam/common/pose-types.h>
 #include <aslam/matcher/match.h>
-#include <aslam/matcher/matching-problem-frame-to-frame.h>
 
 namespace aslam {
 class VisualFrame;
@@ -30,10 +29,10 @@ namespace geometric_vision {
 bool rejectOutlierKeypointMatchesTwopt(
     const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
     const aslam::Quaternion& q_Ckp1_Ck,
-    const aslam::MatchingProblemFrameToFrame::MatchesWithScore& matches_kp1_k,
+    const aslam::FrameToFrameMatchesWithScore& matches_kp1_k,
     bool fix_random_seed, double ransac_threshold, size_t ransac_max_iterations,
-    aslam::MatchingProblemFrameToFrame::MatchesWithScore* inlier_matches_kp1_k,
-    aslam::MatchingProblemFrameToFrame::MatchesWithScore* outlier_matches_kp1_k);
+    aslam::FrameToFrameMatchesWithScore* inlier_matches_kp1_k,
+    aslam::FrameToFrameMatchesWithScore* outlier_matches_kp1_k);
 }  // namespace gv
 
 }  // namespace aslam
