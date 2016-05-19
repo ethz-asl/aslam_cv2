@@ -1,11 +1,9 @@
-#ifndef ASLAM_CV_MATCHINGENGINE_H_
-#define ASLAM_CV_MATCHINGENGINE_H_
+#ifndef ASLAM_CV_MATCHING_ENGINE_H_
+#define ASLAM_CV_MATCHING_ENGINE_H_
 
 #include <aslam/common/macros.h>
 
-#include "aslam/matcher/match.h"
 #include "aslam/matcher/match-helpers.h"
-#include "aslam/matcher/matching-problem.h"
 
 namespace aslam {
 
@@ -32,5 +30,6 @@ class MatchingEngine {
     return success;
   }
 };
-}
-#endif //ASLAM_CV_MATCHINGENGINE_H_
+
+}  // namespace aslam
+#endif // ASLAM_CV_MATCHING_ENGINE_H_

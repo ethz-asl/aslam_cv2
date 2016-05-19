@@ -6,9 +6,6 @@
 #include <aslam/frames/visual-nframe.h>
 #include <glog/logging.h>
 
-#include "aslam/matcher/matching-problem-frame-to-frame.h"
-#include "aslam/matcher/matching-problem-landmarks-to-frame.h"
-
 namespace aslam {
 
 template<typename MatchWithScore, typename Match>

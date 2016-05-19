@@ -1,13 +1,14 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
-
 #include <aslam/common/entrypoint.h>
 #include <aslam/matcher/match.h>
-#include <aslam/matcher/matching-engine-exclusive.h>
+//#include <aslam/matcher/matching-engine-exclusive.h>
 #include <aslam/matcher/matching-engine-greedy.h>
-#include <aslam/matcher/matching-problem.h>
-#include <gtest/gtest.h>
+//#include <aslam/matcher/matching-problem.h>
+//#include <gtest/gtest.h>
+
+/*
 
 namespace aslam {
 
@@ -19,10 +20,12 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
   aslam::Matches matches_A_B_;
 
  public:
-  ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(SimpleMatchProblem, getIndexApple, getIndexBanana);
-
   SimpleMatchProblem() {}
   ~SimpleMatchProblem() {}
+  typedef aslam::MatchWithScore MatchWithScore;
+  typedef Aligned<std::vector, MatchWithScore>::type MatchesWithScore;
+  typedef aslam::Match Match;
+  typedef Aligned<std::vector, Match>::type Matches;
 
   virtual size_t numApples() const {
     return apples_.size();
@@ -237,5 +240,7 @@ TEST(TestMatcher, GreedyMatcher) {
 }
 
 }  // namespace aslam
+
+*/
 
 ASLAM_UNITTEST_ENTRYPOINT

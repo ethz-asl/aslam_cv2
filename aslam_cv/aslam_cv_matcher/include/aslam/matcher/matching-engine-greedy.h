@@ -1,10 +1,10 @@
-#ifndef ASLAM_CV_MATCHINGENGINE_GREEDY_H_
-#define ASLAM_CV_MATCHINGENGINE_GREEDY_H_
+#ifndef ASLAM_CV_MATCHING_ENGINE_GREEDY_H_
+#define ASLAM_CV_MATCHING_ENGINE_GREEDY_H_
 
 #include <vector>
 
 #include <aslam/common/macros.h>
-#include <aslam/matcher/match.h>
+#include <glog/logging.h>
 
 #include "aslam/matcher/matching-engine.h"
 
@@ -18,7 +18,7 @@ namespace aslam {
 template<typename MatchingProblem>
 class MatchingEngineGreedy : public MatchingEngine<MatchingProblem> {
  public:
-  using MatchingEngine<MatchingProblem>::match;
+  //using MatchingEngine<MatchingProblem>::match;
   ASLAM_POINTER_TYPEDEFS(MatchingEngineGreedy);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngineGreedy);
 
