@@ -96,7 +96,7 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
     // Check if this is a continued track.
     if (current_track_ids(matches_prev_current[i].getIndexApple()) >= 0) {
       // Put the current keypoint into the bucket.
-      CHECK_LT(matches_prev_current[i].getIndexApple(), current_num_pts);
+      CHECK_LE(matches_prev_current[i].getIndexApple(), current_num_pts);
       const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint = current_frame.getKeypointMeasurement(
           matches_prev_current[i].getIndexApple());
       int bin_index = compute_bin_index(keypoint);
@@ -259,11 +259,9 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
   std::vector<unsigned char> prediction_success;
   predictKeypointsByRotation(previous_frame, q_Ckp1_Ck, &C2_previous_image_points, &prediction_success);
 
-  // TODO(magehrig, schneith): adapt to arbitrary (binary) descriptor sizes.
-  // Distance function.
   const unsigned int descriptorSizeBytes = current_frame.getDescriptorSizeBytes();
   CHECK_LE(descriptorSizeBytes * 8, 512);
-  auto hammingDistance512 =
+  std::function<unsigned int(const unsigned char*, const unsigned char*)> hammingDistance512 =
       [descriptorSizeBytes](const unsigned char* x, const unsigned char* y)->unsigned int {
         unsigned int distance = 0;
         for(unsigned int i = 0; i < descriptorSizeBytes; i++) {
@@ -273,7 +271,7 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
             val &= val - 1;
           }
         }
-        CHECK_LT(distance, descriptorSizeBytes * 8);
+        CHECK_LE(distance, descriptorSizeBytes * 8);
         return distance;
       };
 
@@ -331,11 +329,11 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
     KeyPointIterator near_corners_end = current_keypoints_by_y.begin() + corner_row_LUT[near_bottom];
 
     // Get descriptors and match.
-    static const int kMatchingThresholdBits = 120;
     bool found = false;
     int n_processed_corners = 0;
     KeyPointIterator it_best;
-    int best_score = 512 - kMatchingThresholdBits;
+    const unsigned int descriptorSizeBits = descriptorSizeBytes*8;;
+    int best_score = static_cast<int>(descriptorSizeBits*kMatchingThresholdBitsRatio);
     // Keep track of processed corners s.t. we don't process them again in the
     // large window.
     std::vector<uint8_t> processed_current_corners;
@@ -350,7 +348,7 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
       CHECK_LT(it->index, current_num_pts);
       CHECK_GE(it->index, 0);
       const unsigned char* const current_descriptor = current_frame.getDescriptor(it->index);
-      int current_score = 512 - hammingDistance512(previous_descriptor, current_descriptor);
+      int current_score = descriptorSizeBits - hammingDistance512(previous_descriptor, current_descriptor);
       if (current_score > best_score) {
         best_score = current_score;
         it_best = it;
@@ -376,7 +374,7 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
         CHECK_LT(it->index, current_num_pts);
         CHECK_GE(it->index, 0);
         const unsigned char* const current_descriptor = current_frame.getDescriptor(it->index);
-        int current_score = 512 - hammingDistance512(previous_descriptor, current_descriptor);
+        int current_score = descriptorSizeBits - hammingDistance512(previous_descriptor, current_descriptor);
         if (current_score > best_score) {
           best_score = current_score;
           it_best = it;

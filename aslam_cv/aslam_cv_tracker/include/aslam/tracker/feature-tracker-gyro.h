@@ -86,6 +86,7 @@ class GyroTracker : public FeatureTracker{
   const float kKeypointScoreThresholdUnconditional = kKeypointScoreThreshold * 2;
   const int kNumberOfKeyPointsUseStrong = 1000;
   const float kKeypointScoreThresholdStrong = kKeypointScoreThreshold * 1.2;
+  const float kMatchingThresholdBitsRatio = 0.75;
 };
 
 }       // namespace aslam
