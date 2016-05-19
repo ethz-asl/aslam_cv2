@@ -19,6 +19,8 @@ GyroTracker::GyroTracker(const aslam::Camera& camera)
       track_lengths_initialized_(false),
       current_track_id_(0) {}
 
+// TODO(magehrig): Filter matches also based on descriptor distance
+// and not only keypoint score?
 void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
                         const aslam::VisualFrame& previous_frame,
                         aslam::VisualFrame* current_frame,
@@ -39,7 +41,6 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
   }
 
   // Make sure the frames are in order time-wise
-  // TODO(schneith): Maybe also enforce that deltaT < tolerance?
   CHECK_GT(current_frame->getTimestampNanoseconds(), previous_frame.getTimestampNanoseconds());
 
   // Check that the required data is available in the frame
@@ -57,8 +58,8 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
 
   // Prepare buckets.
   std::vector<std::vector<int> > buckets;
-  std::vector<std::pair<int, int> > candidates_new_tracks;
-  candidates_new_tracks.reserve(matches_with_score_kp1_k->size());
+  std::vector<std::pair<int, int> > definite_tracks_match_indices;
+  definite_tracks_match_indices.reserve(matches_with_score_kp1_k->size());
   buckets.resize(kNumberOfTrackingBuckets * kNumberOfTrackingBuckets);
 
   float bucket_width_x = static_cast<float>(camera_.imageWidth()) / kNumberOfTrackingBuckets;
@@ -91,7 +92,8 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
     current_track_lengths_[matches_current_prev[i].getIndexApple()] =
         previous_track_lengths_[matches_current_prev[i].getIndexBanana()] + 1;
 
-    // Check if this is a continued track.
+    // Continued tracks (track id of last frame's matched keypoint was not -1)
+    // will be added unconditionally to our set of tracks.
     if (current_track_ids(matches_current_prev[i].getIndexApple()) >= 0) {
       // Put the current keypoint into the bucket.
       CHECK_LE(matches_current_prev[i].getIndexApple(), current_num_pts);
@@ -99,19 +101,19 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
           matches_current_prev[i].getIndexApple());
       int bin_index = compute_bin_index(keypoint);
       buckets[bin_index].push_back(0);
-      candidates_new_tracks.emplace_back(
+      definite_tracks_match_indices.emplace_back(
           std::make_pair(matches_current_prev[i].getIndexApple(),
                          matches_current_prev[i].getIndexBanana()));
     }
   }
 
-  VLOG(4) << "Got " << candidates_new_tracks.size() << " continued tracks";
+  VLOG(4) << "Got " << definite_tracks_match_indices.size() << " continued tracks";
 
   std::vector<std::pair<int, float> > candidates;
   candidates.reserve(matches_with_score_kp1_k->size());
   for (size_t i = 0; i < matches_with_score_kp1_k->size(); ++i) {
     int index_in_curr = matches_current_prev[i].getIndexApple();
-    const double& keypoint_score = current_frame->getKeypointScore(index_in_curr);
+    const float& keypoint_score = current_frame->getKeypointScore(index_in_curr);
     aslam::statistics::DebugStatsCollector stats_laplacian_score("GyroTracker keypoint score");
     stats_laplacian_score.AddSample(keypoint_score);
 
@@ -120,12 +122,14 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
     }
   }
 
+  // sort match indices such that first ones are
+  // associated with the higher keypoint responses.
   std::sort(candidates.begin(), candidates.end(),
             [](const std::pair<int, float> & lhs, const std::pair<int, float> & rhs) {
               return lhs.second > rhs.second;
             });
 
-  // Unconditionally push the first very strong points.
+  // Unconditionally push the first very strong points (according to detector score).
   int candidate_idx = 0;
   for (; candidate_idx < std::min<int>(kNumberOfKeyPointsUseUnconditional, candidates.size());
       ++candidate_idx) {
@@ -136,14 +140,14 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
     const double& keypoint_score = current_frame->getKeypointScore(index_in_curr);
     if (keypoint_score < kKeypointScoreThresholdUnconditional) {
       aslam::statistics::DebugStatsCollector stats_too_low_laplacian_score(
-          "GyroTracker Too low laplacian score for unconditional");
+          "GyroTracker Too low Laplacian score for unconditional");
       stats_too_low_laplacian_score.AddSample(keypoint_score);
-      continue;
+      break; // was continue before. Mr. Reviewer, what do you think?
     }
 
     int bin_index = compute_bin_index(keypoint);
     buckets[bin_index].push_back(0);
-    candidates_new_tracks.emplace_back(
+    definite_tracks_match_indices.emplace_back(
         std::make_pair(matches_current_prev[match_idx].getIndexApple(),
                        matches_current_prev[match_idx].getIndexBanana()));
     aslam::statistics::DebugStatsCollector stats_unconditionally(
@@ -165,13 +169,13 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
       aslam::statistics::DebugStatsCollector stats_too_low_keypoint_score_strong(
           "GyroTracker Too low score for strong");
       stats_too_low_keypoint_score_strong.AddSample(keypoint_score);
-      continue;
+      break; // was continue before. Mr. Reviewer, what do you think?
     }
     int bin_index = compute_bin_index(keypoint);
 
     if (static_cast<int>(buckets[bin_index].size()) < num_pts_per_bucket) {
       buckets[bin_index].push_back(0);
-      candidates_new_tracks.emplace_back(
+      definite_tracks_match_indices.emplace_back(
           std::make_pair(matches_current_prev[match_idx].getIndexApple(),
                          matches_current_prev[match_idx].getIndexBanana()));
       aslam::statistics::DebugStatsCollector stats_strong_acc("GyroTracker Strong accepted");
@@ -185,13 +189,21 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
 
   // Assign new Id's to all candidates that are not continued tracks.
   aslam::statistics::DebugStatsCollector stats_track_length("GyroTracker Track lengths");
-  for (size_t i = 0; i < candidates_new_tracks.size(); ++i) {
-    int index_in_curr = candidates_new_tracks[i].first;
+  for (size_t i = 0; i < definite_tracks_match_indices.size(); ++i) {
+    int index_in_curr = definite_tracks_match_indices[i].first;
     if (current_track_ids(index_in_curr) == -1) {
       current_track_ids(index_in_curr) = ++current_track_id_;
       current_track_lengths_[index_in_curr] = 1;
     }
     stats_track_length.AddSample(current_track_lengths_[index_in_curr]);
+  }
+
+  // TODO(magehrig): remove this check if everything is working fine.
+  // Check if all track ids are unique:
+  std::unordered_set<int> id_set;
+  for (size_t i = 0u; i < current_track_ids.size(); ++i) {
+    int track_id = current_track_ids[i];
+    if (track_id >= 0) CHECK(id_set.insert(track_id).second) << "not a unique track id!!!";
   }
 
   // Save the output track-ids to the channel in the current frame.
@@ -398,6 +410,7 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
     if (found) {
       is_current_keypoint_matched.at(it_best->index) = true;
       // TODO(maehrig): add true response of keypoint_kp1 to matches_with_score_kp1_k instead of 0.0.
+      // Another possibility is using the descriptor distance as score.
       matches_with_score_kp1_k->emplace_back(it_best->index, i, 0.0);
       aslam::statistics::DebugStatsCollector stats_distance_match("GyroTracker match bits");
       stats_distance_match.AddSample(best_score);
