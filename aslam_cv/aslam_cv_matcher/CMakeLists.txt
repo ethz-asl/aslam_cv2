@@ -24,6 +24,7 @@ set(HEADERS
 )
 
 set(SOURCES
+  src/match-helpers.cc
   src/match-visualization.cc
   src/matching-problem.cc
   src/matching-problem-frame-to-frame.cc

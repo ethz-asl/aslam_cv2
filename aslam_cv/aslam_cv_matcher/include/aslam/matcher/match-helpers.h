@@ -21,48 +21,38 @@ void convertMatches(
     OpenCvMatches* matches_A_B);
 
 /// Get number of matches for a rig match list. (outer vector = cameras, inner vector = match list)
-template<typename MatchType>
-size_t countRigMatches(
-    const typename Aligned<std::vector,
-                           typename Aligned<std::vector,MatchType>::type>::type& rig_matches);
+size_t countRigMatches(const FrameToFrameMatchesList& rig_matches);
 
 /// Select and return N random matches for each camera in the rig.
-template<typename MatchesType>
-typename Aligned<std::vector, MatchesType>::type pickNRandomRigMatches(
-    size_t n_per_camera, const typename Aligned<std::vector, MatchesType>::type& rig_matches);
+FrameToFrameMatchesList pickNRandomRigMatches(
+    size_t n_per_camera, const FrameToFrameMatchesList& rig_matches);
 
 /// Get the matches based on the track id channels for one VisualFrame.
-template<typename MatchesType>
-size_t extractMatchesFromTrackIdChannel(const aslam::VisualFrame& frame_kp1,
-                                        const aslam::VisualFrame& frame_k,
-                                        MatchesType* matches_kp1_kp);
+size_t extractMatchesFromTrackIdChannel(const VisualFrame& frame_kp1,
+                                        const VisualFrame& frame_k,
+                                        FrameToFrameMatches* matches_kp1_kp);
 
 /// Get the matches based on the track id channels for one VisualNFrame.
-template<typename MatchesType>
 size_t extractMatchesFromTrackIdChannels(
-    const aslam::VisualNFrame& nframe_kp1, const aslam::VisualNFrame& nframe_k,
-    typename Aligned<std::vector, MatchesType>::type* rig_matches_kp1_kp);
+    const VisualNFrame& nframe_kp1, const VisualNFrame& nframe_k,
+    FrameToFrameMatchesList* rig_matches_kp1_kp);
 
 /// Get the median pixel disparity for all matches.
-template<typename MatchesType>
 double getMatchPixelDisparityMedian(
-      const aslam::VisualNFrame& nframe_kp1, const aslam::VisualNFrame& nframe_k,
-      const typename Aligned<std::vector, MatchesType>::type& matches_kp1_kp);
+      const VisualNFrame& nframe_kp1, const VisualNFrame& nframe_k,
+      const FrameToFrameMatchesList& matches_kp1_kp);
 
 /// Get the median pixel disparity for all matches, taking into account the relative
 /// orientation of the frames.
-template<typename MatchType>
 double getUnrotatedMatchPixelDisparityMedian(
-    const aslam::VisualNFrame& nframe_kp1, const aslam::VisualNFrame& nframe_k,
-    const typename Aligned<std::vector,
-                           typename Aligned<std::vector, MatchType>::type>::type& matches_kp1_k,
+    const VisualNFrame& nframe_kp1, const VisualNFrame& nframe_k,
+    const FrameToFrameMatchesList& matches_kp1_k,
     const aslam::Quaternion& q_kp1_k);
 
 /// Return the normalized bearing vectors for a list of single camera matches.
-template<typename MatchType>
 void getBearingVectorsFromMatches(
-    const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
-    const typename Aligned<std::vector, MatchType>::type& matches_kp1_k,
+    const VisualFrame& frame_kp1, const VisualFrame& frame_k,
+    const FrameToFrameMatches& matches_kp1_k,
     Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_kp1,
     Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_k);
 }  // namespace aslam
