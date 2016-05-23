@@ -20,9 +20,6 @@ void convertMatches(
     const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
     OpenCvMatches* matches_A_B);
 
-/// Get number of matches for a rig match list. (outer vector = cameras, inner vector = match list)
-size_t countRigMatches(const FrameToFrameMatchesList& rig_matches);
-
 /// Select and return N random matches for each camera in the rig.
 FrameToFrameMatchesList pickNRandomRigMatches(
     size_t n_per_camera, const FrameToFrameMatchesList& rig_matches);
