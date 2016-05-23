@@ -1,15 +1,8 @@
 #include "aslam/matcher/match-helpers.h"
 
-namespace aslam {
+#include <aslam/common/stl-helpers.h>
 
-/// Get number of matches for a rig match list. (outer vector = cameras, inner vector = match list)
-size_t countRigMatches(const FrameToFrameMatchesList& rig_matches) {
-  size_t num_matches = 0;
-  for (const FrameToFrameMatches& camera_matches : rig_matches) {
-    num_matches += camera_matches.size();
-  }
-  return num_matches;
-}
+namespace aslam {
 
 /// Select and return N random matches for each camera in the rig.
 FrameToFrameMatchesList pickNRandomRigMatches(
@@ -106,7 +99,8 @@ double getUnrotatedMatchPixelDisparityMedian(
 
   const size_t num_cameras = nframe_kp1.getNumCameras();
   CHECK_EQ(matches_kp1_k.size(), num_cameras);
-  const size_t num_matches = countRigMatches(matches_kp1_k);
+  const size_t num_matches = aslam::common::countNumberOfElementsInNestedList<FrameToFrameMatch>(
+      matches_kp1_k);
   std::vector<double> disparity_px;
   disparity_px.reserve(num_matches);
   size_t projection_failed_counter = 0u;
