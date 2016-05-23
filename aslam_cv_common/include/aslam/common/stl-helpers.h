@@ -14,6 +14,8 @@
 namespace aslam {
 namespace common {
 
+// Returns the total number of elements in a nested list, that is,
+// num_outter_list_elements * num_inner_list_elements.
 template<class ElementType, class Allocator, class NestedAllocator>
 size_t countNumberOfElementsInNestedList(
     const std::vector<std::vector<ElementType, Allocator>, NestedAllocator>& nested_list) {
