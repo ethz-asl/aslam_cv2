@@ -14,6 +14,18 @@
 namespace aslam {
 namespace common {
 
+// Returns the total number of elements in a nested list, that is,
+// num_outter_list_elements * num_inner_list_elements.
+template<class ElementType, class Allocator, class NestedAllocator>
+size_t countNumberOfElementsInNestedList(
+    const std::vector<std::vector<ElementType, Allocator>, NestedAllocator>& nested_list) {
+  size_t num_elements = 0u;
+  for (const std::vector<ElementType, Allocator>& list : nested_list) {
+    num_elements += list.size();
+  }
+  return num_elements;
+}
+
 template<typename RandAccessIter>
 double median(RandAccessIter begin, RandAccessIter end) {
   CHECK(begin != end) << "No data provided to calculate the median.";

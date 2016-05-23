@@ -62,4 +62,29 @@ TEST(StlHelpers, draw_random) {
   EXPECT_EQ(output.size(), kNum);
 }
 
+TEST(StdHelpers, count_nested_list_elements) {
+  const size_t kArbitraryNumElementsOfList = 123u;
+  Aligned<std::vector, int>::type eigen_list(kArbitraryNumElementsOfList);
+
+  const size_t kArbitraryNumElementsOfNestedList = 93u;
+  Aligned<std::vector, Aligned<std::vector, int>::type>::type eigen_nested_list(
+      kArbitraryNumElementsOfNestedList, eigen_list);
+
+  size_t num_elements = aslam::common::countNumberOfElementsInNestedList(
+      eigen_nested_list);
+
+  CHECK_EQ(num_elements,
+           kArbitraryNumElementsOfList * kArbitraryNumElementsOfNestedList);
+
+  std::vector<int> std_list(kArbitraryNumElementsOfList);
+  std::vector<std::vector<int>> std_nested_list(
+      kArbitraryNumElementsOfNestedList, std_list);
+
+  num_elements = aslam::common::countNumberOfElementsInNestedList(
+      std_nested_list);
+
+  CHECK_EQ(num_elements,
+           kArbitraryNumElementsOfList *  kArbitraryNumElementsOfNestedList);
+}
+
 ASLAM_UNITTEST_ENTRYPOINT
