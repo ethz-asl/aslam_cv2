@@ -14,12 +14,11 @@
 namespace aslam {
 namespace common {
 
-template<typename ElementType>
+template<class ElementType, class Allocator, class NestedAllocator>
 size_t countNumberOfElementsInNestedList(
-    const typename aslam::Aligned<
-      std::vector, typename aslam::Aligned<std::vector, ElementType>::type>::type& nested_list) {
+    const std::vector<std::vector<ElementType, Allocator>, NestedAllocator>& nested_list) {
   size_t num_elements = 0u;
-  for (const typename aslam::Aligned<std::vector, ElementType>::type& list : nested_list) {
+  for (const std::vector<ElementType, Allocator>& list : nested_list) {
     num_elements += list.size();
   }
   return num_elements;
