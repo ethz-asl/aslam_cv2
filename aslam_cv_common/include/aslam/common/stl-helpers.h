@@ -14,6 +14,17 @@
 namespace aslam {
 namespace common {
 
+template<typename ElementType>
+size_t countNumberOfElementsInNestedList(
+    const typename aslam::Aligned<
+      std::vector, typename aslam::Aligned<std::vector, ElementType>::type>::type& nested_list) {
+  size_t num_elements = 0u;
+  for (const typename aslam::Aligned<std::vector, ElementType>::type& list : nested_list) {
+    num_elements += list.size();
+  }
+  return num_elements;
+}
+
 template<typename RandAccessIter>
 double median(RandAccessIter begin, RandAccessIter end) {
   CHECK(begin != end) << "No data provided to calculate the median.";
