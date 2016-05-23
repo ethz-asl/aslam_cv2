@@ -6,7 +6,7 @@
 
 using namespace aslam;
 
-TEST(StlHelpers, erase_indices) {
+TEST(StlHelpers, EraseIndices) {
   std::vector<int> test_vector = {0, 1, 2, 3, 4, 5};
   std::vector<size_t> indices_to_remove = {2, 4};
 
@@ -21,7 +21,7 @@ TEST(StlHelpers, erase_indices) {
   }
 }
 
-TEST(StlHelpers, erase_indices_aligned) {
+TEST(StlHelpers, EraseIndicesAligned) {
   Aligned<std::vector, Eigen::Vector3i>::type test_vector;
   test_vector.push_back(Eigen::Vector3i::Constant(0));
   test_vector.push_back(Eigen::Vector3i::Constant(1));
@@ -40,7 +40,7 @@ TEST(StlHelpers, erase_indices_aligned) {
   }
 }
 
-TEST(StlHelpers, draw_random) {
+TEST(StlHelpers, DrawRandom) {
   Aligned<std::vector, Eigen::Vector3i>::type test_vector;
   test_vector.push_back(Eigen::Vector3i::Constant(0));
   test_vector.push_back(Eigen::Vector3i::Constant(1));
@@ -62,7 +62,7 @@ TEST(StlHelpers, draw_random) {
   EXPECT_EQ(output.size(), kNum);
 }
 
-TEST(StdHelpers, count_nested_list_elements) {
+TEST(StdHelpers, CountNestedListElements) {
   const size_t kArbitraryNumElementsOfList = 123u;
   Aligned<std::vector, int>::type eigen_list(kArbitraryNumElementsOfList);
 
