@@ -1,6 +1,7 @@
 #include "aslam/matcher/match-helpers.h"
 
 #include <aslam/common/stl-helpers.h>
+#include <Eigen/Core>
 
 namespace aslam {
 
@@ -99,8 +100,8 @@ double getUnrotatedMatchPixelDisparityMedian(
 
   const size_t num_cameras = nframe_kp1.getNumCameras();
   CHECK_EQ(matches_kp1_k.size(), num_cameras);
-  const size_t num_matches = aslam::common::countNumberOfElementsInNestedList<FrameToFrameMatch>(
-      matches_kp1_k);
+  const size_t num_matches =
+      aslam::common::countNumberOfElementsInNestedList(matches_kp1_k);
   std::vector<double> disparity_px;
   disparity_px.reserve(num_matches);
   size_t projection_failed_counter = 0u;
