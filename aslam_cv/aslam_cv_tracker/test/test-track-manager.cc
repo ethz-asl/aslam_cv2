@@ -34,7 +34,7 @@ TEST(TrackManagerTests, TestApplyMatcher) {
   apple_frame->swapTrackIds(&apple_tracks);
 
   // matches_A_B: {(0,0), (1,1), (2,2), (3,3), (4,4)}
-  aslam::MatchingProblemFrameToFrame::MatchesWithScore matches_A_B;
+  aslam::FrameToFrameMatchesWithScore matches_A_B;
   matches_A_B.reserve(5);
 
   matches_A_B.emplace_back(0, 0, 0.1);
@@ -83,7 +83,7 @@ TEST(TrackManagerTests, TestApplyMatchesEmpty) {
   banana_frame->swapTrackIds(&banana_tracks);
   apple_frame->swapTrackIds(&apple_tracks);
 
-  aslam::MatchingProblemFrameToFrame::MatchesWithScore matches_A_B;
+  aslam::FrameToFrameMatchesWithScore matches_A_B;
 
   aslam::SimpleTrackManager track_manager;
   track_manager.applyMatchesToFrames(matches_A_B, apple_frame.get(), banana_frame.get());
@@ -175,7 +175,7 @@ TEST(TrackManagerTests, TestApplyMatchesUniformly) {
   /// matches_A_B: {(0,0), (1,1), (2,2), (3,3), (4,4), ...}
   Eigen::VectorXd banana_scores = Eigen::VectorXd::Constant(kNumKeypoints, 0);
   Eigen::VectorXd apple_scores = Eigen::VectorXd::Constant(kNumKeypoints, 0);
-  aslam::MatchingProblemFrameToFrame::MatchesWithScore matches_A_B;
+  aslam::FrameToFrameMatchesWithScore matches_A_B;
   matches_A_B.reserve(kNumKeypoints);
   for (size_t match_idx = 0; match_idx < kNumKeypoints; ++match_idx) {
     double score = 1.0 - (static_cast<double>(match_idx) /
@@ -269,7 +269,7 @@ TEST(TrackManagerTests, TestApplyMatchesUniformEmpty) {
   banana_frame->swapKeypointScores(&banana_scores);
   apple_frame->swapKeypointScores(&apple_scores);
 
-  aslam::MatchingProblemFrameToFrame::MatchesWithScore matches_A_B;
+  aslam::FrameToFrameMatchesWithScore matches_A_B;
 
   const size_t kBucketCapacity = 5u;
   const size_t kNumStrongToPush = 20u;

@@ -21,8 +21,8 @@ namespace aslam {
   }
 
   void SimpleTrackManager::applyMatchesToFrames(
-      const MatchingProblemFrameToFrame::MatchesWithScore& matches_A_B,
-      VisualFrame* apple_frame, VisualFrame* banana_frame) {
+      const FrameToFrameMatchesWithScore& matches_A_B, VisualFrame* apple_frame,
+      VisualFrame* banana_frame) {
     CHECK_NOTNULL(apple_frame);
     CHECK_NOTNULL(banana_frame);
 
@@ -36,7 +36,7 @@ namespace aslam {
     std::unordered_set<int> consumed_apples;
     std::unordered_set<int> consumed_bananas;
 
-    for (const MatchingProblemFrameToFrame::MatchWithScore& match : matches_A_B) {
+    for (const FrameToFrameMatchWithScore& match : matches_A_B) {
       int index_apple = match.getKeypointIndexAppleFrame();
       CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
       CHECK_GE(index_apple, 0);
@@ -80,8 +80,8 @@ namespace aslam {
   }
 
   void UniformTrackManager::applyMatchesToFrames(
-      const MatchingProblemFrameToFrame::MatchesWithScore& matches_A_B,
-      VisualFrame* apple_frame, VisualFrame* banana_frame) {
+      const FrameToFrameMatchesWithScore& matches_A_B, VisualFrame* apple_frame,
+      VisualFrame* banana_frame) {
     CHECK_NOTNULL(apple_frame);
     CHECK_NOTNULL(banana_frame);
 
@@ -124,10 +124,10 @@ namespace aslam {
           return bin_index;
         };
 
-    std::set<MatchingProblemFrameToFrame::MatchWithScore, std::greater<MatchWithScore>>
+    std::set<FrameToFrameMatchWithScore, std::greater<MatchWithScore>>
       candidates_for_new_tracks;
 
-    for (const MatchingProblemFrameToFrame::MatchWithScore& match : matches_A_B) {
+    for (const FrameToFrameMatchWithScore& match : matches_A_B) {
       int index_apple = match.getKeypointIndexAppleFrame();
       CHECK_LT(index_apple, static_cast<int>(num_apple_track_ids));
 
@@ -144,7 +144,7 @@ namespace aslam {
 
       if ((track_id_apple) < 0 && (track_id_banana < 0)) {
         // Both track ids are < 0. Candidate for a new track.
-        MatchingProblemFrameToFrame::MatchWithScore match_scored_by_keypoint_strenght = match;
+        FrameToFrameMatchWithScore match_scored_by_keypoint_strenght = match;
         const double apple_keypoint_score =
             apple_frame->getKeypointScores()(index_apple);
         const double banana_keypoint_score =
@@ -178,7 +178,7 @@ namespace aslam {
     }
     // Push some number of very strong new track candidates.
     size_t num_very_strong_candidates_pushed = 0u;
-    std::set<MatchingProblemFrameToFrame::MatchWithScore, std::greater<MatchWithScore>>::
+    std::set<FrameToFrameMatchWithScore, std::greater<FrameToFrameMatchWithScore>>::
       const_iterator iterator_matches_fo_new_tracks = candidates_for_new_tracks.begin();
     for (; (iterator_matches_fo_new_tracks != candidates_for_new_tracks.end())
         &&  (num_very_strong_candidates_pushed <

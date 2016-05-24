@@ -4,8 +4,6 @@
 #include <mutex>
 #include <unordered_set>
 
-#include <aslam/matcher/matching-problem-frame-to-frame.h>
-
 #include <glog/logging.h>
 
 namespace aslam {
@@ -47,7 +45,7 @@ namespace aslam {
     /// @param[in]  apple_frame   Pointer to the apple frame.
     /// @param[in]  banana_frame  Pointer to the banana frame.
     virtual void applyMatchesToFrames(
-        const MatchingProblemFrameToFrame::MatchesWithScore& matches_A_B,
+        const FrameToFrameMatchesWithScore& matches_A_B,
         VisualFrame* apple_frame, VisualFrame* banana_frame) = 0;
 
     /// \brief Returns a pointer to the track id channel. If no track id channel is present for the
@@ -82,7 +80,7 @@ namespace aslam {
     ///        applied) or < 0, in which case the valid id (>=0) is copied over.
     ///        Matches are expected to be exclusive.
     virtual void applyMatchesToFrames(
-        const MatchingProblemFrameToFrame::MatchesWithScore& matches,
+        const FrameToFrameMatchesWithScore& matches,
         VisualFrame* apple_frame, VisualFrame* banana_frame);
   };
 
@@ -131,7 +129,7 @@ namespace aslam {
     ///        full or all matches have been accepted.
     ///        The matches are expected to be exclusive.
     virtual void applyMatchesToFrames(
-        const MatchingProblemFrameToFrame::MatchesWithScore& matches_A_B,
+        const FrameToFrameMatchesWithScore& matches_A_B,
         VisualFrame* apple_frame, VisualFrame* banana_frame);
    private:
     /// \brief Square root of the number of tracking buckets. The image space
@@ -149,10 +147,8 @@ namespace aslam {
   };
 
   inline void addToSetsAndCheckExclusiveness(
-                                    int index_apple,
-                                    int index_banana,
-                                    std::unordered_set<int>* consumed_apples,
-                                    std::unordered_set<int>* consumed_bananas) {
+      int index_apple, int index_banana, std::unordered_set<int>* consumed_apples,
+      std::unordered_set<int>* consumed_bananas) {
     CHECK_NOTNULL(consumed_apples);
     CHECK_NOTNULL(consumed_bananas);
     std::pair<std::unordered_set<int>::iterator, bool> ret_apple =
