@@ -12,7 +12,7 @@ FrameToFrameMatchesList pickNRandomRigMatches(
   size_t num_cameras = rig_matches.size();
   aslam::FrameToFrameMatchesList subsampled_rig_matches(num_cameras);
 
-  for (size_t cam_idx = 0; cam_idx < num_cameras; ++cam_idx) {
+  for (size_t cam_idx = 0u; cam_idx < num_cameras; ++cam_idx) {
     const aslam::FrameToFrameMatches& camera_matches = rig_matches[cam_idx];
     if (camera_matches.size() <= n_per_camera) {
       subsampled_rig_matches[cam_idx] = camera_matches;

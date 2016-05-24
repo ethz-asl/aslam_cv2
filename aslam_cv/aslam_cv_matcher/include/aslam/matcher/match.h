@@ -98,11 +98,11 @@ struct MatchWithScore {
 // bananas are associated within the context of the given matching problem.
 
 #define ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(                                                    \
-    MatchType, getAppleIndexAlias, getBananaIndexAlias)                                     \
-  struct MatchType ## MatchWithScore : public aslam::MatchWithScore {                       \
-  MatchType ## MatchWithScore(int index_apple, int index_banana, double _score)      \
+    MatchType, getAppleIndexAlias, getBananaIndexAlias)                                           \
+  struct MatchType ## MatchWithScore : public aslam::MatchWithScore {                             \
+  MatchType ## MatchWithScore(int index_apple, int index_banana, double _score)                   \
         : aslam::MatchWithScore(index_apple, index_banana, _score) {}                             \
-    virtual ~MatchType ## MatchWithScore() = default;                                  \
+    virtual ~MatchType ## MatchWithScore() = default;                                             \
     int getAppleIndexAlias() const {                                                              \
       return aslam::MatchWithScore::getIndexApple();                                              \
     }                                                                                             \
@@ -111,25 +111,25 @@ struct MatchWithScore {
     }                                                                                             \
   };                                                                                              \
   typedef Aligned<std::vector, MatchType ## MatchWithScore>::type MatchType ## MatchesWithScore;  \
-  typedef Aligned<std::vector, MatchType ## MatchesWithScore>::type  \
-    MatchType ## MatchesWithScoreList;                      \
-  struct MatchType ## Match : public aslam::Match {                                    \
-      MatchType ## Match() = default;                                                    \
-      MatchType ## Match(size_t first_, size_t second_) : aslam::Match(first_, second_){}\
-    virtual ~MatchType ## Match() = default;                                           \
+  typedef Aligned<std::vector, MatchType ## MatchesWithScore>::type                               \
+    MatchType ## MatchesWithScoreList;                                                            \
+  struct MatchType ## Match : public aslam::Match {                                               \
+      MatchType ## Match() = default;                                                             \
+      MatchType ## Match(size_t first_, size_t second_) : aslam::Match(first_, second_){}         \
+    virtual ~MatchType ## Match() = default;                                                      \
     size_t getAppleIndexAlias() const { return first; }                                           \
     size_t getBananaIndexAlias() const { return second; }                                         \
   };                                                                                              \
-  typedef Aligned<std::vector, MatchType ## Match>::type MatchType ## Matches;                      \
-  typedef Aligned<std::vector, MatchType ## Matches>::type MatchType ## MatchesList;      \
+  typedef Aligned<std::vector, MatchType ## Match>::type MatchType ## Matches;                    \
+  typedef Aligned<std::vector, MatchType ## Matches>::type MatchType ## MatchesList;              \
 
-#define ASLAM_ADD_MATCH_TYPEDEFS(MatchType) \
-  typedef MatchType ## MatchWithScore MatchWithScore;  \
-  typedef Aligned<std::vector, MatchType ## MatchWithScore>::type MatchesWithScore;  \
-  typedef Aligned<std::vector, MatchType ## MatchesWithScore>::type MatchesWithScoreList; \
-  typedef MatchType ## Match Match; \
-  typedef Aligned<std::vector, MatchType ## Match>::type Matches;                      \
-  typedef Aligned<std::vector, MatchType ## Matches>::type MatchesList;   \
+#define ASLAM_ADD_MATCH_TYPEDEFS(MatchType)                                                       \
+  typedef MatchType ## MatchWithScore MatchWithScore;                                             \
+  typedef Aligned<std::vector, MatchType ## MatchWithScore>::type MatchesWithScore;               \
+  typedef Aligned<std::vector, MatchType ## MatchesWithScore>::type MatchesWithScoreList;         \
+  typedef MatchType ## Match Match;                                                               \
+  typedef Aligned<std::vector, MatchType ## Match>::type Matches;                                 \
+  typedef Aligned<std::vector, MatchType ## Matches>::type MatchesList;                           \
 
 namespace aslam {
 ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
