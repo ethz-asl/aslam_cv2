@@ -6,7 +6,6 @@
 #include <aslam/common/memory.h>
 #include <aslam/matcher/match.h>
 #include <aslam/matcher/matching-engine-exclusive.h>
-#include <aslam/matcher/matching-problem-frame-to-frame.h>
 #include <aslam/tracker/feature-tracker.h>
 #include <Eigen/Dense>
 
@@ -30,7 +29,7 @@ class FeatureTrackerDescriptorMatching : public FeatureTracker {
   /// @param[out] matches_with_score_kp1_k Detected matches from frame k to frame k+1.
   virtual void track(
       const Quaternion& q_Ckp1_Ck, const VisualFrame& frame_k, VisualFrame* frame_kp1,
-      MatchingProblemFrameToFrame::MatchesWithScore* matches_with_score_kp1_k) override;
+      FrameToFrameMatchesWithScore* matches_with_score_kp1_k) override;
 
  private:
   MatchingEngineExclusive<MatchingProblemFrameToFrame> matching_engines_;

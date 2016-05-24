@@ -3,12 +3,10 @@
 #include <vector>
 #include <aslam/common/entrypoint.h>
 #include <aslam/matcher/match.h>
-//#include <aslam/matcher/matching-engine-exclusive.h>
+#include <aslam/matcher/matching-engine-exclusive.h>
 #include <aslam/matcher/matching-engine-greedy.h>
-//#include <aslam/matcher/matching-problem.h>
-//#include <gtest/gtest.h>
-
-/*
+#include <aslam/matcher/matching-problem.h>
+#include <gtest/gtest.h>
 
 namespace aslam {
 
@@ -240,7 +238,5 @@ TEST(TestMatcher, GreedyMatcher) {
 }
 
 }  // namespace aslam
-
-*/
 
 ASLAM_UNITTEST_ENTRYPOINT
