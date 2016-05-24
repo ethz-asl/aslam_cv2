@@ -44,11 +44,8 @@ inline void convertMatches(const MatchesWithScore& matches_with_score_A_B, Match
 
 template<typename MatchesWithScore>
 void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B) {
-  aslam::MatchesWithScore aslam_matches_with_score_A_B;
-  aslam_matches_with_score_A_B.reserve(matches_with_score_A_B.size());
-  for (const typename MatchesWithScore::value_type& match : matches_with_score_A_B) {
-    aslam_matches_with_score_A_B.emplace_back(match);
-  }
+  const aslam::MatchesWithScore aslam_matches_with_score_A_B(
+      matches_with_score_A_B.begin(), matches_with_score_A_B.end());
   convertMatches(aslam_matches_with_score_A_B, matches_A_B);
 }
 
@@ -59,6 +56,7 @@ void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_wi
   convertMatches<typename MatchingProblem::MatchWithScore, typename MatchingProblem::Match>(
       matches_with_score_A_B, matches_A_B);
 }
+
 }  // namespace aslam
 
 #endif  // ASLAM_MATCHER_MATCH_HELPERS_INL_H_

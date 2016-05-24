@@ -26,7 +26,7 @@ void getCvKeyPointsFromVisualFrame(const VisualFrame& frame,
 void drawVisualFrameKeyPointsAndMatches(const VisualFrame& frame_A,
                                         const VisualFrame& frame_B,
                                         aslam::FeatureVisualizationType type,
-                                        const Matches& matches_A_B,
+                                        const FrameToFrameMatches& matches_A_B,
                                         cv::Mat* image_w_feature_matches) {
   CHECK_NOTNULL(image_w_feature_matches);
 
@@ -45,8 +45,10 @@ void drawVisualFrameKeyPointsAndMatches(const VisualFrame& frame_A,
   aslam::OpenCvMatches cv_matches_A_B;
   if(!matches_A_B.empty()) {
     cv_matches_A_B.reserve(matches_A_B.size());
-    for(const Match& match: matches_A_B) {
-      cv_matches_A_B.emplace_back(cv::DMatch(match.first, match.second, 0.0));
+    for(const FrameToFrameMatch& match: matches_A_B) {
+      cv_matches_A_B.emplace_back(cv::DMatch(
+          static_cast<int>(match.getKeypointIndexAppleFrame()),
+          static_cast<int>(match.getKeypointIndexBananaFrame()), 0.0));
     }
   }
 
@@ -59,7 +61,7 @@ void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
                                   const cv::Mat& image_B,
                                   const Eigen::Matrix2Xd& key_points_B,
                                   FeatureVisualizationType type,
-                                  const Matches& matches_A_B,
+                                  const FrameToFrameMatches& matches_A_B,
                                   cv::Mat* image_w_feature_matches) {
   CHECK_NOTNULL(image_w_feature_matches);
 
@@ -81,8 +83,10 @@ void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
   aslam::OpenCvMatches cv_matches_A_B;
   if(!matches_A_B.empty()) {
     cv_matches_A_B.reserve(matches_A_B.size());
-    for(const Match& match: matches_A_B) {
-      cv_matches_A_B.emplace_back(cv::DMatch(match.first, match.second, 0.0));
+    for(const FrameToFrameMatch& match: matches_A_B) {
+      cv_matches_A_B.emplace_back(cv::DMatch(
+          static_cast<int>(match.getKeypointIndexAppleFrame()),
+          static_cast<int>(match.getKeypointIndexBananaFrame()), 0.0));
     }
   }
 

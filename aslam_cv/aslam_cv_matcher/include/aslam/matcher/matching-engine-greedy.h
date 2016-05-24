@@ -18,7 +18,6 @@ namespace aslam {
 template<typename MatchingProblem>
 class MatchingEngineGreedy : public MatchingEngine<MatchingProblem> {
  public:
-  //using MatchingEngine<MatchingProblem>::match;
   ASLAM_POINTER_TYPEDEFS(MatchingEngineGreedy);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngineGreedy);
 

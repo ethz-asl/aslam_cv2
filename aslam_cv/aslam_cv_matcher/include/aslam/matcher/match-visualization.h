@@ -24,7 +24,7 @@ void getCvKeyPointsFromVisualFrame(const VisualFrame& frame,
 void drawVisualFrameKeyPointsAndMatches(const VisualFrame& frame_A,
                                         const VisualFrame& frame_B,
                                         aslam::FeatureVisualizationType visualization_type,
-                                        const Matches& matches_A_B,
+                                        const FrameToFrameMatches& matches_A_B,
                                         cv::Mat* image_w_feature_matches);
 
 void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
@@ -32,7 +32,7 @@ void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
                                   const cv::Mat& image_B,
                                   const Eigen::Matrix2Xd& key_points_B,
                                   FeatureVisualizationType type,
-                                  const Matches& matches_A_B,
+                                  const FrameToFrameMatches& matches_A_B,
                                   cv::Mat* image_w_feature_matches);
 
 void drawKeyPointsAndMatches(const cv::Mat& image_A,

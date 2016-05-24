@@ -4,12 +4,21 @@
 #include "aslam/matcher/match.h"
 
 namespace aslam {
+
+// Convert any kind of matches with score to any kind of match.
+template<typename MatchWithScore, typename Match>
+void convertMatches(
+    const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
+    typename Aligned<std::vector, Match>::type* matches_A_B);
+
+// Convert aslam::MatchesWithScore to aslam::Matches.
 inline void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);
 
+// Convert any (derived) MatchesWithScore to aslam::Matches.
 template<typename MatchesWithScore>
 void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);
 
-/// Convert MatchesWithScore to Matches.
+/// Convert MatchesWithScore of a matching problem to the corresponding Matches.
 template<typename MatchingProblem>
 void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_with_score_A_B,
                     typename MatchingProblem::Matches* matches_A_B);
@@ -52,6 +61,7 @@ void getBearingVectorsFromMatches(
     const FrameToFrameMatches& matches_kp1_k,
     Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_kp1,
     Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_k);
+
 }  // namespace aslam
 
 #include "./match-helpers-inl.h"

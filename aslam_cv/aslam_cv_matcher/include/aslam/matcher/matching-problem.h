@@ -117,5 +117,5 @@ public:
   /// flag 'matcher_store_all_tested_pairs' is set to true.
   CandidatesList all_tested_pairs_;
 };
-}
+}  // namespace aslam
 #endif //ASLAM_CV_MATCHING_PROBLEM_H_

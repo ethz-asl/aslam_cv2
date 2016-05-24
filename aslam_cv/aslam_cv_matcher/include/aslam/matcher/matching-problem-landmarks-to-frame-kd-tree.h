@@ -31,11 +31,9 @@ class NeighborCellCountingGrid {
   ASLAM_POINTER_TYPEDEFS(NeighborCellCountingGrid);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(NeighborCellCountingGrid);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   FRIEND_TEST(TestNeighborhoodGrid, TestSimpleHandcrafted);
 
   NeighborCellCountingGrid() = delete;
-
   // min_x, max_x, min_y, max_y define the borders of the grid, while num_bins_x
   // and num_bins_y define into how many cells the grid is divided.
   NeighborCellCountingGrid(
@@ -52,9 +50,7 @@ class NeighborCellCountingGrid {
 
  private:
   typedef Eigen::Vector2i Coordinate;
-
   Coordinate elementToGridCoordinate(double x_position, double y_position) const;
-
   void incrementCellCount(const Coordinate& coordinate);
 
   Eigen::MatrixXi grid_neighboring_cell_count_;
@@ -62,7 +58,6 @@ class NeighborCellCountingGrid {
   const double min_x_, max_x_, min_y_, max_y_;
   const size_t num_bins_x_, num_bins_y_;
   double interval_x_, interval_y_;
-
   int max_neighbor_count_;
 };
 
