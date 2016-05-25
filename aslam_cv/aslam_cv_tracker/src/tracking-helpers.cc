@@ -90,6 +90,8 @@ void insertKeypointsIntoVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
   frame->setKeypointMeasurements(new_keypoints);
   frame->setKeypointScores(new_keypoint_scores);
   frame->setKeypointScales(new_keypoint_scales);
+  const Eigen::VectorXd orientations = Eigen::VectorXd::Constant(num_new_keypoints, 0.0);
+  frame->setKeypointOrientations(orientations);
 
   Eigen::VectorXd uncertainties(num_new_keypoints);
   uncertainties.setConstant(fixed_keypoint_uncertainty_px);
