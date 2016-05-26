@@ -28,13 +28,13 @@ class GyroTracker : public FeatureTracker{
  public:
   /// \brief Construct the feature tracker.
   /// @param[in] input_camera The camera used in the tracker for projection/backprojection.
-  explicit GyroTracker(const aslam::Camera& camera);
+  explicit GyroTracker(const Camera& camera);
   virtual ~GyroTracker() {}
 
-  virtual void track(const aslam::Quaternion& q_Ckp1_Ck,
-                     const aslam::VisualFrame& frame_k,
-                     aslam::VisualFrame* frame_kp1,
-                     aslam::MatchesWithScore* matches_with_score_kp1_k) override;
+  virtual void track(const Quaternion& q_Ckp1_Ck,
+                     const VisualFrame& frame_k,
+                     VisualFrame* frame_kp1,
+                     MatchesWithScore* matches_with_score_kp1_k) override;
 
  private:
   /// \brief Match features between the current and the previous frames using a given interframe
@@ -48,11 +48,10 @@ class GyroTracker : public FeatureTracker{
   /// @param[out] matches_prev_current  Vector of structs containing the found matches. Indices
   ///                                   correspond to the ordering of the keypoint/descriptor vector in the
   ///                                   respective frame channels. (Apple = frame_kp1, Banana = frame_k)
-  void matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
+  void matchFeatures(const Quaternion& q_Ckp1_Ck,
                      const VisualFrame& frame_k,
                      const VisualFrame& frame_kp1,
-                     aslam::MatchesWithScore* matches_with_score_kp1_k) const;
-
+                     MatchesWithScore* matches_with_score_kp1_k) const;
 
   /// The camera model used in the tracker.
   const aslam::Camera& camera_;
