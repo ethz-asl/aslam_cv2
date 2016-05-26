@@ -68,19 +68,6 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
   const static unsigned int kdescriptorSizeBytes = matching_data.descriptor_size_bytes_;
   // usually binary descriptors size is less or equal to 512 bits.
   CHECK_LE(kdescriptorSizeBytes * 8, 512);
-  std::function<unsigned int(const unsigned char*, const unsigned char*)> hammingDistance512 =
-      [kdescriptorSizeBytes](const unsigned char* x, const unsigned char* y)->unsigned int {
-        unsigned int distance = 0;
-        for(unsigned int i = 0; i < kdescriptorSizeBytes; i++) {
-          unsigned char val = *(x + i) ^ *(y + i);
-          while(val) {
-            ++distance;
-            val &= val - 1;
-          }
-        }
-        CHECK_LE(distance, kdescriptorSizeBytes * 8);
-        return distance;
-      };
 
   matches_with_score_kp1_k->reserve(matching_data.num_points_k);
 
@@ -94,7 +81,9 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
   for (int i = 0; i < matching_data.num_points_k; ++i) {
     Eigen::Matrix<double, 2, 1> predicted_keypoint_position_kp1 =
         matching_data.predicted_keypoint_positions_kp1.block<2, 1>(0, i);
-    const unsigned char* const descriptor_k = frame_k.getDescriptor(i);
+    const common::FeatureDescriptorConstRef& descriptor_k =
+        matching_data.descriptors_k_wrapped.at(i);
+    //const unsigned char* const descriptor_k = frame_k.getDescriptor(i);
 
     std::function<int(int, int, int)> clamp = [](int lower, int upper, int in) {
       return std::min<int>(std::max<int>(in, lower), upper);
@@ -158,8 +147,9 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
 
       CHECK_LT(it->index, matching_data.num_points_kp1);
       CHECK_GE(it->index, 0u);
-      const unsigned char* const descriptor_kp1 = frame_kp1.getDescriptor(it->index);
-      int current_score = kdescriptorSizeBits - hammingDistance512(descriptor_k, descriptor_kp1);
+      const common::FeatureDescriptorConstRef& descriptor_kp1 =
+          matching_data.descriptors_kp1_wrapped.at(it->index);
+      int current_score = kdescriptorSizeBits - common::GetNumBitsDifferent(descriptor_k, descriptor_kp1);
       if (current_score > best_score) {
         best_score = current_score;
         it_best = it;
@@ -184,8 +174,9 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
         }
         CHECK_LT(it->index, matching_data.num_points_kp1);
         CHECK_GE(it->index, 0);
-        const unsigned char* const descriptor_kp1 = frame_kp1.getDescriptor(it->index);
-        int current_score = kdescriptorSizeBits - hammingDistance512(descriptor_k, descriptor_kp1);
+        const common::FeatureDescriptorConstRef& descriptor_kp1 =
+            matching_data.descriptors_kp1_wrapped.at(it->index);
+        int current_score = kdescriptorSizeBits - common::GetNumBitsDifferent(descriptor_k, descriptor_kp1);
         if (current_score > best_score) {
           best_score = current_score;
           it_best = it;
@@ -199,9 +190,10 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
 
     if (found) {
       is_keypoint_kp1_matched.at(it_best->index) = true;
-      // TODO(magehrig): Replace keypoints score with descriptor distance score.
+      // The larger the matching score, the more likely it is that it's a true match.
+      const double matching_score = static_cast<double>(best_score)/kdescriptorSizeBits;
       matches_with_score_kp1_k->emplace_back(
-          static_cast<int>(it_best->index), i, 0.0);
+          static_cast<int>(it_best->index), i, matching_score);
       aslam::statistics::StatsCollector stats_distance_match("GyroTracker match bits");
       stats_distance_match.AddSample(best_score);
     } else {
@@ -210,34 +202,5 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
     }
   }
 }
-
-/*
-inline double computeMatchScore(int hamming_distance) {
-  return static_cast<double>(384 - hamming_distance) / 384.0;
-}
-
-inline int computeHammingDistance(int banana_index, int apple_index) {
-  CHECK_LT(apple_index, static_cast<int>(apple_descriptors_.size()))
-      << "No descriptor for this apple.";
-  CHECK_LT(banana_index, static_cast<int>(banana_descriptors_.size()))
-      << "No descriptor for this banana.";
-  CHECK_LT(apple_index, static_cast<int>(valid_apples_.size()))
-      << "No valid flag for this apple.";
-  CHECK_LT(banana_index, static_cast<int>(valid_bananas_.size()))
-      << "No valid flag for this apple.";
-  CHECK(valid_apples_[apple_index]) << "The given apple is not valid.";
-  CHECK(valid_bananas_[banana_index]) << "The given banana is not valid.";
-
-  const common::FeatureDescriptorConstRef& apple_descriptor =
-      apple_descriptors_[apple_index];
-  const common::FeatureDescriptorConstRef& banana_descriptor =
-      banana_descriptors_[banana_index];
-
-  CHECK_NOTNULL(apple_descriptor.data());
-  CHECK_NOTNULL(banana_descriptor.data());
-
-  return common::GetNumBitsDifferent(banana_descriptor, apple_descriptor);
-}
-*/
 
 }  //namespace aslam
