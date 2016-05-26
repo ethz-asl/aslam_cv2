@@ -190,15 +190,15 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
 
     if (found) {
       is_keypoint_kp1_matched.at(it_best->index) = true;
-      // The larger the matching score, the more likely it is that it's a true match.
+      // The larger the matching score (<=1), the more likely it is that it's a true match.
       const double matching_score = static_cast<double>(best_score)/kdescriptorSizeBits;
       matches_with_score_kp1_k->emplace_back(
           static_cast<int>(it_best->index), i, matching_score);
-      aslam::statistics::StatsCollector stats_distance_match("GyroTracker match bits");
+      aslam::statistics::StatsCollector stats_distance_match("GyroTracker: number of matching bits");
       stats_distance_match.AddSample(best_score);
     } else {
-      aslam::statistics::StatsCollector stats_distance_no_match("GyroTracker no-match num_checked");
-      stats_distance_no_match.AddSample(n_processed_corners);
+      aslam::statistics::StatsCollector stats_count_no_match("GyroTracker: number of non-matched keypoints");
+      stats_count_no_match.AddSample(n_processed_corners);
     }
   }
 }
