@@ -59,7 +59,10 @@ class GyroTracker : public FeatureTracker{
 
   /// Two descriptors can match if the number of matching bits normalized
   /// with the descriptor length in bits is higher than this threshold.
-  const float kMatchingThresholdBitsRatio = 0.8;
+  static constexpr float kMatchingThresholdBitsRatio = 0.8;
+  /// Image space distances for keypoint matches.
+  static constexpr int kSmallSearchDistance = 10;
+  static constexpr int kLargeSearchDistance = 30;
 };
 
 }       // namespace aslam

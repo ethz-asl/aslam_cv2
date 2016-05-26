@@ -28,16 +28,14 @@ void GyroTracker::track(const aslam::Quaternion& q_Ckp1_Ck,
   CHECK_NOTNULL(matches_with_score_kp1_k)->clear();
   CHECK(previous_frame.hasTrackIds());
   CHECK(current_frame->hasTrackIds());
-
-  aslam::timing::Timer timer_tracking("FeatureTrackerLk: track");
-
   // Make sure the frames are in order time-wise
   CHECK_GT(current_frame->getTimestampNanoseconds(), previous_frame.getTimestampNanoseconds());
-
   // Check that the required data is available in the frame
   CHECK(current_frame->hasDescriptors());
   CHECK_EQ(current_frame->getDescriptors().rows(), current_frame->getDescriptorSizeBytes());
   CHECK_EQ(current_frame->getKeypointMeasurements().cols(), current_frame->getDescriptors().cols());
+
+  aslam::timing::Timer timer_tracking("FeatureTrackerLk: track");
 
   // Match the keypoints in the current frame to the previous one.
   matchFeatures(q_Ckp1_Ck, *current_frame, previous_frame, matches_with_score_kp1_k);
@@ -96,26 +94,22 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
   std::vector<unsigned char> prediction_success;
   predictKeypointsByRotation(previous_frame, q_Ckp1_Ck, &C2_previous_image_points, &prediction_success);
 
-  const unsigned int descriptorSizeBytes = current_frame.getDescriptorSizeBytes();
+  const static unsigned int kdescriptorSizeBytes = current_frame.getDescriptorSizeBytes();
   // usually binary descriptors size is less or equal to 512 bits.
-  CHECK_LE(descriptorSizeBytes * 8, 512);
+  CHECK_LE(kdescriptorSizeBytes * 8, 512);
   std::function<unsigned int(const unsigned char*, const unsigned char*)> hammingDistance512 =
-      [descriptorSizeBytes](const unsigned char* x, const unsigned char* y)->unsigned int {
+      [kdescriptorSizeBytes](const unsigned char* x, const unsigned char* y)->unsigned int {
         unsigned int distance = 0;
-        for(unsigned int i = 0; i < descriptorSizeBytes; i++) {
+        for(unsigned int i = 0; i < kdescriptorSizeBytes; i++) {
           unsigned char val = *(x + i) ^ *(y + i);
           while(val) {
             ++distance;
             val &= val - 1;
           }
         }
-        CHECK_LE(distance, descriptorSizeBytes * 8);
+        CHECK_LE(distance, kdescriptorSizeBytes * 8);
         return distance;
       };
-
-  // Look for matches in a small area around the predicted keypoint location.
-  static constexpr int kMinSearchRadius = 10;
-  static constexpr int kSearchRadius = 20;
 
   matches_with_score_kp1_k->reserve(prev_num_pts);
 
@@ -130,10 +124,10 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
     Eigen::Matrix<double, 2, 1> previous_predicted = C2_previous_image_points.block<2, 1>(0, i);
     const unsigned char* previous_descriptor = previous_frame.getDescriptor(i);
 
-    const int bound_left_nearest = previous_predicted(0) - kMinSearchRadius;
-    const int bound_right_nearest = previous_predicted(0) + kMinSearchRadius;
-    const int bound_left_near = previous_predicted(0) - kSearchRadius;
-    const int bound_right_near = previous_predicted(0) + kSearchRadius;
+    const int bound_left_nearest = previous_predicted(0) - kSmallSearchDistance;
+    const int bound_right_nearest = previous_predicted(0) + kSmallSearchDistance;
+    const int bound_left_near = previous_predicted(0) - kLargeSearchDistance;
+    const int bound_right_near = previous_predicted(0) + kLargeSearchDistance;
 
     std::function<int(int, int, int)> clamp = [](int lower, int upper, int in) {
       return std::min<int>(std::max<int>(in, lower), upper);
@@ -141,11 +135,11 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
 
     // Get search area for LUT iterators (rowwise).
     int idxnearest[2];  // Min search region.
-    idxnearest[0] = clamp(0, image_height - 1, previous_predicted(1) + 0.5 - kMinSearchRadius);
-    idxnearest[1] = clamp(0, image_height - 1, previous_predicted(1) + 0.5 + kMinSearchRadius);
+    idxnearest[0] = clamp(0, image_height - 1, previous_predicted(1) + 0.5 - kSmallSearchDistance);
+    idxnearest[1] = clamp(0, image_height - 1, previous_predicted(1) + 0.5 + kSmallSearchDistance);
     int idxnear[2];  // Max search region.
-    idxnear[0] = clamp(0, image_height - 1, previous_predicted(1) + 0.5 - kSearchRadius);
-    idxnear[1] = clamp(0, image_height - 1, previous_predicted(1) + 0.5 + kSearchRadius);
+    idxnear[0] = clamp(0, image_height - 1, previous_predicted(1) + 0.5 - kLargeSearchDistance);
+    idxnear[1] = clamp(0, image_height - 1, previous_predicted(1) + 0.5 + kLargeSearchDistance);
 
     CHECK_LE(idxnearest[0], idxnearest[1]);
     CHECK_LE(idxnear[0], idxnear[1]);
@@ -175,8 +169,8 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
     bool found = false;
     int n_processed_corners = 0;
     KeyPointIterator it_best;
-    const unsigned int descriptorSizeBits = descriptorSizeBytes*8;
-    int best_score = static_cast<int>(descriptorSizeBits*kMatchingThresholdBitsRatio);
+    const static unsigned int kdescriptorSizeBits = kdescriptorSizeBytes*8;
+    int best_score = static_cast<int>(kdescriptorSizeBits*kMatchingThresholdBitsRatio);
     // Keep track of processed corners s.t. we don't process them again in the
     // large window.
     std::vector<bool> processed_current_corners;
@@ -195,12 +189,12 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
       CHECK_LT(it->index, current_num_pts);
       CHECK_GE(it->index, 0);
       const unsigned char* const current_descriptor = current_frame.getDescriptor(it->index);
-      int current_score = descriptorSizeBits - hammingDistance512(previous_descriptor, current_descriptor);
+      int current_score = kdescriptorSizeBits - hammingDistance512(previous_descriptor, current_descriptor);
       if (current_score > best_score) {
         best_score = current_score;
         it_best = it;
         found = true;
-        CHECK_LT((previous_predicted - it_best->measurement).norm(), kMinSearchRadius * 2);
+        CHECK_LT((previous_predicted - it_best->measurement).norm(), kSmallSearchDistance * 2);
 
         aslam::statistics::DebugStatsCollector stats_distance_match("GyroTracker distance to match min");
         stats_distance_match.AddSample((previous_predicted - it_best->measurement).norm());
@@ -221,12 +215,12 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
         CHECK_LT(it->index, current_num_pts);
         CHECK_GE(it->index, 0);
         const unsigned char* const current_descriptor = current_frame.getDescriptor(it->index);
-        int current_score = descriptorSizeBits - hammingDistance512(previous_descriptor, current_descriptor);
+        int current_score = kdescriptorSizeBits - hammingDistance512(previous_descriptor, current_descriptor);
         if (current_score > best_score) {
           best_score = current_score;
           it_best = it;
           found = true;
-          CHECK_LT((previous_predicted - it_best->measurement).norm(), kSearchRadius * 2);
+          CHECK_LT((previous_predicted - it_best->measurement).norm(), kLargeSearchDistance * 2);
 
           aslam::statistics::DebugStatsCollector stats_distance_match("GyroTracker distance to match norm");
           stats_distance_match.AddSample((previous_predicted - it_best->measurement).norm());
@@ -238,7 +232,7 @@ void GyroTracker::matchFeatures(const aslam::Quaternion& q_Ckp1_Ck,
 
     if (found) {
       is_current_keypoint_matched.at(it_best->index) = true;
-      // TODO(magehrig): Add the descriptor distance as second score?
+      // TODO(magehrig): Replace keypoints score with descriptor distance score.
       matches_with_score_kp1_k->emplace_back(it_best->index, i, it_best->response);
       aslam::statistics::DebugStatsCollector stats_distance_match("GyroTracker match bits");
       stats_distance_match.AddSample(best_score);
