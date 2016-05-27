@@ -79,8 +79,13 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
   std::vector<bool> is_keypoint_kp1_matched;
   is_keypoint_kp1_matched.resize(matching_data.num_points_kp1, false);
   size_t number_of_matches = 0u;
+  size_t number_of_failed_predictions = 0u;
 
   for (int i = 0; i < matching_data.num_points_k; ++i) {
+    if (!matching_data.prediction_success.at(i)) {
+      ++number_of_failed_predictions;
+      continue;
+    }
     Eigen::Matrix<double, 2, 1> predicted_keypoint_position_kp1 =
         matching_data.predicted_keypoint_positions_kp1.block<2, 1>(0, i);
     const common::FeatureDescriptorConstRef& descriptor_k =
@@ -204,6 +209,8 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
   stats_number_of_matches.AddSample(number_of_matches);
   aslam::statistics::StatsCollector stats_number_of_no_matches("GyroTracker: number of unmatched keypoints");
   stats_number_of_no_matches.AddSample(matching_data.num_points_k - number_of_matches);
+  aslam::statistics::StatsCollector stats_number_of_failed_predictions("GyroTracker: number of unsuccessul keypoint location predictions");
+  stats_number_of_failed_predictions.AddSample(number_of_failed_predictions);
 }
 
 inline int GyroTracker::clamp(const int& lower, const int& upper, const int& in) const {
