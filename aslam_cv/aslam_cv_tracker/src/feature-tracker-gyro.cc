@@ -67,7 +67,7 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
 
   const static unsigned int kdescriptorSizeBytes = matching_data.descriptor_size_bytes_;
   // usually binary descriptors size is less or equal to 512 bits.
-  CHECK_LE(kdescriptorSizeBytes * 8, 512);
+  CHECK_LE(kdescriptorSizeBytes * 8, 512u);
 
   matches_with_score_kp1_k->reserve(matching_data.num_points_k);
 
@@ -75,19 +75,16 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
   // are not matched again.
   // TODO(magehrig): Improve this by allowing duplicate matches
   // and discarding duplicate matches according to descriptor distances.
+  // TODO(magehrig): Use prediction success/fail info.
   std::vector<bool> is_keypoint_kp1_matched;
   is_keypoint_kp1_matched.resize(matching_data.num_points_kp1, false);
+  size_t number_of_matches = 0u;
 
   for (int i = 0; i < matching_data.num_points_k; ++i) {
     Eigen::Matrix<double, 2, 1> predicted_keypoint_position_kp1 =
         matching_data.predicted_keypoint_positions_kp1.block<2, 1>(0, i);
     const common::FeatureDescriptorConstRef& descriptor_k =
         matching_data.descriptors_k_wrapped.at(i);
-    //const unsigned char* const descriptor_k = frame_k.getDescriptor(i);
-
-    std::function<int(int, int, int)> clamp = [](int lower, int upper, int in) {
-      return std::min<int>(std::max<int>(in, lower), upper);
-    };
 
     // Get search area for LUT iterators (rowwise).
     int idxnearest[2];  // Min search region.
@@ -189,18 +186,28 @@ void GyroTracker::matchFeatures(const Quaternion& q_Ckp1_Ck,
     }
 
     if (found) {
+      ++number_of_matches;
       is_keypoint_kp1_matched.at(it_best->index) = true;
-      // The larger the matching score (<=1), the more likely it is that it's a true match.
+      // The larger the matching score (which is smaller or equal to 1),
+      // the higher the probability that a true match occurred.
       const double matching_score = static_cast<double>(best_score)/kdescriptorSizeBits;
       matches_with_score_kp1_k->emplace_back(
           static_cast<int>(it_best->index), i, matching_score);
       aslam::statistics::StatsCollector stats_distance_match("GyroTracker: number of matching bits");
       stats_distance_match.AddSample(best_score);
     } else {
-      aslam::statistics::StatsCollector stats_count_no_match("GyroTracker: number of non-matched keypoints");
-      stats_count_no_match.AddSample(n_processed_corners);
+      aslam::statistics::StatsCollector stats_count_processed("GyroTracker: number of processed keypoints per keypoint");
+      stats_count_processed.AddSample(n_processed_corners);
     }
   }
+  aslam::statistics::StatsCollector stats_number_of_matches("GyroTracker: number of matched keypoints");
+  stats_number_of_matches.AddSample(number_of_matches);
+  aslam::statistics::StatsCollector stats_number_of_no_matches("GyroTracker: number of unmatched keypoints");
+  stats_number_of_no_matches.AddSample(matching_data.num_points_k - number_of_matches);
+}
+
+inline int GyroTracker::clamp(const int& lower, const int& upper, const int& in) const {
+  return std::min<int>(std::max<int>(in, lower), upper);
 }
 
 }  //namespace aslam
