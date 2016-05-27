@@ -35,6 +35,7 @@ GyroTrackerMatchingData::GyroTrackerMatchingData(
 void GyroTrackerMatchingData::setupData() {
   // Predict keypoint positions.
   predictKeypointsByRotation(frame_k, q_Ckp1_Ck, &predicted_keypoint_positions_kp1, &prediction_success);
+  CHECK_EQ(prediction_success.size(), predicted_keypoint_positions_kp1.cols());
 
   // Prepare descriptors for efficient matching.
   const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& descriptors_kp1 =
