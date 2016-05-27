@@ -12,9 +12,9 @@ namespace aslam {
 
 struct KeypointData {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  KeypointData(const Eigen::Vector2d& measurement, const size_t& index);
+  KeypointData(const Eigen::Vector2d& measurement, const int& index);
   Eigen::Vector2d measurement;
-  size_t index;
+  int index;
 };
 
 struct GyroTrackerMatchingData {
@@ -31,9 +31,9 @@ struct GyroTrackerMatchingData {
   /// Descriptor size in bytes.
   const size_t descriptor_size_bytes_;
   /// Number of keypoints/descriptors in frame (k+1).
-  const size_t num_points_kp1;
+  const int num_points_kp1;
   /// Number of keypoints/descriptors in frame k.
-  const size_t num_points_k;
+  const int num_points_k;
   // Predicted locations of the keypoints in frame k
   // in frame (k+1) based on camera rotation.
   Eigen::Matrix2Xd predicted_keypoint_positions_kp1;

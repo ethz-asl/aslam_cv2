@@ -5,7 +5,7 @@
 
 namespace aslam {
 
-KeypointData::KeypointData(const Eigen::Vector2d& measurement, const size_t& index)
+KeypointData::KeypointData(const Eigen::Vector2d& measurement, const int& index)
   : measurement(measurement), index(index) {}
 
 GyroTrackerMatchingData::GyroTrackerMatchingData(
@@ -14,16 +14,16 @@ GyroTrackerMatchingData::GyroTrackerMatchingData(
     const VisualFrame& frame_k)
   : frame_kp1(frame_kp1), frame_k(frame_k), q_Ckp1_Ck(q_Ckp1_Ck),
     descriptor_size_bytes_(frame_kp1.getDescriptorSizeBytes()),
-    num_points_kp1(static_cast<size_t>(frame_kp1.getKeypointMeasurements().cols())),
-    num_points_k(static_cast<size_t>(frame_k.getKeypointMeasurements().cols())) {
+    num_points_kp1(frame_kp1.getKeypointMeasurements().cols()),
+    num_points_k(frame_k.getKeypointMeasurements().cols()) {
   CHECK(frame_kp1.isValid());
   CHECK(frame_k.isValid());
   CHECK(frame_kp1.hasDescriptors());
   CHECK(frame_k.hasDescriptors());
   CHECK(frame_kp1.hasKeypointMeasurements());
   CHECK(frame_k.hasKeypointMeasurements());
-  CHECK_GT(num_points_kp1, 0u);
-  CHECK_GT(num_points_k, 0u);
+  CHECK_GT(num_points_kp1, 0);
+  CHECK_GT(num_points_k, 0);
   CHECK_EQ(num_points_kp1, frame_kp1.getDescriptors().cols()) <<
       "Number of keypoints and descriptors in frame k+1 is not the same.";
   CHECK_EQ(num_points_k, frame_k.getDescriptors().cols()) <<
@@ -47,13 +47,13 @@ void GyroTrackerMatchingData::setupData() {
   descriptors_kp1_wrapped.reserve(num_points_kp1);
   descriptors_k_wrapped.reserve(num_points_k);
 
-  for (size_t descriptor_kp1_idx = 0u; descriptor_kp1_idx < num_points_kp1;
+  for (int descriptor_kp1_idx = 0; descriptor_kp1_idx < num_points_kp1;
       ++descriptor_kp1_idx) {
     descriptors_kp1_wrapped.emplace_back(
         &(descriptors_kp1.coeffRef(0, descriptor_kp1_idx)), descriptor_size_bytes_);
   }
 
-  for (size_t descriptor_k_idx = 0u; descriptor_k_idx < num_points_k;
+  for (int descriptor_k_idx = 0; descriptor_k_idx < num_points_k;
       ++descriptor_k_idx) {
     descriptors_k_wrapped.emplace_back(
         &(descriptors_k.coeffRef(0, descriptor_k_idx)), descriptor_size_bytes_);
@@ -62,7 +62,7 @@ void GyroTrackerMatchingData::setupData() {
   // Sort keypoints of frame (k+1) from small to large y coordinates.
   keypoints_kp1_by_y.reserve(num_points_kp1);
 
-  for (size_t i = 0u; i < num_points_kp1; ++i) {
+  for (int i = 0; i < num_points_kp1; ++i) {
     keypoints_kp1_by_y.emplace_back(frame_kp1.getKeypointMeasurement(i), i);
   }
 

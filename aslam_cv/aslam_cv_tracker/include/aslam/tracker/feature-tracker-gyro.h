@@ -53,6 +53,8 @@ class GyroTracker : public FeatureTracker{
                      const VisualFrame& frame_kp1,
                      MatchesWithScore* matches_with_score_kp1_k) const;
 
+  int clamp(const int& lower, const int& upper, const int& in) const;
+
   /// The camera model used in the tracker.
   const aslam::Camera& camera_;
 
