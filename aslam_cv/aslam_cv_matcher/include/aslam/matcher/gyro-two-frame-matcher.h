@@ -19,6 +19,21 @@ namespace aslam {
 /// \class GyroTwoFrameMatcher
 /// \brief Frame to frame matcher using an interframe rotation matrix
 ///  to predict the feature positions to constrain the search window.
+///
+/// The initial matcher attempts to match every keypoint of frame k to a keypoint
+/// in frame (k+1). This is done by predicting the keypoint location by
+/// using an interframe rotation matrix. Then a rectangular search window around
+/// that location is searched for the best match greater than a threshold.
+/// If the initial search was not successful, the search window is increased once.
+/// The initial matcher is allowed to discard a previous match if the new one
+/// has a higher score. The discarded matches are called inferior matches and
+/// a second matcher tries to match them. The second matcher only tries
+/// to match a keypoint of frame k with the queried keypoints of frame (k+1)
+/// of the initial matcher. Therefore, it does not compute distances between
+/// descriptors anymore because the initial matcher has already done that.
+/// The second matcher is executed several times because it is also allowed
+/// do discard inferior matches of the current iteration.
+/// The matches are exclusive.
 class GyroTwoFrameMatcher {
  public:
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(GyroTwoFrameMatcher);
@@ -72,18 +87,29 @@ class GyroTwoFrameMatcher {
     std::vector<double> match_candidate_matching_scores;
   };
 
+  /// \brief Initialize data the matcher relies on.
   void Initialize();
+
+  /// \brief Match a keypoint of frame k with one of frame (k+1) if possible.
+  ///
+  /// Initial matcher that tries to match a keypoint of frame k with
+  /// a keypoint of frame (k+1) once. It is allowed to discard an
+  /// already existing match.
+  void MatchKeypoint(const int idx_k);
+
+  /// \brief Try to match inferior matches without modifying initial matches.
+  ///
+  /// Second matcher that is only quering keypoints of frame (k+1) that the
+  /// initial matcher has queried before. Is executed several times.
+  void MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched);
+
+
   int Clamp(const int lower, const int upper, const int in) const;
 
   // The larger the matching score (which is smaller or equal to 1),
   // the higher the probability that a true match occurred.
   double ComputeMatchingScore(const int num_matching_bits,
                               const unsigned int descriptor_size_bits) const;
-
-  /// \brief Match a keypoint of frame k with one of frame (k+1) if possible.
-  void MatchKeypoint(const int idx_k);
-  /// \brief Try to match inferior matches without modifying initial matches.
-  void MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched);
 
   // The current frame.
   const VisualFrame& frame_kp1_;
