@@ -11,7 +11,6 @@ set(HEADERS
   include/aslam/tracker/feature-tracker.h
   include/aslam/tracker/feature-tracker-descriptor-matcher.h
   include/aslam/tracker/feature-tracker-gyro.h
-  include/aslam/tracker/feature-tracker-gyro-matching-data.h
   include/aslam/tracker/feature-tracker-lk.h
   include/aslam/tracker/track-manager.h
 )
@@ -20,7 +19,6 @@ set(SOURCES
   src/feature-tracker-lk.cc
   src/feature-tracker-descriptor-matcher.cc
   src/feature-tracker-gyro.cc
-  src/feature-tracker-gyro-matching-data.cc
   src/track-manager.cc
   src/tracking-helpers.cc
 )
