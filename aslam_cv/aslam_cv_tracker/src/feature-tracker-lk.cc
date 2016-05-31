@@ -1,6 +1,7 @@
 #include <aslam/common/statistics/statistics.h>
 #include <aslam/common/timer.h>
 #include <aslam/frames/visual-frame.h>
+#include <aslam/matcher/matching-helpers.h>
 #include <aslam/tracker/feature-tracker-lk.h>
 #include <aslam/tracker/tracking-helpers.h>
 #include <brisk/brisk.h>

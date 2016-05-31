@@ -1,0 +1,165 @@
+#ifndef MATCHER_GYRO_TWO_FRAME_MATCHER_H_
+#define MATCHER_GYRO_TWO_FRAME_MATCHER_H_
+
+#include <algorithm>
+#include <vector>
+
+#include <Eigen/Core>
+#include <glog/logging.h>
+
+#include <aslam/common/pose-types.h>
+#include <aslam/common-private/feature-descriptor-ref.h>
+#include <aslam/frames/visual-frame.h>
+
+#include "aslam/matcher/matching-helpers.h"
+#include "aslam/matcher/match.h"
+
+namespace aslam {
+
+/// \class GyroTwoFrameMatcher
+/// \brief Frame to frame matcher using an interframe rotation matrix
+///  to predict the feature positions to constrain the search window.
+class GyroTwoFrameMatcher {
+ public:
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(GyroTwoFrameMatcher);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  /// \brief Constructs the GyroTwoFrameMatcher.
+  /// @param[in]  q_Ckp1_Ck     Rotation matrix that describes the camera rotation between the
+  ///                           two frames that are matched.
+  /// @param[in]  frame_kp1     The current VisualFrame that needs to contain the keypoints and
+  ///                           descriptor channels. Usually this is an output of the VisualPipeline.
+  /// @param[in]  frame_k       The previous VisualFrame that needs to contain the keypoints and
+  ///                           descriptor channels. Usually this is an output of the VisualPipeline.
+  /// @param[in]  image_height  The image height of the given camera.
+  /// @param[out] matches_with_score_kp1_k  Vector of structs containing the found matches. Indices
+  ///                                       correspond to the ordering of the keypoint/descriptor vector in the
+  ///                                       respective frame channels.
+  GyroTwoFrameMatcher(const Quaternion& q_Ckp1_Ck,
+                      const VisualFrame& frame_kp1,
+                      const VisualFrame& frame_k,
+                      const uint32_t image_height,
+                      MatchesWithScore* matches_with_score_kp1_k);
+  virtual ~GyroTwoFrameMatcher() {};
+
+  void Match();
+
+ private:
+  struct KeypointData {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    KeypointData(const Eigen::Vector2d& measurement, const int index)
+      : measurement(measurement), channel_index(index) {}
+    Eigen::Vector2d measurement;
+    int channel_index;
+  };
+
+  typedef typename Aligned<std::vector, KeypointData>::type::const_iterator KeyPointIterator;
+  typedef typename MatchesWithScore::iterator MatchesWithScoreIterator;
+
+  struct MatchData {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    MatchData() = default;
+    void AddCandidate(
+        const KeyPointIterator& keypoint_iterator_kp1, const double matching_score) {
+      CHECK_GT(matching_score, 0.0);
+      CHECK_LE(matching_score, 1.0);
+      keypoint_match_candidates_kp1.push_back(keypoint_iterator_kp1);
+      match_candidate_matching_scores.push_back(matching_score);
+    }
+    // Iterators of keypoints of frame (k+1) that were candidates for the match
+    // together with their scores.
+    std::vector<KeyPointIterator> keypoint_match_candidates_kp1;
+    std::vector<double> match_candidate_matching_scores;
+  };
+
+  void Initialize();
+  int Clamp(const int lower, const int upper, const int in) const;
+
+  // The larger the matching score (which is smaller or equal to 1),
+  // the higher the probability that a true match occurred.
+  double ComputeMatchingScore(const int num_matching_bits,
+                              const unsigned int descriptor_size_bits) const;
+
+  /// \brief Match a keypoint of frame k with one of frame (k+1) if possible.
+  void MatchKeypoint(const int idx_k);
+  /// \brief Try to match inferior matches without modifying initial matches.
+  void MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched);
+
+  // The current frame.
+  const VisualFrame& frame_kp1_;
+  // The previous frame.
+  const VisualFrame& frame_k_;
+  // Rotation matrix that describes the camera rotation between the
+  // two frames that are matched.
+  const Quaternion& q_Ckp1_Ck_;
+  // Descriptor size in bytes.
+  const size_t kDescriptorSizeBytes;
+  // Number of keypoints/descriptors in frame (k+1).
+  const int kNumPointsKp1;
+  // Number of keypoints/descriptors in frame k.
+  const int kNumPointsK;
+  const uint32_t kImageHeight;
+
+  // Matches with scores with indices corresponding
+  // to the ordering of the keypoint/descriptors in
+  // the respective channels.
+  MatchesWithScore* const matches_with_score_kp1_k_;
+  // Predicted locations of the keypoints in frame k
+  // in frame (k+1) based on camera rotation.
+  Eigen::Matrix2Xd predicted_keypoint_positions_kp1_;
+  // Store prediction success for each keypoint of
+  // frame k.
+  std::vector<unsigned char> prediction_success_;
+  // Descriptors of frame (k+1).
+  std::vector<common::FeatureDescriptorConstRef> descriptors_kp1_wrapped_;
+  // Descriptors of frame k.
+  std::vector<common::FeatureDescriptorConstRef> descriptors_k_wrapped_;
+  // Keypoints of frame (k+1) sorted from small to large y coordinates.
+  typename Aligned<std::vector, KeypointData>::type keypoints_kp1_sorted_by_y_;
+  // corner_row_LUT[i] is the number of keypoints that has an y position
+  // lower than i in the image.
+  std::vector<int> corner_row_LUT_;
+  // Remember matched keypoints of frame (k+1).
+  std::vector<bool> is_keypoint_kp1_matched_;
+  // Map from keypoint indices of frame (k+1) to
+  // the corresponding match iterator.
+  std::unordered_map<int, MatchesWithScoreIterator> kp1_idx_to_matches_with_score_iterator_map_;
+  // Keep track of processed keypoints s.t. we don't process them again in the
+  // large window. Set every element to false for each keypoint (of frame k) iteration!
+  std::vector<bool> iteration_processed_keypoints_kp1_;
+  // The queried keypoints in frame (k+1) and the corresponding
+  // matching score are stored for each attempted match.
+  // A map from the keypoint in frame k to the corresponding
+  // match data is created.
+  std::unordered_map<int, MatchData> idx_k_to_attempted_match_data_map;
+  // Inferior matches are a subset of all attempted matches.
+  // Remeber indices of keypoints in frame k that are deemed inferior matches.
+  std::vector<int> inferior_match_keypoint_idx_k;
+
+  // Two descriptors can match if the number of matching bits normalized
+  // with the descriptor length in bits is higher than this threshold.
+  static constexpr float kMatchingThresholdBitsRatio = 0.8;
+  // Small image space distances for keypoint matches.
+  static constexpr int kSmallSearchDistance = 10;
+  // Large image space distances for keypoint matches.
+  // Only used if small search was unsuccessful.
+  static constexpr int kLargeSearchDistance = 30;
+  // Number of iterations to match inferior matches.
+  static constexpr size_t kInferiorIterations = 3u;
+};
+
+inline int GyroTwoFrameMatcher::Clamp(
+    const int lower, const int upper, const int in) const {
+  return std::min<int>(std::max<int>(in, lower), upper);
+}
+
+inline double GyroTwoFrameMatcher::ComputeMatchingScore(
+    const int num_matching_bits, const unsigned int descriptor_size_bits) const {
+  return static_cast<double>(num_matching_bits)/descriptor_size_bits;
+}
+
+} // namespace aslam
+
+
+
+#endif // MATCHER_GYRO_TWO_FRAME_MATCHER_H_

@@ -31,39 +31,28 @@ class GyroTracker : public FeatureTracker{
   explicit GyroTracker(const Camera& camera);
   virtual ~GyroTracker() {}
 
+  /// \brief Track features between the current and the previous frames using a given interframe
+  ///        rotation q_Ckp1_Ck to predict the feature positions.
+  /// @param[in] q_Ckp1_Ck      Rotation matrix that describes the camera rotation between the
+  ///                           two frames that are matched.
+  /// @param[int] frame_k       The previous VisualFrame that needs to contain the keypoints and
+  ///                           descriptor channels. Usually this is an output of the VisualPipeline.
+  /// @param[out] frame_kp1     The current VisualFrame that needs to contain the keypoints and
+  ///                           descriptor channels. Usually this is an output of the VisualPipeline.
+  /// @param[out] matches_with_score_kp1_k  Vector of structs containing the found matches. Indices
+  ///                                       correspond to the ordering of the keypoint/descriptor vector in the
+  ///                                       respective frame channels.
   virtual void track(const Quaternion& q_Ckp1_Ck,
                      const VisualFrame& frame_k,
                      VisualFrame* frame_kp1,
                      MatchesWithScore* matches_with_score_kp1_k) override;
 
  private:
-  /// \brief Match features between the current and the previous frames using a given interframe
-  ///        rotation q_Ckp1_Ck to predict the feature positions.
-  /// @param[in] q_Ckp1_Ck      Rotation matrix that describes the camera rotation between the
-  ///                           two frames that are matched.
-  /// @param[in] frame_kp1      The current VisualFrame that needs to contain the keypoints and
-  ///                           descriptor channels. Usually this is an output of the VisualPipeline.
-  /// @param[in] frame_k        The previous VisualFrame that needs to contain the keypoints and
-  ///                           descriptor channels. Usually this is an output of the VisualPipeline.
-  /// @param[out] matches_prev_current  Vector of structs containing the found matches. Indices
-  ///                                   correspond to the ordering of the keypoint/descriptor vector in the
-  ///                                   respective frame channels. (Apple = frame_kp1, Banana = frame_k)
-  void matchFeatures(const Quaternion& q_Ckp1_Ck,
-                     const VisualFrame& frame_k,
-                     const VisualFrame& frame_kp1,
-                     MatchesWithScore* matches_with_score_kp1_k) const;
 
   int clamp(const int& lower, const int& upper, const int& in) const;
 
   /// The camera model used in the tracker.
   const aslam::Camera& camera_;
-
-  /// Two descriptors can match if the number of matching bits normalized
-  /// with the descriptor length in bits is higher than this threshold.
-  static constexpr float kMatchingThresholdBitsRatio = 0.8;
-  /// Image space distances for keypoint matches.
-  static constexpr int kSmallSearchDistance = 10;
-  static constexpr int kLargeSearchDistance = 30;
 };
 
 }       // namespace aslam

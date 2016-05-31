@@ -19,14 +19,6 @@ void convertKeypointVectorToCvPointList(const Eigen::Matrix2Xd& keypoints,
 void convertCvPointListToKeypointVector(const std::vector<cv::Point2f>& keypoints,
                                         Eigen::Matrix2Xd* keypoints_eigen);
 
-/// Rotate keypoints from a VisualFrame using a specified rotation. Note that if the back-,
-/// projection fails or the keypoint leaves the image region, the predicted keypoint will be left
-/// unchanged and the prediction_success will be set to false.
-void predictKeypointsByRotation(const VisualFrame& frame_k,
-                                const aslam::Quaternion& q_Ckp1_Ck,
-                                Eigen::Matrix2Xd* predicted_keypoints_kp1,
-                                std::vector<unsigned char>* prediction_success);
-
 /// Insert a list of keypoints into a VisualFrame.
 void insertKeypointsIntoVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
                                     const Eigen::VectorXd& new_keypoint_scores,
