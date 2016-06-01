@@ -101,15 +101,14 @@ void GyroTwoFrameMatcher::Match() {
   std::vector<bool> is_inferior_keypoint_kp1_matched(
       is_keypoint_kp1_matched_);
   for (size_t i = 0u; i < kInferiorIterations; ++i) {
-    MatchInferiorMatches(&is_inferior_keypoint_kp1_matched);
-    if (inferior_match_keypoint_idx_k.size() == 0u) {
-      return;
-    }
+    if(!MatchInferiorMatches(&is_inferior_keypoint_kp1_matched)) return;
   }
 }
 
-void GyroTwoFrameMatcher::MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched) {
+bool GyroTwoFrameMatcher::MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched) {
   CHECK_EQ(is_inferior_keypoint_kp1_matched->size(), is_keypoint_kp1_matched_.size());
+
+  bool found_something = false;
 
   std::unordered_set<int> erase_inferior_match_keypoint_idx_k;
   for (const int inferior_keypoint_idx_k: inferior_match_keypoint_idx_k) {
@@ -132,6 +131,7 @@ void GyroTwoFrameMatcher::MatchInferiorMatches(std::vector<bool>* is_inferior_ke
     }
 
     if (found) {
+      if (!found_something) found_something = true;
       const int best_match_keypoint_idx_kp1 = it_best->channel_index;
       if (is_inferior_keypoint_kp1_matched->at(best_match_keypoint_idx_kp1)) {
         if (best_matching_score > kp1_idx_to_matches_with_score_iterator_map_.at(
@@ -184,6 +184,8 @@ void GyroTwoFrameMatcher::MatchInferiorMatches(std::vector<bool>* is_inferior_ke
 
   // Subsequent iterations should not mess with the current matches.
   is_keypoint_kp1_matched_ = *is_inferior_keypoint_kp1_matched;
+
+  return found_something;
 }
 
 
