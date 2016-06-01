@@ -100,8 +100,9 @@ class GyroTwoFrameMatcher {
   /// \brief Try to match inferior matches without modifying initial matches.
   ///
   /// Second matcher that is only quering keypoints of frame (k+1) that the
-  /// initial matcher has queried before. Is executed several times.
-  void MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched);
+  /// initial matcher has queried before. Should be executed several times.
+  /// Returns true if matches are still found.
+  bool MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched);
 
 
   int Clamp(const int lower, const int upper, const int in) const;
