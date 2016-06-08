@@ -205,11 +205,15 @@ void GyroTwoFrameMatcher::MatchKeypoint(const int idx_k) {
 
   // Compute search area for LUT iterators row-wise.
   int y_nearest[2];  // Small search region.
-  y_nearest[0] = Clamp(0, kImageHeight - 1, predicted_keypoint_position_kp1(1) + 0.5 - kSmallSearchDistance);
-  y_nearest[1] = Clamp(0, kImageHeight - 1, predicted_keypoint_position_kp1(1) + 0.5 + kSmallSearchDistance);
+  y_nearest[0] = Clamp(0, kImageHeight - 1, static_cast<int>(
+      predicted_keypoint_position_kp1(1) + 0.5 - kSmallSearchDistance));
+  y_nearest[1] = Clamp(0, kImageHeight - 1, static_cast<int>(
+      predicted_keypoint_position_kp1(1) + 0.5 + kSmallSearchDistance));
   int y_near[2];  // Large search region.
-  y_near[0] = Clamp(0, kImageHeight - 1, predicted_keypoint_position_kp1(1) + 0.5 - kLargeSearchDistance);
-  y_near[1] = Clamp(0, kImageHeight - 1, predicted_keypoint_position_kp1(1) + 0.5 + kLargeSearchDistance);
+  y_near[0] = Clamp(0, kImageHeight - 1, static_cast<int>(
+      predicted_keypoint_position_kp1(1) + 0.5 - kLargeSearchDistance));
+  y_near[1] = Clamp(0, kImageHeight - 1, static_cast<int>(
+      predicted_keypoint_position_kp1(1) + 0.5 + kLargeSearchDistance));
 
   CHECK_LE(y_nearest[0], y_nearest[1]);
   CHECK_LE(y_near[0], y_near[1]);

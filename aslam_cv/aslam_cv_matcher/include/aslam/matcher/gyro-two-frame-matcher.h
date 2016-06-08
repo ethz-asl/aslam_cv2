@@ -143,7 +143,7 @@ class GyroTwoFrameMatcher {
   std::vector<common::FeatureDescriptorConstRef> descriptors_k_wrapped_;
   // Keypoints of frame (k+1) sorted from small to large y coordinates.
   typename Aligned<std::vector, KeypointData>::type keypoints_kp1_sorted_by_y_;
-  // corner_row_LUT[i] is the number of keypoints that has an y position
+  // corner_row_LUT[i] is the number of keypoints that has y position
   // lower than i in the image.
   std::vector<int> corner_row_LUT_;
   // Remember matched keypoints of frame (k+1).
