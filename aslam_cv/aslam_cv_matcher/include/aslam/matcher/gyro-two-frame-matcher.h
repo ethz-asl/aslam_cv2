@@ -32,7 +32,7 @@ namespace aslam {
 /// of the initial matcher. Therefore, it does not compute distances between
 /// descriptors anymore because the initial matcher has already done that.
 /// The second matcher is executed several times because it is also allowed
-/// do discard inferior matches of the current iteration.
+/// to discard inferior matches of the current iteration.
 /// The matches are exclusive.
 class GyroTwoFrameMatcher {
  public:
@@ -112,6 +112,12 @@ class GyroTwoFrameMatcher {
   double ComputeMatchingScore(const int num_matching_bits,
                               const unsigned int descriptor_size_bits) const;
 
+  // Compute ratio test. Test is inspired by David Lowe's "ratio test"
+  // for matching descriptors. Returns true if test is passed.
+  bool PassRatioTest(const unsigned int descriptor_size_bits,
+                     const unsigned int distance_shortest,
+                     const unsigned int distance_second_shortest);
+
   // The current frame.
   const VisualFrame& frame_kp1_;
   // The previous frame.
@@ -163,9 +169,14 @@ class GyroTwoFrameMatcher {
   // Remeber indices of keypoints in frame k that are deemed inferior matches.
   std::vector<int> inferior_match_keypoint_idx_k;
 
-  // Two descriptors can match if the number of matching bits normalized
+  // Two descriptors could match if the number of matching bits normalized
   // with the descriptor length in bits is higher than this threshold.
-  static constexpr float kMatchingThresholdBitsRatio = 0.78;
+  static constexpr float kMatchingThresholdBitsRatioRelaxed = 0.75;
+  // The more strict threshold is used for matching inferior matches.
+  // It is stricter because there is no ratio test anymore.
+  static constexpr float kMatchingThresholdBitsRatioStrict = 0.85;
+  // Two descriptors could match if they pass the Lowe ratio test.
+  static constexpr float kLoweRatio = 0.8;
   // Small image space distances for keypoint matches.
   static constexpr int kSmallSearchDistance = 10;
   // Large image space distances for keypoint matches.
@@ -183,6 +194,20 @@ inline int GyroTwoFrameMatcher::Clamp(
 inline double GyroTwoFrameMatcher::ComputeMatchingScore(
     const int num_matching_bits, const unsigned int descriptor_size_bits) const {
   return static_cast<double>(num_matching_bits)/descriptor_size_bits;
+}
+
+inline bool GyroTwoFrameMatcher::PassRatioTest(
+    const unsigned int descriptor_size_bits,
+    const unsigned int distance_closest,
+    const unsigned int distance_second_closest) {
+  CHECK_LE(distance_closest, distance_second_closest);
+  if (distance_second_closest > descriptor_size_bits) {
+    // There has never been a second matching candidate.
+    // Consequently, we cannot conclude with this test.
+    return true;
+  } else {
+    return distance_closest/distance_second_closest < kLoweRatio;
+  }
 }
 
 } // namespace aslam
