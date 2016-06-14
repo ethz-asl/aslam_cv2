@@ -9,8 +9,12 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
     const VisualFrame& frame_kp1,
     const VisualFrame& frame_k,
     const uint32_t image_height,
+    const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
+    const std::vector<unsigned char>& prediction_success,
     MatchesWithScore* matches_with_score_kp1_k)
   : frame_kp1_(frame_kp1), frame_k_(frame_k), q_Ckp1_Ck_(q_Ckp1_Ck),
+    predicted_keypoint_positions_kp1_(predicted_keypoint_positions_kp1),
+    prediction_success_(prediction_success),
     kDescriptorSizeBytes(frame_kp1.getDescriptorSizeBytes()),
     kNumPointsKp1(frame_kp1.getKeypointMeasurements().cols()),
     kNumPointsK(frame_k.getKeypointMeasurements().cols()),
@@ -38,6 +42,7 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
   CHECK_GT(kImageHeight, 0u);
   CHECK_EQ(iteration_processed_keypoints_kp1_.size(), kNumPointsKp1);
   CHECK_EQ(is_keypoint_kp1_matched_.size(), kNumPointsKp1);
+  CHECK_EQ(prediction_success_.size(), predicted_keypoint_positions_kp1_.cols());
 
   descriptors_kp1_wrapped_.reserve(kNumPointsKp1);
   keypoints_kp1_sorted_by_y_.reserve(kNumPointsKp1);
@@ -47,10 +52,6 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
 }
 
 void GyroTwoFrameMatcher::Initialize() {
-  // Predict keypoint positions.
-  predictKeypointsByRotation(frame_k_, q_Ckp1_Ck_, &predicted_keypoint_positions_kp1_, &prediction_success_);
-  CHECK_EQ(prediction_success_.size(), predicted_keypoint_positions_kp1_.cols());
-
   // Prepare descriptors for efficient matching.
   const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& descriptors_kp1 =
       frame_kp1_.getDescriptors();

@@ -13,7 +13,7 @@ void convertKeypointVectorToCvPointList(const Eigen::Matrix2Xd& keypoints,
                                         std::vector<cv::Point2f>* keypoints_cv) {
   CHECK_NOTNULL(keypoints_cv);
   keypoints_cv->reserve(keypoints.cols());
-  for (int idx = 0u; idx < keypoints.cols(); ++idx) {
+  for (int idx = 0; idx < keypoints.cols(); ++idx) {
     keypoints_cv->emplace_back(keypoints.col(idx)(0), keypoints.col(idx)(1));
   }
 }
@@ -24,14 +24,15 @@ void convertCvPointListToKeypointVector(const std::vector<cv::Point2f>& keypoint
   keypoints_eigen->resize(Eigen::NoChange, keypoints.size());
   for (size_t idx = 0u; idx < keypoints.size(); ++idx) {
     keypoints_eigen->col(idx)(0) = keypoints[idx].x;
-    keypoints_eigen->col(idx)(0) = keypoints[idx].y;
+    keypoints_eigen->col(idx)(1) = keypoints[idx].y;
   }
 }
 
+// TODO(magehrig): Add keypoint orientations. Swap for efficiency?
 void insertKeypointsIntoVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
                                     const Eigen::VectorXd& new_keypoint_scores,
                                     const Eigen::VectorXd& new_keypoint_scales,
-                                    const double& fixed_keypoint_uncertainty_px,
+                                    const double fixed_keypoint_uncertainty_px,
                                     aslam::VisualFrame* frame) {
   CHECK_NOTNULL(frame);
   CHECK_GT(fixed_keypoint_uncertainty_px, 0.0);
@@ -55,8 +56,18 @@ void insertKeypointsIntoVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
   frame->setTrackIds(track_ids);
 }
 
+void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& keypoint_measurements,
+                                            const Eigen::VectorXd& keypoint_scores,
+                                            const Eigen::VectorXd& keypoint_scales,
+                                            const Eigen::VectorXd& keypoint_orientations,
+                                            const double fixed_keypoint_uncertainty_px,
+                                            aslam::VisualFrame* frame) {
+  // TODO(magehrig): Also pass descriptors!
+
+}
+
 void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
-                                            const double& fixed_keypoint_uncertainty_px,
+                                            const double fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame) {
   CHECK_NOTNULL(frame);
   CHECK_GT(fixed_keypoint_uncertainty_px, 0.0);
@@ -92,7 +103,7 @@ void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoint
     CHECK_EQ(static_cast<int>(extended_size), frame->getKeypointMeasurementUncertainties().rows());
     CHECK_EQ(static_cast<int>(extended_size), frame->getTrackIds().rows());
   } else {
-    // Just set the keypoints, invalid track ids and constant measurement uncertainties.
+    // Just set/swap the keypoints, invalid track ids and constant measurement uncertainties.
     frame->setKeypointMeasurements(new_keypoints);
 
     Eigen::VectorXi track_ids(num_new_keypoints);
