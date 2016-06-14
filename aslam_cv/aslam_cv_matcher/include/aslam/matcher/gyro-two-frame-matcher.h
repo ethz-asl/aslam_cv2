@@ -54,6 +54,8 @@ class GyroTwoFrameMatcher {
                       const VisualFrame& frame_kp1,
                       const VisualFrame& frame_k,
                       const uint32_t image_height,
+                      const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
+                      const std::vector<unsigned char>& prediction_success,
                       MatchesWithScore* matches_with_score_kp1_k);
   virtual ~GyroTwoFrameMatcher() {};
 
@@ -75,7 +77,7 @@ class GyroTwoFrameMatcher {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     MatchData() = default;
     void AddCandidate(
-        const KeyPointIterator& keypoint_iterator_kp1, const double matching_score) {
+        const KeyPointIterator keypoint_iterator_kp1, const double matching_score) {
       CHECK_GT(matching_score, 0.0);
       CHECK_LE(matching_score, 1.0);
       keypoint_match_candidates_kp1.push_back(keypoint_iterator_kp1);
@@ -125,6 +127,12 @@ class GyroTwoFrameMatcher {
   // Rotation matrix that describes the camera rotation between the
   // two frames that are matched.
   const Quaternion& q_Ckp1_Ck_;
+  // Predicted locations of the keypoints in frame k
+  // in frame (k+1) based on camera rotation.
+  const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1_;
+  // Store prediction success for each keypoint of
+  // frame k.
+  const std::vector<unsigned char>& prediction_success_;
   // Descriptor size in bytes.
   const size_t kDescriptorSizeBytes;
   // Number of keypoints/descriptors in frame (k+1).
@@ -137,12 +145,6 @@ class GyroTwoFrameMatcher {
   // to the ordering of the keypoint/descriptors in
   // the respective channels.
   MatchesWithScore* const matches_with_score_kp1_k_;
-  // Predicted locations of the keypoints in frame k
-  // in frame (k+1) based on camera rotation.
-  Eigen::Matrix2Xd predicted_keypoint_positions_kp1_;
-  // Store prediction success for each keypoint of
-  // frame k.
-  std::vector<unsigned char> prediction_success_;
   // Descriptors of frame (k+1).
   std::vector<common::FeatureDescriptorConstRef> descriptors_kp1_wrapped_;
   // Descriptors of frame k.
