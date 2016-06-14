@@ -114,9 +114,9 @@ class GyroTwoFrameMatcher {
 
   // Compute ratio test. Test is inspired by David Lowe's "ratio test"
   // for matching descriptors. Returns true if test is passed.
-  bool PassRatioTest(const unsigned int descriptor_size_bits,
-                     const unsigned int distance_shortest,
-                     const unsigned int distance_second_shortest);
+  bool RatioTest(const unsigned int descriptor_size_bits,
+                 const unsigned int distance_shortest,
+                 const unsigned int distance_second_shortest);
 
   // The current frame.
   const VisualFrame& frame_kp1_;
@@ -164,19 +164,19 @@ class GyroTwoFrameMatcher {
   // matching score are stored for each attempted match.
   // A map from the keypoint in frame k to the corresponding
   // match data is created.
-  std::unordered_map<int, MatchData> idx_k_to_attempted_match_data_map;
+  std::unordered_map<int, MatchData> idx_k_to_attempted_match_data_map_;
   // Inferior matches are a subset of all attempted matches.
   // Remeber indices of keypoints in frame k that are deemed inferior matches.
-  std::vector<int> inferior_match_keypoint_idx_k;
+  std::vector<int> inferior_match_keypoint_idx_k_;
 
   // Two descriptors could match if the number of matching bits normalized
   // with the descriptor length in bits is higher than this threshold.
-  static constexpr float kMatchingThresholdBitsRatioRelaxed = 0.75;
+  static constexpr float kMatchingThresholdBitsRatioRelaxed = 0.75f;
   // The more strict threshold is used for matching inferior matches.
-  // It is stricter because there is no ratio test anymore.
-  static constexpr float kMatchingThresholdBitsRatioStrict = 0.85;
+  // It is more strict because there is no ratio test anymore.
+  static constexpr float kMatchingThresholdBitsRatioStrict = 0.8f;
   // Two descriptors could match if they pass the Lowe ratio test.
-  static constexpr float kLoweRatio = 0.8;
+  static constexpr float kLoweRatio = 0.8f;
   // Small image space distances for keypoint matches.
   static constexpr int kSmallSearchDistance = 10;
   // Large image space distances for keypoint matches.
@@ -196,7 +196,7 @@ inline double GyroTwoFrameMatcher::ComputeMatchingScore(
   return static_cast<double>(num_matching_bits)/descriptor_size_bits;
 }
 
-inline bool GyroTwoFrameMatcher::PassRatioTest(
+inline bool GyroTwoFrameMatcher::RatioTest(
     const unsigned int descriptor_size_bits,
     const unsigned int distance_closest,
     const unsigned int distance_second_closest) {

@@ -20,6 +20,7 @@ void convertCvPointListToKeypointVector(const std::vector<cv::Point2f>& keypoint
                                         Eigen::Matrix2Xd* keypoints_eigen);
 
 /// Insert a list of keypoints into a VisualFrame.
+// TODO(magehrig): pass CV keypoint instead.
 void insertKeypointsIntoVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
                                     const Eigen::VectorXd& new_keypoint_scores,
                                     const Eigen::VectorXd& new_keypoint_scales,
