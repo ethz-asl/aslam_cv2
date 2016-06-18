@@ -119,7 +119,7 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
       prediction_success, matches_with_score_kp1_k);
   matcher.Match();
 
-  // Compute LK candidates.
+  // Compute LK candidates and track them.
   FrameStatusTrackLength status_track_length_k;
   std::vector<TrackedMatch> tracked_matches;
   std::vector<int> lk_candidate_indices_k;
@@ -128,16 +128,12 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   ComputeStatusTrackLengthOfFrameK(tracked_matches, &status_track_length_k);
   ComputeLKCandidates(*matches_with_score_kp1_k, status_track_length_k,
                       *frame_kp1, &lk_candidate_indices_k);
+  LKTracking(predicted_keypoint_positions_kp1, prediction_success,
+             lk_candidate_indices_k, frame_kp1, matches_with_score_kp1_k);
 
-  //FrameFeatureStatus frame_feature_status_kp1;
-  //UpdateFeatureStatusDeque(fame_feature_status_kp1);
   status_track_length_km1_.swap(status_track_length_k);
   initialized_ = true;
 }
-
-// TODO(magehrig):
-//  - Assign feature status in (k+1).
-//  - Ensure that all keypoint info that is needed is provided.
 
 void GyroTracker::LKTracking(
       const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
@@ -151,7 +147,7 @@ void GyroTracker::LKTracking(
   CHECK_EQ(prediction_success.size(), predicted_keypoint_positions_kp1.cols());
 
   if (lk_candidate_indices_k.empty()) {
-    LOG(WARNING) << "No LK candidates to track.";
+    VLOG(3) << "No LK candidates to track.";
     return;
   }
 
@@ -165,29 +161,29 @@ void GyroTracker::LKTracking(
   }
 
   // Get definite lk keypoint locations in OpenCV format.
-  std::vector<cv::Point2f> keypoint_locations_k;
-  keypoint_locations_k.reserve(lk_definite_indices_k.size());
+  std::vector<cv::Point2f> lk_cv_points_k;
+  lk_cv_points_k.reserve(lk_definite_indices_k.size());
   for (const int lk_definite_index_k: lk_definite_indices_k) {
-    const Eigen::Matrix<double, 2, 1>& keypoint_location_k =
+    const Eigen::Matrix<double, 2, 1>& lk_keypoint_location_k =
         frame_kp1->getKeypointMeasurement(lk_definite_index_k);
-    keypoint_locations_k.emplace_back(
-        static_cast<float>(keypoint_location_k(0,0)),
-        static_cast<float>(keypoint_location_k(0,1)));
+    lk_cv_points_k.emplace_back(
+        static_cast<float>(lk_keypoint_location_k(0,0)),
+        static_cast<float>(lk_keypoint_location_k(0,1)));
   }
 
-  std::vector<cv::Point2f> keypoint_locations_kp1;
-  std::vector<unsigned char> tracking_success;
-  std::vector<float> tracking_errors;
+  std::vector<cv::Point2f> lk_cv_points_kp1;
+  std::vector<unsigned char> lk_tracking_success;
+  std::vector<float> lk_tracking_errors;
   cv::calcOpticalFlowPyrLK(
-      frames_k_km1_[0]->getRawImage(), frame_kp1->getRawImage(), keypoint_locations_k,
-      keypoint_locations_kp1, tracking_success, tracking_errors,
+      frames_k_km1_[0]->getRawImage(), frame_kp1->getRawImage(), lk_cv_points_k,
+      lk_cv_points_kp1, lk_tracking_success, lk_tracking_errors,
       settings.lk_window_size, settings.lk_max_pyramid_levels,
       settings.lk_termination_criteria, settings.lk_operation_flag,
       settings.lk_min_eigenvalue_threshold);
 
-  CHECK_EQ(tracking_success.size(), lk_candidate_indices_k.size());
-  CHECK_EQ(keypoint_locations_kp1.size(), tracking_success.size());
-  CHECK_EQ(keypoint_locations_k.size(), keypoint_locations_kp1.size());
+  CHECK_EQ(lk_tracking_success.size(), lk_candidate_indices_k.size());
+  CHECK_EQ(lk_cv_points_kp1.size(), lk_tracking_success.size());
+  CHECK_EQ(lk_cv_points_k.size(), lk_cv_points_kp1.size());
 
   std::function<bool(const cv::Point2f&)> is_outside_roi =
       [this](const cv::Point2f& point) -> bool {
@@ -198,41 +194,59 @@ void GyroTracker::LKTracking(
   };
 
   std::unordered_set<size_t> indices_to_erase;
-  for (size_t i = 0u; i < tracking_success.size(); ++i) {
-    if (tracking_success[i] == 0u || is_outside_roi(keypoint_locations_kp1[i])) {
+  for (size_t i = 0u; i < lk_tracking_success.size(); ++i) {
+    if (lk_tracking_success[i] == 0u || is_outside_roi(lk_cv_points_kp1[i])) {
       indices_to_erase.insert(i);
     }
   }
   EraseVectorElementsHelper(indices_to_erase, &lk_definite_indices_k);
-  EraseVectorElementsHelper(indices_to_erase, &keypoint_locations_kp1);
+  EraseVectorElementsHelper(indices_to_erase, &lk_cv_points_kp1);
 
-  const size_t num_successfully_tracked = keypoint_locations_kp1.size();
+  const size_t num_points_successfully_tracked = lk_cv_points_kp1.size();
 
-  // TODO(magehrig):  assign class_id to each keypoint because they might
-  //                  get removed in the extraction stage. Create unordered_map
-  //                  from class_id to frame k index.
-  // TODO(magehrig): extract descriptors.
-
-  Eigen::Matrix2Xd keypoint_measurements_kp1(2, num_successfully_tracked);
-  Eigen::VectorXd keypoint_uncertainties_kp1(num_successfully_tracked);
-  Eigen::VectorXd kekypoint_orientations_kp1(num_successfully_tracked);
-  // Keypoint scales are called keypoint size in OpenCV.
-  Eigen::VectorXd keypoint_scales_kp1(num_successfully_tracked);
-  // Keypoint scores are called keypoint response in OpenCV.
-  Eigen::VectorXd keypoint_scores_kp1(num_successfully_tracked);
-  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> descriptors_kp1(); // TODO(magehrig): initialize.
-  for (int i = 0; i < keypoint_locations_kp1.size(); ++i) {
-    if (!(tracking_success(i) == 1)) continue;
+  // Convert Cv points to Cv keypoints because this format is
+  // required for descriptor extraction. Take relevant keypoint information
+  // (such as score and size) from frame k.
+  // Assign unique class_id to keypoints because some of them will get removed
+  // during the extraction phase and we want to be able to identify them.
+  std::vector<cv::KeyPoint> lk_cv_keypoints_kp1;
+  lk_cv_keypoints_kp1.reserve(num_points_successfully_tracked);
+  for (size_t i = 0u; i < num_points_successfully_tracked; ++i) {
+    const size_t channel_idx = lk_definite_indices_k[i];
+    const int class_id = static_cast<int>(i);
+    lk_cv_keypoints_kp1.emplace_back(
+        lk_cv_points_kp1, frames_k_km1_[0]->getKeypointScale(channel_idx),
+        frames_k_km1_[0]->getKeypointOrientation(channel_idx),
+        frames_k_km1_[0]->getKeypointScore(channel_idx),
+        0 /* octave info not used by extractor */, class_id);
   }
 
+  cv::Mat lk_descriptors_kp1;
+  extractor_->compute(frame_kp1->getRawImage(), lk_cv_keypoints_kp1, lk_descriptors_kp1);
 
-  // x Compute subset of lk_candidate_indices_k that were successfully predicted.
-  // x Convert keypoint measurements to cv point vector.
-  // x Lk track 'em.
-  // - Extract descriptors directly after LK for successfully tracked + inside ROI.
-  // - Write successful new keypoints into frame.
-  // - Update matches accordingly.
-  // - Assign feature status in (k+1) & make sure to update it at the end.
+  CHECK_EQ(lk_descriptors_kp1.type(), CV_8UC1);
+  CHECK(lk_descriptors_kp1.isContinuous());
+
+  const size_t num_points_after_extraction = lk_cv_keypoints_kp1.size();
+
+  const int initial_size_kp1 = frame_kp1->getTrackIds().size();
+  for (int i = 0; i < static_cast<int>(num_points_after_extraction); ++i) {
+    matches_with_score_kp1_k->emplace_back(
+        initial_size_kp1 + i, lk_definite_indices_k[lk_cv_keypoints_kp1[i].class_id], 0.0);
+  }
+
+  // Add keypoints and descriptors to frame (k+1).
+  insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
+      lk_cv_keypoints_kp1, lk_descriptors_kp1,
+      settings.kKeypointUncertaintyPx, frame_kp1);
+
+  // Update feature status for next iteration.
+  const size_t extended_size_pk1 = static_cast<size_t>(initial_size_kp1) +
+      num_points_after_extraction;
+  FrameFeatureStatus frame_feature_status_kp1(extended_size_pk1);
+  std::fill(frame_feature_status_kp1.begin(), frame_feature_status_kp1.begin() + initial_size_kp1, FeatureStatus::kDetected);
+  std::fill(frame_feature_status_kp1.begin() + initial_size_kp1, frame_feature_status_kp1.end(), FeatureStatus::kLkTracked);
+  UpdateFeatureStatusDeque(frame_feature_status_kp1);
 }
 
 void GyroTracker::ComputeTrackedMatches(
