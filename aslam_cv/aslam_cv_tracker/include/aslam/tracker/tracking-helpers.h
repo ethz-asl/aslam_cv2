@@ -3,11 +3,13 @@
 
 #include <vector>
 
-#include <aslam/common/memory.h>
-#include <aslam/common/pose-types.h>
 #include <glog/logging.h>
 #include <Eigen/Core>
+
+#include <aslam/common/memory.h>
+#include <aslam/common/pose-types.h>
 #include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
 namespace aslam {
 class VisualFrame;

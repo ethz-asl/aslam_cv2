@@ -105,14 +105,14 @@ void insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
 
   Eigen::Matrix2Xd* const keypoint_measurements =
       frame->getKeypointMeasurementsMutable();
-  Eigen::Vector2d* const keypoint_orientations =
+  Eigen::VectorXd* const keypoint_orientations =
       frame->getKeypointOrientationsMutable();
-  Eigen::Vector2d* const keypoint_scales =
+  Eigen::VectorXd* const keypoint_scales =
       frame->getKeypointScalesMutable();
-  Eigen::Vector2d* const keypointi_scores =
+  Eigen::VectorXd* const keypointi_scores =
       frame->getKeypointScoresMutable();
-  Eigen::Vector2i* const track_ids = frame->getTrackIdsMutable();
-  Eigen::Vector2d* const keypoint_uncertainties =
+  Eigen::VectorXi* const track_ids = frame->getTrackIdsMutable();
+  Eigen::VectorXd* const keypoint_uncertainties =
       frame->getKeypointMeasurementUncertaintiesMutable();
   VisualFrame::DescriptorsT* const descriptors =
       frame->getDescriptorsMutable();

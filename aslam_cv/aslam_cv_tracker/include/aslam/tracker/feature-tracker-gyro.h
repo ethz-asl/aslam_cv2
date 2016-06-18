@@ -113,7 +113,7 @@ class GyroTracker : public FeatureTracker{
       const FrameFeatureStatus& frame_feature_status_kp1);
 
   virtual void UpdateFramePointerDeque(
-      const VisualFrame* new_frame_k_ptr);
+      const VisualFrame& new_frame_k);
 
   template <typename Type>
   void EraseVectorElementsHelper(
