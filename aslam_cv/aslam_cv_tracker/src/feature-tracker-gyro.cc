@@ -9,7 +9,8 @@
 #include <aslam/common/memory.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/matcher/gyro-two-frame-matcher.h>
-#include "aslam/matcher/matching-helpers.h"
+#include <aslam/matcher/matching-helpers.h>
+#include <opencv2/video/tracking.hpp>
 
 #include "aslam/tracker/tracking-helpers.h"
 
@@ -52,7 +53,7 @@ GyroTrackerSettings::GyroTrackerSettings()
       "want to enable tracking more keypoints with the lk-tracker than you "
       "are detecting in the next frame.";
   CHECK_GT(lk_max_status_track_length, 0u);
-  CHECK_GT(lk_window_size, 0);
+  CHECK_GT(FLAGS_gyro_lk_window_size, 0);
   CHECK_GE(lk_max_pyramid_levels, 0);
   CHECK_GT(lk_min_eigenvalue_threshold, 0.0);
 }
@@ -98,8 +99,7 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   // Make sure the frames are in order time-wise
   CHECK_GT(frame_kp1->getTimestampNanoseconds(),
            frame_k.getTimestampNanoseconds());
-
-  UpdateFramePointerDeque(&frame_k);
+  UpdateFramePointerDeque(frame_k);
   if (!initialized_) {
     InitializeFeatureStatusDeque();
   }
@@ -162,18 +162,26 @@ void GyroTracker::LKTracking(
 
   // Get definite lk keypoint locations in OpenCV format.
   std::vector<cv::Point2f> lk_cv_points_k;
+  std::vector<cv::Point2f> lk_cv_points_kp1;
   lk_cv_points_k.reserve(lk_definite_indices_k.size());
+  lk_cv_points_kp1.reserve(lk_definite_indices_k.size());
   for (const int lk_definite_index_k: lk_definite_indices_k) {
+    // Compute Cv points in frame k.
     const Eigen::Matrix<double, 2, 1>& lk_keypoint_location_k =
-        frame_kp1->getKeypointMeasurement(lk_definite_index_k);
+        frames_k_km1_[0]->getKeypointMeasurement(lk_definite_index_k);
     lk_cv_points_k.emplace_back(
         static_cast<float>(lk_keypoint_location_k(0,0)),
         static_cast<float>(lk_keypoint_location_k(0,1)));
+    // Compute predicted locations in frame (k+1).
+    lk_cv_points_kp1.emplace_back(
+        static_cast<float>(predicted_keypoint_positions_kp1(0, lk_definite_index_k)),
+        static_cast<float>(predicted_keypoint_positions_kp1(1, lk_definite_index_k)));
   }
 
-  std::vector<cv::Point2f> lk_cv_points_kp1;
   std::vector<unsigned char> lk_tracking_success;
   std::vector<float> lk_tracking_errors;
+
+  // TODO(magehrig): use predicted locations. Otherwise optflow will fail.
   cv::calcOpticalFlowPyrLK(
       frames_k_km1_[0]->getRawImage(), frame_kp1->getRawImage(), lk_cv_points_k,
       lk_cv_points_kp1, lk_tracking_success, lk_tracking_errors,
@@ -215,7 +223,7 @@ void GyroTracker::LKTracking(
     const size_t channel_idx = lk_definite_indices_k[i];
     const int class_id = static_cast<int>(i);
     lk_cv_keypoints_kp1.emplace_back(
-        lk_cv_points_kp1, frames_k_km1_[0]->getKeypointScale(channel_idx),
+        lk_cv_points_kp1[i], frames_k_km1_[0]->getKeypointScale(channel_idx),
         frames_k_km1_[0]->getKeypointOrientation(channel_idx),
         frames_k_km1_[0]->getKeypointScore(channel_idx),
         0 /* octave info not used by extractor */, class_id);
@@ -326,6 +334,7 @@ void GyroTracker::ComputeLKCandidates(
       LOG(FATAL) << "Unknown feature status.";
     }
   }
+
   const size_t kNumPointsKp1 = frame_kp1.getTrackIds().size();
   const size_t kLkNumCandidatesBeforeCutoff =
       indices_detected_and_tracked.size() +
@@ -391,47 +400,25 @@ void GyroTracker::ComputeUnmatchedIndicesOfFrameK(
   CHECK_NOTNULL(unmatched_indices_k)->clear();
 
   const size_t num_points_k = frames_k_km1_[0]->getTrackIds().size();
-  const size_t num_matches = matches_with_score_kp1_k.size();
+  const size_t num_matches_k = matches_with_score_kp1_k.size();
+  const size_t num_unmatched_k = num_points_k - num_matches_k;
 
-  unmatched_indices_k->reserve(num_points_k - num_matches);
-  std::vector<bool> is_unmatched(true, num_points_k);
+  unmatched_indices_k->reserve(num_unmatched_k);
+  std::vector<bool> is_unmatched(num_points_k, true);
 
   for (const MatchWithScore& match: matches_with_score_kp1_k) {
-    is_unmatched[match.correspondence[1]] = false;
+    is_unmatched.at(match.correspondence[1]) = false;
   }
-  for (int i = 0; i < static_cast<int>(is_unmatched.size()); ++i) {
+
+  for (int i = 0; i < static_cast<int>(num_points_k); ++i) {
     if (is_unmatched[i]) {
       unmatched_indices_k->push_back(i);
     }
   }
 
-  CHECK_EQ(num_matches + unmatched_indices_k->size(),
+  CHECK_EQ(unmatched_indices_k->size(), num_unmatched_k);
+  CHECK_EQ(num_matches_k + unmatched_indices_k->size(),
            num_points_k);
-
-  /* Why so complicated?
-  const int num_points_k = frames_k_km1_[0]->getTrackIds().size();
-  const int num_matches = static_cast<int>(matches_with_score_kp1_k.size());
-
-  unmatched_indices_k->reserve(num_points_k);
-  for (int i = 0; i < num_points_k; ++i) {
-    unmatched_indices_k->push_back(i);
-  }
-  std::vector<bool> index_to_erase(num_points_k, false);
-  for (const MatchWithScore& match: matches_with_score_kp1_k) {
-    index_to_erase.at(match.correspondence[1]) = true;
-  }
-  std::vector<bool>::iterator it_index_to_erase = index_to_erase.begin();
-  std::vector<int>::iterator it_erase_from = std::remove_if(
-      unmatched_indices_k->begin(), unmatched_indices_k->end(),
-      [&it_index_to_erase](const int useless) -> bool {
-    return *it_index_to_erase++ == true;
-  });
-  unmatched_indices_k->erase(it_erase_from, unmatched_indices_k->end());
-  unmatched_indices_k->shrink_to_fit();
-
-  CHECK_EQ(matches_with_score_kp1_k.size() + unmatched_indices_k->size(),
-           frames_k_km1_[0]->getTrackIds().size());
-  */
 }
 
 void GyroTracker::ComputeStatusTrackLengthOfFrameK(
@@ -466,7 +453,6 @@ void GyroTracker::ComputeStatusTrackLengthOfFrameK(
 
 void GyroTracker::InitializeFeatureStatusDeque() {
   CHECK_EQ(frames_k_km1_.size(), 1u);
-
   const size_t num_points_k = frames_k_km1_[0]->getTrackIds().size();
   FrameFeatureStatus frame_feature_status_k(num_points_k, FeatureStatus::kDetected);
   UpdateFeatureStatusDeque(frame_feature_status_k);
@@ -481,12 +467,37 @@ void GyroTracker::UpdateFeatureStatusDeque(
   }
 }
 
-virtual void GyroTracker::UpdateFramePointerDeque(
-    const VisualFrame* new_frame_k_ptr) {
-  CHECK_NOTNULL(new_frame_k_ptr);
-  frames_k_km1_.push_front(new_frame_k_ptr);
+void GyroTracker::UpdateFramePointerDeque(
+    const VisualFrame& new_frame_k) {
+  CHECK(new_frame_k.hasKeypointMeasurements());
+  CHECK(new_frame_k.hasDescriptors());
+  CHECK(new_frame_k.hasKeypointMeasurementUncertainties());
+  CHECK(new_frame_k.hasKeypointOrientations());
+  CHECK(new_frame_k.hasKeypointScales());
+  CHECK(new_frame_k.hasKeypointScores());
+  CHECK(new_frame_k.hasTrackIds());
+
+  frames_k_km1_.push_front(&new_frame_k);
   if (frames_k_km1_.size() == 3u) {
     frames_k_km1_.pop_back();
+  }
+  if (frames_k_km1_.size() >= 1u) {
+    CHECK(frames_k_km1_[0]->hasKeypointMeasurements());
+    CHECK(frames_k_km1_[0]->hasDescriptors());
+    CHECK(frames_k_km1_[0]->hasKeypointMeasurementUncertainties());
+    CHECK(frames_k_km1_[0]->hasKeypointOrientations());
+    CHECK(frames_k_km1_[0]->hasKeypointScales());
+    CHECK(frames_k_km1_[0]->hasKeypointScores());
+    CHECK(frames_k_km1_[0]->hasTrackIds());
+    if (frames_k_km1_.size() == 2u) {
+      CHECK(frames_k_km1_[1]->hasKeypointMeasurements());
+      CHECK(frames_k_km1_[1]->hasDescriptors());
+      CHECK(frames_k_km1_[1]->hasKeypointMeasurementUncertainties());
+      CHECK(frames_k_km1_[1]->hasKeypointOrientations());
+      CHECK(frames_k_km1_[1]->hasKeypointScales());
+      CHECK(frames_k_km1_[1]->hasKeypointScores());
+      CHECK(frames_k_km1_[1]->hasTrackIds());
+    }
   }
 }
 
