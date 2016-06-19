@@ -134,7 +134,7 @@ void insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
     const cv::KeyPoint keypoint = new_cv_keypoints[i];
     new_keypoint_measurements(0, i) = static_cast<double>(keypoint.pt.x);
     new_keypoint_measurements(1, i) = static_cast<double>(keypoint.pt.y);
-    new_keypoint_orientations(i) = keypoint.angle;
+    new_keypoint_orientations(i) = static_cast<double>(keypoint.angle);
     new_keypoint_scales(i) = static_cast<double>(keypoint.size);
     new_keypoint_scores(i) = static_cast<double>(keypoint.response);
   }

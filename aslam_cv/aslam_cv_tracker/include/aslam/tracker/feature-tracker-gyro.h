@@ -128,10 +128,10 @@ class GyroTracker : public FeatureTracker{
   /// Minimum distance to image border is used to skip image points
   /// , predicted by the lk-tracker, that are too close to the image border.
   const size_t kMinDistanceToImageBorderPx;
+  /// Descriptor extractor that is used on lk-tracked points.
+  const cv::Ptr<cv::DescriptorExtractor> extractor_;
   /// Remember if we have initialized already.
   bool initialized_;
-  /// Descriptor extractor that is used on lk-tracked points.
-  cv::Ptr<cv::DescriptorExtractor> extractor_;
   // Store track IDs of frame k and (k-1) in that order.
   std::deque<TrackIds> track_ids_k_km1_;
   /// Keep feature status for every index. For frames k and km1 in that order.

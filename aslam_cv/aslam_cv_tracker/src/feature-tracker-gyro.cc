@@ -63,8 +63,8 @@ GyroTracker::GyroTracker(const Camera& camera,
                          cv::Ptr<cv::DescriptorExtractor> extractor_ptr)
     : camera_(camera) ,
       kMinDistanceToImageBorderPx(min_distance_to_image_border),
-      initialized_(false),
-      extractor_(extractor_ptr) {
+      extractor_(extractor_ptr),
+      initialized_(false) {
 }
 
 void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
@@ -181,7 +181,6 @@ void GyroTracker::LKTracking(
   std::vector<unsigned char> lk_tracking_success;
   std::vector<float> lk_tracking_errors;
 
-  // TODO(magehrig): use predicted locations. Otherwise optflow will fail.
   cv::calcOpticalFlowPyrLK(
       frame_k.getRawImage(), frame_kp1->getRawImage(), lk_cv_points_k,
       lk_cv_points_kp1, lk_tracking_success, lk_tracking_errors,
@@ -226,7 +225,7 @@ void GyroTracker::LKTracking(
         lk_cv_points_kp1[i], frame_k.getKeypointScale(channel_idx),
         frame_k.getKeypointOrientation(channel_idx),
         frame_k.getKeypointScore(channel_idx),
-        0 /* octave info not used by extractor */, class_id);
+        0 /* Octave info not used by extractor */, class_id);
   }
 
   cv::Mat lk_descriptors_kp1;
@@ -240,13 +239,14 @@ void GyroTracker::LKTracking(
   const int initial_size_kp1 = frame_kp1->getTrackIds().size();
   for (int i = 0; i < static_cast<int>(num_points_after_extraction); ++i) {
     matches_with_score_kp1_k->emplace_back(
-        initial_size_kp1 + i, lk_definite_indices_k[lk_cv_keypoints_kp1[i].class_id], 0.0);
+        initial_size_kp1 + i, lk_definite_indices_k[lk_cv_keypoints_kp1[i].class_id],
+        0.0 /* We don't have scores for lk tracking */);
   }
 
   // Add keypoints and descriptors to frame (k+1).
   insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
       lk_cv_keypoints_kp1, lk_descriptors_kp1,
-      settings.kKeypointUncertaintyPx, frame_kp1);
+      GyroTrackerSettings::kKeypointUncertaintyPx, frame_kp1);
 
   // Update feature status for next iteration.
   const size_t extended_size_pk1 = static_cast<size_t>(initial_size_kp1) +
