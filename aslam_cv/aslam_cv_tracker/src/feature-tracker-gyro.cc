@@ -14,7 +14,7 @@
 
 #include "aslam/tracker/tracking-helpers.h"
 
-DEFINE_double(gyro_lk_candidate_ratio, 0.4, "This ratio defines the number of "
+DEFINE_double(gyro_lk_candidate_ratio, 0.3, "This ratio defines the number of "
     "unmatched (from frame k to (k+1)) keypoints that will be tracked with "
     "the lk tracker to the next frame. If we detect N keypoints in frame (k+1), "
     "we track at most 'N times this ratio' keypoints to frame (k+1) with the "
@@ -145,6 +145,7 @@ void GyroTracker::LKTracking(
   CHECK_NOTNULL(frame_kp1);
   CHECK_NOTNULL(matches_with_score_kp1_k);
   CHECK_EQ(prediction_success.size(), predicted_keypoint_positions_kp1.cols());
+  CHECK_LE(lk_candidate_indices_k.size(), prediction_success.size());
 
   if (lk_candidate_indices_k.empty()) {
     VLOG(3) << "No LK candidates to track.";
@@ -155,7 +156,7 @@ void GyroTracker::LKTracking(
   // successfully predicted keypoint locations in frame (k+1).
   std::vector<int> lk_definite_indices_k;
   for (const int candidate_index_k: lk_candidate_indices_k) {
-    if (prediction_success[candidate_index_k] == 1) {
+    if (prediction_success.at(candidate_index_k) == 1) {
       lk_definite_indices_k.push_back(candidate_index_k);
     }
   }
@@ -171,7 +172,7 @@ void GyroTracker::LKTracking(
         frame_k.getKeypointMeasurement(lk_definite_index_k);
     lk_cv_points_k.emplace_back(
         static_cast<float>(lk_keypoint_location_k(0,0)),
-        static_cast<float>(lk_keypoint_location_k(0,1)));
+        static_cast<float>(lk_keypoint_location_k(1,0)));
     // Compute predicted locations in frame (k+1).
     lk_cv_points_kp1.emplace_back(
         static_cast<float>(predicted_keypoint_positions_kp1(0, lk_definite_index_k)),
@@ -188,7 +189,7 @@ void GyroTracker::LKTracking(
       settings.lk_termination_criteria, settings.lk_operation_flag,
       settings.lk_min_eigenvalue_threshold);
 
-  CHECK_EQ(lk_tracking_success.size(), lk_candidate_indices_k.size());
+  CHECK_EQ(lk_tracking_success.size(), lk_definite_indices_k.size());
   CHECK_EQ(lk_cv_points_kp1.size(), lk_tracking_success.size());
   CHECK_EQ(lk_cv_points_k.size(), lk_cv_points_kp1.size());
 
@@ -318,7 +319,7 @@ void GyroTracker::ComputeLKCandidates(
         indices_detected_and_tracked.emplace_back(
             unmatched_index_k, current_status_track_length);
       } else {
-        // These candidates have the medium priority as lk candidates.
+        // These candidates have medium priority as lk candidates.
         // The most valuable candidates have the highest keypoint scores.
         const double keypoint_score =
             frame_k.getKeypointScore(unmatched_index_k);
@@ -346,7 +347,7 @@ void GyroTracker::ComputeLKCandidates(
       kLkNumCandidatesBeforeCutoff, kLkNumMaxCandidates);
   lk_candidate_indices_k->reserve(kNumLkCandidatesAfterCutoff);
 
-  // Only sort the indices that are possible candidates.
+  // Only sort indices that are possible candidates.
   if (kLkNumCandidatesBeforeCutoff > kLkNumMaxCandidates) {
     std::sort(indices_detected_and_tracked.begin(),
               indices_detected_and_tracked.end(),

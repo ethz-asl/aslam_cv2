@@ -214,6 +214,4 @@ inline bool GyroTwoFrameMatcher::RatioTest(
 
 } // namespace aslam
 
-
-
 #endif // MATCHER_GYRO_TWO_FRAME_MATCHER_H_

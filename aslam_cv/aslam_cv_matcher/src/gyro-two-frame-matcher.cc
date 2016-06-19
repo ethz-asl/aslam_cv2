@@ -36,9 +36,9 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
       "Number of keypoints and descriptors in frame k+1 is not the same.";
   CHECK_EQ(kNumPointsK, frame_k.getDescriptors().cols()) <<
       "Number of keypoints and descriptors in frame k is not the same.";
-  // Usually binary descriptors' size is less or equal to 512 bits.
-  // Adapt the following check if this framework uses larger binary descriptors.
-  CHECK_LE(kDescriptorSizeBytes*8, 512u);
+  CHECK_LE(kDescriptorSizeBytes*8, 512u) << "Usually binary descriptors' size "
+      "is less or equal to 512 bits. Adapt the following check if this "
+      "framework uses larger binary descriptors.";
   CHECK_GT(kImageHeight, 0u);
   CHECK_EQ(iteration_processed_keypoints_kp1_.size(), kNumPointsKp1);
   CHECK_EQ(is_keypoint_kp1_matched_.size(), kNumPointsKp1);
