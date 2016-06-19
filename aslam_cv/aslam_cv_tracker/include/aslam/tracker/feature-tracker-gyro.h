@@ -80,17 +80,20 @@ class GyroTracker : public FeatureTracker{
   };
   typedef std::vector<FeatureStatus> FrameFeatureStatus;
   typedef std::vector<size_t> FrameStatusTrackLength;
+  typedef Eigen::VectorXi TrackIds;
 
   virtual void LKTracking(
       const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
       const std::vector<unsigned char>& prediction_success,
       const std::vector<int>& lk_candidate_indices_k,
+      const VisualFrame& frame_k,
       VisualFrame* frame_kp1,
       MatchesWithScore* matches_with_score_kp1_k);
 
   virtual void ComputeLKCandidates(
       const MatchesWithScore& matches_with_score_kp1_k,
       const FrameStatusTrackLength& status_track_length_k,
+      const VisualFrame& frame_k,
       const VisualFrame& frame_kp1,
       std::vector<int>* lk_candidate_indices_k) const;
 
@@ -112,7 +115,7 @@ class GyroTracker : public FeatureTracker{
   virtual void UpdateFeatureStatusDeque(
       const FrameFeatureStatus& frame_feature_status_kp1);
 
-  virtual void UpdateFramePointerDeque(
+  virtual void UpdateTrackIdDeque(
       const VisualFrame& new_frame_k);
 
   template <typename Type>
@@ -129,8 +132,8 @@ class GyroTracker : public FeatureTracker{
   bool initialized_;
   /// Descriptor extractor that is used on lk-tracked points.
   cv::Ptr<cv::DescriptorExtractor> extractor_;
-  // Store pointers to frame k and (k-1) in that order.
-  std::deque<const VisualFrame*> frames_k_km1_;
+  // Store track IDs of frame k and (k-1) in that order.
+  std::deque<TrackIds> track_ids_k_km1_;
   /// Keep feature status for every index. For frames k and km1 in that order.
   std::deque<FrameFeatureStatus> feature_status_k_km1_;
   /// Keep status track length of frame (k-1) for every index.
