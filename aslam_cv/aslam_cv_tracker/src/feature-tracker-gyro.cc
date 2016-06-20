@@ -14,12 +14,12 @@
 
 #include "aslam/tracker/tracking-helpers.h"
 
-DEFINE_double(gyro_lk_candidate_ratio, 0.3, "This ratio defines the number of "
+DEFINE_double(gyro_lk_candidate_ratio, 0.6, "This ratio defines the number of "
     "unmatched (from frame k to (k+1)) keypoints that will be tracked with "
     "the lk tracker to the next frame. If we detect N keypoints in frame (k+1), "
     "we track at most 'N times this ratio' keypoints to frame (k+1) with the "
     "lk tracker.");
-DEFINE_uint64(gyro_lk_max_status_track_length, 3u, "Status track length is the "
+DEFINE_uint64(gyro_lk_max_status_track_length, 5u, "Status track length is the "
     "track length since the status of the keypoint has changed (e.g. from lk "
     "tracked to detected or the reverse). The lk tracker will not track "
     "keypoints with longer status track length than this value.");
@@ -392,6 +392,8 @@ void GyroTracker::ComputeLKCandidates(
     lk_candidate_indices_k->push_back(pair.first);
     ++counter;
   }
+
+  VLOG(4) << "Lk buffer size/max_size ratio: " << counter/static_cast<float>(kLkNumMaxCandidates);
 }
 
 void GyroTracker::ComputeUnmatchedIndicesOfFrameK(
