@@ -64,7 +64,8 @@ bool MatchingEngineGreedy<MatchingProblem>::match(
     // Compress the best unique match in place.
     std::vector<unsigned char> is_apple_assigned(num_apples, false);
 
-    typename MatchingProblem::MatchesWithScore::iterator output_match_iterator = matches_A_B->begin();
+    typename MatchingProblem::MatchesWithScore::iterator output_match_iterator =
+        matches_A_B->begin();
     for (const typename MatchingProblem::MatchWithScore& match : *matches_A_B) {
       const int apple_index = match.getIndexApple();
 
