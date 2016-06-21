@@ -11,14 +11,14 @@
 namespace aslam {
 
 std::unique_ptr<NeighborCellCountingGrid> createRandomGrid(
-    double* min_x_ptr, double* max_x_ptr, double* min_y_ptr, double* max_y_ptr,
-    size_t* num_bins_x_ptr,  size_t* num_bins_y_ptr) {
-  double& min_x = *CHECK_NOTNULL(min_x_ptr);
-  double& max_x = *CHECK_NOTNULL(max_x_ptr);
-  double& min_y = *CHECK_NOTNULL(min_y_ptr);
-  double& max_y = *CHECK_NOTNULL(max_y_ptr);
-  size_t& num_bins_x = *CHECK_NOTNULL(num_bins_x_ptr);
-  size_t& num_bins_y = *CHECK_NOTNULL(num_bins_y_ptr);
+    double* min_x, double* max_x, double* min_y, double* max_y,
+    size_t* num_bins_x,  size_t* num_bins_y) {
+  CHECK_NOTNULL(min_x);
+  CHECK_NOTNULL(max_x);
+  CHECK_NOTNULL(min_y);
+  CHECK_NOTNULL(max_y);
+  CHECK_NOTNULL(num_bins_x);
+  CHECK_NOTNULL(num_bins_y);
 
   const size_t kSeed = 342u;
   std::default_random_engine random_engine(kSeed);
@@ -32,25 +32,25 @@ std::unique_ptr<NeighborCellCountingGrid> createRandomGrid(
   std::uniform_real_distribution<double> uniform_dist_grid_border_min(-kMinMaxLimit, kMinMaxLimit);
   std::uniform_real_distribution<double> uniform_dist_grid_width(kMinWidth, kMaxWidth);
 
-  min_x = uniform_dist_grid_border_min(random_engine);
-  min_y = uniform_dist_grid_border_min(random_engine);
+  *min_x = uniform_dist_grid_border_min(random_engine);
+  *min_y = uniform_dist_grid_border_min(random_engine);
   const double width = uniform_dist_grid_width(random_engine);
-  max_x = min_x + width;
-  max_y = min_y + width;
-  CHECK_GT(max_x, min_x);
-  CHECK_GT(max_y, min_y);
+  *max_x = *min_x + width;
+  *max_y = *min_y + width;
+  CHECK_GT(*max_x, *min_x);
+  CHECK_GT(*max_y, *min_y);
 
   std::uniform_int_distribution<int> uniform_dist_num_intervals(kMinNumBins, kMaxNumBins);
 
-  num_bins_x = static_cast<size_t>(uniform_dist_num_intervals(random_engine));
-  CHECK_GE(num_bins_x, static_cast<size_t>(kMinNumBins));
-  CHECK_LE(num_bins_x, static_cast<size_t>(kMaxNumBins));
-  num_bins_y = static_cast<size_t>(uniform_dist_num_intervals(random_engine));
-  CHECK_GE(num_bins_y, static_cast<size_t>(kMinNumBins));
-  CHECK_LE(num_bins_y, static_cast<size_t>(kMaxNumBins));
+  *num_bins_x = static_cast<size_t>(uniform_dist_num_intervals(random_engine));
+  CHECK_GE(*num_bins_x, static_cast<size_t>(kMinNumBins));
+  CHECK_LE(*num_bins_x, static_cast<size_t>(kMaxNumBins));
+  *num_bins_y = static_cast<size_t>(uniform_dist_num_intervals(random_engine));
+  CHECK_GE(*num_bins_y, static_cast<size_t>(kMinNumBins));
+  CHECK_LE(*num_bins_y, static_cast<size_t>(kMaxNumBins));
 
   std::unique_ptr<NeighborCellCountingGrid> grid(
-      new NeighborCellCountingGrid(min_x, max_x, min_y, max_y, num_bins_x, num_bins_y));
+      new NeighborCellCountingGrid(*min_x, *max_x, *min_y, *max_y, *num_bins_x, *num_bins_y));
 
   return grid;
 }
