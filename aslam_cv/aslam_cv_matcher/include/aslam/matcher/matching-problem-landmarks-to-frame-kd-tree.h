@@ -37,7 +37,8 @@ class NeighborCellCountingGrid {
   // min_x, max_x, min_y, max_y define the borders of the grid, while num_bins_x
   // and num_bins_y define into how many cells the grid is divided.
   NeighborCellCountingGrid(
-      double min_x, double max_x, double min_y, double max_y, size_t num_bins_x, size_t num_bins_y);
+      double min_x, double max_x, double min_y, double max_y, size_t num_bins_x,
+      size_t num_bins_y);
   virtual ~NeighborCellCountingGrid() = default;
 
   void addElementToGrid(const Eigen::Vector2d& element);

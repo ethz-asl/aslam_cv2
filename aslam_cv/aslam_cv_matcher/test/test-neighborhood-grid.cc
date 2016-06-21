@@ -316,7 +316,8 @@ TEST(TestNeighborhoodGrid, TestSimpleHandcrafted) {
                                       1, 1, 0, 0, 0, 0, 2, 2, 4, 2,
                                       1, 1, 0, 0, 0, 0, 1, 1, 2, 1;
 
-  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(grid.grid_neighboring_cell_count_, ground_truth_neighbor_cell_count));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(grid.grid_neighboring_cell_count_,
+                                 ground_truth_neighbor_cell_count));
 }
 
 TEST(TestNeighborhoodGrid, TestCornerCases) {
