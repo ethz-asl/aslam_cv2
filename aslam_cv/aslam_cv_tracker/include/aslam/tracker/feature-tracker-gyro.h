@@ -141,7 +141,7 @@ class GyroTracker : public FeatureTracker{
   /// since the status of the feature has changed.
   FrameStatusTrackLength status_track_length_km1_;
 
-  const GyroTrackerSettings settings;
+  const GyroTrackerSettings settings_;
 };
 
 // Erase elements of a vector based on a set of indices.
