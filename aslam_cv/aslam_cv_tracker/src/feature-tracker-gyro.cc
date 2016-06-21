@@ -25,7 +25,7 @@ DEFINE_uint64(gyro_lk_max_status_track_length, 5u, "Status track length is the "
     "keypoints with longer status track length than this value.");
 DEFINE_int32(gyro_lk_window_size, 21, "Size of the search window at each "
     "pyramid level.");
-DEFINE_int32(gyro_lk_max_pyramid_levels, 3, "If set to 0, pyramids are not "
+DEFINE_int32(gyro_lk_max_pyramid_levels, 1, "If set to 0, pyramids are not "
     "used (single level), if set to 1, two levels are used, and so on. "
     "If pyramids are passed to the input then the algorithm will use as many "
     "levels as possible but not more than this threshold.");
