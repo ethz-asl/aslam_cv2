@@ -213,8 +213,12 @@ template<typename PointType>
 void
 WeightedOccupancyGrid<PointType>::setConstantWeightForAllPointsInGrid(
     WeightType weight) {
+  LOG(INFO) << "setConstantWeightForAllPointsInGrid";
+  LOG(INFO) << "Num grid rows: " << num_grid_rows_;
+  LOG(INFO) << "Num grid rows: " << num_grid_rows_;
+
   for (size_t i_row = 0u; i_row < num_grid_rows_; ++i_row) {
-    for (size_t j_col = 0u; j_col < num_grid_rows_; ++j_col) {
+    for (size_t j_col = 0u; j_col < num_grid_cols_; ++j_col) {
       for (PointType& point : getGridCell(GridCoordinates(i_row, j_col))) {
         point.weight = weight;
       }
