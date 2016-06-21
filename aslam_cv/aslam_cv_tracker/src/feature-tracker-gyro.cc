@@ -99,9 +99,12 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   // Make sure the frames are in order time-wise
   CHECK_GT(frame_kp1->getTimestampNanoseconds(),
            frame_k.getTimestampNanoseconds());
-  UpdateTrackIdDeque(frame_k);
-  if (!initialized_) {
-    InitializeFeatureStatusDeque();
+
+  if (settings_.lk_max_num_candidates_ratio_kp1 > 0.0) {
+    UpdateTrackIdDeque(frame_k);
+    if (!initialized_) {
+      InitializeFeatureStatusDeque();
+    }
   }
 
   // Predict keypoint positions for all keypoints in current frame k.
@@ -119,20 +122,23 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
       prediction_success, matches_with_score_kp1_k);
   matcher.Match();
 
-  // Compute LK candidates and track them.
-  FrameStatusTrackLength status_track_length_k;
-  std::vector<TrackedMatch> tracked_matches;
-  std::vector<int> lk_candidate_indices_k;
+  if (settings_.lk_max_num_candidates_ratio_kp1 > 0.0) {
+    // Compute LK candidates and track them.
+    FrameStatusTrackLength status_track_length_k;
+    std::vector<TrackedMatch> tracked_matches;
+    std::vector<int> lk_candidate_indices_k;
 
-  ComputeTrackedMatches(&tracked_matches);
-  ComputeStatusTrackLengthOfFrameK(tracked_matches, &status_track_length_k);
-  ComputeLKCandidates(*matches_with_score_kp1_k, status_track_length_k,
-                      frame_k, *frame_kp1, &lk_candidate_indices_k);
-  LKTracking(predicted_keypoint_positions_kp1, prediction_success,
-             lk_candidate_indices_k, frame_k, frame_kp1, matches_with_score_kp1_k);
+    ComputeTrackedMatches(&tracked_matches);
+    ComputeStatusTrackLengthOfFrameK(tracked_matches, &status_track_length_k);
+    ComputeLKCandidates(*matches_with_score_kp1_k, status_track_length_k,
+                        frame_k, *frame_kp1, &lk_candidate_indices_k);
+    LKTracking(predicted_keypoint_positions_kp1, prediction_success,
+               lk_candidate_indices_k, frame_k, frame_kp1, matches_with_score_kp1_k);
 
-  status_track_length_km1_.swap(status_track_length_k);
-  initialized_ = true;
+    status_track_length_km1_.swap(status_track_length_k);
+    initialized_ = true;
+  }
+
 }
 
 void GyroTracker::LKTracking(
@@ -185,9 +191,9 @@ void GyroTracker::LKTracking(
   cv::calcOpticalFlowPyrLK(
       frame_k.getRawImage(), frame_kp1->getRawImage(), lk_cv_points_k,
       lk_cv_points_kp1, lk_tracking_success, lk_tracking_errors,
-      settings.lk_window_size, settings.lk_max_pyramid_levels,
-      settings.lk_termination_criteria, settings.lk_operation_flag,
-      settings.lk_min_eigenvalue_threshold);
+      settings_.lk_window_size, settings_.lk_max_pyramid_levels,
+      settings_.lk_termination_criteria, settings_.lk_operation_flag,
+      settings_.lk_min_eigenvalue_threshold);
 
   CHECK_EQ(lk_tracking_success.size(), lk_definite_indices_k.size());
   CHECK_EQ(lk_cv_points_kp1.size(), lk_tracking_success.size());
@@ -326,7 +332,7 @@ void GyroTracker::ComputeLKCandidates(
         indices_detected_and_untracked.emplace_back(unmatched_index_k, keypoint_score);
       }
     } else if (current_feature_status == FeatureStatus::kLkTracked) {
-      if (current_status_track_length < settings.lk_max_status_track_length) {
+      if (current_status_track_length < settings_.lk_max_status_track_length) {
         // These candidates have the lowest priority as lk candidates.
         // The most valuable candidates have the shortest status track length.
         indices_lktracked.emplace_back(
@@ -342,7 +348,7 @@ void GyroTracker::ComputeLKCandidates(
       indices_detected_and_tracked.size() +
       indices_detected_and_untracked.size() + indices_lktracked.size();
   const size_t kLkNumMaxCandidates = static_cast<size_t>(
-      kNumPointsKp1*settings.lk_max_num_candidates_ratio_kp1);
+      kNumPointsKp1*settings_.lk_max_num_candidates_ratio_kp1);
   const size_t kNumLkCandidatesAfterCutoff = std::min(
       kLkNumCandidatesBeforeCutoff, kLkNumMaxCandidates);
   lk_candidate_indices_k->reserve(kNumLkCandidatesAfterCutoff);
