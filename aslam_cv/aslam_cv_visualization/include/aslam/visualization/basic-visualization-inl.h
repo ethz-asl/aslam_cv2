@@ -18,7 +18,7 @@ void visualizeMatches(const aslam::VisualFrame& frame_kp1,
   VLOG(4) << "Converted raw image from grayscale to color.";
 
   aslam::Matches matches;
-  aslam::convertMatches<MatchesWithScore>(matches_with_score, &matches);
+  aslam::convertMatchesWithScoreToMatches<MatchesWithScore>(matches_with_score, &matches);
   VLOG(4) << "Converted the matches.";
 
   CHECK_NOTNULL(image->data);
