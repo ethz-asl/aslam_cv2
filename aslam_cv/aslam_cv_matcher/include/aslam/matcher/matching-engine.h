@@ -26,7 +26,7 @@ class MatchingEngine {
     CHECK_NOTNULL(matches_A_B);
     typename MatchingProblem::MatchesWithScore matches_with_score_A_B;
     const bool success = match(problem, &matches_with_score_A_B);
-    convertMatches<MatchingProblem>(matches_with_score_A_B, matches_A_B);
+    convertMatchesWithScoreToMatches<MatchingProblem>(matches_with_score_A_B, matches_A_B);
     return success;
   }
 };

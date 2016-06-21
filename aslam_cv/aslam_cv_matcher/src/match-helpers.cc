@@ -6,22 +6,23 @@
 namespace aslam {
 
 /// Select and return N random matches for each camera in the rig.
-FrameToFrameMatchesList pickNRandomRigMatches(
-    size_t n_per_camera, const FrameToFrameMatchesList& rig_matches) {
+void pickNRandomRigMatches(
+    size_t n_per_camera, const FrameToFrameMatchesList& rig_matches,
+    FrameToFrameMatchesList* selected_rig_matches) {
+  CHECK_NOTNULL(selected_rig_matches)->clear();
   CHECK_GT(n_per_camera, 0u);
-  size_t num_cameras = rig_matches.size();
-  aslam::FrameToFrameMatchesList subsampled_rig_matches(num_cameras);
+  const size_t num_cameras = rig_matches.size();
+  selected_rig_matches->resize(num_cameras);
 
   for (size_t cam_idx = 0u; cam_idx < num_cameras; ++cam_idx) {
     const aslam::FrameToFrameMatches& camera_matches = rig_matches[cam_idx];
     if (camera_matches.size() <= n_per_camera) {
-      subsampled_rig_matches[cam_idx] = camera_matches;
+      (*selected_rig_matches)[cam_idx] = camera_matches;
     } else {
-      common::drawNRandomElements(n_per_camera, camera_matches, &subsampled_rig_matches[cam_idx]);
+      common::drawNRandomElements(n_per_camera, camera_matches, &(*selected_rig_matches)[cam_idx]);
     }
   }
-  CHECK_EQ(rig_matches.size(), subsampled_rig_matches.size());
-  return subsampled_rig_matches;
+  CHECK_EQ(num_cameras, selected_rig_matches->size());
 }
 
 /// Get the matches based on the track id channels for one VisualFrame.

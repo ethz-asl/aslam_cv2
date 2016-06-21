@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
+
 #include <aslam/common/entrypoint.h>
 #include <aslam/matcher/match.h>
 #include <aslam/matcher/matching-engine-exclusive.h>

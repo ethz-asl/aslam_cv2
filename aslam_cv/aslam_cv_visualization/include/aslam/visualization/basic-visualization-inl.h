@@ -1,5 +1,5 @@
-#ifndef SLAM_VISUALIZATION_BASIC_VISUALIZATION_INL_H_
-#define SLAM_VISUALIZATION_BASIC_VISUALIZATION_INL_H_
+#ifndef ASLAM_VISUALIZATION_BASIC_VISUALIZATION_INL_H_
+#define ASLAM_VISUALIZATION_BASIC_VISUALIZATION_INL_H_
 
 #include <aslam/matcher/match.h>
 #include <aslam/matcher/match-helpers.h>
@@ -13,8 +13,7 @@ void visualizeMatches(const aslam::VisualFrame& frame_kp1,
                       cv::Mat* image) {
   CHECK_NOTNULL(image);
 
-  cv::Mat& match_image = *image;
-  cv::cvtColor(frame_kp1.getRawImage(), match_image, CV_GRAY2BGR);
+  cv::cvtColor(frame_kp1.getRawImage(), *image, CV_GRAY2BGR);
 
   VLOG(4) << "Converted raw image from grayscale to color.";
 
@@ -22,12 +21,12 @@ void visualizeMatches(const aslam::VisualFrame& frame_kp1,
   aslam::convertMatches<MatchesWithScore>(matches_with_score, &matches);
   VLOG(4) << "Converted the matches.";
 
-  CHECK_NOTNULL(match_image.data);
+  CHECK_NOTNULL(image->data);
 
   drawKeypointMatches(
-      frame_kp1, frame_k, matches, cv::Scalar(255, 255, 0), cv::Scalar(255, 0, 255), &match_image);
+      frame_kp1, frame_k, matches, cv::Scalar(255, 255, 0), cv::Scalar(255, 0, 255), image);
 }
 
 }  // namespace aslam_cv_visualization
 
-#endif // SLAM_VISUALIZATION_BASIC_VISUALIZATION_INL_H_
+#endif // ASLAM_VISUALIZATION_BASIC_VISUALIZATION_INL_H_

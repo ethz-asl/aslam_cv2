@@ -7,31 +7,35 @@ namespace aslam {
 
 // Convert any kind of matches with score to any kind of match.
 template<typename MatchWithScore, typename Match>
-void convertMatches(
+void convertMatchesWithScoreToMatches(
     const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
     typename Aligned<std::vector, Match>::type* matches_A_B);
 
 // Convert aslam::MatchesWithScore to aslam::Matches.
-inline void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);
+inline void convertMatchesWithScoreToMatches(
+    const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);
 
 // Convert any (derived) MatchesWithScore to aslam::Matches.
 template<typename MatchesWithScore>
-void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);
+void convertMatchesWithScoreToMatches(
+    const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B);
 
 /// Convert MatchesWithScore of a matching problem to the corresponding Matches.
 template<typename MatchingProblem>
-void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_with_score_A_B,
-                    typename MatchingProblem::Matches* matches_A_B);
+void convertMatchesWithScoreToMatches(
+    const typename MatchingProblem::MatchesWithScore& matches_with_score_A_B,
+    typename MatchingProblem::Matches* matches_A_B);
 
 /// Convert MatchesWithScore to cv::DMatches.
 template<typename MatchWithScore>
-void convertMatches(
+void convertMatchesWithScoreToOpenCvMatches(
     const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
     OpenCvMatches* matches_A_B);
 
 /// Select and return N random matches for each camera in the rig.
-FrameToFrameMatchesList pickNRandomRigMatches(
-    size_t n_per_camera, const FrameToFrameMatchesList& rig_matches);
+void pickNRandomRigMatches(
+    size_t n_per_camera, const FrameToFrameMatchesList& rig_matches,
+    FrameToFrameMatchesList* selected_rig_matches);
 
 /// Get the matches based on the track id channels for one VisualFrame.
 size_t extractMatchesFromTrackIdChannel(const VisualFrame& frame_kp1,
