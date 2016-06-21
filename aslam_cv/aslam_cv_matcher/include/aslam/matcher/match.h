@@ -100,8 +100,8 @@ struct MatchWithScore {
 #define ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(                                                    \
     MatchType, getAppleIndexAlias, getBananaIndexAlias)                                           \
   struct MatchType ## MatchWithScore : public aslam::MatchWithScore {                             \
-  MatchType ## MatchWithScore(int index_apple, int index_banana, double _score)                   \
-        : aslam::MatchWithScore(index_apple, index_banana, _score) {}                             \
+  MatchType ## MatchWithScore(int index_apple, int index_banana, double score)                   \
+        : aslam::MatchWithScore(index_apple, index_banana, score) {}                             \
     virtual ~MatchType ## MatchWithScore() = default;                                             \
     int getAppleIndexAlias() const {                                                              \
       return aslam::MatchWithScore::getIndexApple();                                              \
