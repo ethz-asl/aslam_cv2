@@ -37,7 +37,8 @@ struct GyroTrackerSettings {
 
 /// \class GyroTracker
 /// \brief Feature tracker using an interframe rotation matrix to predict the feature positions
-///        while matching.
+///        while matching. It also tracks a subset of unmatched features with an optical
+///        flow algorithm (Lucas-Kanade method).
 class GyroTracker : public FeatureTracker{
  public:
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(GyroTracker);
@@ -45,7 +46,11 @@ class GyroTracker : public FeatureTracker{
 
  public:
   /// \brief Construct the feature tracker.
-  /// @param[in] input_camera The camera used in the tracker for projection/backprojection.
+  /// @param[in] camera The camera used in the tracker for projection/backprojection.
+  /// @param[in] min_distance_to_image_border The distance to the image border
+  ///                                         that must remain free of keypoints.
+  /// @param[in] extractor_ptr Pointer to an extractor objects that is used to
+  ///                          compute descriptors for optical flow tracked keypoints.
   explicit GyroTracker(const Camera& camera,
                        const size_t min_distance_to_image_border,
                        cv::Ptr<cv::DescriptorExtractor> extractor_ptr);
@@ -82,6 +87,9 @@ class GyroTracker : public FeatureTracker{
   typedef std::vector<size_t> FrameStatusTrackLength;
   typedef Eigen::VectorXi TrackIds;
 
+  /// Track candidate features from frame k to (k+1) with optical flow.
+  /// Extract descriptors for successful tracks and insert keypoint
+  /// and descriptor information into frame (k+1).
   virtual void LKTracking(
       const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
       const std::vector<unsigned char>& prediction_success,
@@ -90,6 +98,8 @@ class GyroTracker : public FeatureTracker{
       VisualFrame* frame_kp1,
       MatchesWithScore* matches_with_score_kp1_k);
 
+  /// In general, not all unmatched features will be tracked with the optical
+  /// flow algorithm. This function computes the candidates that will be tracked.
   virtual void ComputeLKCandidates(
       const MatchesWithScore& matches_with_score_kp1_k,
       const FrameStatusTrackLength& status_track_length_k,
@@ -102,10 +112,14 @@ class GyroTracker : public FeatureTracker{
   virtual void ComputeTrackedMatches(
       std::vector<TrackedMatch>* tracked_matches) const;
 
+  /// The matcher is not able to match all features from frame k to (k+1).
+  /// This function computes the indices of unmatched features in frame k.
   virtual void ComputeUnmatchedIndicesOfFrameK(
       const MatchesWithScore& matches_with_score_kp1_k,
       std::vector<int>* unmatched_indices_k) const;
 
+  /// Status track length is defined as the track length since the status
+  /// (lk-tracked or detected) of the tracked feature has changed.
   virtual void ComputeStatusTrackLengthOfFrameK(
       const std::vector<TrackedMatch>& tracked_matches,
       FrameStatusTrackLength* status_track_length_k);
@@ -118,6 +132,7 @@ class GyroTracker : public FeatureTracker{
   virtual void UpdateTrackIdDeque(
       const VisualFrame& new_frame_k);
 
+  /// Erase elements of a vector based on a set of indices.
   template <typename Type>
   void EraseVectorElementsHelper(
           const std::unordered_set<size_t>& indices_to_erase,
@@ -144,7 +159,6 @@ class GyroTracker : public FeatureTracker{
   const GyroTrackerSettings settings_;
 };
 
-// Erase elements of a vector based on a set of indices.
 template <typename Type>
 void GyroTracker::EraseVectorElementsHelper(
         const std::unordered_set<size_t>& indices_to_erase,
