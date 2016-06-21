@@ -37,8 +37,9 @@ bool rejectOutlierKeypointMatchesTwopt(
   opengv::bearingVectors_t bearing_vectors_k;
 
   aslam::FrameToFrameMatches matches_without_score_kp1_k;
-  aslam::convertMatches<aslam::FrameToFrameMatchWithScore, aslam::FrameToFrameMatch>(
-      matches_kp1_k, &matches_without_score_kp1_k);
+  aslam::convertMatchesWithScoreToMatches<aslam::FrameToFrameMatchWithScore,
+                                          aslam::FrameToFrameMatch>(
+                                              matches_kp1_k, &matches_without_score_kp1_k);
   aslam::getBearingVectorsFromMatches(frame_kp1, frame_k, matches_without_score_kp1_k,
                                       &bearing_vectors_kp1, &bearing_vectors_k);
 
