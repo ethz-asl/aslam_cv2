@@ -9,7 +9,7 @@
 namespace aslam {
 
 template<typename MatchWithScore, typename Match>
-void convertMatches(
+void convertMatchesWithScoreToMatches(
     const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
     typename Aligned<std::vector, Match>::type* matches_A_B) {
   CHECK_NOTNULL(matches_A_B)->clear();
@@ -24,7 +24,7 @@ void convertMatches(
 }
 
 template<typename MatchWithScore>
-void convertMatches(
+void convertMatchesWithScoreToOpenCvMatches(
     const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
     OpenCvMatches* matches_A_B) {
   CHECK_NOTNULL(matches_A_B)->clear();
@@ -38,23 +38,28 @@ void convertMatches(
   CHECK_EQ(matches_with_score_A_B.size(), matches_A_B->size());
 }
 
-inline void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B) {
-  convertMatches<MatchWithScore, Match>(matches_with_score_A_B, matches_A_B);
+inline void convertMatchesWithScoreToMatches(
+    const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B) {
+  convertMatchesWithScoreToMatches<MatchWithScore, Match>(
+      matches_with_score_A_B, matches_A_B);
 }
 
 template<typename MatchesWithScore>
-void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B) {
+void convertMatchesWithScoreToMatches(
+    const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B) {
   const aslam::MatchesWithScore aslam_matches_with_score_A_B(
       matches_with_score_A_B.begin(), matches_with_score_A_B.end());
-  convertMatches(aslam_matches_with_score_A_B, matches_A_B);
+  convertMatchesWithScoreToMatches(aslam_matches_with_score_A_B, matches_A_B);
 }
 
 /// Convert MatchesWithScore to Matches.
 template<typename MatchingProblem>
-void convertMatches(const typename MatchingProblem::MatchesWithScore& matches_with_score_A_B,
-                    typename MatchingProblem::Matches* matches_A_B) {
-  convertMatches<typename MatchingProblem::MatchWithScore, typename MatchingProblem::Match>(
-      matches_with_score_A_B, matches_A_B);
+void convertMatchesWithScoreToMatches(
+    const typename MatchingProblem::MatchesWithScore& matches_with_score_A_B,
+    typename MatchingProblem::Matches* matches_A_B) {
+  convertMatchesWithScoreToMatches<typename MatchingProblem::MatchWithScore,
+                                   typename MatchingProblem::Match>(
+                                       matches_with_score_A_B, matches_A_B);
 }
 
 }  // namespace aslam

@@ -60,7 +60,6 @@ class MatchingProblemLandmarksToFrame : public MatchingProblem {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrame);
-  //ASLAM_ADD_MATCH_TYPEDEFS(LandmarksToFrame);
 
   MatchingProblemLandmarksToFrame() = delete;
 
@@ -115,6 +114,8 @@ protected:
     return common::GetNumBitsDifferent(banana_descriptor, apple_descriptor);
   }
 
+  void setupValidVectorsAndDescriptors();
+
   /// The landmarks to be matched.
   LandmarkWithDescriptorList landmarks_;
   /// The visual frame the landmarks are matched against.
@@ -136,11 +137,11 @@ protected:
   const int descriptor_size_bits_;
 
   /// The height of the visual frame.
-  size_t image_height_frame_;
+  size_t image_height_;
 
   /// Pairs with image space distance >= image_space_distance_threshold_pixels_ are
   /// excluded from matches.
-  double squared_image_space_distance_threshold_pixels_squared_;
+  double squared_image_space_distance_threshold_px_sq_;
 
   /// Pairs with descriptor distance >= hamming_distance_threshold_ are
   /// excluded from matches.

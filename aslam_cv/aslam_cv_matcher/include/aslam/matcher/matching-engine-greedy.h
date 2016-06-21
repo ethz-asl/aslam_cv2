@@ -64,18 +64,18 @@ bool MatchingEngineGreedy<MatchingProblem>::match(
     // Compress the best unique match in place.
     std::vector<unsigned char> is_apple_assigned(num_apples, false);
 
-    typename MatchingProblem::MatchesWithScore::iterator match_out = matches_A_B->begin();
+    typename MatchingProblem::MatchesWithScore::iterator output_match_iterator = matches_A_B->begin();
     for (const typename MatchingProblem::MatchWithScore& match : *matches_A_B) {
       const int apple_index = match.getIndexApple();
 
       if (!is_apple_assigned[apple_index]) {
         is_apple_assigned[apple_index] = true;
-        *match_out++ = match;
+        *output_match_iterator++ = match;
       }
     }
 
     // Trim the end of the vector.
-    matches_A_B->erase(match_out, matches_A_B->end());
+    matches_A_B->erase(output_match_iterator, matches_A_B->end());
   } else {
     LOG(WARNING) << "problem->doSetup() failed.";
     return false;

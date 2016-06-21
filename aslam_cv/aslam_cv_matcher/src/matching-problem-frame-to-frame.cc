@@ -14,15 +14,15 @@ MatchingProblemFrameToFrame::MatchingProblemFrameToFrame(const VisualFrame& appl
   : apple_frame_(apple_frame),
     banana_frame_(banana_frame),
     q_A_B_(q_A_B),
-    squared_image_space_distance_threshold_pixels_squared_(image_space_distance_threshold *
-                                                           image_space_distance_threshold),
+    squared_image_space_distance_threshold_px_sq_(image_space_distance_threshold *
+                                                  image_space_distance_threshold),
     hamming_distance_threshold_(hamming_distance_threshold) {
   CHECK_GE(hamming_distance_threshold, 0) << "Descriptor distance needs to be positive.";
   CHECK_GE(image_space_distance_threshold, 0.0) << "Image space distance needs to be positive.";
 
   descriptor_size_byes_ = apple_frame.getDescriptorSizeBytes();
   CHECK_EQ(descriptor_size_byes_, banana_frame.getDescriptorSizeBytes()) << "Apple and banana "
-      "frames have different descriptor lengths.";
+      << "frames have different descriptor lengths.";
 
   // The vertical search band must be at least twice the image space distance.
   vertical_band_halfwidth_pixels_ = static_cast<int>(std::ceil(image_space_distance_threshold));
@@ -50,9 +50,9 @@ bool MatchingProblemFrameToFrame::doSetup() {
   size_t num_apple_descriptors = static_cast<size_t>(apple_descriptors.cols());
   size_t num_banana_descriptors = static_cast<size_t>(banana_descriptors.cols());
   CHECK_EQ(num_apple_descriptors, num_apple_keypoints) << "Mismatch between the number of apple"
-      " descriptors and the number of apple keypoints.";
+      << " descriptors and the number of apple keypoints.";
   CHECK_EQ(num_banana_descriptors, num_banana_keypoints) << "Mismatch between the number of banana"
-      " descriptors and the number of banana keypoints.";
+      << " descriptors and the number of banana keypoints.";
 
   apple_descriptors_.clear();
   banana_descriptors_.clear();
@@ -103,7 +103,7 @@ bool MatchingProblemFrameToFrame::doSetup() {
   // Then, project all banana keypoints into the apple frame.
   const Eigen::Matrix2Xd& banana_keypoints = banana_frame_.getKeypointMeasurements();
   CHECK_EQ(static_cast<int>(num_banana_keypoints), banana_keypoints.cols()) << "The number of "
-      "banana keypoints  and the number of columns in the banana keypoint matrix is different.";
+      << "banana keypoints  and the number of columns in the banana keypoint matrix is different.";
 
   Camera::ConstPtr banana_camera = banana_frame_.getCameraGeometry();
   CHECK(banana_camera);
@@ -155,9 +155,9 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
   // Get list of apple keypoint indices within some defined distance around the projected banana
   // keypoint and within some defined descriptor distance.
   CHECK_EQ(numApples(), y_coordinate_to_apple_keypoint_index_map_.size()) << "The number of apples"
-      " and the number of apples in the apple LUT differs. This can happen if 1. the apple frame "
-      "was altered between calling setup() and getAppleCandidatesForBanana(...) or 2. if the "
-      "setup() function did not build a valid LUT for apple keypoints.";
+    << " and the number of apples in the apple LUT differs. This can happen if 1. the apple frame "
+    << "was altered between calling setup() and getAppleCandidatesForBanana(...) or 2. if the "
+    << "setup() function did not build a valid LUT for apple keypoints.";
   CHECK_LT(banana_index, static_cast<int>(valid_bananas_.size()))
     << "No valid flag for this banana.";
   CHECK_LT(banana_index, static_cast<int>(A_projected_keypoints_banana_.size()))
@@ -223,7 +223,7 @@ void MatchingProblemFrameToFrame::getAppleCandidatesForBanana(int banana_index,
 
       double squared_image_space_distance = (apple_keypoint - A_keypoint_banana).squaredNorm();
 
-      if (squared_image_space_distance < squared_image_space_distance_threshold_pixels_squared_) {
+      if (squared_image_space_distance < squared_image_space_distance_threshold_px_sq_) {
         // This one is within the radius. Compute the descriptor distance.
         int hamming_distance = computeHammingDistance(banana_index, apple_index);
 

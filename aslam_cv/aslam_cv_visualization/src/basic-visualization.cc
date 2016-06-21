@@ -42,9 +42,11 @@ void visualizeKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::
         nframe->getFrame(frame_idx).getCameraGeometry()->imageWidth();
     const size_t image_height =
         nframe->getFrame(frame_idx).getCameraGeometry()->imageHeight();
-    cv::Mat slice = image(cv::Rect(offsets[frame_idx].width, offsets[frame_idx].height,
-                                   image_width, image_height));
-    aslam_cv_visualization::drawKeypoints(nframe->getFrame(frame_idx), &slice);
+    cv::Mat frame_slice_of_multi_image =
+        image(cv::Rect(
+            offsets[frame_idx].width, offsets[frame_idx].height, image_width, image_height));
+    aslam_cv_visualization::drawKeypoints(
+        nframe->getFrame(frame_idx), &frame_slice_of_multi_image);
   }
 }
 

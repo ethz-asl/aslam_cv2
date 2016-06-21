@@ -27,11 +27,11 @@ typedef Aligned<std::vector, cv::DMatch>::type OpenCvMatches;
 
 struct MatchWithScore {
   template<typename MatchWithScore, typename Match>
-  friend void convertMatches(
+  friend void convertMatchesWithScoreToMatches(
       const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
       typename Aligned<std::vector, Match>::type* matches_A_B);
   template<typename MatchWithScore>
-  friend void convertMatches(
+  friend void convertMatchesWithScoreToOpenCvMatches(
       const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
       OpenCvMatches* matches_A_B);
   FRIEND_TEST(TestMatcherExclusive, ExclusiveMatcher);

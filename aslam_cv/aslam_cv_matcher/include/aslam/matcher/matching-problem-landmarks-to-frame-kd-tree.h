@@ -113,12 +113,14 @@ private:
   Eigen::MatrixXd valid_keypoints_;
   std::vector<size_t> valid_keypoint_index_to_keypoint_index_;
 
-  Eigen::Matrix2Xd p_valid_projected_landmarks_;
+  Eigen::Matrix2Xd valid_projected_landmarks_;
   std::vector<size_t> valid_landmark_index_to_landmark_index_;
 
   NeighborCellCountingGrid::UniquePtr image_space_counting_grid_;
 
   std::shared_ptr<Nabo::NNSearchD> nn_index_;
+
+  const double search_radius_px_;
 };
 }  // namespace aslam
 #endif  // ASLAM_CV_MATCHING_PROBLEM_LANDMARKS_TO_FRAME_KD_TREE_H_

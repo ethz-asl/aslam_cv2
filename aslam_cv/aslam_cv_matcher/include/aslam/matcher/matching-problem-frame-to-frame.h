@@ -133,7 +133,7 @@ private:
 
   /// Pairs with image space distance >= image_space_distance_threshold_pixels_ are
   /// excluded from matches.
-  double squared_image_space_distance_threshold_pixels_squared_;
+  double squared_image_space_distance_threshold_px_sq_;
 
   /// Pairs with descriptor distance >= hamming_distance_threshold_ are
   /// excluded from matches.

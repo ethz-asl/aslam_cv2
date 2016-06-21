@@ -14,62 +14,25 @@ MatchingProblemLandmarksToFrameKDTree::MatchingProblemLandmarksToFrameKDTree(
     double image_space_distance_threshold_pixels,
     int hamming_distance_threshold)
   : MatchingProblemLandmarksToFrame(
-      frame, landmarks, image_space_distance_threshold_pixels, hamming_distance_threshold) {
+      frame, landmarks, image_space_distance_threshold_pixels, hamming_distance_threshold),
+      search_radius_px_(image_space_distance_threshold_pixels) {
   CHECK_GT(hamming_distance_threshold, 0) << "Descriptor distance needs to be positive.";
   CHECK_GT(image_space_distance_threshold_pixels, 0.0)
     << "Image space distance needs to be positive.";
   CHECK(frame.getCameraGeometry()) << "The camera of the visual frame is NULL.";
-  CHECK_GT(image_height_frame_, 0u) << "The visual frame has zero image rows.";
+  CHECK_GT(image_height_, 0u) << "The visual frame has zero image rows.";
   CHECK_GT(descriptor_size_bytes_, 0);
   CHECK_GT(descriptor_size_bits_, 0);
 }
 
 bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   aslam::timing::Timer method_timer("MatchingProblemLandmarksToFrameKDTree::doSetup()");
-  CHECK_GT(image_height_frame_, 0u) << "The visual frame has zero image rows.";
+
+  setupValidVectorsAndDescriptors();
 
   const size_t num_keypoints = numApples();
   const size_t num_landmarks = numBananas();
-  is_frame_keypoint_valid_.resize(num_keypoints, false);
-  is_landmark_valid_.resize(num_landmarks, false);
 
-  if (FLAGS_matcher_store_all_tested_pairs) {
-    all_tested_pairs_.resize(num_landmarks);
-  }
-
-  // First, create descriptor wrappers for all descriptors.
-  const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& frame_descriptors =
-      frame_.getDescriptors();
-  CHECK_EQ(frame_descriptors.rows(), descriptor_size_bytes_);
-
-  const size_t num_frame_descriptors = static_cast<size_t>(frame_descriptors.cols());
-  CHECK_EQ(num_frame_descriptors, num_keypoints) << "Mismatch between the number of "
-      << "descriptors and the number of keypoints in the visual frame.";
-
-  frame_descriptors_.clear();
-  landmark_descriptors_.clear();
-  frame_descriptors_.reserve(num_frame_descriptors);
-  landmark_descriptors_.reserve(num_landmarks);
-
-  // This creates a descriptor wrapper for the given descriptor and allows computing the Hamming
-  // distance between two descriptors.
-  for (size_t frame_descriptor_idx = 0u; frame_descriptor_idx < num_frame_descriptors;
-      ++frame_descriptor_idx) {
-    frame_descriptors_.emplace_back(
-        &(frame_descriptors.coeffRef(0, frame_descriptor_idx)), descriptor_size_bytes_);
-  }
-
-  for (size_t landmark_descriptor_idx = 0u; landmark_descriptor_idx < num_landmarks;
-      ++landmark_descriptor_idx) {
-    CHECK_EQ(landmarks_[landmark_descriptor_idx].getDescriptor().rows(), descriptor_size_bytes_)
-        << "Mismatch between the descriptor size of landmark " << landmark_descriptor_idx << "("
-        << landmarks_[landmark_descriptor_idx].getDescriptor().rows() << " bytes vs. "
-        << descriptor_size_bytes_ << " bytes for keypoints).";
-    landmark_descriptors_.emplace_back(
-        landmarks_[landmark_descriptor_idx].getDescriptor().data(), descriptor_size_bytes_);
-  }
-
-  // Then, create a LUT mapping y coordinates to frame keypoint indices.
   const Eigen::Matrix2Xd& keypoints = frame_.getKeypointMeasurements();
   CHECK_EQ(static_cast<int>(num_keypoints), keypoints.cols())
     << "The number of keypoints in the visual frame does not match the number "
@@ -84,11 +47,11 @@ bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   const double image_height = static_cast<double>(camera->imageHeight());
   CHECK_GT(image_height, 0.0);
   const double image_width = static_cast<double>(camera->imageWidth());
-  CHECK_GT(image_height, 0.0);
+  CHECK_GT(image_width, 0.0);
 
-  CHECK_GT(squared_image_space_distance_threshold_pixels_squared_, 0.0);
+  CHECK_GT(squared_image_space_distance_threshold_px_sq_, 0.0);
   const double image_space_distance_threshold_pixels =
-      std::sqrt(squared_image_space_distance_threshold_pixels_squared_);
+      std::sqrt(squared_image_space_distance_threshold_px_sq_);
 
   const size_t num_bins_x =
       static_cast<size_t>(std::floor(image_width / image_space_distance_threshold_pixels));
@@ -120,16 +83,16 @@ bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   valid_keypoints_.conservativeResize(2, valid_keypoint_index);
   VLOG(3) << "Num valid keypoints: " << valid_keypoint_index;
 
-  p_valid_projected_landmarks_ = Eigen::MatrixXd(2, num_landmarks);
+  valid_projected_landmarks_ = Eigen::MatrixXd(2, num_landmarks);
 
   // Then, project all landmarks into the visual frame.
   size_t valid_landmark_index = 0u;
   VLOG(3) << "Projecting " << num_landmarks << " into the visual frame.";
   valid_landmark_index_to_landmark_index_.reserve(num_landmarks);
   for (size_t landmark_idx = 0u; landmark_idx < num_landmarks; ++landmark_idx) {
-    Eigen::Vector2d p_projected_landmark;
-    if (camera->project3(landmarks_[landmark_idx].get_p_C_landmark(), &p_projected_landmark)) {
-      p_valid_projected_landmarks_.col(valid_landmark_index) = p_projected_landmark;
+    Eigen::Vector2d projected_landmark;
+    if (camera->project3(landmarks_[landmark_idx].get_p_C_landmark(), &projected_landmark)) {
+      valid_projected_landmarks_.col(valid_landmark_index) = projected_landmark;
       valid_landmark_index_to_landmark_index_.emplace_back(landmark_idx);
       is_landmark_valid_[landmark_idx] = true;
       ++valid_landmark_index;
@@ -138,7 +101,7 @@ bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
     }
   }
   CHECK_EQ(valid_landmark_index, valid_landmark_index_to_landmark_index_.size());
-  p_valid_projected_landmarks_.conservativeResize(2, valid_landmark_index);
+  valid_projected_landmarks_.conservativeResize(2, valid_landmark_index);
   VLOG(3) << "Computed all projections of landmarks into the visual frame. (valid/invalid) ("
           << valid_landmark_index << "/" << (num_landmarks - valid_landmark_index) << ")";
 
@@ -166,7 +129,7 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
     return;
   }
 
-  const int num_valid_landmarks = p_valid_projected_landmarks_.cols();
+  const int num_valid_landmarks = valid_projected_landmarks_.cols();
 
   size_t num_matches = 0u;
 
@@ -178,16 +141,15 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
   Eigen::MatrixXd distances_squared = Eigen::MatrixXd::Constant(
       num_neighbors, num_valid_landmarks, std::numeric_limits<double>::infinity());
   const double kSearchNNEpsilon = 0.0;
-  CHECK_GT(squared_image_space_distance_threshold_pixels_squared_, 0.0);
-  const double kSearchRadius = std::sqrt(squared_image_space_distance_threshold_pixels_squared_);
+  CHECK_GT(search_radius_px_, 0.0);
   const unsigned kOptionFlags = Nabo::NNSearchD::ALLOW_SELF_MATCH;
 
   aslam::timing::Timer knn_timer(
       "MatchingProblemLandmarksToFrameKDTree::getCandidates - knn search");
   CHECK(nn_index_);
   nn_index_->knn(
-      p_valid_projected_landmarks_, indices, distances_squared, num_neighbors, kSearchNNEpsilon,
-      kOptionFlags, kSearchRadius);
+      valid_projected_landmarks_, indices, distances_squared, num_neighbors, kSearchNNEpsilon,
+      kOptionFlags, search_radius_px_);
   knn_timer.Stop();
 
   aslam::timing::Timer knn_post_processing_timer(
@@ -212,7 +174,7 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
       CHECK_GE(knn_keypoint_index, 0);
 
       if (distance_squared_image_space_pixels_squared <
-          squared_image_space_distance_threshold_pixels_squared_) {
+          squared_image_space_distance_threshold_px_sq_) {
         CHECK_LT(knn_keypoint_index, valid_keypoint_index_to_keypoint_index_.size());
         const size_t keypoint_index =
             valid_keypoint_index_to_keypoint_index_[knn_keypoint_index];

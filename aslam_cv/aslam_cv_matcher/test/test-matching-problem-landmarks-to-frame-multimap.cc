@@ -16,7 +16,7 @@
 
 static const size_t kDescriptorSizeBytes = 48u;
 static const size_t kSeed = 233232u;
-static const unsigned char kCharThreshold = 128;
+static const unsigned char kCharBinaryThreshold = 128;
 
 typedef Eigen::Matrix<unsigned char, kDescriptorSizeBytes, Eigen::Dynamic> Descriptors;
 
@@ -336,11 +336,11 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchesBecauseOfHammingDistance) {
   CHECK_LT(kNumBytesDifferent, frame_descriptors.rows());
   CHECK_LT(kNumBytesDifferent, landmark_descriptors.rows());
 
-  unsigned char kCharThreshold = 128;
+  unsigned char kCharBinaryThreshold = 128;
   size_t num_made_invalid = 0u;
 
   for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    if (selection_vector(keypoint_index) < kCharThreshold) {
+    if (selection_vector(keypoint_index) < kCharBinaryThreshold) {
       frame_descriptors.block<kNumBytesDifferent, 1>(0, keypoint_index) =
           Eigen::Matrix<unsigned char, kNumBytesDifferent, 1>::Zero();
       landmark_descriptors.block<kNumBytesDifferent, 1>(0, keypoint_index) =
@@ -408,7 +408,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseOfSearchBand) {
 
   size_t num_made_invalid = 0u;
   for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    if (selection_vector(keypoint_index) < kCharThreshold) {
+    if (selection_vector(keypoint_index) < kCharBinaryThreshold) {
       Eigen::Vector2d keypoint = frame_keypoints.col(keypoint_index);
 
       const double shift_angle_radians =
@@ -485,7 +485,7 @@ TEST_F(LandmarksToFrameMatcherTest, MatchNoMatchBecauseLandmarksBehindCamera) {
 
   size_t num_made_invalid = 0u;
   for (size_t keypoint_index = 0u; keypoint_index < kNumKeypoints; ++keypoint_index) {
-    if (selection_vector(keypoint_index) < kCharThreshold) {
+    if (selection_vector(keypoint_index) < kCharBinaryThreshold) {
       projected_keypoints.col(keypoint_index) *= -1;
       ++num_made_invalid;
     }
