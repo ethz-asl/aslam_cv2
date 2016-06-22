@@ -18,7 +18,8 @@ DEFINE_double(gyro_lk_candidate_ratio, 0.6, "This ratio defines the number of "
     "unmatched (from frame k to (k+1)) keypoints that will be tracked with "
     "the lk tracker to the next frame. If we detect N keypoints in frame (k+1), "
     "we track at most 'N times this ratio' keypoints to frame (k+1) with the "
-    "lk tracker.");
+    "lk tracker. A value of 0 means that pure tracking by matching descriptors "
+    "will be used.");
 DEFINE_uint64(gyro_lk_max_status_track_length, 5u, "Status track length is the "
     "track length since the status of the keypoint has changed (e.g. from lk "
     "tracked to detected or the reverse). The lk tracker will not track "
