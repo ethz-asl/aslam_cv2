@@ -101,13 +101,18 @@ class GyroTwoFrameMatcher {
   /// already existing match.
   void MatchKeypoint(const int idx_k);
 
+  template <int WindowHalfSideLength>
+  void GetKeypointIteratorsInWindow(
+      const Eigen::Matrix<double, 2, 1>& predicted_keypoint_position,
+      KeyPointIterator* it_keypoints_begin,
+      KeyPointIterator* it_keypoints_end) const;
+
   /// \brief Try to match inferior matches without modifying initial matches.
   ///
   /// Second matcher that is only quering keypoints of frame (k+1) that the
   /// initial matcher has queried before. Should be executed several times.
   /// Returns true if matches are still found.
   bool MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched);
-
 
   int Clamp(const int lower, const int upper, const int in) const;
 
@@ -189,6 +194,30 @@ class GyroTwoFrameMatcher {
   // Number of iterations to match inferior matches.
   static constexpr size_t kMaxNumInferiorIterations = 3u;
 };
+
+template <int WindowHalfSideLength>
+void GyroTwoFrameMatcher::GetKeypointIteratorsInWindow(
+    const Eigen::Matrix<double, 2, 1>& predicted_keypoint_position,
+    KeyPointIterator* it_keypoints_begin,
+    KeyPointIterator* it_keypoints_end) const {
+  CHECK_NOTNULL(it_keypoints_begin);
+  CHECK_NOTNULL(it_keypoints_end);
+
+  // Compute search area for LUT iterators row-wise.
+  int LUT_index_top = Clamp(0, kImageHeight - 1, static_cast<int>(
+      predicted_keypoint_position(1) + 0.5 - WindowHalfSideLength));
+  int LUT_index_bottom = Clamp(0, kImageHeight - 1, static_cast<int>(
+      predicted_keypoint_position(1) + 0.5 + WindowHalfSideLength));
+
+  *it_keypoints_begin = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_top];
+  *it_keypoints_end = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_bottom];
+
+  CHECK_LE(LUT_index_top, LUT_index_bottom);
+  CHECK_GE(LUT_index_bottom, 0);
+  CHECK_GE(LUT_index_top, 0);
+  CHECK_LT(LUT_index_top, kImageHeight);
+  CHECK_LT(LUT_index_bottom, kImageHeight);
+}
 
 inline int GyroTwoFrameMatcher::Clamp(
     const int lower, const int upper, const int in) const {

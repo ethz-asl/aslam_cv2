@@ -81,6 +81,8 @@ void GyroTwoFrameMatcher::Initialize() {
             });
 
   // Lookup table construction.
+  // TODO(magehrig):  Sort by y if image height >= image width,
+  //                  otherwise sort by x.
   int v = 0;
   for (size_t y = 0; y < kImageHeight; ++y) {
     while (v < kNumPointsKp1 &&
@@ -115,48 +117,28 @@ void GyroTwoFrameMatcher::MatchKeypoint(const int idx_k) {
             iteration_processed_keypoints_kp1_.end(),
             false);
 
-  Eigen::Matrix<double, 2, 1> predicted_keypoint_position_kp1 =
-      predicted_keypoint_positions_kp1_.block<2, 1>(0, idx_k);
-  const common::FeatureDescriptorConstRef& descriptor_k =
-      descriptors_k_wrapped_[idx_k];
-
-  // Compute search area for LUT iterators row-wise.
-  int nearest_top = Clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position_kp1(1) + 0.5 - kSmallSearchDistance));
-  int nearest_bottom = Clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position_kp1(1) + 0.5 + kSmallSearchDistance));
-  int near_top = Clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position_kp1(1) + 0.5 - kLargeSearchDistance));
-  int near_bottom = Clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position_kp1(1) + 0.5 + kLargeSearchDistance));
-
-  CHECK_LE(nearest_top, nearest_bottom);
-  CHECK_LE(near_top, near_bottom);
-  CHECK_GE(nearest_top, 0);
-  CHECK_GE(nearest_bottom, 0);
-  CHECK_GE(near_top, 0);
-  CHECK_GE(near_bottom, 0);
-  CHECK_LT(nearest_top, kImageHeight);
-  CHECK_LT(nearest_bottom, kImageHeight);
-  CHECK_LT(near_top, kImageHeight);
-  CHECK_LT(near_bottom, kImageHeight);
-
-  KeyPointIterator nearest_corners_begin = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[nearest_top];
-  KeyPointIterator nearest_corners_end = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[nearest_bottom];
-  KeyPointIterator near_corners_begin = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[near_top];
-  KeyPointIterator near_corners_end = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[near_bottom];
-
   bool found = false;
   bool passed_ratio_test = false;
   int n_processed_corners = 0;
   KeyPointIterator it_best;
   const static unsigned int kDescriptorSizeBits = 8*kDescriptorSizeBytes;
-  int best_score = static_cast<int>(kDescriptorSizeBits*kMatchingThresholdBitsRatioRelaxed);
+  int best_score = static_cast<int>(
+      kDescriptorSizeBits*kMatchingThresholdBitsRatioRelaxed);
   unsigned int distance_best = kDescriptorSizeBits + 1;
   unsigned int distance_second_best = kDescriptorSizeBits + 1;
+  const common::FeatureDescriptorConstRef& descriptor_k =
+      descriptors_k_wrapped_[idx_k];
 
-  const int bound_left_nearest = predicted_keypoint_position_kp1(0) - kSmallSearchDistance;
-  const int bound_right_nearest = predicted_keypoint_position_kp1(0) + kSmallSearchDistance;
+  Eigen::Matrix<double, 2, 1> predicted_keypoint_position_kp1 =
+      predicted_keypoint_positions_kp1_.block<2, 1>(0, idx_k);
+  KeyPointIterator nearest_corners_begin, nearest_corners_end;
+  GetKeypointIteratorsInWindow<kSmallSearchDistance>(
+      predicted_keypoint_position_kp1, &nearest_corners_begin, &nearest_corners_end);
+
+  const int bound_left_nearest =
+      predicted_keypoint_position_kp1(0) - kSmallSearchDistance;
+  const int bound_right_nearest =
+      predicted_keypoint_position_kp1(0) + kSmallSearchDistance;
 
   MatchData current_match_data;
 
@@ -186,14 +168,21 @@ void GyroTwoFrameMatcher::MatchKeypoint(const int idx_k) {
     }
     iteration_processed_keypoints_kp1_[it->channel_index] = true;
     ++n_processed_corners;
-    const double current_matching_score = ComputeMatchingScore(current_score, kDescriptorSizeBits);
+    const double current_matching_score =
+        ComputeMatchingScore(current_score, kDescriptorSizeBits);
     current_match_data.AddCandidate(it, current_matching_score);
   }
 
   // If no match in small window, increase window and search again.
   if (!found) {
-    const int bound_left_near = predicted_keypoint_position_kp1(0) - kLargeSearchDistance;
-    const int bound_right_near = predicted_keypoint_position_kp1(0) + kLargeSearchDistance;
+    const int bound_left_near =
+        predicted_keypoint_position_kp1(0) - kLargeSearchDistance;
+    const int bound_right_near =
+        predicted_keypoint_position_kp1(0) + kLargeSearchDistance;
+
+    KeyPointIterator near_corners_begin, near_corners_end;
+    GetKeypointIteratorsInWindow<kLargeSearchDistance>(
+        predicted_keypoint_position_kp1, &near_corners_begin, &near_corners_end);
 
     for (KeyPointIterator it = near_corners_begin; it != near_corners_end; ++it) {
       if (iteration_processed_keypoints_kp1_[it->channel_index]) {
@@ -207,7 +196,8 @@ void GyroTwoFrameMatcher::MatchKeypoint(const int idx_k) {
       CHECK_GE(it->channel_index, 0);
       const common::FeatureDescriptorConstRef& descriptor_kp1 =
           descriptors_kp1_wrapped_[it->channel_index];
-      unsigned int distance = common::GetNumBitsDifferent(descriptor_k, descriptor_kp1);
+      unsigned int distance =
+          common::GetNumBitsDifferent(descriptor_k, descriptor_kp1);
       int current_score = kDescriptorSizeBits - distance;
       if (current_score > best_score) {
         best_score = current_score;
@@ -221,7 +211,8 @@ void GyroTwoFrameMatcher::MatchKeypoint(const int idx_k) {
         distance_second_best = distance;
       }
       ++n_processed_corners;
-      const double current_matching_score = ComputeMatchingScore(current_score, kDescriptorSizeBits);
+      const double current_matching_score =
+          ComputeMatchingScore(current_score, kDescriptorSizeBits);
       current_match_data.AddCandidate(it, current_matching_score);
     }
   }
@@ -279,14 +270,16 @@ void GyroTwoFrameMatcher::MatchKeypoint(const int idx_k) {
   stats_count_processed.AddSample(n_processed_corners);
 }
 
-bool GyroTwoFrameMatcher::MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched) {
+bool GyroTwoFrameMatcher::MatchInferiorMatches(
+    std::vector<bool>* is_inferior_keypoint_kp1_matched) {
   CHECK_EQ(is_inferior_keypoint_kp1_matched->size(), is_keypoint_kp1_matched_.size());
 
   bool found_inferior_match = false;
 
   std::unordered_set<int> erase_inferior_match_keypoint_idx_k;
   for (const int inferior_keypoint_idx_k: inferior_match_keypoint_idx_k_) {
-    const MatchData& match_data = idx_k_to_attempted_match_data_map_[inferior_keypoint_idx_k];
+    const MatchData& match_data =
+        idx_k_to_attempted_match_data_map_[inferior_keypoint_idx_k];
     bool found = false;
     double best_matching_score = static_cast<double>(kMatchingThresholdBitsRatioStrict);
     KeyPointIterator it_best;
@@ -353,7 +346,8 @@ bool GyroTwoFrameMatcher::MatchInferiorMatches(std::vector<bool>* is_inferior_ke
           return erase_inferior_match_keypoint_idx_k.count(element) == 1u;
         }
     );
-    inferior_match_keypoint_idx_k_.erase(iter_erase_from, inferior_match_keypoint_idx_k_.end());
+    inferior_match_keypoint_idx_k_.erase(
+        iter_erase_from, inferior_match_keypoint_idx_k_.end());
   }
 
   // Subsequent iterations should not mess with the current matches.
