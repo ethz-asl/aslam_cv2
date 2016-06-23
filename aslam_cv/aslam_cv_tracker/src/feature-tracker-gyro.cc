@@ -350,6 +350,7 @@ void GyroTracker::ComputeLKCandidates(
   }
 
   const size_t kNumPointsKp1 = frame_kp1.getTrackIds().size();
+  CHECK_EQ(kNumPointsKp1, frame_kp1.getDescriptors().cols());
   const size_t kLkNumCandidatesBeforeCutoff =
       indices_detected_and_tracked.size() +
       indices_detected_and_untracked.size() + indices_lktracked.size();
@@ -443,8 +444,8 @@ void GyroTracker::ComputeStatusTrackLengthOfFrameK(
   CHECK_NOTNULL(status_track_length_k)->clear();
   CHECK_GT(track_ids_k_km1_.size(), 0u);
 
-  const int NumPointsK = track_ids_k_km1_[0].size();
-  status_track_length_k->assign(NumPointsK, 0u);
+  const int kNumPointsK = track_ids_k_km1_[0].size();
+  status_track_length_k->assign(kNumPointsK, 0u);
 
   if (!initialized_) {
     return;
