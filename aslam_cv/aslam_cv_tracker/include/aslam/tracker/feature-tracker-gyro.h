@@ -30,7 +30,7 @@ struct GyroTrackerSettings {
   int lk_operation_flag;
   double lk_min_eigenvalue_threshold;
 
-  // Keypoint uncertainty. It's quite arbitrary...
+  // Keypoint uncertainty.
   static constexpr double kKeypointUncertaintyPx = 0.8;
 };
 
@@ -53,7 +53,7 @@ class GyroTracker : public FeatureTracker{
   ///                          compute descriptors for optical flow tracked keypoints.
   explicit GyroTracker(const Camera& camera,
                        const size_t min_distance_to_image_border,
-                       cv::Ptr<cv::DescriptorExtractor> extractor_ptr);
+                       const cv::Ptr<cv::DescriptorExtractor>& extractor_ptr);
   virtual ~GyroTracker() {}
 
   /// \brief Track features between the current and the previous frames using a given interframe
@@ -73,16 +73,13 @@ class GyroTracker : public FeatureTracker{
                      MatchesWithScore* matches_with_score_kp1_k) override;
 
  private:
-  struct TrackedMatch {
-    TrackedMatch(const int index_k, const int index_km1)
-      : correspondence{index_k, index_km1} {}
-    std::array<int, 2u> correspondence;
-  };
-
   enum class FeatureStatus {
     kDetected,
     kLkTracked
   };
+
+  // first: index_k, second: index_km1.
+  typedef std::pair<int, int> TrackedMatch;
   typedef std::vector<FeatureStatus> FrameFeatureStatus;
   typedef std::vector<size_t> FrameStatusTrackLength;
   typedef Eigen::VectorXi TrackIds;

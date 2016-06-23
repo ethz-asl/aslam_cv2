@@ -101,7 +101,7 @@ void GyroTwoFrameMatcher::Match() {
 
   std::vector<bool> is_inferior_keypoint_kp1_matched(
       is_keypoint_kp1_matched_);
-  for (size_t i = 0u; i < kInferiorIterations; ++i) {
+  for (size_t i = 0u; i < kMaxNumInferiorIterations; ++i) {
     if(!MatchInferiorMatches(&is_inferior_keypoint_kp1_matched)) return;
   }
 }
