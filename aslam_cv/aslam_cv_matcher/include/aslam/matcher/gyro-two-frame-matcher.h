@@ -47,6 +47,8 @@ class GyroTwoFrameMatcher {
   /// @param[in]  frame_k       The previous VisualFrame that needs to contain the keypoints and
   ///                           descriptor channels. Usually this is an output of the VisualPipeline.
   /// @param[in]  image_height  The image height of the given camera.
+  /// @param[in]  predicted_keypoint_positions_kp1  Predicted positions of keypoints in next frame.
+  /// @param[in]  prediction_success  Was the prediction successful?
   /// @param[out] matches_with_score_kp1_k  Vector of structs containing the found matches. Indices
   ///                                       correspond to the ordering of the keypoint/descriptor vector in the
   ///                                       respective frame channels.
@@ -185,7 +187,7 @@ class GyroTwoFrameMatcher {
   // Only used if small search was unsuccessful.
   static constexpr int kLargeSearchDistance = 20;
   // Number of iterations to match inferior matches.
-  static constexpr size_t kInferiorIterations = 3u;
+  static constexpr size_t kMaxNumInferiorIterations = 3u;
 };
 
 inline int GyroTwoFrameMatcher::Clamp(

@@ -44,17 +44,17 @@ void insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(
   CHECK_EQ(new_cv_descriptors.type(), CV_8UC1);
   CHECK(new_cv_descriptors.isContinuous());
 
-  const size_t num_new_keypoints = new_cv_keypoints.size();
+  const size_t kNumNewKeypoints = new_cv_keypoints.size();
 
   Eigen::Matrix2Xd new_keypoints_measurements;
   Eigen::VectorXd new_keypoint_scores;
   Eigen::VectorXd new_keypoint_scales;
   Eigen::VectorXd new_keypoint_orientations;
-  new_keypoints_measurements.resize(Eigen::NoChange, num_new_keypoints);
-  new_keypoint_scores.resize(num_new_keypoints);
-  new_keypoint_scales.resize(num_new_keypoints);
-  new_keypoint_orientations.resize(num_new_keypoints);
-  for (size_t idx = 0u; idx < num_new_keypoints; ++idx) {
+  new_keypoints_measurements.resize(Eigen::NoChange, kNumNewKeypoints);
+  new_keypoint_scores.resize(kNumNewKeypoints);
+  new_keypoint_scales.resize(kNumNewKeypoints);
+  new_keypoint_orientations.resize(kNumNewKeypoints);
+  for (size_t idx = 0u; idx < kNumNewKeypoints; ++idx) {
     const cv::KeyPoint& cv_keypoint = new_cv_keypoints[idx];
     new_keypoints_measurements.col(idx)(0) = static_cast<double>(cv_keypoint.pt.x);
     new_keypoints_measurements.col(idx)(1) = static_cast<double>(cv_keypoint.pt.y);
@@ -68,12 +68,12 @@ void insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(
   frame->swapKeypointScales(&new_keypoint_scales);
   frame->swapKeypointOrientations(&new_keypoint_orientations);
 
-  Eigen::VectorXd uncertainties(num_new_keypoints);
+  Eigen::VectorXd uncertainties(kNumNewKeypoints);
   uncertainties.setConstant(fixed_keypoint_uncertainty_px);
   frame->swapKeypointMeasurementUncertainties(&uncertainties);
 
   // Set invalid track ids.
-  Eigen::VectorXi track_ids(num_new_keypoints);
+  Eigen::VectorXi track_ids(kNumNewKeypoints);
   track_ids.setConstant(-1);
   frame->swapTrackIds(&track_ids);
 
@@ -99,9 +99,9 @@ void insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
   CHECK_EQ(new_cv_descriptors.type(), CV_8UC1);
   CHECK(new_cv_descriptors.isContinuous());
 
-  const size_t initial_size = frame->getTrackIds().size();
-  const size_t additional_size = new_cv_keypoints.size();
-  const size_t extended_size = initial_size + additional_size;
+  const size_t kInitialSize = frame->getTrackIds().size();
+  const size_t kAdditionalSize = new_cv_keypoints.size();
+  const size_t extended_size = kInitialSize + kAdditionalSize;
 
   Eigen::Matrix2Xd* const keypoint_measurements =
       frame->getKeypointMeasurementsMutable();
@@ -126,11 +126,11 @@ void insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
   keypoint_uncertainties->conservativeResize(extended_size);
   descriptors->conservativeResize(Eigen::NoChange, extended_size);
 
-  Eigen::Matrix2Xd new_keypoint_measurements(2, additional_size);
-  Eigen::VectorXd new_keypoint_orientations(additional_size);
-  Eigen::VectorXd new_keypoint_scales(additional_size);
-  Eigen::VectorXd new_keypoint_scores(additional_size);
-  for (size_t i = 0; i < additional_size; ++i) {
+  Eigen::Matrix2Xd new_keypoint_measurements(2, kAdditionalSize);
+  Eigen::VectorXd new_keypoint_orientations(kAdditionalSize);
+  Eigen::VectorXd new_keypoint_scales(kAdditionalSize);
+  Eigen::VectorXd new_keypoint_scores(kAdditionalSize);
+  for (size_t i = 0; i < kAdditionalSize; ++i) {
     const cv::KeyPoint keypoint = new_cv_keypoints[i];
     new_keypoint_measurements(0, i) = static_cast<double>(keypoint.pt.x);
     new_keypoint_measurements(1, i) = static_cast<double>(keypoint.pt.y);
@@ -140,24 +140,24 @@ void insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
   }
 
   keypoint_measurements->block(
-      0, initial_size, 2,additional_size) =
+      0, kInitialSize, 2,kAdditionalSize) =
           new_keypoint_measurements;
   keypoint_orientations->segment(
-      initial_size, additional_size) =
+      kInitialSize, kAdditionalSize) =
           new_keypoint_orientations;
   keypoint_scales->segment(
-      initial_size, additional_size) =
+      kInitialSize, kAdditionalSize) =
           new_keypoint_scales;
   keypointi_scores->segment(
-      initial_size, additional_size) =
+      kInitialSize, kAdditionalSize) =
           new_keypoint_scores;
   track_ids->segment(
-      initial_size, additional_size).setConstant(-1);
+      kInitialSize, kAdditionalSize).setConstant(-1);
   keypoint_uncertainties->segment(
-      initial_size, additional_size)
+      kInitialSize, kAdditionalSize)
           .setConstant(fixed_keypoint_uncertainty_px);
   descriptors->block(
-      0, initial_size, new_cv_descriptors.cols, new_cv_descriptors.rows) =
+      0, kInitialSize, new_cv_descriptors.cols, new_cv_descriptors.rows) =
       Eigen::Map<VisualFrame::DescriptorsT>(
           // Switch cols/rows as Eigen is col-major and cv::Mat is row-major.
           new_cv_descriptors.data, new_cv_descriptors.cols,

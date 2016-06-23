@@ -61,7 +61,7 @@ GyroTrackerSettings::GyroTrackerSettings()
 
 GyroTracker::GyroTracker(const Camera& camera,
                          const size_t min_distance_to_image_border,
-                         cv::Ptr<cv::DescriptorExtractor> extractor_ptr)
+                         const cv::Ptr<cv::DescriptorExtractor>& extractor_ptr)
     : camera_(camera) ,
       kMinDistanceToImageBorderPx(min_distance_to_image_border),
       extractor_(extractor_ptr),
@@ -163,7 +163,7 @@ void GyroTracker::LKTracking(
   // successfully predicted keypoint locations in frame (k+1).
   std::vector<int> lk_definite_indices_k;
   for (const int candidate_index_k: lk_candidate_indices_k) {
-    if (prediction_success.at(candidate_index_k) == 1) {
+    if (prediction_success[candidate_index_k] == 1) {
       lk_definite_indices_k.push_back(candidate_index_k);
     }
   }
@@ -217,7 +217,7 @@ void GyroTracker::LKTracking(
   EraseVectorElementsHelper(indices_to_erase, &lk_definite_indices_k);
   EraseVectorElementsHelper(indices_to_erase, &lk_cv_points_kp1);
 
-  const size_t num_points_successfully_tracked = lk_cv_points_kp1.size();
+  const size_t kNumPointsSuccessfullyTracked = lk_cv_points_kp1.size();
 
   // Convert Cv points to Cv keypoints because this format is
   // required for descriptor extraction. Take relevant keypoint information
@@ -225,8 +225,8 @@ void GyroTracker::LKTracking(
   // Assign unique class_id to keypoints because some of them will get removed
   // during the extraction phase and we want to be able to identify them.
   std::vector<cv::KeyPoint> lk_cv_keypoints_kp1;
-  lk_cv_keypoints_kp1.reserve(num_points_successfully_tracked);
-  for (size_t i = 0u; i < num_points_successfully_tracked; ++i) {
+  lk_cv_keypoints_kp1.reserve(kNumPointsSuccessfullyTracked);
+  for (size_t i = 0u; i < kNumPointsSuccessfullyTracked; ++i) {
     const size_t channel_idx = lk_definite_indices_k[i];
     const int class_id = static_cast<int>(i);
     lk_cv_keypoints_kp1.emplace_back(
@@ -242,12 +242,12 @@ void GyroTracker::LKTracking(
   CHECK_EQ(lk_descriptors_kp1.type(), CV_8UC1);
   CHECK(lk_descriptors_kp1.isContinuous());
 
-  const size_t num_points_after_extraction = lk_cv_keypoints_kp1.size();
+  const size_t kNumPointsAfterExtraction = lk_cv_keypoints_kp1.size();
 
-  const int initial_size_kp1 = frame_kp1->getTrackIds().size();
-  for (int i = 0; i < static_cast<int>(num_points_after_extraction); ++i) {
+  const int kInitialSizeKp1 = frame_kp1->getTrackIds().size();
+  for (int i = 0; i < static_cast<int>(kNumPointsAfterExtraction); ++i) {
     matches_with_score_kp1_k->emplace_back(
-        initial_size_kp1 + i, lk_definite_indices_k[lk_cv_keypoints_kp1[i].class_id],
+        kInitialSizeKp1 + i, lk_definite_indices_k[lk_cv_keypoints_kp1[i].class_id],
         0.0 /* We don't have scores for lk tracking */);
   }
 
@@ -257,11 +257,13 @@ void GyroTracker::LKTracking(
       GyroTrackerSettings::kKeypointUncertaintyPx, frame_kp1);
 
   // Update feature status for next iteration.
-  const size_t extended_size_pk1 = static_cast<size_t>(initial_size_kp1) +
-      num_points_after_extraction;
+  const size_t extended_size_pk1 = static_cast<size_t>(kInitialSizeKp1) +
+      kNumPointsAfterExtraction;
   FrameFeatureStatus frame_feature_status_kp1(extended_size_pk1);
-  std::fill(frame_feature_status_kp1.begin(), frame_feature_status_kp1.begin() + initial_size_kp1, FeatureStatus::kDetected);
-  std::fill(frame_feature_status_kp1.begin() + initial_size_kp1, frame_feature_status_kp1.end(), FeatureStatus::kLkTracked);
+  std::fill(frame_feature_status_kp1.begin(), frame_feature_status_kp1.begin() +
+            kInitialSizeKp1, FeatureStatus::kDetected);
+  std::fill(frame_feature_status_kp1.begin() + kInitialSizeKp1,
+            frame_feature_status_kp1.end(), FeatureStatus::kLkTracked);
   UpdateFeatureStatusDeque(frame_feature_status_kp1);
 }
 
@@ -311,14 +313,17 @@ void GyroTracker::ComputeLKCandidates(
   ComputeUnmatchedIndicesOfFrameK(
       matches_with_score_kp1_k, &unmatched_indices_k);
 
-  std::vector<std::pair<int, size_t>> indices_detected_and_tracked;
-  std::vector<std::pair<int, double>> indices_detected_and_untracked;
-  std::vector<std::pair<int, size_t>> indices_lktracked;
+  typedef std::pair<int, size_t> IndexTrackLengthPair;
+  typedef std::pair<int, double> IndexKeypointScorePair;
+
+  std::vector<IndexTrackLengthPair> indices_detected_and_tracked;
+  std::vector<IndexKeypointScorePair> indices_detected_and_untracked;
+  std::vector<IndexTrackLengthPair> indices_lktracked;
   for (const int unmatched_index_k: unmatched_indices_k) {
     const size_t current_status_track_length =
-        status_track_length_k.at(unmatched_index_k);
+        status_track_length_k[unmatched_index_k];
     const FeatureStatus current_feature_status =
-        feature_status_k_km1_[0].at(unmatched_index_k);
+        feature_status_k_km1_[0][unmatched_index_k];
     if (current_feature_status == FeatureStatus::kDetected) {
       if (current_status_track_length > 0u) {
         // These candidates have the highest priority as lk candidates.
@@ -358,23 +363,23 @@ void GyroTracker::ComputeLKCandidates(
   if (kLkNumCandidatesBeforeCutoff > kLkNumMaxCandidates) {
     std::sort(indices_detected_and_tracked.begin(),
               indices_detected_and_tracked.end(),
-              [](const std::pair<int, size_t>& lhs,
-                  const std::pair<int, size_t>& rhs) -> bool {
+              [](const IndexTrackLengthPair& lhs,
+                  const IndexTrackLengthPair& rhs) -> bool {
       return lhs.second > rhs.second;
     });
     if (indices_detected_and_tracked.size() < kLkNumMaxCandidates) {
       std::sort(indices_detected_and_untracked.begin(),
                 indices_detected_and_untracked.end(),
-                [](const std::pair<int, double>& lhs,
-                    const std::pair<int, double>& rhs) -> bool {
+                [](const IndexKeypointScorePair& lhs,
+                    const IndexKeypointScorePair& rhs) -> bool {
         return lhs.second > rhs.second;
       });
       if (indices_detected_and_tracked.size() +
           indices_detected_and_untracked.size() < kLkNumMaxCandidates) {
         std::sort(indices_lktracked.begin(),
                   indices_lktracked.end(),
-                  [](const std::pair<int, size_t>& lhs,
-                      const std::pair<int, size_t>& rhs) -> bool {
+                  [](const IndexTrackLengthPair& lhs,
+                      const IndexTrackLengthPair& rhs) -> bool {
           return lhs.second < rhs.second;
         });
       }
@@ -384,17 +389,17 @@ void GyroTracker::ComputeLKCandidates(
   // Construct candidate vector based on sorted candidate indices
   // until max number of candidates is reached.
   size_t counter = 0u;
-  for (const std::pair<int, size_t>& pair: indices_detected_and_tracked) {
+  for (const IndexTrackLengthPair& pair: indices_detected_and_tracked) {
     if (counter == kLkNumMaxCandidates) break;
     lk_candidate_indices_k->push_back(pair.first);
     ++counter;
   }
-  for (const std::pair<int, double>& pair: indices_detected_and_untracked) {
+  for (const IndexKeypointScorePair& pair: indices_detected_and_untracked) {
     if (counter == kLkNumMaxCandidates) break;
     lk_candidate_indices_k->push_back(pair.first);
     ++counter;
   }
-  for (const std::pair<int, size_t>& pair: indices_lktracked) {
+  for (const IndexTrackLengthPair& pair: indices_lktracked) {
     if (counter == kLkNumMaxCandidates) break;
     lk_candidate_indices_k->push_back(pair.first);
     ++counter;
@@ -410,26 +415,26 @@ void GyroTracker::ComputeUnmatchedIndicesOfFrameK(
   CHECK_GE(track_ids_k_km1_[0].size(), matches_with_score_kp1_k.size());
   CHECK_NOTNULL(unmatched_indices_k)->clear();
 
-  const size_t num_points_k = track_ids_k_km1_[0].size();
-  const size_t num_matches_k = matches_with_score_kp1_k.size();
-  const size_t num_unmatched_k = num_points_k - num_matches_k;
+  const size_t kNumPointsK = track_ids_k_km1_[0].size();
+  const size_t kNumMatchesK = matches_with_score_kp1_k.size();
+  const size_t kNumUnmatchedK = kNumPointsK - kNumMatchesK;
 
-  unmatched_indices_k->reserve(num_unmatched_k);
-  std::vector<bool> is_unmatched(num_points_k, true);
+  unmatched_indices_k->reserve(kNumUnmatchedK);
+  std::vector<bool> is_unmatched(kNumPointsK, true);
 
   for (const MatchWithScore& match: matches_with_score_kp1_k) {
-    is_unmatched.at(match.correspondence[1]) = false;
+    is_unmatched[match.correspondence[1]] = false;
   }
 
-  for (int i = 0; i < static_cast<int>(num_points_k); ++i) {
+  for (int i = 0; i < static_cast<int>(kNumPointsK); ++i) {
     if (is_unmatched[i]) {
       unmatched_indices_k->push_back(i);
     }
   }
 
-  CHECK_EQ(unmatched_indices_k->size(), num_unmatched_k);
-  CHECK_EQ(num_matches_k + unmatched_indices_k->size(),
-           num_points_k);
+  CHECK_EQ(unmatched_indices_k->size(), kNumUnmatchedK);
+  CHECK_EQ(kNumMatchesK + unmatched_indices_k->size(),
+           kNumPointsK);
 }
 
 void GyroTracker::ComputeStatusTrackLengthOfFrameK(
@@ -438,8 +443,8 @@ void GyroTracker::ComputeStatusTrackLengthOfFrameK(
   CHECK_NOTNULL(status_track_length_k)->clear();
   CHECK_GT(track_ids_k_km1_.size(), 0u);
 
-  const int num_points_k = track_ids_k_km1_[0].size();
-  status_track_length_k->assign(num_points_k, 0u);
+  const int NumPointsK = track_ids_k_km1_[0].size();
+  status_track_length_k->assign(NumPointsK, 0u);
 
   if (!initialized_) {
     return;
@@ -448,16 +453,16 @@ void GyroTracker::ComputeStatusTrackLengthOfFrameK(
   CHECK_GT(status_track_length_km1_.size(), 0u);
 
   for (const TrackedMatch& match: tracked_matches) {
-    const int match_index_k = match.correspondence[0];
-    const int match_index_km1 = match.correspondence[1];
-    if (feature_status_k_km1_[1].at(match_index_km1) !=
-        feature_status_k_km1_[0].at(match_index_k)) {
+    const int match_index_k = match.first;
+    const int match_index_km1 = match.second;
+    if (feature_status_k_km1_[1][match_index_km1] !=
+        feature_status_k_km1_[0][match_index_k]) {
       // Reset the status track length to 1 because the status of this
       // particular tracked keypoint has changed from frame (k-1) to k.
-      status_track_length_k->at(match_index_k) = 1u;
+      (*status_track_length_k)[match_index_k] = 1u;
     } else {
-      status_track_length_k->at(match_index_k) =
-          status_track_length_km1_.at(match_index_km1) + 1u;
+      (*status_track_length_k)[match_index_k] =
+          status_track_length_km1_[match_index_km1] + 1u;
     }
   }
 }
