@@ -334,7 +334,12 @@ void GyroTracker::ComputeLKCandidates(
     const FeatureStatus current_feature_status =
         feature_status_k_km1_[0][unmatched_index_k];
     if (current_feature_status == FeatureStatus::kDetected) {
-      if (current_status_track_length > 0u) {
+      // Threshold that defines how many times a feature has to be detected
+      // and matched to be deemed worthy to be tracked by the LK-tracker.
+      // A value of 1 means that it has to be detected twice (and matched once).
+      // TODO(magehrig): Create flag for this?
+      static constexpr size_t kDetectedMinTrackLength = 1u;
+      if (current_status_track_length >= kDetectedMinTrackLength) {
         // These candidates have the highest priority as lk candidates.
         // The most valuable candidates have the longest status track length.
         indices_detected_and_tracked.emplace_back(
