@@ -324,7 +324,6 @@ void GyroTracker::ComputeLKCandidates(
       matches_with_score_kp1_k, &unmatched_indices_k);
 
   typedef std::pair<int, size_t> IndexTrackLengthPair;
-  typedef std::pair<int, double> IndexKeypointScorePair;
 
   std::vector<IndexTrackLengthPair> indices_detected_and_tracked;
   std::vector<IndexTrackLengthPair> indices_lktracked;
