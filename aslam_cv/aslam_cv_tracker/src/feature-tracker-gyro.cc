@@ -401,7 +401,10 @@ void GyroTracker::ComputeLKCandidates(
     ++counter;
   }
 
-  VLOG(4) << "Lk buffer size/max_size ratio: " << counter/static_cast<float>(kLkNumMaxCandidates);
+  VLOG(4) << "(num LK candidates before cut-off)/"
+      "(num detected features in frame k+1): " <<
+      kLkNumCandidatesBeforeCutoff/static_cast<float>(kNumPointsKp1) <<
+      ". Cut-off ratio: " << settings_.lk_max_num_candidates_ratio_kp1;
 }
 
 void GyroTracker::ComputeUnmatchedIndicesOfFrameK(
