@@ -303,6 +303,9 @@ void GyroTracker::ComputeTrackedMatches(
       track_ids_km1_eigen.data(),
       track_ids_km1_eigen.data() + track_ids_km1_eigen.size());
   for (int index_k = 0; index_k < track_ids_k_eigen.size(); ++index_k) {
+    const int track_id_k = track_ids_k_eigen(index_k);
+    // Skip invalid track IDs.
+    if (track_id_k == -1) continue;
     const int index_km1 = GetIndexOfValue(track_ids_km1, track_ids_k_eigen(index_k));
     if (index_km1 >= 0) {
       tracked_matches->emplace_back(index_k, index_km1);
