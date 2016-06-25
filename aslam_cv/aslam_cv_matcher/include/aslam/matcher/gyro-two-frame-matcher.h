@@ -180,7 +180,7 @@ class GyroTwoFrameMatcher {
 
   // Two descriptors could match if the number of matching bits normalized
   // with the descriptor length in bits is higher than this threshold.
-  static constexpr float kMatchingThresholdBitsRatioRelaxed = 0.78f;
+  static constexpr float kMatchingThresholdBitsRatioRelaxed = 0.8f;
   // The more strict threshold is used for matching inferior matches.
   // It is more strict because there is no ratio test anymore.
   static constexpr float kMatchingThresholdBitsRatioStrict = 0.85f;
