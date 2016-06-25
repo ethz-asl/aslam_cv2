@@ -238,8 +238,13 @@ inline bool GyroTwoFrameMatcher::RatioTest(
     // There has never been a second matching candidate.
     // Consequently, we cannot conclude with this test.
     return true;
+  } else if (distance_second_closest == 0u) {
+    // Unusual case of division by zero:
+    // Let the ratio test be successful.
+    return true;
   } else {
-    return distance_closest/distance_second_closest < kLoweRatio;
+    return distance_closest/static_cast<float>(distance_second_closest) <
+        kLoweRatio;
   }
 }
 
