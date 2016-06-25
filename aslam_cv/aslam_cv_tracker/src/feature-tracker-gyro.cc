@@ -338,8 +338,8 @@ void GyroTracker::ComputeLKCandidates(
     if (current_feature_status == FeatureStatus::kDetected) {
       // Threshold that defines how many times a feature has to be detected
       // and matched to be deemed worthy to be tracked by the LK-tracker.
-      // A value of 1 means that it has to be detected twice (and matched once).
-      // TODO(magehrig): Create flag for this?
+      // A value of 1 means that it has to be at least
+      // detected twice (and matched once).
       static constexpr size_t kDetectedMinTrackLength = 1u;
       if (current_status_track_length >= kDetectedMinTrackLength) {
         // These candidates have the highest priority as lk candidates.
