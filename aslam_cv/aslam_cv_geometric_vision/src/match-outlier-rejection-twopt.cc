@@ -72,6 +72,12 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
       rotation_ransac.inliers_.begin(), rotation_ransac.inliers_.end());
   inlier_indices.insert(translation_ransac.inliers_.begin(), translation_ransac.inliers_.end());
 
+  if (inlier_indices.size() < kMinKeypointCorrespondences) {
+    VLOG(1) << "Too few inliers to reliably classify outlier matches.";
+    *outlier_matches_kp1_k =  matches_kp1_k;
+    return false;
+  }
+
   // Remove the outliers from the matches list.
   int match_index = 0;
   for (const aslam::MatchWithScore& match : matches_kp1_k) {
