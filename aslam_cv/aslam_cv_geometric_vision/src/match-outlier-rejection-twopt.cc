@@ -122,10 +122,10 @@ bool rejectOutlierFeatureMatchesRelativePoseRotationSAC(
 
   opengv::sac::Ransac<RotationOnlySacProblem> rotation_only_ransac;
   rotation_only_ransac.sac_model_ = rotation_sac_problem;
-  //ransac.threshold_ = ransac_threshold;
-  rotation_only_ransac.threshold_ = 9.0;
-  //ransac.max_iterations_ = ransac_max_iterations;
-  rotation_only_ransac.max_iterations_ = 50;
+  rotation_only_ransac.threshold_ = ransac_threshold;
+  //rotation_only_ransac.threshold_ = 9.0;
+  rotation_only_ransac.max_iterations_ = ransac_max_iterations;
+  //rotation_only_ransac.max_iterations_ = 50;
   rotation_only_ransac.computeModel();
 
   const size_t kNumRotationOnlyInliers = rotation_only_ransac.inliers_.size();
@@ -141,8 +141,10 @@ bool rejectOutlierFeatureMatchesRelativePoseRotationSAC(
           !fix_random_seed));
   opengv::sac::Ransac<CentralRelativePoseSacProblem> relative_pose_ransac;
   relative_pose_ransac.sac_model_ = relative_pose_sac_problem;
-  relative_pose_ransac.threshold_ = 9.0;
-  relative_pose_ransac.max_iterations_ = 50;
+  //relative_pose_ransac.threshold_ = 9.0;
+  relative_pose_ransac.threshold_ = ransac_threshold;
+  //relative_pose_ransac.max_iterations_ = 50;
+  relative_pose_ransac.max_iterations_ = ransac_max_iterations;
   relative_pose_ransac.computeModel();
 
   const size_t kNumRelativePoseInliers = relative_pose_ransac.inliers_.size();
@@ -152,17 +154,20 @@ bool rejectOutlierFeatureMatchesRelativePoseRotationSAC(
 
   bool use_rotation_ransac_result = false;
   bool use_relative_pose_ransac_result = false;
-  std::vector<int> inliers;
+  std::vector<int>::const_iterator it_inliers_begin;
+  std::vector<int>::const_iterator it_inliers_end;
 
   if (rotation_only_inlier_ratio > relative_pose_inlier_ratio ||
       rotation_only_inlier_ratio > 0.8) {
     if (kNumRotationOnlyInliers >= kMinKeypointCorrespondences) {
       use_rotation_ransac_result = true;
-      inliers.assign(rotation_only_ransac.inliers_.begin(), rotation_only_ransac.inliers_.end());
+      it_inliers_begin = rotation_only_ransac.inliers_.begin();
+      it_inliers_end = rotation_only_ransac.inliers_.end();
     }
   } else if (kNumRelativePoseInliers >= kMinKeypointCorrespondences) {
     use_relative_pose_ransac_result = true;
-    inliers.assign(relative_pose_ransac.inliers_.begin(), relative_pose_ransac.inliers_.end());
+    it_inliers_begin = relative_pose_ransac.inliers_.begin();
+    it_inliers_end = relative_pose_ransac.inliers_.end();
   }
 
   if (!use_rotation_ransac_result && ! use_relative_pose_ransac_result) {
@@ -171,15 +176,17 @@ bool rejectOutlierFeatureMatchesRelativePoseRotationSAC(
     return false;
   } else {
     std::vector<bool> is_inlier_match(kNumMatches, false);
-    for (const int index: inliers) {
-      is_inlier_match.at(index) = true;
-      inlier_matches_kp1_k->emplace_back(matches_kp1_k.at(index));
+    for (std::vector<int>::const_iterator it = it_inliers_begin;
+        it != it_inliers_end; ++it) {
+      is_inlier_match.at(*it) = true;
+      inlier_matches_kp1_k->emplace_back(matches_kp1_k.at(*it));
     }
     for (size_t index = 0u; index < kNumMatches; ++index) {
       if (!is_inlier_match[index]) {
         outlier_matches_kp1_k->emplace_back(matches_kp1_k.at(index));
       }
     }
+    CHECK_EQ(inlier_matches_kp1_k->size() + outlier_matches_kp1_k->size(), matches_kp1_k.size());
     return true;
   }
 }
