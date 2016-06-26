@@ -80,9 +80,9 @@ bool rejectOutlierFeatureMatchesTranslationSAC(
 }
 
 bool rejectOutlierFeatureMatchesRelativePoseRotationSAC(
-    const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
-    const aslam::Quaternion& q_Ckp1_Ck, const aslam::MatchesWithScore& matches_kp1_k,
-    bool fix_random_seed, double ransac_threshold, size_t ransac_max_iterations,
+    const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k
+    , const aslam::MatchesWithScore& matches_kp1_k, bool fix_random_seed,
+    double ransac_threshold, size_t ransac_max_iterations,
     aslam::MatchesWithScore* inlier_matches_kp1_k,
     aslam::MatchesWithScore* outlier_matches_kp1_k) {
   CHECK_GT(ransac_threshold, 0.0);
@@ -100,7 +100,6 @@ bool rejectOutlierFeatureMatchesRelativePoseRotationSAC(
     return false;
   }
 
-  // Solve 2-pt RANSAC problem.
   opengv::bearingVectors_t bearing_vectors_kp1;
   opengv::bearingVectors_t bearing_vectors_k;
 
@@ -110,10 +109,6 @@ bool rejectOutlierFeatureMatchesRelativePoseRotationSAC(
                                       &bearing_vectors_kp1, &bearing_vectors_k);
   using opengv::relative_pose::CentralRelativeAdapter;
   CentralRelativeAdapter adapter(bearing_vectors_kp1, bearing_vectors_k);
-  /*
-  CentralRelativeAdapter adapter(bearing_vectors_kp1, bearing_vectors_k,
-                                 q_Ckp1_Ck.getRotationMatrix());
-  */
 
   typedef opengv::sac_problems::relative_pose::RotationOnlySacProblem
       RotationOnlySacProblem;
@@ -123,9 +118,7 @@ bool rejectOutlierFeatureMatchesRelativePoseRotationSAC(
   opengv::sac::Ransac<RotationOnlySacProblem> rotation_only_ransac;
   rotation_only_ransac.sac_model_ = rotation_sac_problem;
   rotation_only_ransac.threshold_ = ransac_threshold;
-  //rotation_only_ransac.threshold_ = 9.0;
   rotation_only_ransac.max_iterations_ = ransac_max_iterations;
-  //rotation_only_ransac.max_iterations_ = 50;
   rotation_only_ransac.computeModel();
 
   const size_t kNumRotationOnlyInliers = rotation_only_ransac.inliers_.size();
@@ -141,9 +134,8 @@ bool rejectOutlierFeatureMatchesRelativePoseRotationSAC(
           !fix_random_seed));
   opengv::sac::Ransac<CentralRelativePoseSacProblem> relative_pose_ransac;
   relative_pose_ransac.sac_model_ = relative_pose_sac_problem;
-  //relative_pose_ransac.threshold_ = 9.0;
-  relative_pose_ransac.threshold_ = ransac_threshold;
-  //relative_pose_ransac.max_iterations_ = 50;
+  //relative_pose_ransac.threshold_ = ransac_threshold;
+  relative_pose_ransac.threshold_ = 0.00005;
   relative_pose_ransac.max_iterations_ = ransac_max_iterations;
   relative_pose_ransac.computeModel();
 
