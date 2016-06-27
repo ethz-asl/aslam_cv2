@@ -448,7 +448,7 @@ void GyroTracker::ComputeStatusTrackLengthOfFrameK(
     return;
   }
   CHECK_EQ(feature_status_k_km1_.size(), 2u);
-  CHECK_GT(status_track_length_km1_.size(), 0u);
+  //CHECK_GT(status_track_length_km1_.size(), 0u);
 
   for (const TrackedMatch& match: tracked_matches) {
     const int match_index_k = match.first;

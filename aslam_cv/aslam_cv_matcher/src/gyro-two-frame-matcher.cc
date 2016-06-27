@@ -30,8 +30,6 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
   CHECK(frame_k.hasKeypointMeasurements());
   CHECK_GT(frame_kp1.getTimestampNanoseconds(), frame_k.getTimestampNanoseconds());
   CHECK_NOTNULL(matches_with_score_kp1_k_)->clear();
-  CHECK_GT(kNumPointsKp1, 0);
-  CHECK_GT(kNumPointsK, 0);
   CHECK_EQ(kNumPointsKp1, frame_kp1.getDescriptors().cols()) <<
       "Number of keypoints and descriptors in frame k+1 is not the same.";
   CHECK_EQ(kNumPointsK, frame_k.getDescriptors().cols()) <<
@@ -96,6 +94,10 @@ void GyroTwoFrameMatcher::Initialize() {
 
 void GyroTwoFrameMatcher::Match() {
   Initialize();
+
+  if (kNumPointsK == 0 || kNumPointsKp1 == 0) {
+    return;
+  }
 
   for (int i = 0; i < kNumPointsK; ++i) {
     MatchKeypoint(i);

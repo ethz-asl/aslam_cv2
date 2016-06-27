@@ -15,7 +15,10 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
   CHECK_NOTNULL(predicted_keypoints_kp1);
   CHECK_NOTNULL(prediction_success)->clear();
   CHECK(frame_k.hasKeypointMeasurements());
-  CHECK_GT(frame_k.getNumKeypointMeasurements(), 0u);
+  //CHECK_GT(frame_k.getNumKeypointMeasurements(), 0u);
+  if (frame_k.getNumKeypointMeasurements() == 0u) {
+    return;
+  }
   const aslam::Camera& camera = *CHECK_NOTNULL(frame_k.getCameraGeometry().get());
 
   // Early exit for identity rotation.
