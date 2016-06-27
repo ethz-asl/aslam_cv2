@@ -8,7 +8,6 @@
 #include <opengv/relative_pose/methods.hpp>
 #include <opengv/sac/Ransac.hpp>
 #include <opengv/sac_problems/relative_pose/TranslationOnlySacProblem.hpp>
-#include <opengv/sac_problems/relative_pose/CentralRelativePoseSacProblem.hpp>
 #include <opengv/sac_problems/relative_pose/RotationOnlySacProblem.hpp>
 
 namespace aslam {
