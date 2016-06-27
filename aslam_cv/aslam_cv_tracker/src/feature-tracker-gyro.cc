@@ -24,6 +24,10 @@ DEFINE_uint64(gyro_lk_max_status_track_length, 10u, "Status track length is the 
     "track length since the status of the keypoint has changed (e.g. from lk "
     "tracked to detected or the reverse). The lk tracker will not track "
     "keypoints with longer status track length than this value.");
+DEFINE_uint64(gyro_lk_track_detected_threshold, 1u, "Threshold that defines "
+    "how many times a detected feature has to be matched to be deemed "
+    "worthy to be tracked by the LK-tracker. A value of 1 means that it has "
+    "to be at least detected twice and matched once.");
 DEFINE_int32(gyro_lk_window_size, 21, "Size of the search window at each "
     "pyramid level.");
 DEFINE_int32(gyro_lk_max_pyramid_levels, 1, "If set to 0, pyramids are not "
@@ -336,12 +340,7 @@ void GyroTracker::ComputeLKCandidates(
     const FeatureStatus current_feature_status =
         feature_status_k_km1_[0][unmatched_index_k];
     if (current_feature_status == FeatureStatus::kDetected) {
-      // Threshold that defines how many times a feature has to be detected
-      // and matched to be deemed worthy to be tracked by the LK-tracker.
-      // A value of 1 means that it has to be at least
-      // detected twice (and matched once).
-      static constexpr size_t kDetectedMinTrackLength = 1u;
-      if (current_status_track_length >= kDetectedMinTrackLength) {
+      if (current_status_track_length >= FLAGS_gyro_lk_track_detected_threshold) {
         // These candidates have the highest priority as lk candidates.
         // The most valuable candidates have the longest status track length.
         indices_detected_and_tracked.emplace_back(
