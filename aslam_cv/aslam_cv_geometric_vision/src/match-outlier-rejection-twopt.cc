@@ -68,6 +68,11 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
   translation_ransac.computeModel();
 
   // Take the union of both inlier sets as final inlier set.
+  // This is done because translation only ransac erroneously discards many
+  // matches in the center of the image as outliers but it is reliable
+  // closer to the boundary of the image. On the contrary, rotation only
+  // ransac erroneously discards many matches close to the border of the image
+  // but it correctly classifies matches in the center of the image.
   std::unordered_set<int> inlier_indices(
       rotation_ransac.inliers_.begin(), rotation_ransac.inliers_.end());
   inlier_indices.insert(translation_ransac.inliers_.begin(), translation_ransac.inliers_.end());
