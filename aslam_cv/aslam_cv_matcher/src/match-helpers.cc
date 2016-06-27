@@ -1,38 +1,34 @@
-#include <aslam/common/stl-helpers.h>
-#include <aslam/frames/visual-frame.h>
-#include <aslam/frames/visual-nframe.h>
-#include <glog/logging.h>
+#include "aslam/matcher/match-helpers.h"
 
-#include "aslam/matcher/match.h"
+#include <aslam/common/stl-helpers.h>
+#include <Eigen/Core>
 
 namespace aslam {
 
-void convertMatches(const MatchesWithScore& matches_with_score_A_B, Matches* matches_A_B) {
-  CHECK_NOTNULL(matches_A_B)->clear();
-  matches_A_B->reserve(matches_with_score_A_B.size());
-  for (const aslam::MatchWithScore& match : matches_with_score_A_B) {
-    CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
-    CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
-    matches_A_B->emplace_back(static_cast<size_t> (match.getIndexApple()),
-                              static_cast<size_t> (match.getIndexBanana()));
+/// Select and return N random matches for each camera in the rig.
+void pickNRandomRigMatches(
+    size_t n_per_camera, const FrameToFrameMatchesList& rig_matches,
+    FrameToFrameMatchesList* selected_rig_matches) {
+  CHECK_NOTNULL(selected_rig_matches)->clear();
+  CHECK_GT(n_per_camera, 0u);
+  const size_t num_cameras = rig_matches.size();
+  selected_rig_matches->resize(num_cameras);
+
+  for (size_t cam_idx = 0u; cam_idx < num_cameras; ++cam_idx) {
+    const aslam::FrameToFrameMatches& camera_matches = rig_matches[cam_idx];
+    if (camera_matches.size() <= n_per_camera) {
+      (*selected_rig_matches)[cam_idx] = camera_matches;
+    } else {
+      common::drawNRandomElements(n_per_camera, camera_matches, &(*selected_rig_matches)[cam_idx]);
+    }
   }
-  CHECK_EQ(matches_with_score_A_B.size(), matches_A_B->size());
+  CHECK_EQ(num_cameras, selected_rig_matches->size());
 }
 
-void convertMatches(const MatchesWithScore& matches_with_score_A_B, OpenCvMatches* matches_A_B) {
-  CHECK_NOTNULL(matches_A_B)->clear();
-  matches_A_B->reserve(matches_with_score_A_B.size());
-  for (MatchWithScore match : matches_with_score_A_B) {
-    CHECK_GE(match.getIndexApple(), 0) << "Apple keypoint index is negative.";
-    CHECK_GE(match.getIndexBanana(), 0) << "Banana keypoint index is negative.";
-    matches_A_B->emplace_back(cv::DMatch(match.getIndexApple(), match.getIndexBanana(), static_cast<float>(match.getScore())));
-  }
-  CHECK_EQ(matches_with_score_A_B.size(), matches_A_B->size());
-}
-
-size_t extractMatchesFromTrackIdChannel(const aslam::VisualFrame& frame_kp1,
-                                        const aslam::VisualFrame& frame_k,
-                                        aslam::Matches* matches_kp1_kp) {
+/// Get the matches based on the track id channels for one VisualFrame.
+size_t extractMatchesFromTrackIdChannel(const VisualFrame& frame_kp1,
+                                        const VisualFrame& frame_k,
+                                        FrameToFrameMatches* matches_kp1_kp) {
   CHECK_NOTNULL(matches_kp1_kp);
   CHECK_EQ(frame_kp1.getRawCameraGeometry().get(), frame_k.getRawCameraGeometry().get());
   const Eigen::VectorXi& track_ids_kp1 = frame_kp1.getTrackIds();
@@ -66,9 +62,10 @@ size_t extractMatchesFromTrackIdChannel(const aslam::VisualFrame& frame_kp1,
   return matches_kp1_kp->size();
 }
 
-size_t extractMatchesFromTrackIdChannels(const aslam::VisualNFrame& nframe_kp1,
-                                         const aslam::VisualNFrame& nframe_k,
-                                         std::vector<aslam::Matches>* rig_matches_kp1_kp) {
+/// Get the matches based on the track id channels for one VisualNFrame.
+size_t extractMatchesFromTrackIdChannels(
+    const VisualNFrame& nframe_kp1, const VisualNFrame& nframe_k,
+    FrameToFrameMatchesList* rig_matches_kp1_kp) {
   CHECK_NOTNULL(rig_matches_kp1_kp);
   CHECK_EQ(nframe_kp1.getNCameraShared().get(), nframe_k.getNCameraShared().get());
 
@@ -85,23 +82,27 @@ size_t extractMatchesFromTrackIdChannels(const aslam::VisualNFrame& nframe_kp1,
   return num_matches;
 }
 
-double getMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
-                                    const aslam::VisualNFrame& nframe_k,
-                                    const std::vector<aslam::Matches>& matches_kp1_kp) {
+/// Get the median pixel disparity for all matches.
+double getMatchPixelDisparityMedian(
+      const VisualNFrame& nframe_kp1, const VisualNFrame& nframe_k,
+      const FrameToFrameMatchesList& matches_kp1_kp) {
   aslam::Quaternion q_kp1_kp;
   q_kp1_kp.setIdentity();
   return getUnrotatedMatchPixelDisparityMedian(nframe_kp1, nframe_k, matches_kp1_kp, q_kp1_kp);
 }
 
-double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_kp1,
-                                             const aslam::VisualNFrame& nframe_k,
-                                             const std::vector<aslam::Matches>& matches_kp1_k,
-                                             const aslam::Quaternion& q_kp1_k) {
+/// Get the median pixel disparity for all matches, taking into account the relative
+/// orientation of the frames.
+double getUnrotatedMatchPixelDisparityMedian(
+    const VisualNFrame& nframe_kp1, const VisualNFrame& nframe_k,
+    const FrameToFrameMatchesList& matches_kp1_k,
+    const aslam::Quaternion& q_kp1_k) {
   CHECK_EQ(nframe_kp1.getNCameraShared().get(), nframe_k.getNCameraShared().get());
 
   const size_t num_cameras = nframe_kp1.getNumCameras();
   CHECK_EQ(matches_kp1_k.size(), num_cameras);
-  const size_t num_matches = countRigMatches(matches_kp1_k);
+  const size_t num_matches =
+      aslam::common::countNumberOfElementsInNestedList(matches_kp1_k);
   std::vector<double> disparity_px;
   disparity_px.reserve(num_matches);
   size_t projection_failed_counter = 0u;
@@ -113,7 +114,7 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
       const Eigen::Matrix2Xd& keypoints_kp1 =
           nframe_kp1.getFrame(cam_idx).getKeypointMeasurements();
       const Eigen::Matrix2Xd& keypoints_k = nframe_k.getFrame(cam_idx).getKeypointMeasurements();
-      for (const aslam::Match& match_kp1_kp : matches_kp1_k[cam_idx]) {
+      for (const FrameToFrameMatch& match_kp1_kp : matches_kp1_k[cam_idx]) {
         CHECK_LT(static_cast<int>(match_kp1_kp.first), keypoints_kp1.cols());
         CHECK_LT(static_cast<int>(match_kp1_kp.second), keypoints_k.cols());
         disparity_px.emplace_back((keypoints_kp1.col(match_kp1_kp.first)
@@ -125,7 +126,7 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
     for (size_t cam_idx = 0u; cam_idx < num_cameras; ++cam_idx) {
       std::vector<size_t> keypoint_indices_k;
       keypoint_indices_k.reserve(matches_kp1_k[cam_idx].size());
-      for (const aslam::Match& match_kp1_kp : matches_kp1_k[cam_idx]) {
+      for (const FrameToFrameMatch& match_kp1_kp : matches_kp1_k[cam_idx]) {
         CHECK_LT(static_cast<int>(match_kp1_kp.second),
                  nframe_k.getFrame(cam_idx).getNumKeypointMeasurements());
         keypoint_indices_k.emplace_back(match_kp1_kp.second);
@@ -173,9 +174,10 @@ double getUnrotatedMatchPixelDisparityMedian(const aslam::VisualNFrame& nframe_k
   return aslam::common::median(disparity_px.begin(), disparity_px.end());
 }
 
+/// Return the normalized bearing vectors for a list of single camera matches.
 void getBearingVectorsFromMatches(
-    const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
-    const aslam::Matches& matches_kp1_k,
+    const VisualFrame& frame_kp1, const VisualFrame& frame_k,
+    const FrameToFrameMatches& matches_kp1_k,
     Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_kp1,
     Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_k) {
   CHECK_NOTNULL(bearing_vectors_kp1);
@@ -189,7 +191,7 @@ void getBearingVectorsFromMatches(
 
   keypoint_indices_kp1.reserve(matches_kp1_k.size());
   keypoint_indices_k.reserve(matches_kp1_k.size());
-  for (const aslam::Match& match_kp1_k : matches_kp1_k) {
+  for (const FrameToFrameMatch& match_kp1_k : matches_kp1_k) {
     keypoint_indices_kp1.emplace_back(match_kp1_k.first);
     keypoint_indices_k.emplace_back(match_kp1_k.second);
   }
@@ -202,4 +204,3 @@ void getBearingVectorsFromMatches(
 }
 
 }  // namespace aslam
-
