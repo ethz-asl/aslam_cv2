@@ -7,6 +7,7 @@
 
 #include <aslam/common/macros.h>
 #include <aslam/common/memory.h>
+#include <aslam/common/timer.h>
 #include <aslam/matcher/match.h>
 
 #include "aslam/matcher/matching-engine.h"
@@ -37,7 +38,8 @@ class MatchingEngineExclusive : public MatchingEngine<MatchingProblem> {
   MatchingEngineExclusive() {};
   virtual ~MatchingEngineExclusive() {};
 
-  virtual bool match(MatchingProblem* problem, typename aslam::MatchesWithScore* matches_A_B);
+  virtual bool match(MatchingProblem* problem,
+                     typename MatchingProblem::MatchesWithScore* matches_A_B);
 
 private:
   /// \brief Recursively assigns the next best apple to the given banana.
@@ -70,16 +72,15 @@ private:
     }
   }
 
-  /// \brief List of sorted candidates for a given banana. (i.e. candidates_[banana_index] refers to
-  ///        a list of apples sorted wrt. the matching score (note: it's sorted bottom-up, so
+  /// \brief List of sorted candidates for a given banana. (i.e. candidates_[banana_index] refers
+  ///        to a list of apples sorted wrt. the matching score (note: it's sorted bottom-up, so
   ///        .begin() points to the worst apple match for this banana. use .rbegin() instead to get
   ///        best candidate.)
-  typename aslam::Aligned<std::vector, typename MatchingProblem::Candidates>::type candidates_;
+  typename MatchingProblem::CandidatesList candidates_;
 
   /// \brief The temporary matches assigned to each apple. (i.e. temporary_matches_[apple_index]
   ///        returns the current match for this apple. May change during the assignment procedure.
-  typename aslam::Aligned<std::vector, typename MatchingProblem::Candidate>::type
-    temporary_matches_;
+  typename MatchingProblem::Candidates temporary_matches_;
 
   /// \brief Iterators to the next best apple candidate for each banana.
   ///        (i.e. iterator_to_next_best_apple_[banana_index] points to the next best candidate
@@ -90,28 +91,31 @@ private:
 };
 
 template<typename MatchingProblem>
-bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
-                                                     aslam::MatchesWithScore* matches_A_B) {
+bool MatchingEngineExclusive<MatchingProblem>::match(
+    MatchingProblem* problem, typename MatchingProblem::MatchesWithScore* matches_A_B) {
+  aslam::timing::Timer method_timer("MatchingEngineExclusive<MatchingProblem>::match()");
+
   CHECK_NOTNULL(problem);
   CHECK_NOTNULL(matches_A_B);
   matches_A_B->clear();
 
   if (problem->doSetup()) {
-    size_t num_bananas = problem->numBananas();
-    size_t num_apples = problem->numApples();
+    const size_t num_bananas = problem->numBananas();
+    const size_t num_apples = problem->numApples();
+
+    problem->getCandidates(&candidates_);
+    CHECK_EQ(candidates_.size(), num_bananas) << "The size of the candidates list does not "
+        << "match the number of bananas of the problem. getCandidates(...) of the given matching "
+        << "problem is supposed to return a vector of candidates for each banana and hence the "
+        << "size of the returned vector must match the number of bananas.";
 
     temporary_matches_.clear();
     temporary_matches_.resize(num_apples);
-
-    candidates_.clear();
-    candidates_.resize(num_bananas);
 
     iterator_to_next_best_apple_.resize(num_bananas);
 
     // Collect all apple candidates for every banana.
     for (size_t index_banana = 0; index_banana < num_bananas; ++index_banana) {
-      problem->getAppleCandidatesForBanana(index_banana, &(candidates_[index_banana]));
-
       // Sorts the candidates in descending order.
       std::sort(candidates_[index_banana].begin(), candidates_[index_banana].end(),
                 std::greater<typename MatchingProblem::Candidate>());
@@ -135,10 +139,11 @@ bool MatchingEngineExclusive<MatchingProblem>::match(MatchingProblem* problem,
       }
     }
 
-    VLOG(10) << "Matched " << matches_A_B->size() << " keypoints.";
+    method_timer.Stop();
     return true;
   } else {
     LOG(ERROR) << "Setting up the matching problem (.doSetup()) failed.";
+    method_timer.Stop();
     return false;
   }
 }

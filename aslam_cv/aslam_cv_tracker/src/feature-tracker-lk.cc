@@ -178,9 +178,8 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
 }
 
 void FeatureTrackerLk::track(
-    const aslam::Quaternion& q_Ckp1_Ck, const aslam::VisualFrame& frame_k,
-    aslam::VisualFrame* frame_kp1,
-    aslam::MatchesWithScore* matches_with_score_kp1_k) {
+    const Quaternion& q_Ckp1_Ck, const VisualFrame& frame_k, VisualFrame* frame_kp1,
+    FrameToFrameMatchesWithScore* matches_with_score_kp1_k) {
   aslam::timing::Timer timer_tracking("FeatureTrackerLk: track");
   CHECK_NOTNULL(frame_kp1);
   CHECK_NOTNULL(matches_with_score_kp1_k)->clear();
@@ -233,7 +232,8 @@ void FeatureTrackerLk::track(
   size_t num_failed_tracking = 0u;
   size_t num_outside_image = 0u;
   size_t num_external_abort = 0u;
-  for (size_t keypoint_idx_k = 0u; keypoint_idx_k < tracked_keypoints_kp1.size(); ++keypoint_idx_k) {
+  for (size_t keypoint_idx_k = 0u; keypoint_idx_k < tracked_keypoints_kp1.size();
+      ++keypoint_idx_k) {
     // Drop keypoint if the tracking was unsuccessful.
     if (!tracking_success[keypoint_idx_k]) {
       ++num_failed_tracking;
@@ -337,8 +337,7 @@ void FeatureTrackerLk::track(
   abort_keypoints_wrt_frame_id_.setInvalid();
 }
 
-void FeatureTrackerLk::trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
-                                      const aslam::VisualFrame& frame_k,
+void FeatureTrackerLk::trackKeypoints(const Quaternion& q_Ckp1_Ck, const VisualFrame& frame_k,
                                       const cv::Mat& image_frame_kp1,
                                       Vector2dList* tracked_keypoints_kp1,
                                       std::vector<unsigned char>* tracking_success,
@@ -473,7 +472,7 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
 }
 
 void FeatureTrackerLk::swapKeypointIndicesToAbort(
-    const aslam::FrameId& frame_id, std::unordered_set<size_t>* keypoint_indices_to_abort) {
+    const FrameId& frame_id, std::unordered_set<size_t>* keypoint_indices_to_abort) {
   CHECK_NOTNULL(keypoint_indices_to_abort);
   CHECK(frame_id.isValid());
   keypoint_indices_to_abort_.swap(*keypoint_indices_to_abort);

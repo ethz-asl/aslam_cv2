@@ -6,18 +6,24 @@
 ///
 /// @}
 
-#include <set>
 #include <vector>
 
 #include <aslam/common/macros.h>
+#include <aslam/common/memory.h>
 #include <glog/logging.h>
 
-#include "match.h"
 namespace aslam {
 
 /// \class MatchingProblem
 ///
 /// \brief defines the specifics of a matching problem
+///
+/// IMPORTANT NOTE: If you create a new matching problem inheriting from this class, make sure
+/// not to forget to add the
+/// ASLAM_ADD_MATCH_TYPEDEFS_WITH_ALIASES(
+///    NewMatchingProblemClassName, alias_for_getAppleIndex, alias_for_getBananaIndex)
+/// macro in the public class body! Otherwise, no matches type will be available for the
+/// new problem and compilation will fail.
 ///
 /// The problem is assumed to have two lists (Apples and Bananas) whose elements
 /// can be referenced by a linear index. The problem defines the score
@@ -59,18 +65,19 @@ public:
     }
   };
 
-  typedef std::vector<Candidate> Candidates;
+  typedef Aligned<std::vector, Candidate>::type Candidates;
+  typedef Aligned<std::vector, Candidates>::type CandidatesList;
 
   ASLAM_POINTER_TYPEDEFS(MatchingProblem);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblem);
 
-  MatchingProblem() {};
-  virtual ~MatchingProblem() {};
+  MatchingProblem() = default;
+  virtual ~MatchingProblem() = default;
 
   virtual size_t numApples() const = 0;
   virtual size_t numBananas() const = 0;
 
-  /// Get a short list of candidates in list a for index b
+  /// Get a short list of candidates for all banana indices.
   ///
   /// Return all indices of list a for n^2 matching; or use something
   /// smarter like nabo to get nearest neighbors.  Can also be used to
@@ -81,12 +88,34 @@ public:
   /// for sorting, pre-filtering, and will be explicitly recomputed
   /// using the computeScore function.
   ///
-  /// \param[in] b The index of b queried for candidates.
-  /// \param[out] candidates Candidates from the Apples-list that could potentially match this element of Bananas.
-  virtual void getAppleCandidatesForBanana(int /*b*/, Candidates* candidates) = 0;
+  /// \param[out] candidates_for_bananas Candidates from the Apples-list that could potentially
+  ///                                    match for each banana.
+  virtual inline void getCandidates(CandidatesList* candidates_for_bananas) {
+    CHECK_NOTNULL(candidates_for_bananas)->clear();
+    const size_t num_bananas = numBananas();
+    candidates_for_bananas->resize(num_bananas);
+    for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
+      getAppleCandidatesForBanana(
+          banana_idx, &(*candidates_for_bananas)[banana_idx]);
+    }
+  }
 
-  /// Gets called at the beginning of the matching problem; ie to setup kd-trees, lookup tables, whatever...
+  /// Get a short list of candidates for a given banana index.
+  ///
+  /// \param[in] banana_index The index of the banana queried for candidates.
+  /// \param[out] candidates_for_bananas Candidates from the Apples-list that could potentially
+  ///                                    match for each element of Bananas.
+  virtual void getAppleCandidatesForBanana(int banana_index, Candidates* candidates) {
+    LOG(FATAL) << "Not implemented.";
+  }
+
+  /// Gets called at the beginning of the matching problem; i.e. to setup kd-trees, lookup tables
+  /// or the like.
   virtual bool doSetup() = 0;
+
+  /// List of tested match pairs for every banana. This is only retrieved and stored if the
+  /// flag 'matcher_store_all_tested_pairs' is set to true.
+  CandidatesList all_tested_pairs_;
 };
-}
+}  // namespace aslam
 #endif //ASLAM_CV_MATCHING_PROBLEM_H_

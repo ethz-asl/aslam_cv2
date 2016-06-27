@@ -91,20 +91,18 @@ class FeatureTrackerLk : public FeatureTracker {
   /// to frame (k+1) and initializes new keypoints if the number of keypoints drops below the
   /// specified threshold.
   virtual void track(
-      const aslam::Quaternion& q_Ckp1_Ck, const aslam::VisualFrame& frame_k,
-      aslam::VisualFrame* frame_kp1,
-      aslam::MatchesWithScore* matches_with_score_kp1_k) override;
+      const Quaternion& q_Ckp1_Ck, const VisualFrame& frame_k, VisualFrame* frame_kp1,
+      FrameToFrameMatchesWithScore* matches_with_score_kp1_k) override;
 
   /// Takes a visual frame with no keypoints, and initializes new keypoints.
   /// Uses the class settings and an occupancy grid.
-  void initializeKeypointsInEmptyVisualFrame(aslam::VisualFrame* frame) const;
+  void initializeKeypointsInEmptyVisualFrame(VisualFrame* frame) const;
 
  private:
   /// Track existing keypoints from frame (k) to frame (k+1). Make sure that the ordering of the
   /// keypoints in the keypoints_kp1 remains unchanged when writing the keypoints to the keypoint
   /// channel of the VisualFrame.
-  void trackKeypoints(const aslam::Quaternion& q_Ckp1_Ck,
-                      const aslam::VisualFrame& frame_k,
+  void trackKeypoints(const Quaternion& q_Ckp1_Ck, const VisualFrame& frame_k,
                       const cv::Mat& image_frame_kp1,
                       Vector2dList* tracked_keypoints_kp1,
                       std::vector<unsigned char>* tracking_success,
@@ -115,7 +113,7 @@ class FeatureTrackerLk : public FeatureTracker {
   /// the given occupancy grid.
   /// The keypoints will not be added to the visual frame, but only to the given
   /// occupancy grid.
-  void detectNewKeypointsInVisualFrame(const aslam::VisualFrame& frame,
+  void detectNewKeypointsInVisualFrame(const VisualFrame& frame,
                                        const cv::Mat& detection_mask,
                                        OccupancyGrid* occupancy_grid) const;
 
@@ -160,7 +158,7 @@ class FeatureTrackerLk : public FeatureTracker {
   /// Set a list of keypoint ids that have been identified as outliers in the last update step.
   /// The tracking of these features will be aborted.
   virtual void swapKeypointIndicesToAbort(
-      const aslam::FrameId& frame_id, std::unordered_set<size_t>* keypoint_indices_to_abort);
+      const FrameId& frame_id, std::unordered_set<size_t>* keypoint_indices_to_abort);
 
   /// Keypoint indices wrt. to the last frame for which the tracking should be aborted during
   /// the next call to track().

@@ -1,12 +1,15 @@
-#include <math.h>
-#include <vector>
 #include <algorithm>
+#include <cmath>
+#include <vector>
 
 #include <aslam/common/entrypoint.h>
 #include <aslam/matcher/match.h>
 #include <aslam/matcher/matching-engine-exclusive.h>
 #include <aslam/matcher/matching-engine-greedy.h>
 #include <aslam/matcher/matching-problem.h>
+#include <gtest/gtest.h>
+
+namespace aslam {
 
 class SimpleMatchProblem : public aslam::MatchingProblem {
 
@@ -16,10 +19,12 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
   aslam::Matches matches_A_B_;
 
  public:
-  SimpleMatchProblem() {
-  }
-  ~SimpleMatchProblem() {
-  }
+  SimpleMatchProblem() {}
+  ~SimpleMatchProblem() {}
+  typedef aslam::MatchWithScore MatchWithScore;
+  typedef Aligned<std::vector, MatchWithScore>::type MatchesWithScore;
+  typedef aslam::Match Match;
+  typedef Aligned<std::vector, Match>::type Matches;
 
   virtual size_t numApples() const {
     return apples_.size();
@@ -58,8 +63,6 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
      }
    };
 };
-
-namespace aslam {
 
 TEST(PriorityMatchingTest, TestAssignBest) {
   ////////////////////
@@ -146,13 +149,11 @@ TEST(PriorityMatchingTest, TestAssignBest) {
   EXPECT_EQ(matching_engine.temporary_matches_[3].index_banana, -1);
 }
 
-}  // namespace aslam
-
 TEST(TestMatcherExclusive, EmptyMatch) {
   SimpleMatchProblem mp;
   aslam::MatchingEngineExclusive<SimpleMatchProblem> me;
 
-  aslam::MatchesWithScore matches;
+  SimpleMatchProblem::MatchesWithScore matches;
   me.match(&mp, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -174,7 +175,7 @@ TEST(TestMatcherExclusive, ExclusiveMatcher) {
   match_problem.setApples(apples.begin(), apples.end());
   EXPECT_EQ(5u, match_problem.numApples());
 
-  aslam::MatchesWithScore matches;
+  SimpleMatchProblem::MatchesWithScore matches;
   matching_engine.match(&match_problem, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -187,7 +188,7 @@ TEST(TestMatcherExclusive, ExclusiveMatcher) {
 
   match_problem.sortMatches();
 
-  for (auto &match : matches) {
+  for (const SimpleMatchProblem::MatchWithScore &match : matches) {
     EXPECT_EQ(match.getIndexBanana(), banana_index_for_apple[match.getIndexApple()]);
   }
 }
@@ -196,7 +197,7 @@ TEST(TestMatcher, EmptyMatch) {
   SimpleMatchProblem mp;
   aslam::MatchingEngineGreedy<SimpleMatchProblem> me;
 
-  aslam::MatchesWithScore matches;
+  SimpleMatchProblem::MatchesWithScore matches;
   me.match(&mp, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -219,7 +220,7 @@ TEST(TestMatcher, GreedyMatcher) {
   mp.setApples(apples.begin(), apples.end());
   EXPECT_EQ(5u, mp.numApples());
 
-  aslam::MatchesWithScore matches;
+  SimpleMatchProblem::MatchesWithScore matches;
   me.match(&mp, &matches);
   EXPECT_TRUE(matches.empty());
 
@@ -232,9 +233,11 @@ TEST(TestMatcher, GreedyMatcher) {
 
   mp.sortMatches();
 
-  for (auto &match : matches) {
+  for (const SimpleMatchProblem::MatchWithScore& match : matches) {
     EXPECT_EQ(match.getIndexApple(), ind_a_of_b[match.getIndexBanana()]);
   }
 }
+
+}  // namespace aslam
 
 ASLAM_UNITTEST_ENTRYPOINT
