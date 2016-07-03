@@ -3,8 +3,8 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/frames/visual-frame.h>
-#include <glog/logging.h>
 #include <Eigen/Core>
+#include <glog/logging.h>
 
 namespace aslam {
 
@@ -15,7 +15,6 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
   CHECK_NOTNULL(predicted_keypoints_kp1);
   CHECK_NOTNULL(prediction_success)->clear();
   CHECK(frame_k.hasKeypointMeasurements());
-  //CHECK_GT(frame_k.getNumKeypointMeasurements(), 0u);
   if (frame_k.getNumKeypointMeasurements() == 0u) {
     return;
   }

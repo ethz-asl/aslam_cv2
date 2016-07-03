@@ -2,14 +2,13 @@
 
 #include <algorithm>
 
-#include <Eigen/Core>
-#include <glog/logging.h>
-
 #include <aslam/cameras/camera.h>
 #include <aslam/common/memory.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/matcher/gyro-two-frame-matcher.h>
 #include <aslam/matcher/matching-helpers.h>
+#include <Eigen/Core>
+#include <glog/logging.h>
 #include <opencv2/video/tracking.hpp>
 
 #include "aslam/tracker/tracking-helpers.h"
@@ -108,9 +107,9 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   if (settings_.lk_max_num_candidates_ratio_kp1 > 0.0) {
     // It is important, that the track Id deque is updated at the beginning
     // because the rest of the code relies on this.
-    UpdateTrackIdDeque(frame_k);
+    updateTrackIdDeque(frame_k);
     if (!initialized_) {
-      InitializeFeatureStatusDeque();
+      initializeFeatureStatusDeque();
     }
   }
 
@@ -127,7 +126,7 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
       q_Ckp1_Ck, *frame_kp1, frame_k, camera_.imageHeight(),
       predicted_keypoint_positions_kp1,
       prediction_success, matches_kp1_k);
-  matcher.Match();
+  matcher.match();
 
   if (settings_.lk_max_num_candidates_ratio_kp1 > 0.0) {
     // Compute LK candidates and track them.
@@ -135,20 +134,19 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
     std::vector<TrackedMatch> tracked_matches;
     std::vector<int> lk_candidate_indices_k;
 
-    ComputeTrackedMatches(&tracked_matches);
-    ComputeStatusTrackLengthOfFrameK(tracked_matches, &status_track_length_k);
-    ComputeLKCandidates(*matches_kp1_k, status_track_length_k,
+    computeTrackedMatches(&tracked_matches);
+    computeStatusTrackLengthOfFrameK(tracked_matches, &status_track_length_k);
+    computeLKCandidates(*matches_kp1_k, status_track_length_k,
                         frame_k, *frame_kp1, &lk_candidate_indices_k);
-    LKTracking(predicted_keypoint_positions_kp1, prediction_success,
+    lkTracking(predicted_keypoint_positions_kp1, prediction_success,
                lk_candidate_indices_k, frame_k, frame_kp1, matches_kp1_k);
 
     status_track_length_km1_.swap(status_track_length_k);
     initialized_ = true;
   }
-
 }
 
-void GyroTracker::LKTracking(
+void GyroTracker::lkTracking(
       const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
       const std::vector<unsigned char>& prediction_success,
       const std::vector<int>& lk_candidate_indices_k,
@@ -169,7 +167,7 @@ void GyroTracker::LKTracking(
     FrameFeatureStatus frame_feature_status_kp1(kInitialSizeKp1);
     std::fill(frame_feature_status_kp1.begin(), frame_feature_status_kp1.end(),
               FeatureStatus::kDetected);
-    UpdateFeatureStatusDeque(frame_feature_status_kp1);
+    updateFeatureStatusDeque(frame_feature_status_kp1);
     VLOG(4) << "No LK candidates to track.";
     return;
   }
@@ -229,8 +227,8 @@ void GyroTracker::LKTracking(
       indices_to_erase.insert(i);
     }
   }
-  EraseVectorElementsHelper(indices_to_erase, &lk_definite_indices_k);
-  EraseVectorElementsHelper(indices_to_erase, &lk_cv_points_kp1);
+  eraseVectorElementsByIndex(indices_to_erase, &lk_definite_indices_k);
+  eraseVectorElementsByIndex(indices_to_erase, &lk_cv_points_kp1);
 
   const size_t kNumPointsSuccessfullyTracked = lk_cv_points_kp1.size();
 
@@ -278,10 +276,10 @@ void GyroTracker::LKTracking(
             kInitialSizeKp1, FeatureStatus::kDetected);
   std::fill(frame_feature_status_kp1.begin() + kInitialSizeKp1,
             frame_feature_status_kp1.end(), FeatureStatus::kLkTracked);
-  UpdateFeatureStatusDeque(frame_feature_status_kp1);
+  updateFeatureStatusDeque(frame_feature_status_kp1);
 }
 
-void GyroTracker::ComputeTrackedMatches(
+void GyroTracker::computeTrackedMatches(
       std::vector<TrackedMatch>* tracked_matches) const {
   CHECK_NOTNULL(tracked_matches)->clear();
   if (!initialized_) {
@@ -317,7 +315,7 @@ void GyroTracker::ComputeTrackedMatches(
   }
 }
 
-void GyroTracker::ComputeLKCandidates(
+void GyroTracker::computeLKCandidates(
     const FrameToFrameMatchesWithScore& matches_kp1_k,
     const FrameStatusTrackLength& status_track_length_k,
     const VisualFrame& frame_k,
@@ -327,7 +325,7 @@ void GyroTracker::ComputeLKCandidates(
   CHECK_EQ(status_track_length_k.size(), track_ids_k_km1_[0].size());
 
   std::vector<int> unmatched_indices_k;
-  ComputeUnmatchedIndicesOfFrameK(
+  computeUnmatchedIndicesOfFrameK(
       matches_kp1_k, &unmatched_indices_k);
 
   typedef std::pair<int, size_t> IndexTrackLengthPair;
@@ -406,7 +404,7 @@ void GyroTracker::ComputeLKCandidates(
       ". Cut-off ratio: " << settings_.lk_max_num_candidates_ratio_kp1;
 }
 
-void GyroTracker::ComputeUnmatchedIndicesOfFrameK(
+void GyroTracker::computeUnmatchedIndicesOfFrameK(
     const FrameToFrameMatchesWithScore& matches_kp1_k,
     std::vector<int>* unmatched_indices_k) const {
   CHECK_GT(track_ids_k_km1_.size(), 0u);
@@ -435,7 +433,7 @@ void GyroTracker::ComputeUnmatchedIndicesOfFrameK(
            kNumPointsK);
 }
 
-void GyroTracker::ComputeStatusTrackLengthOfFrameK(
+void GyroTracker::computeStatusTrackLengthOfFrameK(
     const std::vector<TrackedMatch>& tracked_matches,
     FrameStatusTrackLength* status_track_length_k) {
   CHECK_NOTNULL(status_track_length_k)->clear();
@@ -448,7 +446,6 @@ void GyroTracker::ComputeStatusTrackLengthOfFrameK(
     return;
   }
   CHECK_EQ(feature_status_k_km1_.size(), 2u);
-  //CHECK_GT(status_track_length_km1_.size(), 0u);
 
   for (const TrackedMatch& match: tracked_matches) {
     const int match_index_k = match.first;
@@ -465,14 +462,14 @@ void GyroTracker::ComputeStatusTrackLengthOfFrameK(
   }
 }
 
-void GyroTracker::InitializeFeatureStatusDeque() {
+void GyroTracker::initializeFeatureStatusDeque() {
   CHECK_EQ(track_ids_k_km1_.size(), 1u);
   const size_t num_points_k = track_ids_k_km1_[0].size();
   FrameFeatureStatus frame_feature_status_k(num_points_k, FeatureStatus::kDetected);
-  UpdateFeatureStatusDeque(frame_feature_status_k);
+  updateFeatureStatusDeque(frame_feature_status_k);
 }
 
-void GyroTracker::UpdateFeatureStatusDeque(
+void GyroTracker::updateFeatureStatusDeque(
     const FrameFeatureStatus& frame_feature_status_kp1) {
   feature_status_k_km1_.emplace_front(
       frame_feature_status_kp1.begin(), frame_feature_status_kp1.end());
@@ -481,7 +478,7 @@ void GyroTracker::UpdateFeatureStatusDeque(
   }
 }
 
-void GyroTracker::UpdateTrackIdDeque(
+void GyroTracker::updateTrackIdDeque(
     const VisualFrame& new_frame_k) {
   const Eigen::VectorXi& track_ids_k = new_frame_k.getTrackIds();
 

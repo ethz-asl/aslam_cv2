@@ -6,12 +6,12 @@
 #include <memory>
 #include <vector>
 
-#include <opencv2/features2d/features2d.hpp>
+#include <aslam/common/macros.h>
 #include <Eigen/Dense>
 #include <glog/logging.h>
+#include <opencv2/features2d/features2d.hpp>
 
-#include <aslam/common/macros.h>
-#include <aslam/tracker/feature-tracker.h>
+#include "aslam/tracker/feature-tracker.h"
 
 namespace aslam {
 class VisualFrame;
@@ -87,7 +87,7 @@ class GyroTracker : public FeatureTracker{
   /// Track candidate features from frame k to (k+1) with optical flow.
   /// Extract descriptors for successful tracks and insert keypoint
   /// and descriptor information into frame (k+1).
-  virtual void LKTracking(
+  virtual void lkTracking(
       const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
       const std::vector<unsigned char>& prediction_success,
       const std::vector<int>& lk_candidate_indices_k,
@@ -97,7 +97,7 @@ class GyroTracker : public FeatureTracker{
 
   /// In general, not all unmatched features will be tracked with the optical
   /// flow algorithm. This function computes the candidates that will be tracked.
-  virtual void ComputeLKCandidates(
+  virtual void computeLKCandidates(
       const FrameToFrameMatchesWithScore& matches_kp1_k,
       const FrameStatusTrackLength& status_track_length_k,
       const VisualFrame& frame_k,
@@ -106,39 +106,39 @@ class GyroTracker : public FeatureTracker{
 
   /// Compute matches from frame k and frame (k-1). They are called tracked
   /// matches since not all original matches get tracked (e.g. rejected by RANSAC).
-  virtual void ComputeTrackedMatches(
+  virtual void computeTrackedMatches(
       std::vector<TrackedMatch>* tracked_matches) const;
 
   /// The matcher is not able to match all features from frame k to (k+1).
   /// This function computes the indices of unmatched features in frame k.
-  virtual void ComputeUnmatchedIndicesOfFrameK(
+  virtual void computeUnmatchedIndicesOfFrameK(
       const FrameToFrameMatchesWithScore& matches_kp1_k,
       std::vector<int>* unmatched_indices_k) const;
 
   /// Status track length is defined as the track length since the status
   /// (lk-tracked or detected) of the tracked feature has changed.
-  virtual void ComputeStatusTrackLengthOfFrameK(
+  virtual void computeStatusTrackLengthOfFrameK(
       const std::vector<TrackedMatch>& tracked_matches,
       FrameStatusTrackLength* status_track_length_k);
 
-  virtual void InitializeFeatureStatusDeque();
+  virtual void initializeFeatureStatusDeque();
 
-  virtual void UpdateFeatureStatusDeque(
+  virtual void updateFeatureStatusDeque(
       const FrameFeatureStatus& frame_feature_status_kp1);
 
-  virtual void UpdateTrackIdDeque(
+  virtual void updateTrackIdDeque(
       const VisualFrame& new_frame_k);
 
   /// Erase elements of a vector based on a set of indices.
   template <typename Type>
-  void EraseVectorElementsHelper(
+  void eraseVectorElementsByIndex(
           const std::unordered_set<size_t>& indices_to_erase,
           std::vector<Type>* vec) const;
 
   /// The camera model used in the tracker.
   const aslam::Camera& camera_;
-  /// Minimum distance to image border is used to skip image points
-  /// , predicted by the lk-tracker, that are too close to the image border.
+  /// Minimum distance to image border is used to skip image points,
+  /// predicted by the lk-tracker, that are too close to the image border.
   const size_t kMinDistanceToImageBorderPx;
   /// Descriptor extractor that is used on lk-tracked points.
   const cv::Ptr<cv::DescriptorExtractor> extractor_;
@@ -157,7 +157,7 @@ class GyroTracker : public FeatureTracker{
 };
 
 template <typename Type>
-void GyroTracker::EraseVectorElementsHelper(
+void GyroTracker::eraseVectorElementsByIndex(
         const std::unordered_set<size_t>& indices_to_erase,
         std::vector<Type>* vec) const {
   CHECK_NOTNULL(vec);

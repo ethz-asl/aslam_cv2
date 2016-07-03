@@ -7,8 +7,8 @@
 #include <opengv/relative_pose/CentralRelativeAdapter.hpp>
 #include <opengv/relative_pose/methods.hpp>
 #include <opengv/sac/Ransac.hpp>
-#include <opengv/sac_problems/relative_pose/TranslationOnlySacProblem.hpp>
 #include <opengv/sac_problems/relative_pose/RotationOnlySacProblem.hpp>
+#include <opengv/sac_problems/relative_pose/TranslationOnlySacProblem.hpp>
 
 namespace aslam {
 namespace geometric_vision {
