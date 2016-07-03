@@ -1,5 +1,7 @@
 #include <algorithm>
 
+#include <aslam/matcher/match-helpers.h>
+
 #include "aslam/frames/feature-track.h"
 #include "aslam/frames/keypoint-identifier.h"
 #include "aslam/visualization/basic-visualization.h"
@@ -40,9 +42,11 @@ void visualizeKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::
         nframe->getFrame(frame_idx).getCameraGeometry()->imageWidth();
     const size_t image_height =
         nframe->getFrame(frame_idx).getCameraGeometry()->imageHeight();
-    cv::Mat slice = image(cv::Rect(offsets[frame_idx].width, offsets[frame_idx].height, image_width,
-                                   image_height));
-    aslam_cv_visualization::drawKeypoints(nframe->getFrame(frame_idx), &slice);
+    cv::Mat frame_slice_of_multi_image =
+        image(cv::Rect(
+            offsets[frame_idx].width, offsets[frame_idx].height, image_width, image_height));
+    aslam_cv_visualization::drawKeypoints(
+        nframe->getFrame(frame_idx), &frame_slice_of_multi_image);
   }
 }
 
@@ -159,25 +163,6 @@ void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
                                         image_width, image_height));
     individual_images[frame_idx].copyTo(slice);
   }
-}
-
-void visualizeMatches(const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
-                      const aslam::MatchesWithScore& matches_with_scores, cv::Mat* image) {
-  CHECK_NOTNULL(image);
-
-  cv::Mat& match_image = *image;
-  cv::cvtColor(frame_kp1.getRawImage(), match_image, CV_GRAY2BGR);
-
-  VLOG(4) << "Converted raw image from grayscale to color.";
-
-  aslam::Matches matches;
-  aslam::convertMatches(matches_with_scores, &matches);
-  VLOG(4) << "Converted the matches.";
-
-  CHECK_NOTNULL(match_image.data);
-
-  drawKeypointMatches(frame_kp1, frame_k, matches, cv::Scalar(255, 255, 0), cv::Scalar(255, 0, 255),
-                      &match_image);
 }
 
 void drawFeatureTrackPatches(const aslam::FeatureTrack& track, size_t keypoint_neighborhood_px,

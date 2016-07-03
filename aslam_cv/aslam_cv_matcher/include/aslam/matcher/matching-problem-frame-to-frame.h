@@ -11,12 +11,13 @@
 #include <vector>
 
 #include <aslam/common/macros.h>
+#include <aslam/common/memory.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common-private/feature-descriptor-ref.h>
 #include <Eigen/Core>
 
+#include "aslam/matcher/match.h"
 #include "aslam/matcher/matching-problem.h"
-#include "match.h"
 
 namespace aslam {
 class VisualFrame;
@@ -24,8 +25,8 @@ class VisualFrame;
 /// \class MatchingProblem
 /// \brief Defines the specifics of a matching problem.
 /// The problem is assumed to have two visual frames (apple_frame and banana_frame) filled with
-/// keypoints and binary descriptors and a rotation matrix taking vectors from the banana frame into
-/// the apple frame. The problem matches banana features against apple features.
+/// keypoints and binary descriptors and a rotation matrix taking vectors from the banana frame
+/// into the apple frame. The problem matches banana features against apple features.
 ///
 /// Coordinate Frames:
 ///   A:  apple frame
@@ -34,6 +35,7 @@ class MatchingProblemFrameToFrame : public MatchingProblem {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemFrameToFrame);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemFrameToFrame);
+  ASLAM_ADD_MATCH_TYPEDEFS(FrameToFrame);
   friend class MatcherTest;
 
   MatchingProblemFrameToFrame() = delete;
@@ -45,8 +47,9 @@ public:
   /// @param[in]  q_A_B                                       Quaternion taking vectors from
   ///                                                         the banana frame into the
   ///                                                         apple frame.
-  /// @param[in]  image_space_distance_threshold_pixels       Max image space distance threshold for
-  ///                                                         two pairs to become match candidates.
+  /// @param[in]  image_space_distance_threshold_pixels       Max image space distance threshold
+  ///                                                         for two pairs to become match
+  ///                                                         candidates.
   /// @param[in]  hamming_distance_threshold                  Max hamming distance for two pairs
   ///                                                         to become candidates.
   MatchingProblemFrameToFrame(const VisualFrame& apple_frame,
@@ -61,19 +64,10 @@ public:
 
   /// Get a short list of candidates in list a for index b
   ///
-  /// Return all indices of list a for n^2 matching; or use something
-  /// smarter like nabo to get nearest neighbors. Can also be used to
-  /// mask out invalid elements in the lists, or an invalid b, by
-  /// returning and empty candidate list.  
-  ///
-  /// The score for each candidate is a rough score that can be used
-  /// for sorting, pre-filtering, and will be explicitly recomputed
-  /// using the computeScore function.
-  ///
-  /// \param[in] banana_index The index of b queried for candidates.
-  /// \param[out] candidates  Candidates from the Apples-list that could potentially match this
-  ///                         element of Bananas.
-  virtual void getAppleCandidatesForBanana(int banana_index, Candidates* candidates);
+  /// \param[in] frame_banana_keypoint_index The index of b queried for candidates.
+  /// \param[out] candidates  Candidates from the apple frame keypoints that could
+  ///                         potentially match the given keypoint from the banana frame.
+  virtual void getAppleCandidatesForBanana(int frame_banana_keypoint_index, Candidates* candidates);
 
   inline double computeMatchScore(int hamming_distance) {
     return static_cast<double>(384 - hamming_distance) / 384.0;
@@ -139,7 +133,7 @@ private:
 
   /// Pairs with image space distance >= image_space_distance_threshold_pixels_ are
   /// excluded from matches.
-  double squared_image_space_distance_threshold_pixels_squared_;
+  double squared_image_space_distance_threshold_px_sq_;
 
   /// Pairs with descriptor distance >= hamming_distance_threshold_ are
   /// excluded from matches.

@@ -11,7 +11,7 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
     const uint32_t image_height,
     const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
     const std::vector<unsigned char>& prediction_success,
-    MatchesWithScore* matches_with_score_kp1_k)
+    FrameToFrameMatchesWithScore* matches_with_score_kp1_k)
   : frame_kp1_(frame_kp1), frame_k_(frame_k), q_Ckp1_Ck_(q_Ckp1_Ck),
     predicted_keypoint_positions_kp1_(predicted_keypoint_positions_kp1),
     prediction_success_(prediction_success),
@@ -19,7 +19,7 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
     kNumPointsKp1(frame_kp1.getKeypointMeasurements().cols()),
     kNumPointsK(frame_k.getKeypointMeasurements().cols()),
     kImageHeight(image_height),
-    matches_with_score_kp1_k_(matches_with_score_kp1_k),
+    matches_kp1_k_(matches_with_score_kp1_k),
     is_keypoint_kp1_matched_(kNumPointsKp1, false),
     iteration_processed_keypoints_kp1_(kNumPointsKp1, false) {
   CHECK(frame_kp1.isValid());
@@ -29,7 +29,7 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
   CHECK(frame_kp1.hasKeypointMeasurements());
   CHECK(frame_k.hasKeypointMeasurements());
   CHECK_GT(frame_kp1.getTimestampNanoseconds(), frame_k.getTimestampNanoseconds());
-  CHECK_NOTNULL(matches_with_score_kp1_k_)->clear();
+  CHECK_NOTNULL(matches_kp1_k_)->clear();
   CHECK_EQ(kNumPointsKp1, frame_kp1.getDescriptors().cols()) <<
       "Number of keypoints and descriptors in frame k+1 is not the same.";
   CHECK_EQ(kNumPointsK, frame_k.getDescriptors().cols()) <<
@@ -45,7 +45,7 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
   descriptors_kp1_wrapped_.reserve(kNumPointsKp1);
   keypoints_kp1_sorted_by_y_.reserve(kNumPointsKp1);
   descriptors_k_wrapped_.reserve(kNumPointsK);
-  matches_with_score_kp1_k_->reserve(kNumPointsK);
+  matches_kp1_k_->reserve(kNumPointsK);
   corner_row_LUT_.reserve(kImageHeight);
 }
 
@@ -231,21 +231,21 @@ void GyroTwoFrameMatcher::MatchKeypoint(const int idx_k) {
     const double matching_score = ComputeMatchingScore(
         best_score, kDescriptorSizeBits);
     if (is_keypoint_kp1_matched_[best_match_keypoint_idx_kp1]) {
-      if (matching_score > kp1_idx_to_matches_with_score_iterator_map_
-          [best_match_keypoint_idx_kp1]->score) {
+      if (matching_score > kp1_idx_to_matches_iterator_map_
+          [best_match_keypoint_idx_kp1]->getScore()) {
         // The current match is better than a previous match associated with the
         // current keypoint of frame (k+1). Hence, the inferior match is the
         // previous match associated with the current keypoint of frame (k+1).
         const int inferior_keypoint_idx_k =
-            kp1_idx_to_matches_with_score_iterator_map_
-            [best_match_keypoint_idx_kp1]->getIndexBanana();
+            kp1_idx_to_matches_iterator_map_
+            [best_match_keypoint_idx_kp1]->getKeypointIndexBananaFrame();
         inferior_match_keypoint_idx_k_.push_back(inferior_keypoint_idx_k);
 
-        kp1_idx_to_matches_with_score_iterator_map_
+        kp1_idx_to_matches_iterator_map_
         [best_match_keypoint_idx_kp1]->setScore(matching_score);
-        kp1_idx_to_matches_with_score_iterator_map_
+        kp1_idx_to_matches_iterator_map_
         [best_match_keypoint_idx_kp1]->setIndexApple(best_match_keypoint_idx_kp1);
-        kp1_idx_to_matches_with_score_iterator_map_
+        kp1_idx_to_matches_iterator_map_
         [best_match_keypoint_idx_kp1]->setIndexBanana(idx_k);
       } else {
         // The current match is inferior to a previous match associated with the
@@ -254,13 +254,13 @@ void GyroTwoFrameMatcher::MatchKeypoint(const int idx_k) {
         }
     } else {
       is_keypoint_kp1_matched_[best_match_keypoint_idx_kp1] = true;
-      matches_with_score_kp1_k_->emplace_back(
+      matches_kp1_k_->emplace_back(
           best_match_keypoint_idx_kp1, idx_k, matching_score);
 
-      CHECK(matches_with_score_kp1_k_->end() != matches_with_score_kp1_k_->begin())
+      CHECK(matches_kp1_k_->end() != matches_kp1_k_->begin())
         << "Match vector should not be empty.";
-      CHECK(kp1_idx_to_matches_with_score_iterator_map_.emplace(
-          best_match_keypoint_idx_kp1, matches_with_score_kp1_k_->end() - 1).second);
+      CHECK(kp1_idx_to_matches_iterator_map_.emplace(
+          best_match_keypoint_idx_kp1, matches_kp1_k_->end() - 1).second);
     }
 
     aslam::statistics::StatsCollector stats_distance_match(
@@ -303,14 +303,14 @@ bool GyroTwoFrameMatcher::MatchInferiorMatches(
       found_inferior_match = true;
       const int best_match_keypoint_idx_kp1 = it_best->channel_index;
       if ((*is_inferior_keypoint_kp1_matched)[best_match_keypoint_idx_kp1]) {
-        if (best_matching_score > kp1_idx_to_matches_with_score_iterator_map_
-            [best_match_keypoint_idx_kp1]->score) {
+        if (best_matching_score > kp1_idx_to_matches_iterator_map_
+            [best_match_keypoint_idx_kp1]->getScore()) {
           // The current match is better than a previous match associated with the
           // current keypoint of frame (k+1). Hence, the revoked match is the
           // previous match associated with the current keypoint of frame (k+1).
           const int revoked_inferior_keypoint_idx_k =
-              kp1_idx_to_matches_with_score_iterator_map_
-              [best_match_keypoint_idx_kp1]->getIndexBanana();
+              kp1_idx_to_matches_iterator_map_
+              [best_match_keypoint_idx_kp1]->getKeypointIndexBananaFrame();
           // The current keypoint k does not have to be matched anymore
           // in the next iteration.
           erase_inferior_match_keypoint_idx_k.insert(inferior_keypoint_idx_k);
@@ -318,23 +318,23 @@ bool GyroTwoFrameMatcher::MatchInferiorMatches(
           // again in the next iteration.
           erase_inferior_match_keypoint_idx_k.erase(revoked_inferior_keypoint_idx_k);
 
-          kp1_idx_to_matches_with_score_iterator_map_
+          kp1_idx_to_matches_iterator_map_
           [best_match_keypoint_idx_kp1]->setScore(best_matching_score);
-          kp1_idx_to_matches_with_score_iterator_map_
+          kp1_idx_to_matches_iterator_map_
           [best_match_keypoint_idx_kp1]->setIndexApple(best_match_keypoint_idx_kp1);
-          kp1_idx_to_matches_with_score_iterator_map_
+          kp1_idx_to_matches_iterator_map_
           [best_match_keypoint_idx_kp1]->setIndexBanana(inferior_keypoint_idx_k);
         }
       } else {
         (*is_inferior_keypoint_kp1_matched)[best_match_keypoint_idx_kp1] = true;
-        matches_with_score_kp1_k_->emplace_back(
+        matches_kp1_k_->emplace_back(
             best_match_keypoint_idx_kp1, inferior_keypoint_idx_k, best_matching_score);
         erase_inferior_match_keypoint_idx_k.insert(inferior_keypoint_idx_k);
 
-        CHECK(matches_with_score_kp1_k_->end() != matches_with_score_kp1_k_->begin())
+        CHECK(matches_kp1_k_->end() != matches_kp1_k_->begin())
           << "Match vector should not be empty.";
-        CHECK(kp1_idx_to_matches_with_score_iterator_map_.emplace(
-            best_match_keypoint_idx_kp1, matches_with_score_kp1_k_->end() - 1).second);
+        CHECK(kp1_idx_to_matches_iterator_map_.emplace(
+            best_match_keypoint_idx_kp1, matches_kp1_k_->end() - 1).second);
       }
     }
   }

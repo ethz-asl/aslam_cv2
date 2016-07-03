@@ -44,8 +44,9 @@ namespace aslam {
     /// @param[in]  matches_A_B   List of matches between the Apple and Banana frame.
     /// @param[in]  apple_frame   Pointer to the apple frame.
     /// @param[in]  banana_frame  Pointer to the banana frame.
-    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches_A_B,
-                                      VisualFrame* apple_frame, VisualFrame* banana_frame) = 0;
+    virtual void applyMatchesToFrames(
+        const FrameToFrameMatchesWithScore& matches_A_B,
+        VisualFrame* apple_frame, VisualFrame* banana_frame) = 0;
 
     /// \brief Returns a pointer to the track id channel. If no track id channel is present for the
     ///        given frame, a new track id channel will be created with num_keypoints many track
@@ -78,8 +79,9 @@ namespace aslam {
     ///        either expected to be identical (in which case no change is
     ///        applied) or < 0, in which case the valid id (>=0) is copied over.
     ///        Matches are expected to be exclusive.
-    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches,
-                                      VisualFrame* apple_frame, VisualFrame* banana_frame);
+    virtual void applyMatchesToFrames(
+        const FrameToFrameMatchesWithScore& matches,
+        VisualFrame* apple_frame, VisualFrame* banana_frame);
   };
 
   /// \brief Track manager using buckets to uniformly distribute weak new
@@ -126,8 +128,9 @@ namespace aslam {
     ///        filled with the next best matches until either all buckets are
     ///        full or all matches have been accepted.
     ///        The matches are expected to be exclusive.
-    virtual void applyMatchesToFrames(const std::vector<MatchWithScore>& matches_A_B,
-                                      VisualFrame* apple_frame, VisualFrame* banana_frame);
+    virtual void applyMatchesToFrames(
+        const FrameToFrameMatchesWithScore& matches_A_B,
+        VisualFrame* apple_frame, VisualFrame* banana_frame);
    private:
     /// \brief Square root of the number of tracking buckets. The image space
     ///        gets devided into number_of_tracking_buckets_root_^2 buckets.
@@ -144,10 +147,8 @@ namespace aslam {
   };
 
   inline void addToSetsAndCheckExclusiveness(
-                                    int index_apple,
-                                    int index_banana,
-                                    std::unordered_set<int>* consumed_apples,
-                                    std::unordered_set<int>* consumed_bananas) {
+      int index_apple, int index_banana, std::unordered_set<int>* consumed_apples,
+      std::unordered_set<int>* consumed_bananas) {
     CHECK_NOTNULL(consumed_apples);
     CHECK_NOTNULL(consumed_bananas);
     std::pair<std::unordered_set<int>::iterator, bool> ret_apple =
