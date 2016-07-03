@@ -102,7 +102,7 @@ class GyroTwoFrameMatcher {
 
   template <int WindowHalfSideLength>
   void getKeypointIteratorsInWindow(
-      const Eigen::Matrix<double, 2, 1>& predicted_keypoint_position,
+      const Eigen::Vector2d& predicted_keypoint_position,
       KeyPointIterator* it_keypoints_begin,
       KeyPointIterator* it_keypoints_end) const;
 
@@ -196,7 +196,7 @@ class GyroTwoFrameMatcher {
 
 template <int WindowHalfSideLength>
 void GyroTwoFrameMatcher::getKeypointIteratorsInWindow(
-    const Eigen::Matrix<double, 2, 1>& predicted_keypoint_position,
+    const Eigen::Vector2d& predicted_keypoint_position,
     KeyPointIterator* it_keypoints_begin,
     KeyPointIterator* it_keypoints_end) const {
   CHECK_NOTNULL(it_keypoints_begin);

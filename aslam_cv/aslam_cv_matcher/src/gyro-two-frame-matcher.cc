@@ -131,7 +131,7 @@ void GyroTwoFrameMatcher::matchKeypoint(const int idx_k) {
   const common::FeatureDescriptorConstRef& descriptor_k =
       descriptors_k_wrapped_[idx_k];
 
-  Eigen::Matrix<double, 2, 1> predicted_keypoint_position_kp1 =
+  Eigen::Vector2d predicted_keypoint_position_kp1 =
       predicted_keypoint_positions_kp1_.block<2, 1>(0, idx_k);
   KeyPointIterator nearest_corners_begin, nearest_corners_end;
   getKeypointIteratorsInWindow<kSmallSearchDistance>(
