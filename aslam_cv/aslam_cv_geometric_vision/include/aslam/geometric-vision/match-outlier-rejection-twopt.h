@@ -29,10 +29,10 @@ namespace geometric_vision {
 bool rejectOutlierFeatureMatchesTranslationRotationSAC(
     const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
     const aslam::Quaternion& q_Ckp1_Ck,
-    const aslam::MatchesWithScore& matches_kp1_k, bool fix_random_seed,
+    const aslam::FrameToFrameMatchesWithScore& matches_kp1_k, bool fix_random_seed,
     double ransac_threshold, size_t ransac_max_iterations,
-    aslam::MatchesWithScore* inlier_matches_kp1_k,
-    aslam::MatchesWithScore* outlier_matches_kp1_k);
+    aslam::FrameToFrameMatchesWithScore* inlier_matches_kp1_k,
+    aslam::FrameToFrameMatchesWithScore* outlier_matches_kp1_k);
 
 }  // namespace geometric_vision
 

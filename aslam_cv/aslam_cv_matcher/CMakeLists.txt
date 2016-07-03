@@ -10,6 +10,8 @@ catkin_simple(ALL_DEPS_REQUIRED)
 set(HEADERS
   include/aslam/matcher/gyro-two-frame-matcher.h
   include/aslam/matcher/match.h
+  include/aslam/matcher/match-helpers.h
+  include/aslam/matcher/match-helpers-inl.h
   include/aslam/matcher/match-visualization.h
   include/aslam/matcher/matching-engine.h
   include/aslam/matcher/matching-engine-exclusive.h
@@ -19,15 +21,20 @@ set(HEADERS
   include/aslam/matcher/matching-problem.h
   include/aslam/matcher/matching-problem-frame-to-frame.h
   include/aslam/matcher/matching-problem-landmarks-to-frame.h
+  include/aslam/matcher/matching-problem-landmarks-to-frame-kd-tree.h
+  include/aslam/matcher/matching-problem-landmarks-to-frame-multimap.h
 )
 
 set(SOURCES
   src/gyro-two-frame-matcher.cc
-  src/match.cc
+  src/match-helpers.cc
   src/matching-helpers.cc
   src/match-visualization.cc
+  src/matching-problem.cc
   src/matching-problem-frame-to-frame.cc
   src/matching-problem-landmarks-to-frame.cc
+  src/matching-problem-landmarks-to-frame-kd-tree.cc
+  src/matching-problem-landmarks-to-frame-multimap.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -46,8 +53,16 @@ target_link_libraries(test_matcher ${PROJECT_NAME})
 catkin_add_gtest(test_matcher_non_exclusive test/test-matcher-non-exclusive.cc)
 target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
 
-catkin_add_gtest(test_matching_problem_landmarks_to_frame test/test-matching-problem-landmarks-to-frame.cc)
-target_link_libraries(test_matching_problem_landmarks_to_frame ${PROJECT_NAME})
+catkin_add_gtest(test_matching_problem_landmarks_to_frame_kd_tree 
+  test/test-matching-problem-landmarks-to-frame-kd-tree.cc)
+target_link_libraries(test_matching_problem_landmarks_to_frame_kd_tree ${PROJECT_NAME})
+
+catkin_add_gtest(test_matching_problem_landmarks_to_frame_multimap 
+  test/test-matching-problem-landmarks-to-frame-multimap.cc)
+target_link_libraries(test_matching_problem_landmarks_to_frame_multimap ${PROJECT_NAME})
+
+catkin_add_gtest(test_neighborhood_grid test/test-neighborhood-grid.cc)
+target_link_libraries(test_neighborhood_grid ${PROJECT_NAME})
 
 ##########
 # EXPORT #
