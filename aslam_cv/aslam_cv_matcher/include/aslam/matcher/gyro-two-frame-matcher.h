@@ -4,12 +4,11 @@
 #include <algorithm>
 #include <vector>
 
-#include <Eigen/Core>
-#include <glog/logging.h>
-
 #include <aslam/common/pose-types.h>
 #include <aslam/common-private/feature-descriptor-ref.h>
 #include <aslam/frames/visual-frame.h>
+#include <Eigen/Core>
+#include <glog/logging.h>
 
 #include "aslam/matcher/matching-helpers.h"
 #include "aslam/matcher/match.h"
@@ -61,7 +60,7 @@ class GyroTwoFrameMatcher {
                       FrameToFrameMatchesWithScore* matches_kp1_k);
   virtual ~GyroTwoFrameMatcher() {};
 
-  void Match();
+  void match();
 
  private:
   struct KeypointData {
@@ -78,7 +77,7 @@ class GyroTwoFrameMatcher {
   struct MatchData {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     MatchData() = default;
-    void AddCandidate(
+    void addCandidate(
         const KeyPointIterator keypoint_iterator_kp1, const double matching_score) {
       CHECK_GT(matching_score, 0.0);
       CHECK_LE(matching_score, 1.0);
@@ -92,17 +91,17 @@ class GyroTwoFrameMatcher {
   };
 
   /// \brief Initialize data the matcher relies on.
-  void Initialize();
+  void initialize();
 
   /// \brief Match a keypoint of frame k with one of frame (k+1) if possible.
   ///
   /// Initial matcher that tries to match a keypoint of frame k with
   /// a keypoint of frame (k+1) once. It is allowed to discard an
   /// already existing match.
-  void MatchKeypoint(const int idx_k);
+  void matchKeypoint(const int idx_k);
 
   template <int WindowHalfSideLength>
-  void GetKeypointIteratorsInWindow(
+  void getKeypointIteratorsInWindow(
       const Eigen::Matrix<double, 2, 1>& predicted_keypoint_position,
       KeyPointIterator* it_keypoints_begin,
       KeyPointIterator* it_keypoints_end) const;
@@ -112,20 +111,20 @@ class GyroTwoFrameMatcher {
   /// Second matcher that is only quering keypoints of frame (k+1) that the
   /// initial matcher has queried before. Should be executed several times.
   /// Returns true if matches are still found.
-  bool MatchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched);
+  bool matchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched);
 
-  int Clamp(const int lower, const int upper, const int in) const;
+  int clamp(const int lower, const int upper, const int in) const;
 
   // The larger the matching score (which is smaller or equal to 1),
   // the higher the probability that a true match occurred.
-  double ComputeMatchingScore(const int num_matching_bits,
+  double computeMatchingScore(const int num_matching_bits,
                               const unsigned int descriptor_size_bits) const;
 
   // Compute ratio test. Test is inspired by David Lowe's "ratio test"
   // for matching descriptors. Returns true if test is passed.
-  bool RatioTest(const unsigned int descriptor_size_bits,
+  bool ratioTest(const unsigned int descriptor_size_bits,
                  const unsigned int distance_shortest,
-                 const unsigned int distance_second_shortest);
+                 const unsigned int distance_second_shortest) const;
 
   // The current frame.
   const VisualFrame& frame_kp1_;
@@ -157,7 +156,7 @@ class GyroTwoFrameMatcher {
   // Descriptors of frame k.
   std::vector<common::FeatureDescriptorConstRef> descriptors_k_wrapped_;
   // Keypoints of frame (k+1) sorted from small to large y coordinates.
-  typename Aligned<std::vector, KeypointData>::type keypoints_kp1_sorted_by_y_;
+  Aligned<std::vector, KeypointData>::type keypoints_kp1_sorted_by_y_;
   // corner_row_LUT[i] is the number of keypoints that has y position
   // lower than i in the image.
   std::vector<int> corner_row_LUT_;
@@ -196,7 +195,7 @@ class GyroTwoFrameMatcher {
 };
 
 template <int WindowHalfSideLength>
-void GyroTwoFrameMatcher::GetKeypointIteratorsInWindow(
+void GyroTwoFrameMatcher::getKeypointIteratorsInWindow(
     const Eigen::Matrix<double, 2, 1>& predicted_keypoint_position,
     KeyPointIterator* it_keypoints_begin,
     KeyPointIterator* it_keypoints_end) const {
@@ -204,9 +203,9 @@ void GyroTwoFrameMatcher::GetKeypointIteratorsInWindow(
   CHECK_NOTNULL(it_keypoints_end);
 
   // Compute search area for LUT iterators row-wise.
-  int LUT_index_top = Clamp(0, kImageHeight - 1, static_cast<int>(
+  int LUT_index_top = clamp(0, kImageHeight - 1, static_cast<int>(
       predicted_keypoint_position(1) + 0.5 - WindowHalfSideLength));
-  int LUT_index_bottom = Clamp(0, kImageHeight - 1, static_cast<int>(
+  int LUT_index_bottom = clamp(0, kImageHeight - 1, static_cast<int>(
       predicted_keypoint_position(1) + 0.5 + WindowHalfSideLength));
 
   *it_keypoints_begin = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_top];
@@ -219,20 +218,20 @@ void GyroTwoFrameMatcher::GetKeypointIteratorsInWindow(
   CHECK_LT(LUT_index_bottom, kImageHeight);
 }
 
-inline int GyroTwoFrameMatcher::Clamp(
+inline int GyroTwoFrameMatcher::clamp(
     const int lower, const int upper, const int in) const {
   return std::min<int>(std::max<int>(in, lower), upper);
 }
 
-inline double GyroTwoFrameMatcher::ComputeMatchingScore(
+inline double GyroTwoFrameMatcher::computeMatchingScore(
     const int num_matching_bits, const unsigned int descriptor_size_bits) const {
   return static_cast<double>(num_matching_bits)/descriptor_size_bits;
 }
 
-inline bool GyroTwoFrameMatcher::RatioTest(
+inline bool GyroTwoFrameMatcher::ratioTest(
     const unsigned int descriptor_size_bits,
     const unsigned int distance_closest,
-    const unsigned int distance_second_closest) {
+    const unsigned int distance_second_closest) const {
   CHECK_LE(distance_closest, distance_second_closest);
   if (distance_second_closest > descriptor_size_bits) {
     // There has never been a second matching candidate.
