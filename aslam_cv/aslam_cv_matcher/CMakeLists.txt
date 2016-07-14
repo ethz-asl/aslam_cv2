@@ -8,6 +8,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 # LIBRARIES #
 #############
 set(HEADERS
+  include/aslam/matcher/gyro-two-frame-matcher.h
   include/aslam/matcher/match.h
   include/aslam/matcher/match-helpers.h
   include/aslam/matcher/match-helpers-inl.h
@@ -24,6 +25,7 @@ set(HEADERS
 )
 
 set(SOURCES
+  src/gyro-two-frame-matcher.cc
   src/match-helpers.cc
   src/match-visualization.cc
   src/matching-problem.cc

@@ -16,7 +16,7 @@ class VisualFrame;
 
 namespace aslam {
 /// \class FeatureTracker
-/// \brief Base class defining the interface for feature trackers and providing visualization.
+/// \brief Base class defining the interface for feature trackers.
 class FeatureTracker {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -26,7 +26,7 @@ class FeatureTracker {
  protected:
   FeatureTracker() = default;
  public:
-  virtual ~FeatureTracker() {};
+  virtual ~FeatureTracker() {}
 
   /// Track features and return the matches. The matches are not written to the TrackId channels
   /// and should be written to the track id channels using a TrackManager (after e.g. outlier
@@ -40,7 +40,7 @@ class FeatureTracker {
   virtual void swapKeypointIndicesToAbort(const FrameId& /*frame_id*/,
       std::unordered_set<size_t>* /*keypoint_indices_to_abort*/) {
     LOG(FATAL) << "FeatureTracker does not support track abortion.";
-  };
+  }
 };
 
 }  // namespace aslam

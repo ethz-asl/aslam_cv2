@@ -5,9 +5,10 @@
 
 #include <aslam/common/memory.h>
 #include <aslam/common/pose-types.h>
-#include <glog/logging.h>
 #include <Eigen/Core>
+#include <glog/logging.h>
 #include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
 namespace aslam {
 class VisualFrame;
@@ -19,20 +20,22 @@ void convertKeypointVectorToCvPointList(const Eigen::Matrix2Xd& keypoints,
 void convertCvPointListToKeypointVector(const std::vector<cv::Point2f>& keypoints,
                                         Eigen::Matrix2Xd* keypoints_eigen);
 
-/// Rotate keypoints from a VisualFrame using a specified rotation. Note that if the back-,
-/// projection fails or the keypoint leaves the image region, the predicted keypoint will be left
-/// unchanged and the prediction_success will be set to false.
-void predictKeypointsByRotation(const VisualFrame& frame_k,
-                                const aslam::Quaternion& q_Ckp1_Ck,
-                                Eigen::Matrix2Xd* predicted_keypoints_kp1,
-                                std::vector<unsigned char>* prediction_success);
+/// Insert a list of OpenCV keypoints and descriptors into an empty VisualFrame.
+void insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(
+    const std::vector<cv::KeyPoint>& new_cv_keypoints, const cv::Mat& new_cv_descriptors,
+    const double fixed_keypoint_uncertainty_px, aslam::VisualFrame* frame);
+
+/// Append a list of OpenCV kepoints and descriptors to a VisualFrame.
+void insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
+    const std::vector<cv::KeyPoint>& new_cv_keypoints, const cv::Mat& new_cv_descriptors,
+    const double fixed_keypoint_uncertainty_px, aslam::VisualFrame* frame);
 
 /// Append a list of kepoints to a VisualFrame.
 void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
-                                            double fixed_keypoint_uncertainty_px,
+                                            const double fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame);
 void insertAdditionalKeypointsToVisualFrame(const Verctor2dList& keypoints,
-                                            double fixed_keypoint_uncertainty_px,
+                                            const double fixed_keypoint_uncertainty_px,
                                             aslam::VisualFrame* frame);
 
 }  // namespace aslam
