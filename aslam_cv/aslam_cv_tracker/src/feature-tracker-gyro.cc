@@ -6,7 +6,7 @@
 #include <aslam/common/memory.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/matcher/gyro-two-frame-matcher.h>
-#include <aslam/matcher/matching-helpers.h>
+#include <aslam/matcher/match-helpers.h>
 #include <Eigen/Core>
 #include <glog/logging.h>
 #include <opencv2/video/tracking.hpp>
@@ -162,7 +162,8 @@ void GyroTracker::lkTracking(
 
   if (lk_candidate_indices_k.empty()) {
     // This means that we won't insert any new keypoints into frame (k+1).
-    // Therefore, all keypoints in frame (k+1) were detected.
+    // Since only inserted keypoints are those that are lk-tracked, all
+    // keypoints in frame (k+1) were detected.
     // Update feature status for next iteration.
     FrameFeatureStatus frame_feature_status_kp1(kInitialSizeKp1);
     std::fill(frame_feature_status_kp1.begin(), frame_feature_status_kp1.end(),
@@ -188,7 +189,7 @@ void GyroTracker::lkTracking(
   lk_cv_points_kp1.reserve(lk_definite_indices_k.size());
   for (const int lk_definite_index_k: lk_definite_indices_k) {
     // Compute Cv points in frame k.
-    const Eigen::Matrix<double, 2, 1>& lk_keypoint_location_k =
+    const Eigen::Vector2d& lk_keypoint_location_k =
         frame_k.getKeypointMeasurement(lk_definite_index_k);
     lk_cv_points_k.emplace_back(
         static_cast<float>(lk_keypoint_location_k(0,0)),
