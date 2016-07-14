@@ -251,9 +251,7 @@ void GyroTracker::lkTracking(
 
   cv::Mat lk_descriptors_kp1;
   extractor_->compute(frame_kp1->getRawImage(), lk_cv_keypoints_kp1, lk_descriptors_kp1);
-
   CHECK_EQ(lk_descriptors_kp1.type(), CV_8UC1);
-  CHECK(lk_descriptors_kp1.isContinuous());
 
   const size_t kNumPointsAfterExtraction = lk_cv_keypoints_kp1.size();
 
@@ -262,11 +260,6 @@ void GyroTracker::lkTracking(
         kInitialSizeKp1 + i, lk_definite_indices_k[lk_cv_keypoints_kp1[i].class_id],
         0.0 /* We don't have scores for lk tracking */);
   }
-
-  // Add keypoints and descriptors to frame (k+1).
-  insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
-      lk_cv_keypoints_kp1, lk_descriptors_kp1,
-      GyroTrackerSettings::kKeypointUncertaintyPx, frame_kp1);
 
   // Update feature status for next iteration.
   const size_t extended_size_pk1 = static_cast<size_t>(kInitialSizeKp1) +
@@ -277,6 +270,16 @@ void GyroTracker::lkTracking(
   std::fill(frame_feature_status_kp1.begin() + kInitialSizeKp1,
             frame_feature_status_kp1.end(), FeatureStatus::kLkTracked);
   updateFeatureStatusDeque(frame_feature_status_kp1);
+
+  if (lk_descriptors_kp1.empty()) {
+    return;
+  }
+  CHECK(lk_descriptors_kp1.isContinuous());
+
+  // Add keypoints and descriptors to frame (k+1).
+  insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
+      lk_cv_keypoints_kp1, lk_descriptors_kp1,
+      GyroTrackerSettings::kKeypointUncertaintyPx, frame_kp1);
 }
 
 void GyroTracker::computeTrackedMatches(
