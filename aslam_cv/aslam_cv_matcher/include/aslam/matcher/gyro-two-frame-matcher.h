@@ -10,7 +10,6 @@
 #include <Eigen/Core>
 #include <glog/logging.h>
 
-#include "aslam/matcher/matching-helpers.h"
 #include "aslam/matcher/match.h"
 
 namespace aslam {

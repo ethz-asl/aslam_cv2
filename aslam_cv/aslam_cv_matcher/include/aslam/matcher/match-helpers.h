@@ -1,6 +1,8 @@
 #ifndef ASLAM_MATCHER_MATCH_HELPERS_H_
 #define ASLAM_MATCHER_MATCH_HELPERS_H_
 
+#include <aslam/common/pose-types.h>
+
 #include "aslam/matcher/match.h"
 
 namespace aslam {
@@ -65,6 +67,14 @@ void getBearingVectorsFromMatches(
     const FrameToFrameMatches& matches_kp1_k,
     Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_kp1,
     Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_k);
+
+/// Rotate keypoints from a VisualFrame using a specified rotation. Note that if the back-,
+/// projection fails or the keypoint leaves the image region, the predicted keypoint will be left
+/// unchanged and the prediction_success will be set to false.
+void predictKeypointsByRotation(const VisualFrame& frame_k,
+                                const aslam::Quaternion& q_Ckp1_Ck,
+                                Eigen::Matrix2Xd* predicted_keypoints_kp1,
+                                std::vector<unsigned char>* prediction_success);
 
 }  // namespace aslam
 

@@ -17,7 +17,6 @@ set(HEADERS
   include/aslam/matcher/matching-engine-exclusive.h
   include/aslam/matcher/matching-engine-greedy.h
   include/aslam/matcher/matching-engine-non-exclusive.h
-  include/aslam/matcher/matching-helpers.h
   include/aslam/matcher/matching-problem.h
   include/aslam/matcher/matching-problem-frame-to-frame.h
   include/aslam/matcher/matching-problem-landmarks-to-frame.h
@@ -28,7 +27,6 @@ set(HEADERS
 set(SOURCES
   src/gyro-two-frame-matcher.cc
   src/match-helpers.cc
-  src/matching-helpers.cc
   src/match-visualization.cc
   src/matching-problem.cc
   src/matching-problem-frame-to-frame.cc
