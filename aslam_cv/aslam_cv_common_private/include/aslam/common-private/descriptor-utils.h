@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 #include <glog/logging.h>
 
+#include "aslam/common-private/feature-descriptor-ref.h"
 #include "aslam/common-private/hamming.h"
 
 namespace aslam {
@@ -59,6 +60,58 @@ inline void descriptorMeanRoundedToBinaryValue(
       setBit(bit, median);
     }
   }
+}
+
+// Returns the col-index into raw_descriptors of the descriptor with
+// smallest accumulated descriptor distance wrt. all other descriptors in
+// raw_descriptors.
+inline void getIndexOfDescriptorClosestToMedian(
+    const DescriptorsType& raw_descriptors, size_t* median_descriptor_index) {
+  const int descriptor_size_bytes = raw_descriptors.rows();
+  CHECK_GT(descriptor_size_bytes, 0);
+  CHECK_NOTNULL(median_descriptor_index);
+
+  std::vector<aslam::common::FeatureDescriptorConstRef> wrapped_descriptors;
+  const int num_descriptors = raw_descriptors.cols();
+  wrapped_descriptors.reserve(num_descriptors);
+
+  for (int descriptor_idx = 0; descriptor_idx < num_descriptors;
+       ++descriptor_idx) {
+    wrapped_descriptors.emplace_back(
+        &raw_descriptors.coeffRef(0, descriptor_idx),
+        descriptor_size_bytes);
+  }
+
+  Eigen::MatrixXi hamming_distance_matrix =
+      Eigen::MatrixXi::Zero(num_descriptors, num_descriptors);
+
+  for (int descriptor_idx_row = 0; descriptor_idx_row < num_descriptors;
+       ++descriptor_idx_row) {
+    const aslam::common::FeatureDescriptorConstRef& row_descriptor =
+        wrapped_descriptors[descriptor_idx_row];
+    for (int descriptor_idx_col = descriptor_idx_row + 1;
+        descriptor_idx_col < num_descriptors; ++descriptor_idx_col) {
+      const aslam::common::FeatureDescriptorConstRef& col_descriptor =
+          wrapped_descriptors[descriptor_idx_col];
+
+      const int hamming_distance =
+          aslam::common::GetNumBitsDifferent(row_descriptor, col_descriptor);
+      CHECK_GE(hamming_distance, 0);
+
+      hamming_distance_matrix(descriptor_idx_row, descriptor_idx_col) =
+          hamming_distance;
+      hamming_distance_matrix(descriptor_idx_col, descriptor_idx_row) =
+          hamming_distance;
+    }
+  }
+
+  Eigen::MatrixXi::Index eigen_median_descriptor_index;
+  double min_accumulated_hamming_distance =
+      hamming_distance_matrix.colwise().sum().minCoeff(
+          &eigen_median_descriptor_index);
+  CHECK_GE(static_cast<int>(eigen_median_descriptor_index), 0);
+  *median_descriptor_index = static_cast<size_t>(eigen_median_descriptor_index);
+  CHECK_LT(*median_descriptor_index, static_cast<size_t>(num_descriptors));
 }
 
 inline double descriptorMeanAbsoluteDeviation(
