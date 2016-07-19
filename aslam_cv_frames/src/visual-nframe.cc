@@ -233,4 +233,11 @@ VisualNFrame::Ptr VisualNFrame::createEmptyTestVisualNFrame(const NCamera::Ptr& 
  return nframe;
 }
 
+void VisualNFrame::releaseRawImagesOfAllFrames() {
+  for (const VisualFrame::Ptr& frame : frames_) {
+    CHECK(frame);
+    frame->releaseRawImage();
+  }
+}
+
 } // namespace aslam

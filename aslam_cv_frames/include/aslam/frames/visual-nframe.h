@@ -157,6 +157,8 @@ class VisualNFrame {
   static VisualNFrame::Ptr createEmptyTestVisualNFrame(
       const std::shared_ptr<NCamera>& ncamera, int64_t timestamp_nanoseconds);
 
+  void releaseRawImagesOfAllFrames();
+
  private:
   /// \brief The unique frame id.
   NFramesId id_;
