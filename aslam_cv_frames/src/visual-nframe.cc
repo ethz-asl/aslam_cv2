@@ -233,7 +233,7 @@ VisualNFrame::Ptr VisualNFrame::createEmptyTestVisualNFrame(const NCamera::Ptr& 
  return nframe;
 }
 
-void VisualNFrame::releaseRawImagesOfAllFrames() const {
+void VisualNFrame::releaseRawImagesOfAllFrames() {
   for (const VisualFrame::Ptr& frame : frames_) {
     CHECK(frame);
     frame->releaseRawImage();
