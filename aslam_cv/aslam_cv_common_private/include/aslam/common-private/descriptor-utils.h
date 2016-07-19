@@ -106,9 +106,7 @@ inline void getIndexOfDescriptorClosestToMedian(
   }
 
   Eigen::MatrixXi::Index eigen_median_descriptor_index;
-  double min_accumulated_hamming_distance =
-      hamming_distance_matrix.colwise().sum().minCoeff(
-          &eigen_median_descriptor_index);
+  hamming_distance_matrix.colwise().sum().minCoeff(&eigen_median_descriptor_index);
   CHECK_GE(static_cast<int>(eigen_median_descriptor_index), 0);
   *median_descriptor_index = static_cast<size_t>(eigen_median_descriptor_index);
   CHECK_LT(*median_descriptor_index, static_cast<size_t>(num_descriptors));
