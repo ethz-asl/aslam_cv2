@@ -124,6 +124,59 @@ TEST(ViwlsGraph, DescriptorMeanStdDeviationTestSameDescriptors) {
                    0.0);
 }
 
+TEST(ViwlsGraph, DescriptorClosestToMedianTestZeroDescriptors) {
+  DescriptorsType descriptors(48, 0);
+  descriptors.setZero();
+
+  size_t closest_to_median_descriptor_index = 0u;
+  EXPECT_DEATH(
+      getIndexOfDescriptorClosestToMedian(
+          descriptors, &closest_to_median_descriptor_index), "");
+}
+
+TEST(ViwlsGraph, DescriptorClosestToMedianTestOneDescriptors) {
+  DescriptorsType descriptors(48, 1);
+  descriptors.setZero();
+
+  descriptors(0, 0) = 7;
+
+  size_t closest_to_median_descriptor_index = 0u;
+  getIndexOfDescriptorClosestToMedian(
+      descriptors, &closest_to_median_descriptor_index);
+
+  EXPECT_EQ(0u, closest_to_median_descriptor_index);
+}
+
+
+TEST(ViwlsGraph, DescriptorClosestToMedianTestThreeDescriptors) {
+  DescriptorsType descriptors(48, 3);
+  descriptors.setZero();
+
+  descriptors(0, 0) = 7;
+  descriptors(0, 1) = 3;
+  descriptors(0, 2) = 1;
+
+  size_t closest_to_median_descriptor_index = 0u;
+  getIndexOfDescriptorClosestToMedian(
+      descriptors, &closest_to_median_descriptor_index);
+
+  EXPECT_EQ(1u, closest_to_median_descriptor_index);
+
+  descriptors(0, 1) = 255;
+
+  getIndexOfDescriptorClosestToMedian(
+      descriptors, &closest_to_median_descriptor_index);
+
+  EXPECT_EQ(0u, closest_to_median_descriptor_index);
+
+  descriptors(0, 2) = 127;
+
+  getIndexOfDescriptorClosestToMedian(
+      descriptors, &closest_to_median_descriptor_index);
+
+  EXPECT_EQ(2u, closest_to_median_descriptor_index);
+}
+
 }  // namespace descriptor_utils
 }  // namespace common
 }  // namespace aslam
