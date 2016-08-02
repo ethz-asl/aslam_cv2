@@ -160,7 +160,16 @@ void GyroTracker::lkTracking(
 
   const int kInitialSizeKp1 = frame_kp1->getTrackIds().size();
 
-  if (lk_candidate_indices_k.empty()) {
+  // Definite lk indices are the subset of lk candidate indices with
+  // successfully predicted keypoint locations in frame (k+1).
+  std::vector<int> lk_definite_indices_k;
+  for (const int candidate_index_k: lk_candidate_indices_k) {
+    if (prediction_success[candidate_index_k] == 1) {
+      lk_definite_indices_k.push_back(candidate_index_k);
+    }
+  }
+
+  if (lk_definite_indices_k.empty()) {
     // This means that we won't insert any new keypoints into frame (k+1).
     // Since only inserted keypoints are those that are lk-tracked, all
     // keypoints in frame (k+1) were detected.
@@ -171,15 +180,6 @@ void GyroTracker::lkTracking(
     updateFeatureStatusDeque(frame_feature_status_kp1);
     VLOG(4) << "No LK candidates to track.";
     return;
-  }
-
-  // Definite lk indices are the subset of lk candidate indices with
-  // successfully predicted keypoint locations in frame (k+1).
-  std::vector<int> lk_definite_indices_k;
-  for (const int candidate_index_k: lk_candidate_indices_k) {
-    if (prediction_success[candidate_index_k] == 1) {
-      lk_definite_indices_k.push_back(candidate_index_k);
-    }
   }
 
   // Get definite lk keypoint locations in OpenCV format.
