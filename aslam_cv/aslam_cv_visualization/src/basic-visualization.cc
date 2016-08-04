@@ -77,7 +77,7 @@ void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
   }
 }
 
-void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
+void assembleMultiImage(const aslam::VisualNFrame::ConstPtr& nframe,
                         cv::Mat* full_image_ptr, Offsets* offsets_ptr) {
   CHECK(nframe);
   const size_t num_frames = nframe->getNumFrames();
