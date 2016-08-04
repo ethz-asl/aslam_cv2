@@ -32,13 +32,14 @@ void insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(
     const std::vector<cv::KeyPoint>& new_cv_keypoints, const cv::Mat& new_cv_descriptors,
     const double fixed_keypoint_uncertainty_px, aslam::VisualFrame* frame) {
   CHECK_NOTNULL(frame);
-  CHECK(!frame->hasKeypointMeasurements());
-  CHECK(!frame->hasDescriptors());
-  CHECK(!frame->hasKeypointMeasurementUncertainties());
-  CHECK(!frame->hasKeypointOrientations());
-  CHECK(!frame->hasKeypointScales());
-  CHECK(!frame->hasKeypointScores());
-  CHECK(!frame->hasTrackIds());
+  CHECK(!frame->hasKeypointMeasurements() || frame->getNumKeypointMeasurements() == 0u);
+  CHECK(!frame->hasDescriptors() || frame->getDescriptors().cols() == 0);
+  CHECK(!frame->hasKeypointMeasurementUncertainties() ||
+        frame->getKeypointMeasurementUncertainties().rows() == 0);
+  CHECK(!frame->hasKeypointOrientations() || frame->getKeypointOrientations().rows() == 0);
+  CHECK(!frame->hasKeypointScales() || frame->getKeypointScales().rows() == 0);
+  CHECK(!frame->hasKeypointScores() || frame->getKeypointScores().rows() == 0);
+  CHECK(!frame->hasTrackIds() || frame->getTrackIds().rows() == 0);
   CHECK_GT(fixed_keypoint_uncertainty_px, 0.0);
   CHECK_EQ(new_cv_keypoints.size(), static_cast<size_t>(new_cv_descriptors.rows));
   CHECK_EQ(new_cv_descriptors.type(), CV_8UC1);
