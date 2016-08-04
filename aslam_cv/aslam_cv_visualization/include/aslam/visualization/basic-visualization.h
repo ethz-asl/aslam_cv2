@@ -60,7 +60,7 @@ void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
                          cv::Mat* image);
 
 /// Takes an nframe and creates a single image patching together all raw images of all frames.
-void assembleMultiImage(const std::shared_ptr<aslam::VisualNFrame>& nframe,
+void assembleMultiImage(const aslam::VisualNFrame::ConstPtr& nframe,
                         cv::Mat* full_image, Offsets* offsets);
 
 /// Draw the patches around all keypoints for one features tracks.

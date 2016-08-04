@@ -4,6 +4,7 @@
 #include <aslam/common/memory.h>
 #include <aslam/frames/feature-track.h>
 #include <aslam/frames/visual-frame.h>
+#include <aslam/frames/visual-nframe.h>
 #include <opencv2/core/core.hpp>
 #include <Eigen/Dense>
 
@@ -43,7 +44,7 @@ class VisualNFrameFeatureTrackVisualizer {
   explicit VisualNFrameFeatureTrackVisualizer(const size_t num_frames);
 
   void drawContinuousFeatureTracks(
-      const std::shared_ptr<aslam::VisualNFrame>& nframe,
+      const aslam::VisualNFrame::ConstPtr& nframe,
       const std::vector<aslam::FeatureTracks>& terminated_feature_tracks,
       cv::Mat* image);
 
