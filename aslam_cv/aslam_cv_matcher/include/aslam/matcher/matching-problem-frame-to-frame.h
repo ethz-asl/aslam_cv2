@@ -126,7 +126,7 @@ private:
   std::vector<common::FeatureDescriptorConstRef> banana_descriptors_;
 
   /// Descriptor size in bytes.
-  size_t descriptor_size_byes_;
+  size_t descriptor_size_bytes_;
 
   /// Half width of the vertical band used for match lookup in pixels.
   int vertical_band_halfwidth_pixels_;
