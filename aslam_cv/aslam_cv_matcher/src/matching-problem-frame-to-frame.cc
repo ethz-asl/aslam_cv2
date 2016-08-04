@@ -20,8 +20,8 @@ MatchingProblemFrameToFrame::MatchingProblemFrameToFrame(const VisualFrame& appl
   CHECK_GE(hamming_distance_threshold, 0) << "Descriptor distance needs to be positive.";
   CHECK_GE(image_space_distance_threshold, 0.0) << "Image space distance needs to be positive.";
 
-  descriptor_size_byes_ = apple_frame.getDescriptorSizeBytes();
-  CHECK_EQ(descriptor_size_byes_, banana_frame.getDescriptorSizeBytes()) << "Apple and banana "
+  descriptor_size_bytes_ = apple_frame.getDescriptorSizeBytes();
+  CHECK_EQ(descriptor_size_bytes_, banana_frame.getDescriptorSizeBytes()) << "Apple and banana "
       << "frames have different descriptor lengths.";
 
   // The vertical search band must be at least twice the image space distance.
@@ -65,13 +65,13 @@ bool MatchingProblemFrameToFrame::doSetup() {
   for (size_t apple_descriptor_idx = 0; apple_descriptor_idx < num_apple_descriptors;
       ++apple_descriptor_idx) {
     apple_descriptors_.emplace_back(
-        &(apple_descriptors.coeffRef(0, apple_descriptor_idx)), descriptor_size_byes_);
+        &(apple_descriptors.coeffRef(0, apple_descriptor_idx)), descriptor_size_bytes_);
   }
 
   for (size_t banana_descriptor_idx = 0; banana_descriptor_idx < num_banana_descriptors;
       ++banana_descriptor_idx) {
     banana_descriptors_.emplace_back(
-        &(banana_descriptors.coeffRef(0, banana_descriptor_idx)), descriptor_size_byes_);
+        &(banana_descriptors.coeffRef(0, banana_descriptor_idx)), descriptor_size_bytes_);
   }
 
   // Then, create a LUT mapping y coordinates to apple keypoint indices.
