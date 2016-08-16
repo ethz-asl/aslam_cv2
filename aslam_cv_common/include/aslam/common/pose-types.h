@@ -5,6 +5,7 @@
 
 #include <aslam/common/memory.h>
 
+#include <Eigen/Core>
 #include <kindr/minimal/position.h>
 #include <kindr/minimal/quat-transformation.h>
 #include <kindr/minimal/rotation-quaternion.h>
@@ -13,6 +14,7 @@ namespace aslam {
 
 typedef kindr::minimal::QuatTransformation Transformation;
 typedef Aligned<std::vector, Transformation>::type TransformationVector;
+typedef Eigen::Matrix<double, 6, 6> TransformationCovariance;
 typedef kindr::minimal::RotationQuaternion Quaternion;
 typedef kindr::minimal::AngleAxis AngleAxis;
 typedef kindr::minimal::Position Position3D;
