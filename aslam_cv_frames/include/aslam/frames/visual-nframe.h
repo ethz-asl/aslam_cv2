@@ -157,7 +157,13 @@ class VisualNFrame {
   static VisualNFrame::Ptr createEmptyTestVisualNFrame(
       const std::shared_ptr<NCamera>& ncamera, int64_t timestamp_nanoseconds);
 
+  /// \brief Iterates over all frames and releases (removed) the raw image.
   void releaseRawImagesOfAllFrames();
+
+  /// \brief Iterates over all frames and resets all keypoint channels
+  ///        (keypoints, keypoint_uncertainties, track_ids, keypoint_scales, ...)
+  ///        to vectors of length zero.
+  void clearKeypointChannelsOfAllFrames();
 
  private:
   /// \brief The unique frame id.
