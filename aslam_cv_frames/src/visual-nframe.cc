@@ -240,4 +240,11 @@ void VisualNFrame::releaseRawImagesOfAllFrames() {
   }
 }
 
+void VisualNFrame::clearKeypointChannelsOfAllFrames() {
+  for (const VisualFrame::Ptr& frame : frames_) {
+    CHECK(frame);
+    frame->clearKeypointChannels();
+  }
+}
+
 } // namespace aslam
