@@ -130,7 +130,7 @@ VisualNFrameFeatureTrackVisualizer::VisualNFrameFeatureTrackVisualizer(const siz
 
 void VisualNFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
     const aslam::VisualNFrame::ConstPtr& nframe,
-    const std::vector<aslam::FeatureTracks>& terminated_feature_tracks,
+    const aslam::FeatureTracksList& terminated_feature_tracks,
     cv::Mat* image) {
   CHECK(nframe);
   CHECK_NOTNULL(image);
