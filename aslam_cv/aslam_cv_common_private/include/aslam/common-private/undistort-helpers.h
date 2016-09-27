@@ -39,6 +39,28 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
 
       // Transform keypoint from image to normalized image plane. (incl. projection effects)
       Eigen::Vector2d keypoint_normalized;
+
+      Eigen::Matrix3d camera_matrix;
+      switch(input_camera.getType()) {
+        case Camera::Type::kPinhole: {
+          // TODO(ds-github): Handle failed dynamic_casts.
+          const aslam::PinholeCamera& cam =
+              dynamic_cast<const aslam::PinholeCamera&>(input_camera);
+          camera_matrix = cam.getCameraMatrix();
+          break;
+        }
+        case Camera::Type::kUnifiedProjection: {
+          const aslam::UnifiedProjectionCamera& cam =
+              dynamic_cast<const aslam::UnifiedProjectionCamera&>(input_camera);
+          camera_matrix = cam.getCameraMatrix();
+          break;
+        }
+        default: {
+          LOG(FATAL) << "Unknown camera model: "
+          << static_cast<std::underlying_type<Camera::Type>::type>(input_camera.getType());
+        }
+      }
+
       if (undistort_to_pinhole) {
         // Transform keypoint from image to normalized image plane. (incl. projection effects)
         Eigen::Vector3d point_3d;
@@ -48,7 +70,6 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
         keypoint_normalized[1] = point_3d[1];
       } else {
         // Transform keypoint from image to normalized image plane.
-        Eigen::Matrix3d camera_matrix = input_camera.getCameraMatrix();
 
         keypoint_normalized[0] = 1.0 / camera_matrix(0,0) * (keypoint[0] - camera_matrix(0,2));
         keypoint_normalized[1] = 1.0 / camera_matrix(1,1) * (keypoint[1] - camera_matrix(1,2));
