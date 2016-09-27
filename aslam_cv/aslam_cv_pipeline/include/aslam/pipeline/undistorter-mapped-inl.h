@@ -64,9 +64,9 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
     case Camera::Type::kPinhole:
       intrinsics << output_camera_matrix(0, 0), output_camera_matrix(1, 1),
                     output_camera_matrix(0, 2), output_camera_matrix(1, 2);
-      break;
       output_camera.reset(new PinholeCamera(intrinsics, output_width, output_height));
       CHECK(output_camera);
+      break;
     case Camera::Type::kUnifiedProjection: {
       aslam::UnifiedProjectionCamera::ConstPtr unified_proj_cam_ptr =
           std::dynamic_pointer_cast<const aslam::UnifiedProjectionCamera>(camera_ptr);
@@ -77,8 +77,8 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
                     output_camera_matrix(0, 2), output_camera_matrix(1, 2);
       output_camera.reset(new UnifiedProjectionCamera(intrinsics, output_width, output_height));
       CHECK(output_camera);
-    }
       break;
+    }
     default:
       LOG(FATAL) << "Unknown camera model: "
         << static_cast<std::underlying_type<Camera::Type>::type>(
