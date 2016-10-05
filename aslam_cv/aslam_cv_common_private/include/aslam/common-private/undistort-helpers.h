@@ -57,7 +57,8 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
         }
         default: {
           LOG(FATAL) << "Unknown camera model: "
-          << static_cast<std::underlying_type<Camera::Type>::type>(input_camera.getType());
+                     << static_cast<std::underlying_type<Camera::Type>::type>(
+                          input_camera.getType());
         }
       }
 
