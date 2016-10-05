@@ -43,16 +43,17 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
       Eigen::Matrix3d camera_matrix;
       switch(input_camera.getType()) {
         case Camera::Type::kPinhole: {
-          // TODO(ds-github): Handle failed dynamic_casts.
-          const aslam::PinholeCamera& cam =
-              dynamic_cast<const aslam::PinholeCamera&>(input_camera);
-          camera_matrix = cam.getCameraMatrix();
+          const aslam::PinholeCamera *const cam =
+              dynamic_cast<const aslam::PinholeCamera*>(&input_camera);
+          CHECK(cam != nullptr);
+          camera_matrix = cam->getCameraMatrix();
           break;
         }
         case Camera::Type::kUnifiedProjection: {
-          const aslam::UnifiedProjectionCamera& cam =
-              dynamic_cast<const aslam::UnifiedProjectionCamera&>(input_camera);
-          camera_matrix = cam.getCameraMatrix();
+          const aslam::UnifiedProjectionCamera *const cam =
+              dynamic_cast<const aslam::UnifiedProjectionCamera*>(&input_camera);
+          CHECK(cam != nullptr);
+          camera_matrix = cam->getCameraMatrix();
           break;
         }
         default: {
