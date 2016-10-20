@@ -11,7 +11,7 @@ namespace aslam {
 
 LineSegmentDetector::LineSegmentDetector(const Options& options)
     : options_(options) {
-  line_detector_ = cv::createLineSegmentDetectorPtr(
+  line_detector_ = aslamcv::createLineSegmentDetectorPtr(
       cv::LSD_REFINE_STD, 0.8, 0.6, 2.0, 16.5, 0.0, 0.65, 1024);
 }
 

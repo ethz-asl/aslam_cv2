@@ -173,7 +173,13 @@ inline double log_gamma_lanczos(const double& x)
 
 namespace cv{
 
-class LineSegmentDetectorImpl : public LineSegmentDetector
+using cv::InputArray;
+using cv::OutputArray;
+using cv::Mat;
+using cv::Ptr;
+using cv::Point;
+
+class LineSegmentDetectorImpl : public aslamcv::LineSegmentDetector
 {
 public:
 
@@ -299,7 +305,7 @@ public:
  * @param min_length    Minimum length of the line segment.
  * @return              Returns the number of line segments not included in the output vector.
  */
-    int filterSize(InputArray lines, OutputArray filtered, float min_length, float max_length = LSD_NO_SIZE_LIMIT);
+    int filterSize(InputArray lines, OutputArray filtered, float min_length, float max_length = aslamcv::LSD_NO_SIZE_LIMIT);
 
 /*
  * Find itnersection point of 2 lines.
@@ -487,11 +493,11 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-CV_EXPORTS Ptr<LineSegmentDetector> createLineSegmentDetectorPtr(
+CV_EXPORTS Ptr<aslamcv::LineSegmentDetector> createLineSegmentDetectorPtr(
         int _refine, double _scale, double _sigma_scale, double _quant, double _ang_th,
         double _log_eps, double _density_th, int _n_bins)
 {
-    return Ptr<LineSegmentDetector>(new LineSegmentDetectorImpl(
+    return Ptr<aslamcv::LineSegmentDetector>(new LineSegmentDetectorImpl(
             _refine, _scale, _sigma_scale, _quant, _ang_th,
             _log_eps, _density_th, _n_bins));
 }
@@ -1413,8 +1419,8 @@ int LineSegmentDetectorImpl::filterSize(InputArray lines, OutputArray filtered, 
         Point e(v[2], v[3]);
 
         float len = norm(b - e);
-        if (((min_length == LSD_NO_SIZE_LIMIT) || (len >= min_length)) &&
-            ((max_length == LSD_NO_SIZE_LIMIT) || (len < max_length)))
+        if (((min_length == aslamcv::LSD_NO_SIZE_LIMIT) || (len >= min_length)) &&
+            ((max_length == aslamcv::LSD_NO_SIZE_LIMIT) || (len < max_length)))
             f.push_back(v);
         else
             ++num_filtered;
