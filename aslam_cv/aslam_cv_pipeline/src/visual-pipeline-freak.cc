@@ -3,8 +3,9 @@
 #include <aslam/pipeline/undistorter.h>
 #include <brisk/brisk.h>
 #include <glog/logging.h>
-#include <opencv2/nonfree/features2d.hpp>
-#include <opencv2/nonfree/nonfree.hpp>
+#include <opencv2/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
+// #include <opencv2/nonfree.hpp>
 
 namespace aslam {
 
@@ -21,12 +22,8 @@ FreakVisualPipeline::FreakVisualPipeline(const Camera::ConstPtr& camera,
                                          bool scale_invariant,
                                          float pattern_scale)
 : VisualPipeline(camera, camera, copy_images) {
-  if (cv::initModule_nonfree()) {
-    initializeFreak(num_octaves, hessian_threshold, num_octave_layers,
-                    rotation_invariant, scale_invariant, pattern_scale);
-  } else {
-    LOG(ERROR) << "Could not initialize opencv nonfree module.";
-  }
+  initializeFreak(num_octaves, hessian_threshold, num_octave_layers,
+                  rotation_invariant, scale_invariant, pattern_scale);
 }
 
 FreakVisualPipeline::FreakVisualPipeline(
@@ -39,12 +36,8 @@ FreakVisualPipeline::FreakVisualPipeline(
                                          bool scale_invariant,
                                          float pattern_scale)
 : VisualPipeline(preprocessing, copy_images) {
-  if (cv::initModule_nonfree()) {
-    initializeFreak(num_octaves, hessian_threshold, num_octave_layers,
-                    rotation_invariant, scale_invariant, pattern_scale);
-  } else {
-    LOG(ERROR) << "Could not initialize opencv nonfree module.";
-  }
+  initializeFreak(num_octaves, hessian_threshold, num_octave_layers,
+                  rotation_invariant, scale_invariant, pattern_scale);
 }
 
 FreakVisualPipeline::~FreakVisualPipeline() { }
@@ -62,10 +55,10 @@ void FreakVisualPipeline::initializeFreak(size_t num_octaves,
   scale_invariant_ = scale_invariant;
   pattern_scale_ = pattern_scale;
 
-  detector_.reset(new cv::SurfFeatureDetector(hessian_threshold_, octaves_,
-                                              num_octave_layers_));
-  extractor_.reset(new cv::FREAK(rotation_invariant_,
-                                 scale_invariant_, pattern_scale_, octaves_));
+  detector_.reset(cv::xfeatures2d::SurfFeatureDetector::create(
+      hessian_threshold_, octaves_, num_octave_layers_).get());
+  extractor_.reset(cv::xfeatures2d::FREAK::create(
+      rotation_invariant_, scale_invariant_, pattern_scale_, octaves_).get());
 }
 
 void FreakVisualPipeline::processFrameImpl(const cv::Mat& image, VisualFrame* frame) const {
