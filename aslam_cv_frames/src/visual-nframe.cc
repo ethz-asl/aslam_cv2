@@ -174,8 +174,7 @@ int64_t VisualNFrame::getMinTimestampNanoseconds() const {
         min_timestamp_nanoseconds = timestamp_frame_nanoseconds;
     }
   }
-  CHECK(aslam::time::isValidTime(min_timestamp_nanoseconds)) << "Time " << min_timestamp_nanoseconds
-      << "[ns] is invalid.";
+  CHECK(aslam::time::isValidTime(min_timestamp_nanoseconds));
   return min_timestamp_nanoseconds;
 }
 
