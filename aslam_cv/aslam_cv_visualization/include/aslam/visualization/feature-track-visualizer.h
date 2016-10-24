@@ -45,7 +45,7 @@ class VisualNFrameFeatureTrackVisualizer {
 
   void drawContinuousFeatureTracks(
       const aslam::VisualNFrame::ConstPtr& nframe,
-      const aslam::FeatureTracksList& terminated_feature_tracks,
+      const std::vector<aslam::FeatureTracks>& terminated_feature_tracks,
       cv::Mat* image);
 
   void setNumFrames(const size_t num_frames);

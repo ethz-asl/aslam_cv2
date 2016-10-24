@@ -10,9 +10,6 @@ namespace aslam_cv_visualization {
 
 void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image) {
   CHECK_NOTNULL(image);
-  if (!frame.hasKeypointMeasurements()) {
-    return;
-  }
   const size_t num_keypoints = frame.getNumKeypointMeasurements();
   for (size_t keypoint_idx = 0u; keypoint_idx < num_keypoints; ++keypoint_idx) {
     Eigen::Vector2d keypoint;
@@ -26,7 +23,7 @@ void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image) {
   }
 }
 
-void visualizeKeypoints(const aslam::VisualNFrame::ConstPtr& nframe, cv::Mat* image_ptr) {
+void visualizeKeypoints(const std::shared_ptr<aslam::VisualNFrame>& nframe, cv::Mat* image_ptr) {
   CHECK(nframe);
   CHECK_NOTNULL(image_ptr);
 

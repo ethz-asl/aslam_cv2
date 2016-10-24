@@ -47,7 +47,8 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
   CHECK_GT(scale, 0.0);
 
   // Create a copy of the input camera.
-  aslam::Camera::Ptr input_camera(camera_ptr->clone());
+  std::shared_ptr<CameraType> input_camera(
+      dynamic_cast<CameraType*>(camera_ptr->clone()));
   CHECK(input_camera);
 
   // Create the scaled output camera with removed distortion.
@@ -55,35 +56,34 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
   Eigen::Matrix3d output_camera_matrix = common::getOptimalNewCameraMatrix(
       *input_camera, alpha, scale, kUndistortToPinhole);
 
-  const int output_width = static_cast<int>(scale * camera_ptr->imageWidth());
-  const int output_height = static_cast<int>(scale * camera_ptr->imageHeight());
-
-  Camera::Ptr output_camera;
-  Eigen::MatrixXd intrinsics(camera_ptr->getParameterSize(), 1);
+  Eigen::Matrix<double, CameraType::parameterCount(), 1> intrinsics;
   switch(camera_ptr->getType()) {
     case Camera::Type::kPinhole:
       intrinsics << output_camera_matrix(0, 0), output_camera_matrix(1, 1),
                     output_camera_matrix(0, 2), output_camera_matrix(1, 2);
-      output_camera.reset(new PinholeCamera(intrinsics, output_width, output_height));
-      CHECK(output_camera);
       break;
     case Camera::Type::kUnifiedProjection: {
-      aslam::UnifiedProjectionCamera::ConstPtr unified_proj_cam_ptr =
-          std::dynamic_pointer_cast<const aslam::UnifiedProjectionCamera>(camera_ptr);
+      aslam::UnifiedProjectionCamera::Ptr unified_proj_cam_ptr =
+          std::dynamic_pointer_cast<aslam::UnifiedProjectionCamera>(camera_ptr);
       CHECK(unified_proj_cam_ptr != nullptr)
         << "Cast to unified projection camera failed.";
       intrinsics << unified_proj_cam_ptr->xi(),
                     output_camera_matrix(0, 0), output_camera_matrix(1, 1),
                     output_camera_matrix(0, 2), output_camera_matrix(1, 2);
-      output_camera.reset(new UnifiedProjectionCamera(intrinsics, output_width, output_height));
-      CHECK(output_camera);
-      break;
     }
+      break;
     default:
       LOG(FATAL) << "Unknown camera model: "
         << static_cast<std::underlying_type<Camera::Type>::type>(
             camera_ptr->getType());
   }
+
+  const int output_width = static_cast<int>(scale * camera_ptr->imageWidth());
+  const int output_height = static_cast<int>(scale * camera_ptr->imageHeight());
+
+  Camera::Ptr output_camera = aslam::createCamera<CameraType>(
+      intrinsics, output_width, output_height);
+  CHECK(output_camera);
 
   cv::Mat map_u, map_v;
   common::buildUndistortMap(*input_camera, *output_camera, CV_16SC2, map_u, map_v);
