@@ -91,6 +91,7 @@ class FeatureTrack {
   KeypointIdentifierList keypoint_identifiers_;
 };
 typedef Aligned<std::vector, FeatureTrack>::type FeatureTracks;
+typedef Aligned<std::vector, FeatureTracks>::type FeatureTracksList;
 
 struct ContinuedFeatureTrack {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
