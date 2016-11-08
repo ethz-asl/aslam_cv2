@@ -13,6 +13,7 @@
   <depend>aslam_cv_common</depend>
   <depend>aslam_cv_common_private</depend>
   <depend>aslam_cv_frames</depend>
+  <depend>cv_bridge</depend>
   <depend>doxygen_catkin</depend>
   <depend>eigen_catkin</depend>
   <depend>eigen_checks</depend>
@@ -21,6 +22,5 @@
   <depend>libnabo</depend>
   <depend>minkindr</depend>
   <depend>opencv3_catkin</depend>
-  <depend>cv_bridge</depend>
   <depend>yaml_cpp_catkin</depend>
 </package>
