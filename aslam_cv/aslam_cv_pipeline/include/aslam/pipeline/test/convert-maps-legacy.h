@@ -9,7 +9,7 @@ namespace aslam {
 // branch to circumvent a SSE2 bug that was introduced with OpenCV 3.*.
 void convertMapsLegacy(cv::InputArray _map1, cv::InputArray _map2,
                        cv::OutputArray _dstmap1, cv::OutputArray _dstmap2,
-                       int dstm1type, bool nninterpolate);
+                       int dstm1type, bool nninterpolate = false);
 } // namespace aslam
 
 #endif // ASLAM_TEST_CONVERT_MAPS_LEGACY_H

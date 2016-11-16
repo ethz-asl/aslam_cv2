@@ -79,8 +79,7 @@ TYPED_TEST(TestUndistorters, TestMappedUndistorter) {
   const cv::Mat& map_v = undistorter->getUndistortMapV();
   cv::Mat map_u_float = map_u.clone();
   cv::Mat map_v_float = map_v.clone();
-  constexpr bool kUseNearestNeighborInterpolation = false;
-  aslam::convertMapsLegacy(map_u, map_v, map_u_float, map_v_float, CV_32FC1, kUseNearestNeighborInterpolation);
+  aslam::convertMapsLegacy(map_u, map_v, map_u_float, map_v_float, CV_32FC1);
 
   // Distort using the maps.
   auto query_map = [&map_u_float, &map_v_float](double u, float v) {
@@ -132,8 +131,7 @@ TEST(TestUndistortersNoPinhole, TestMappedUndistorterUpcToPinhole) {
   const cv::Mat& map_v = undistorter->getUndistortMapV();
   cv::Mat map_u_copy = map_u.clone();
   cv::Mat map_v_copy = map_v.clone();
-  constexpr bool kUseNearestNeighborInterpolation = false;
-  aslam::convertMapsLegacy(map_u, map_v, map_u_copy, map_v_copy, CV_32FC1, kUseNearestNeighborInterpolation);
+  aslam::convertMapsLegacy(map_u, map_v, map_u_copy, map_v_copy, CV_32FC1);
 
   // Distort using the maps.
   auto query_map = [&map_u_copy, &map_v_copy](double u, float v) {
