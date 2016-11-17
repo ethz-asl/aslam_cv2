@@ -34,8 +34,7 @@
 // (including, but not limited to, procurement of substitute goods or services;
 // loss of use, data, or profits; or business interruption) however caused
 // and on any theory of liability, whether in contract, strict liability,
-// or tort (including negligence or otherwise) arising in any way out of
-// the use of this software, even if advised of the possibility of such damage.
+// or tort (including negligence or otherwise) arising in any way out of // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
 
@@ -171,13 +170,18 @@ inline double log_gamma_lanczos(const double& x)
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace cv {
+namespace aslamcv {
 
 using cv::InputArray;
 using cv::OutputArray;
 using cv::Mat;
-using cv::Ptr;
+using cv::Mat_;
 using cv::Point;
+using cv::Point2f;
+using cv::Point2i;
+using cv::Ptr;
+using cv::Scalar;
+using cv::Vec4i;
 
 class LineSegmentDetectorImpl : public aslamcv::LineSegmentDetector
 {
@@ -225,8 +229,8 @@ public:
  *                          This vector will be calculated _only_ when the objects type is REFINE_ADV
  */
     void detect(InputArray _image, OutputArray _lines,
-                OutputArray width = noArray(), OutputArray prec = noArray(),
-                OutputArray nfa = noArray());
+                OutputArray width = cv::noArray(), OutputArray prec = cv::noArray(),
+                OutputArray nfa = cv::noArray());
 
 /**
  * Draw lines on the given canvas.
@@ -247,7 +251,7 @@ public:
  *                  Should have the size of the image, where the lines were found
  * @return          The number of mismatching pixels between lines1 and lines2.
  */
-    int compareSegments(const Size& size, InputArray lines1, InputArray lines2, InputOutputArray _image = noArray());
+    int compareSegments(const Size& size, InputArray lines1, InputArray lines2, InputOutputArray _image = cv::noArray());
 
 /*
  * Shows the lines in a window.
@@ -682,7 +686,7 @@ void LineSegmentDetectorImpl::ll_angle(const double& threshold,
             }
             else
             {
-                angles_data[addr] = fastAtan2(float(gx), float(-gy)) * DEG_TO_RADS;  // gradient angle computation
+                angles_data[addr] = cv::fastAtan2(float(gx), float(-gy)) * DEG_TO_RADS;  // gradient angle computation
                 if (norm > max_grad) { max_grad = norm; }
             }
 
@@ -784,7 +788,7 @@ void LineSegmentDetectorImpl::region_grow(const Point2i& s, std::vector<RegionPo
                     sumdx += cos(float(angle));
                     sumdy += sin(float(angle));
                     // reg_angle is used in the isAligned, so it needs to be updates?
-                    reg_angle = fastAtan2(sumdy, sumdx) * DEG_TO_RADS;
+                    reg_angle = cv::fastAtan2(sumdy, sumdx) * DEG_TO_RADS;
                 }
             }
         }
@@ -877,8 +881,8 @@ double LineSegmentDetectorImpl::get_theta(const std::vector<RegionPoint>& reg, c
 
     // Compute angle
     double theta = (fabs(Ixx)>fabs(Iyy))?
-                    double(fastAtan2(float(lambda - Ixx), float(Ixy))):
-                    double(fastAtan2(float(Ixy), float(lambda - Iyy))); // in degs
+                    double(cv::fastAtan2(float(lambda - Ixx), float(Ixy))):
+                    double(cv::fastAtan2(float(Ixy), float(lambda - Iyy))); // in degs
     theta *= DEG_TO_RADS;
 
     // Correct angle by 180 deg if necessary
@@ -1382,7 +1386,7 @@ int LineSegmentDetectorImpl::angle_filtering(InputArray lines, OutputArray filte
         Point e(v[2], v[3]);
 
         Point2f dv = e - b;
-        float angle = fastAtan2(dv.y, dv.x); // returns in range [0..360]
+        float angle = cv::fastAtan2(dv.y, dv.x); // returns in range [0..360]
         if (angle >= 180) angle -= 180.f;
 
         bool angle_in = (angle >= min_angle && angle <= max_angle);
