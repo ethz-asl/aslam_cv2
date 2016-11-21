@@ -5,7 +5,6 @@
 #include <unordered_map>
 
 #include <aslam/common/stl-helpers.h>
-#include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
 namespace aslam {
