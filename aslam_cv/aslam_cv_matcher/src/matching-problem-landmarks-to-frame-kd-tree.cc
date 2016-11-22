@@ -33,6 +33,8 @@ bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   const size_t num_keypoints = numApples();
   const size_t num_landmarks = numBananas();
 
+  all_tested_pairs_.resize(num_landmarks);
+
   const Eigen::Matrix2Xd& keypoints = frame_.getKeypointMeasurements();
   CHECK_EQ(static_cast<int>(num_keypoints), keypoints.cols())
     << "The number of keypoints in the visual frame does not match the number "
@@ -159,6 +161,8 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
              valid_landmark_index_to_landmark_index_.size());
     const size_t landmark_index = valid_landmark_index_to_landmark_index_[knn_landmark_idx];
     CHECK_LT(landmark_index, numBananas());
+
+    Candidates all_tested_pairs_of_this_landmark;
 
     for (int nearest_neighbor_idx = 0; nearest_neighbor_idx < num_neighbors;
         ++nearest_neighbor_idx) {

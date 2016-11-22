@@ -9,6 +9,10 @@
 namespace aslam_cv_visualization {
 
 void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image) {
+  drawKeypoints(frame, cv::Scalar(0, 255, 255), image);
+}
+
+void drawKeypoints(const aslam::VisualFrame& frame, const cv::Scalar& color, cv::Mat* image) {
   CHECK_NOTNULL(image);
   if (!frame.hasKeypointMeasurements()) {
     return;
@@ -21,8 +25,7 @@ void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image) {
     } else {
       keypoint = frame.getKeypointMeasurement(keypoint_idx);
     }
-    cv::circle(*image, cv::Point(keypoint[0], keypoint[1]), 1,
-               cv::Scalar(0, 255, 255), 1, CV_AA);
+    cv::circle(*image, cv::Point(keypoint[0], keypoint[1]), 1, color, 1, CV_AA);
   }
 }
 

@@ -27,8 +27,10 @@ typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, 1> Descriptor;
 struct LandmarkWithDescriptor {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   LandmarkWithDescriptor() = delete;
-  LandmarkWithDescriptor(const Eigen::Vector3d& p_C_landmark, const Descriptor& descriptor)
-    : p_C_landmark_(p_C_landmark), descriptor_(descriptor) {}
+  LandmarkWithDescriptor(const Eigen::Vector3d& p_C_landmark, const Descriptor& descriptor,
+                         const size_t descriptor_observation_index)
+    : p_C_landmark_(p_C_landmark), descriptor_(descriptor),
+      descriptor_observation_index_(descriptor_observation_index) {}
   virtual ~LandmarkWithDescriptor() = default;
 
   const Eigen::Vector3d& get_p_C_landmark() const {
@@ -39,9 +41,14 @@ struct LandmarkWithDescriptor {
     return descriptor_;
   }
 
+  const size_t getDescriptorObservationIndex() const {
+    return descriptor_observation_index_;
+  }
+
  private:
   Eigen::Vector3d p_C_landmark_;
   Descriptor descriptor_;
+  size_t descriptor_observation_index_;
 };
 
 typedef Aligned<std::vector, LandmarkWithDescriptor>::type LandmarkWithDescriptorList;

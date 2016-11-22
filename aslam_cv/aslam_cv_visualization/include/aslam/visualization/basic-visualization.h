@@ -50,6 +50,7 @@ void visualizeMatches(const aslam::VisualFrame& frame_kp1,
 
 /// Takes a frame and draws keypoints on it.
 void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image);
+void drawKeypoints(const aslam::VisualFrame& frame, const cv::Scalar& color, cv::Mat* image);
 
 /// Takes two frames and a list of matches between them and draws the matches.
 /// Does not draw the raw image!
