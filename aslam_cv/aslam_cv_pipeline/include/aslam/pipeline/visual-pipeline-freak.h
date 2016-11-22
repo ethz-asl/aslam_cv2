@@ -5,8 +5,7 @@
 #include <aslam/pipeline/visual-pipeline-null.h>
 
 namespace cv {
-class FeatureDetector;
-class DescriptorExtractor;
+class Feature2D;
 }  // namespace cv
 
 namespace aslam {
@@ -80,8 +79,8 @@ public:
   virtual void processFrameImpl(const cv::Mat& image,
                                 VisualFrame* frame) const;
 private:
-  std::shared_ptr<cv::FeatureDetector> detector_;
-  std::shared_ptr<cv::DescriptorExtractor> extractor_;
+  std::shared_ptr<cv::Feature2D> detector_;
+  std::shared_ptr<cv::Feature2D> extractor_;
 
   size_t octaves_;
   int hessian_threshold_;

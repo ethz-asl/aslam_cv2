@@ -8,6 +8,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 # LIBRARIES #
 #############
 set(HEADERS
+  include/aslam/pipeline/test/convert-maps-legacy.h
   include/aslam/pipeline/undistorter.h
   include/aslam/pipeline/undistorter-mapped.h
   include/aslam/pipeline/undistorter-mapped-inl.h
@@ -19,6 +20,7 @@ set(HEADERS
 )
 
 set(SOURCES
+  src/test/convert-maps-legacy.cc
   src/undistorter.cc
   src/undistorter-mapped.cc
   src/visual-npipeline.cc

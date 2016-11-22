@@ -45,7 +45,14 @@
 
 #include <opencv2/core/core.hpp>
 
-namespace cv {
+namespace aslamcv {
+using cv::InputArray;
+using cv::OutputArray;
+using cv::InputOutputArray;
+using cv::Mat;
+using cv::Point;
+using cv::Size;
+using cv::Ptr;
 
 enum {LSD_NO_SIZE_LIMIT = -1,
       LSD_REFINE_NONE   = 0,
@@ -55,7 +62,7 @@ enum {LSD_NO_SIZE_LIMIT = -1,
 
 };
 
-class LineSegmentDetector : public Algorithm
+class LineSegmentDetector : public cv::Algorithm
 {
 public:
 /**
@@ -80,8 +87,8 @@ public:
  *                          This vector will be calculated _only_ when the objects type is REFINE_ADV
  */
     virtual void detect(InputArray _image, OutputArray _lines,
-                        OutputArray width = noArray(), OutputArray prec = noArray(),
-                        OutputArray nfa = noArray()) = 0;
+                        OutputArray width = cv::noArray(), OutputArray prec = cv::noArray(),
+                        OutputArray nfa = cv::noArray()) = 0;
 
 /**
  * Draw lines on the given canvas.
@@ -101,7 +108,7 @@ public:
  * @param lines2    The second lines that need to be drawn. Color - Red.
  * @return          The number of mismatching pixels between lines1 and lines2.
  */
-    virtual int compareSegments(const Size& size, InputArray lines1, InputArray lines2, InputOutputArray _image = noArray()) = 0;
+    virtual int compareSegments(const Size& size, InputArray lines1, InputArray lines2, InputOutputArray _image = cv::noArray()) = 0;
 
 /**
  * Find all line elements that are *not* fullfilling the angle and range requirenmnets.

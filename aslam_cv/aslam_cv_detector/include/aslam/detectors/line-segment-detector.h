@@ -30,7 +30,7 @@ class LineSegmentDetector {
   void drawLines(const Lines& lines, cv::Mat* image);
 
  private:
-  cv::Ptr<cv::LineSegmentDetector> line_detector_;
+  cv::Ptr<aslamcv::LineSegmentDetector> line_detector_;
   const Options options_;
 };
 
