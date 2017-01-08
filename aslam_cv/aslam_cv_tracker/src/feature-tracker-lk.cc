@@ -29,6 +29,8 @@ DEFINE_double(lk_min_eigen_threshold, 0.001, "Minimum eigen value of a 2x2 norma
               "optical flow equations.");
 DEFINE_uint64(lk_max_pyramid_level, 3, "Maximal pyramid level number for the Lk-tracking.");
 DEFINE_uint64(lk_window_size, 21, "Size of the search window at each pyramid level.");
+DEFINE_double(lk_max_tracking_error, 1.0, "blabla");
+DEFINE_double(lk_keypoint_search_radius_pixels_squared, 3.0, "blala");
 
 namespace aslam {
 
@@ -49,7 +51,7 @@ LkTrackerSettings::LkTrackerSettings()
   CHECK_GE(ocv_brisk_detector_octaves, 0);
   CHECK_GT(ocv_brisk_detector_patternScale, 0.0f);
   CHECK_GE(ocv_brisk_detector_threshold, 0);
-  CHECK_GE(brisk_detector_octaves, 1);
+  CHECK_GE(brisk_detector_octaves, 0);
   CHECK_GT(min_distance_between_features_px, 1.0);
   CHECK_GT(min_feature_count, 0u);
   CHECK_GT(max_feature_count, min_feature_count);
@@ -98,7 +100,7 @@ void FeatureTrackerLk::initialize(const aslam::Camera& camera) {
 void FeatureTrackerLk::initializeKeypointsInEmptyVisualFrame(
     aslam::VisualFrame* frame) const {
   CHECK_NOTNULL(frame);
-  CHECK(!frame->hasKeypointMeasurements());
+  CHECK(!frame->hasKeypointMeasurements() || frame->getNumKeypointMeasurements() == 0u);
 
   OccupancyGrid occupancy_grid(camera_.imageHeight(), camera_.imageWidth(),
                                settings_.min_distance_between_features_px,
@@ -107,10 +109,12 @@ void FeatureTrackerLk::initializeKeypointsInEmptyVisualFrame(
   detectNewKeypointsInVisualFrame(*frame, detection_mask_image_border_,
                                   &occupancy_grid);
 
+  VLOG(10) << "Detected new keypoints in visual frame.";
+
   OccupancyGrid::PointList keypoints;
   occupancy_grid.getAllPointsInGrid(&keypoints);
 
-  VLOG(10) << "Inserting " << keypoints.size()
+  VLOG(1) << "Inserting " << keypoints.size()
            << " occupancy grid filtered keypoints into the frame.";
   Vector2dList new_keypoints_occupancy_grid_filtered;
   new_keypoints_occupancy_grid_filtered.reserve(keypoints.size());
@@ -143,9 +147,28 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
   std::vector<double> new_keypoints_scores;
   detectNewKeypoints(frame.getRawImage(), num_keypoints_to_detect,
                      detection_mask, &new_keypoints, &new_keypoints_scores);
-  VLOG(10) << "Detected " << new_keypoints.size() << " out of a desired "
+  VLOG(1) << "Detected " << new_keypoints.size() << " out of a desired "
            << num_keypoints_to_detect << " keypoints.";
+
+  //cv::namedWindow("test");
+  //cv::imshow("test", frame.getRawImage());
+  //cv::waitKey(0);
   keypoint_detection_timer.Stop();
+
+  // Drop keypoint if it moved too close to the image border as we can't compute a descriptor.
+  Vector2dList::iterator keypoint_iterator = new_keypoints.begin();
+  while (keypoint_iterator != new_keypoints.end()) {
+    const Eigen::Vector2d& point = *keypoint_iterator;
+    if (point(0) < kMinDistanceToImageBorderPx ||
+        point(0) >= (camera_.imageWidth() - kMinDistanceToImageBorderPx) ||
+        point(1) < kMinDistanceToImageBorderPx ||
+        point(1) >= (camera_.imageHeight() - kMinDistanceToImageBorderPx)) {
+      // Erase this point.
+      keypoint_iterator = new_keypoints.erase(keypoint_iterator);
+    } else {
+      ++keypoint_iterator;
+    }
+  }
 
   // Add the new points to the occupancy grid. If a keypoint is inserted too
   // close to an existing point in the grid, the point with the higher score
@@ -163,6 +186,8 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
                          new_keypoints_scores[idx],
                          kKeypointMatchIndexPreviousFrame),
         settings_.min_distance_between_features_px);
+    VLOG(100) << "After adding new keypoint " << idx << " with score: " << new_keypoints_scores[idx]
+        << ", have " << occupancy_grid->getNumPoints() << " points in the grid.";
   }
   keypoints_grid_insertion_timer.Stop();
 
@@ -198,8 +223,8 @@ void FeatureTrackerLk::track(
 
   // Make sure the frame_kp1 does not yet contain keypoint/tracking information.
   CHECK(frame_kp1->hasRawImage());
-  CHECK(!frame_kp1->hasKeypointMeasurements());
-  CHECK(!frame_kp1->hasTrackIds());
+  CHECK(!frame_kp1->hasKeypointMeasurements() || frame_kp1->getNumKeypointMeasurements() == 0u);
+  CHECK(!frame_kp1->hasTrackIds() || frame_kp1->getTrackIds().rows() == 0);
 
   // Make sure the externally set list of keypoints to abort corresponds to this frame.
   if (!keypoint_indices_to_abort_.empty() && abort_keypoints_wrt_frame_id_ != frame_k.getId()) {
@@ -210,10 +235,18 @@ void FeatureTrackerLk::track(
   Vector2dList tracked_keypoints_kp1;
   std::vector<unsigned char> tracking_success;
   std::vector<float> tracking_errors;
+  VLOG(100) << "Tracking keypoints with q_Ckp1_Ck: " << q_Ckp1_Ck.toImplementation().coeffs().transpose();
   trackKeypoints(q_Ckp1_Ck, frame_k, frame_kp1->getRawImage(), &tracked_keypoints_kp1,
                  &tracking_success, &tracking_errors);
-  VLOG(10) << "Tracked " << tracked_keypoints_kp1.size()
+  VLOG(3) << "Tracked " << tracked_keypoints_kp1.size()
            << " keypoints from frame k to kp1.";
+
+  // Detect BRISK.
+  Vector2dList keypoints_kp1_match;
+  std::vector<double> keypoints_kp1_scores;
+  detectNewKeypoints(frame_kp1->getRawImage(), settings_.max_feature_count,
+                     detection_mask_image_border_, &keypoints_kp1_match, &keypoints_kp1_scores);
+  VLOG(3) << "Detected " << keypoints_kp1_match.size() << " new keypoints.";
 
   // Reject tracked keypoints that meet one of the following criteria:
   //   - tracking was unsuccessful
@@ -233,6 +266,9 @@ void FeatureTrackerLk::track(
   size_t num_failed_tracking = 0u;
   size_t num_outside_image = 0u;
   size_t num_external_abort = 0u;
+  size_t num_too_high_tracking_error = 0u;
+  size_t num_skipped_because_no_keypoint = 0u;
+  size_t num_points_added = 0u;
   for (size_t keypoint_idx_k = 0u; keypoint_idx_k < tracked_keypoints_kp1.size();
       ++keypoint_idx_k) {
     // Drop keypoint if the tracking was unsuccessful.
@@ -242,7 +278,7 @@ void FeatureTrackerLk::track(
     }
 
     // Drop keypoint if it moved too close to the image border as we can't compute a descriptor.
-    const Eigen::Vector2d& point = tracked_keypoints_kp1[keypoint_idx_k];
+    Eigen::Vector2d point = tracked_keypoints_kp1[keypoint_idx_k];
     if (point(0) < kMinDistanceToImageBorderPx ||
         point(0) >= (camera_.imageWidth() - kMinDistanceToImageBorderPx) ||
         point(1) < kMinDistanceToImageBorderPx ||
@@ -257,12 +293,41 @@ void FeatureTrackerLk::track(
       continue;
     }
 
+    double min_distance = std::numeric_limits<double>::infinity();
+    size_t min_index = 0u;
+    const size_t num_keypoints_kp1 = keypoints_kp1_match.size();
+    for (size_t keypoint_kp1_idx = 0u; keypoint_kp1_idx < num_keypoints_kp1; ++keypoint_kp1_idx) {
+      const Eigen::Vector2d keypoint_kp1 = keypoints_kp1_match[keypoint_kp1_idx];
+      const double distance_pixels_squared = (keypoint_kp1 - point).squaredNorm();
+      if (distance_pixels_squared < min_distance) {
+        min_distance = distance_pixels_squared;
+        min_index = keypoint_kp1_idx;
+      }
+    }
+
+    //VLOG(1) << "min_distance: " << min_distance << " with score " << keypoints_kp1_scores[min_index];
+    if (min_distance < FLAGS_lk_keypoint_search_radius_pixels_squared) {
+      point = keypoints_kp1_match[min_index];
+    } else {
+      const float tracking_error = tracking_errors[keypoint_idx_k];
+      //VLOG(1) << "Tracking error: " << tracking_error << " (" << FLAGS_lk_max_tracking_error << ").";
+      if (tracking_error > FLAGS_lk_max_tracking_error) {
+        VLOG(200) << "Skipped with tracking error of " << tracking_errors[keypoint_idx_k];
+        ++num_too_high_tracking_error;
+        continue;
+      }
+    }
+
+    ++num_points_added;
     // Drop keypoints that have moved too close to another tracked keypoint.
     occupancy_grid.addPointOrReplaceWeakestNearestPoints(
         WeightedKeypoint(point(1), point(0), -tracking_errors[keypoint_idx_k], keypoint_idx_k),
         settings_.min_distance_between_features_px);
+
+    //LOG(ERROR) << "Num points: " << occupancy_grid.getNumPoints();
   }
   timer_selection.Stop();
+  //LOG(WARNING) << "Num points added: " << num_points_added;
 
   // Keep some statistics about tracking failures.
   aslam::statistics::StatsCollector("lk-tracker: num tried track keypoints").
@@ -275,7 +340,10 @@ void FeatureTrackerLk::track(
       AddSample(num_outside_image);
   aslam::statistics::StatsCollector("lk-tracker: num failed external abort").
       AddSample(num_external_abort);
-
+  aslam::statistics::StatsCollector too_high_tracking_error("lk-tracker: num too high tracking-error abort");
+  too_high_tracking_error.AddSample(num_too_high_tracking_error);
+  aslam::statistics::StatsCollector no_keypoint("lk-tracker: num no keypoint match abort");
+  no_keypoint.AddSample(num_skipped_because_no_keypoint);
   const size_t num_failed_occupancy_grid = tracked_keypoints_kp1.size() - num_failed_tracking
       - num_outside_image - num_external_abort - occupancy_grid.getNumPoints();
   aslam::statistics::StatsCollector("lk-tracker: num failed occupancy grid").
@@ -315,6 +383,7 @@ void FeatureTrackerLk::track(
   // Extract the index-pairs between matching keypoints between frame (k) and (k+1).
   OccupancyGrid::PointList keypoints_kp1;
   occupancy_grid.getAllPointsInGrid(&keypoints_kp1);
+
 
   Vector2dList new_keypoints_kp1;
   new_keypoints_kp1.reserve(keypoints_kp1.size());
@@ -360,6 +429,17 @@ void FeatureTrackerLk::trackKeypoints(const Quaternion& q_Ckp1_Ck, const VisualF
   Eigen::Matrix2Xd predicted_keypoints_kp1;
   std::vector<unsigned char> prediction_success;
   predictKeypointsByRotation(frame_k, q_Ckp1_Ck, &predicted_keypoints_kp1, &prediction_success);
+  size_t num_prediction_success = 0u;
+  size_t num_prediction_failure = 0u;
+  for (const unsigned char success : prediction_success) {
+    if (success) {
+      ++num_prediction_success;
+    } else {
+      ++num_prediction_failure;
+    }
+  }
+  VLOG(3) << "Num prediction success/failures: " << num_prediction_success
+      << '/' << num_prediction_failure;
 
   // Convert the keypoint type to OpenCV.
   std::vector<cv::Point2f> keypoints_k, keypoints_kp1;
@@ -380,6 +460,18 @@ void FeatureTrackerLk::trackKeypoints(const Quaternion& q_Ckp1_Ck, const VisualF
                            kTerminationCriteria,
                            kOperationFlag,
                            settings_.lk_min_eigen_threshold);
+
+  VLOG(100) << "Calculated optical flow with " << std::endl
+      << keypoints_k.size() << " keypoints_k" << std::endl
+      << keypoints_kp1.size() << " keypoints kp1" << std::endl
+      << "lk_window_size_: " << lk_window_size_ << std::endl
+      << "lk_max_pyramic_level: " << settings_.lk_max_pyramid_level << std::endl
+      << "termination criteria epsilon: " << kTerminationCriteria.epsilon << std::endl
+      << "termination criteria max count: " << kTerminationCriteria.maxCount << std::endl
+      << "termination criteria type: " << kTerminationCriteria.type << std::endl
+      << "operation flag: " << kOperationFlag << std::endl
+      << "lk_min_eigen_threshold: " << settings_.lk_min_eigen_threshold;
+
 
   tracked_keypoints_kp1->reserve(keypoints_kp1.size());
   for (const cv::Point2f& tracked_point : keypoints_kp1) {

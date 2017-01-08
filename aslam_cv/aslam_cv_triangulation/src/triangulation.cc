@@ -363,5 +363,73 @@ TriangulationResult fastTriangulateFeatureTrack(
   return triangulation_result;
 }
 
+TriangulationResult fastTriangulateFeatureTrack2(
+    const aslam::FeatureTrack& track,
+    const aslam::TransformationVector& T_W_Bs,
+    Eigen::Vector3d* W_landmark) {
+  CHECK_NOTNULL(W_landmark);
+  size_t track_length = track.getTrackLength();
+  CHECK_GT(track_length, 1u);
+  CHECK_EQ(track_length, T_W_Bs.size());
+
+  VLOG(200) << "Triangulating track of length " << track_length;
+
+  const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
+  CHECK(camera);
+  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverse();
+
+  size_t index = 0u;
+  const aslam::KeypointIdentifier& first_observation = track.getFirstKeypointIdentifier();
+  const aslam::KeypointIdentifier& last_observation = track.getLastKeypointIdentifier();
+
+  const aslam::Transformation T_G_B1 = T_W_Bs.front();
+  const aslam::Transformation T_G_BN = T_W_Bs.back();
+
+  const double baseline_meters = (T_G_B1.inverse() * T_G_BN).getPosition().squaredNorm();
+
+  if (baseline_meters < 0.2) {
+    return TriangulationResult(TriangulationResult::UNOBSERVABLE);
+  }
+
+  const aslam::Transformation T_G_C1 = T_G_B1 * T_B_C;
+  const aslam::Transformation T_G_CN = T_G_BN * T_B_C;
+
+  const Eigen::Vector2d& first_keypoint_measurement = first_observation.getKeypointMeasurement();
+  Eigen::Vector3d ray1_C;
+  camera->backProject3(first_keypoint_measurement, &ray1_C);
+  ray1_C.normalize();
+  const Eigen::Vector3d ray1_G = T_G_C1.getRotation().rotate(ray1_C);
+
+  const Eigen::Vector2d& last_keypoint_measurement = last_observation.getKeypointMeasurement();
+  Eigen::Vector3d rayN_C;
+  camera->backProject3(last_keypoint_measurement, &rayN_C);
+  rayN_C.normalize();
+  const Eigen::Vector3d rayN_G = T_G_CN.getRotation().rotate(rayN_C);
+
+  const Eigen::Vector3d b = T_G_CN.getPosition() - T_G_C1.getPosition();
+
+  Eigen::Matrix<double, 3, 2> A;
+  A.col(0) = ray1_G;
+  A.col(1) = -rayN_G;
+
+  Eigen::FullPivLU<Eigen::Matrix<double, 3, 2>> fpA(A);
+  int rank = fpA.rank();
+  if (rank == 2) {
+    //LOG(INFO) << "baseline_meters: " << baseline_meters;
+    //LOG(INFO) << "A" << std::endl << A;
+    //LOG(INFO) << "b: " << b.transpose();
+    //LOG(INFO) << "Rank: " << rank;
+    const Eigen::Vector2d x =   A.colPivHouseholderQr().solve(b);
+    const double relative_error = (A*x - b).norm() / b.norm(); // norm() is L2 norm
+    //LOG(INFO) << "The relative error is: " << relative_error;
+    //LOG(INFO) << "x: " << x.transpose();
+    *W_landmark = T_G_C1.getPosition() + x(0) * ray1_G;
+    return TriangulationResult(TriangulationResult::SUCCESSFUL);
+  } else {
+    W_landmark->setZero();
+    return TriangulationResult(TriangulationResult::UNOBSERVABLE);
+  }
+}
+
 }  // namespace aslam
 

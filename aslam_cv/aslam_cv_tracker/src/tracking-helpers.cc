@@ -168,7 +168,7 @@ void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoint
 
   // Add keypoints at the back if the frame already contains keypoints, otherwise just insert
   // the keypoints directly.
-  if (frame->hasKeypointMeasurements()) {
+  if (frame->hasKeypointMeasurements() && frame->getNumKeypointMeasurements() > 0u) {
     CHECK(frame->hasTrackIds());
     CHECK(frame->hasKeypointMeasurementUncertainties());
     const size_t initial_size = frame->getNumKeypointMeasurements();

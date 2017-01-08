@@ -67,6 +67,8 @@ struct LkTrackerSettings {
 
 class FeatureTrackerLk : public FeatureTracker {
  public:
+  ASLAM_POINTER_TYPEDEFS(FeatureTrackerLk);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(FeatureTrackerLk);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
   typedef aslam::common::WeightedKeypoint<double, double, int> WeightedKeypoint;
@@ -143,8 +145,10 @@ class FeatureTrackerLk : public FeatureTracker {
   /// Parameter specifying the termination criteria of the iterative search algorithm
   /// (after the specified maximum number of iterations criteria.maxCount or when the search
   /// window moves by less than criteria.epsilon).
+  //const cv::TermCriteria kTerminationCriteria = cv::TermCriteria(
+  //    cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
   const cv::TermCriteria kTerminationCriteria = cv::TermCriteria(
-      cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
+      cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 1000, 0.003);
 
   /// Pointer to keypoint detector.
   cv::Ptr<cv::FeatureDetector> detector_;
