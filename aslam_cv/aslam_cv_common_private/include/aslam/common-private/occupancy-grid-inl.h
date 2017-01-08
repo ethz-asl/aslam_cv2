@@ -109,9 +109,6 @@ void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
   size_t j_col_max = std::min(static_cast<int>(cell_input_point.j_cols) + 1,
                               static_cast<int>(num_grid_cols_ - 1));
 
-  VLOG(1) << "i_row_min: " << i_row_min << ", j_col_min: " << j_col_min << ", i_row_max: "
-      << i_row_max << ", j_col_max: " << j_col_max;
-
 
   // Collect all points from the neighboring cells that violate the min. distance to the point
   // that should be inserted.
@@ -151,8 +148,6 @@ void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
   // Otherwise only keep the point with the highest score from the set
   // (distance_violating_points, point_to_insert) and remove the others.
   distance_violating_points[&input_cell].emplace_back(input_cell.size() - 1);
-
-  VLOG(1) << "Distance violating size: " << distance_violating_points.size();
 
   // Find the point with the highest score among all conflicting points.
   WeightType highest_weight = std::numeric_limits<WeightType>::lowest();
