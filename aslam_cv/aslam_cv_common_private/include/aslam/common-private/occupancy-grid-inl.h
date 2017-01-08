@@ -89,7 +89,6 @@ bool WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestIfCellFull(
   return false;
 }
 
-/*
 template<typename PointType>
 void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
     const PointType& point_to_insert, CoordinatesType min_distance) {
@@ -118,8 +117,8 @@ void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
   // that should be inserted.
   const CoordinatesType min_distance_sq = min_distance * min_distance;
 
-  typedef std::unordered_map<PointList* /cell/,
-                             std::vector<size_t> /point index/> PointIdentifierMap;
+  typedef std::unordered_map<PointList* /*cell*/,
+                             std::vector<size_t> /*point index*/> PointIdentifierMap;
   PointIdentifierMap distance_violating_points;
   for (size_t i_row = i_row_min; i_row <= i_row_max; ++i_row) {
     for (size_t j_col = j_col_min; j_col <= j_col_max; ++j_col) {
@@ -197,8 +196,8 @@ void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
     current_num_points_ -= indices_to_remove_from_cell.size();
   }
 }
-*/
 
+/*
 template<typename PointType>
 void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
     const PointType& point_to_insert, CoordinatesType min_distance) {
@@ -223,8 +222,8 @@ void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
   // that should be inserted.
   const CoordinatesType min_distance_sq = min_distance * min_distance;
 
-  typedef std::unordered_map<PointList* /*cell*/,
-                             std::vector<size_t> /*point index*/> PointIdentifierMap;
+  typedef std::unordered_map<PointList* /*cell/,
+                             std::vector<size_t> /*point index/> PointIdentifierMap;
   PointIdentifierMap distance_violating_points;
 
   for (size_t i_row = i_row_min; i_row < i_row_max; ++i_row) {
@@ -302,7 +301,7 @@ void WeightedOccupancyGrid<PointType>::addPointOrReplaceWeakestNearestPoints(
     cell = aslam::common::eraseIndicesFromVector(cell, indices_to_remove_from_cell);
     current_num_points_ -= indices_to_remove_from_cell.size();
   }
-}
+}*/
 
 template<typename PointType>
 size_t WeightedOccupancyGrid<PointType>::getAllPointsInGrid(
@@ -327,7 +326,7 @@ void
 WeightedOccupancyGrid<PointType>::setConstantWeightForAllPointsInGrid(
     WeightType weight) {
   for (size_t i_row = 0u; i_row < num_grid_rows_; ++i_row) {
-    for (size_t j_col = 0u; j_col < num_grid_rows_; ++j_col) {
+    for (size_t j_col = 0u; j_col < num_grid_cols_; ++j_col) {
     //for (size_t j_col = 0u; j_col < num_grid_cols_; ++j_col) {
       for (PointType& point : getGridCell(GridCoordinates(i_row, j_col))) {
         point.weight = weight;
