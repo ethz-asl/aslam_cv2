@@ -83,13 +83,21 @@ void FeatureTrackerLk::initialize(const aslam::Camera& camera) {
   // no descriptors can be calculated in this region.
   CHECK_LT(2 * kMinDistanceToImageBorderPx, camera.imageWidth());
   CHECK_LT(2 * kMinDistanceToImageBorderPx, camera.imageHeight());
-  detection_mask_image_border_ = cv::Mat::zeros(camera.imageHeight(), camera.imageWidth(), CV_8UC1);
-  cv::Mat region_of_interest(detection_mask_image_border_,
-                             cv::Rect(kMinDistanceToImageBorderPx + 1,
-                                      kMinDistanceToImageBorderPx + 1,
-                                      camera.imageWidth() - 2 * kMinDistanceToImageBorderPx - 1,
-                                      camera.imageHeight() - 2 * kMinDistanceToImageBorderPx - 1));
-  region_of_interest = cv::Scalar(255);
+  if (camera.hasMask()) {
+    detection_mask_image_border_ = camera.getMask();
+    CHECK_EQ(detection_mask_image_border_.rows, camera.imageHeight());
+    CHECK_EQ(detection_mask_image_border_.cols, camera.imageWidth());
+  } else {
+    detection_mask_image_border_ = cv::Mat::zeros(
+        camera.imageHeight(), camera.imageWidth(), CV_8UC1);
+    cv::Mat region_of_interest(
+        detection_mask_image_border_, cv::Rect(
+            kMinDistanceToImageBorderPx + 1,kMinDistanceToImageBorderPx + 1,
+            camera.imageWidth() - 2 * kMinDistanceToImageBorderPx - 1,
+            camera.imageHeight() - 2 * kMinDistanceToImageBorderPx - 1));
+    region_of_interest = cv::Scalar(255);
+  }
+
   if (settings_.detector_type == LkTrackerSettings::DetectorType::kOcvBrisk) {
     detector_ = new cv::BRISK(settings_.ocv_brisk_detector_threshold,
                               settings_.ocv_brisk_detector_octaves,
@@ -150,9 +158,6 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
   VLOG(1) << "Detected " << new_keypoints.size() << " out of a desired "
            << num_keypoints_to_detect << " keypoints.";
 
-  //cv::namedWindow("test");
-  //cv::imshow("test", frame.getRawImage());
-  //cv::waitKey(0);
   keypoint_detection_timer.Stop();
 
   // Drop keypoint if it moved too close to the image border as we can't compute a descriptor.
@@ -375,8 +380,7 @@ void FeatureTrackerLk::track(
 
     // Detect new points.
     CHECK_LT(occupancy_grid.getNumPoints(), settings_.max_feature_count);
-    detectNewKeypointsInVisualFrame(*frame_kp1, detection_mask,
-                                    &occupancy_grid);
+    detectNewKeypointsInVisualFrame(*frame_kp1, detection_mask, &occupancy_grid);
   }
 
   // Write the keypoints to the frame (k+1) in the following order [tracked, new keypoints]. Also
@@ -516,6 +520,16 @@ void FeatureTrackerLk::detectNewKeypoints(const cv::Mat& image_kp1,
       // Detect new keypoints in the unmasked image area.
       keypoints_cv.reserve(num_keypoints_to_detect);
       detector.detect(image_kp1, keypoints_cv, detection_mask);
+
+      // Since the Brisk detector ignores the detection mask, we apply it manually.
+      std::vector<cv::KeyPoint>::iterator new_keypoints_iterator = keypoints_cv.begin();
+      while (new_keypoints_iterator != keypoints_cv.end()) {
+        if (detection_mask.at<unsigned char>(new_keypoints_iterator->pt) > 0u) {
+          ++new_keypoints_iterator;
+        } else {
+          new_keypoints_iterator = keypoints_cv.erase(new_keypoints_iterator);
+        }
+      }
       break;
     }
     case LkTrackerSettings::DetectorType::kOcvGfft: {
