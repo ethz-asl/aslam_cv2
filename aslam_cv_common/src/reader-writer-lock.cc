@@ -75,12 +75,19 @@ ScopedReadLock::ScopedReadLock(ReaderWriterMutex* rw_lock) : rw_lock_(rw_lock) {
   CHECK_NOTNULL(rw_lock_)->acquireReadLock();
 }
 
+ScopedReadLock::ScopedReadLock(const ScopedReadLock&& other)
+    : rw_lock_(std::move(other.rw_lock_)) {}
+
 ScopedReadLock::~ScopedReadLock() { rw_lock_->releaseReadLock(); }
 
 ScopedWriteLock::ScopedWriteLock(ReaderWriterMutex* rw_lock)
     : rw_lock_(rw_lock) {
   CHECK_NOTNULL(rw_lock_)->acquireWriteLock();
 }
+
+ScopedWriteLock::ScopedWriteLock(const ScopedWriteLock&& other)
+    : rw_lock_(std::move(other.rw_lock_)) {}
+
 ScopedWriteLock::~ScopedWriteLock() { rw_lock_->releaseWriteLock(); }
 
 }  // namespace aslam
