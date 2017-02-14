@@ -71,23 +71,34 @@ bool ReaderWriterMutex::upgradeToWriteLock() {
   return true;
 }
 
-ScopedReadLock::ScopedReadLock(ReaderWriterMutex* rw_lock) : rw_lock_(rw_lock) {
+ScopedReadLock::ScopedReadLock(ReaderWriterMutex* rw_lock) : rw_lock_(rw_lock), locked_(true) {
   CHECK_NOTNULL(rw_lock_)->acquireReadLock();
 }
 
-ScopedReadLock::ScopedReadLock(const ScopedReadLock&& other)
-    : rw_lock_(std::move(other.rw_lock_)) {}
+ScopedReadLock::ScopedReadLock(ScopedReadLock&& other)
+    : rw_lock_(std::move(other.rw_lock_)), locked_(true) {
+  other.locked_ = false;
+}
 
-ScopedReadLock::~ScopedReadLock() { rw_lock_->releaseReadLock(); }
+ScopedReadLock::~ScopedReadLock() {
+  if (locked_) {
+    rw_lock_->releaseReadLock();
+  }
+}
 
-ScopedWriteLock::ScopedWriteLock(ReaderWriterMutex* rw_lock)
-    : rw_lock_(rw_lock) {
+ScopedWriteLock::ScopedWriteLock(ReaderWriterMutex* rw_lock) : rw_lock_(rw_lock), locked_(true) {
   CHECK_NOTNULL(rw_lock_)->acquireWriteLock();
 }
 
-ScopedWriteLock::ScopedWriteLock(const ScopedWriteLock&& other)
-    : rw_lock_(std::move(other.rw_lock_)) {}
+ScopedWriteLock::ScopedWriteLock(ScopedWriteLock&& other)
+    : rw_lock_(std::move(other.rw_lock_)), locked_(true) {
+  other.locked_ = false;
+}
 
-ScopedWriteLock::~ScopedWriteLock() { rw_lock_->releaseWriteLock(); }
+ScopedWriteLock::~ScopedWriteLock() {
+  if (locked_) {
+    rw_lock_->releaseWriteLock();
+  }
+}
 
 }  // namespace aslam

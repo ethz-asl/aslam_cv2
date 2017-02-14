@@ -38,25 +38,27 @@ class ReaderWriterMutex {
 class ScopedReadLock {
  public:
   explicit ScopedReadLock(ReaderWriterMutex* rw_lock);
-  ScopedReadLock(const ScopedReadLock&& other);
+  ScopedReadLock(ScopedReadLock&& other);
   ~ScopedReadLock();
 
  private:
   ScopedReadLock(const ScopedReadLock&) = delete;
   ScopedReadLock& operator=(const ScopedReadLock&) = delete;
   ReaderWriterMutex* rw_lock_;
+  bool locked_;
 };
 
 class ScopedWriteLock {
  public:
   explicit ScopedWriteLock(ReaderWriterMutex* rw_lock);
-  ScopedWriteLock(const ScopedWriteLock&& other);
+  ScopedWriteLock(ScopedWriteLock&& other);
   ~ScopedWriteLock();
 
  private:
   ScopedWriteLock(const ScopedWriteLock&) = delete;
   ScopedWriteLock& operator=(const ScopedWriteLock&) = delete;
   ReaderWriterMutex* rw_lock_;
+  bool locked_;
 };
 
 }  // namespace aslam
