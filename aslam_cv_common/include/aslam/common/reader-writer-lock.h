@@ -45,7 +45,6 @@ class ScopedReadLock {
   ScopedReadLock(const ScopedReadLock&) = delete;
   ScopedReadLock& operator=(const ScopedReadLock&) = delete;
   ReaderWriterMutex* rw_lock_;
-  bool locked_;
 };
 
 class ScopedWriteLock {
@@ -58,7 +57,6 @@ class ScopedWriteLock {
   ScopedWriteLock(const ScopedWriteLock&) = delete;
   ScopedWriteLock& operator=(const ScopedWriteLock&) = delete;
   ReaderWriterMutex* rw_lock_;
-  bool locked_;
 };
 
 }  // namespace aslam
