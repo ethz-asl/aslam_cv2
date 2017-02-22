@@ -155,7 +155,7 @@ void FeatureTrackerLk::detectNewKeypointsInVisualFrame(
   std::vector<double> new_keypoints_scores;
   detectNewKeypoints(frame.getRawImage(), num_keypoints_to_detect,
                      detection_mask, &new_keypoints, &new_keypoints_scores);
-  VLOG(1) << "Detected " << new_keypoints.size() << " out of a desired "
+  VLOG(1000) << "Detected " << new_keypoints.size() << " out of a desired "
            << num_keypoints_to_detect << " keypoints.";
 
   keypoint_detection_timer.Stop();
