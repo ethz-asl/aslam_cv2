@@ -38,6 +38,7 @@ class ReaderWriterMutex {
 class ScopedReadLock {
  public:
   explicit ScopedReadLock(ReaderWriterMutex* rw_lock);
+  ScopedReadLock(ScopedReadLock&& other);
   ~ScopedReadLock();
 
  private:
@@ -49,6 +50,7 @@ class ScopedReadLock {
 class ScopedWriteLock {
  public:
   explicit ScopedWriteLock(ReaderWriterMutex* rw_lock);
+  ScopedWriteLock(ScopedWriteLock&& other);
   ~ScopedWriteLock();
 
  private:
