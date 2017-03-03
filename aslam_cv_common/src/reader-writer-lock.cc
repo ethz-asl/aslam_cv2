@@ -75,7 +75,7 @@ ScopedReadLock::ScopedReadLock(ReaderWriterMutex* rw_lock) : rw_lock_(rw_lock) {
   CHECK_NOTNULL(rw_lock_)->acquireReadLock();
 }
 
-ScopedReadLock::ScopedReadLock(ScopedReadLock&& other) : rw_lock_(std::move(other.rw_lock_)) {
+ScopedReadLock::ScopedReadLock(ScopedReadLock&& other) : rw_lock_(other.rw_lock_) {
   other.rw_lock_ = nullptr;
 }
 
@@ -89,7 +89,7 @@ ScopedWriteLock::ScopedWriteLock(ReaderWriterMutex* rw_lock) : rw_lock_(rw_lock)
   CHECK_NOTNULL(rw_lock_)->acquireWriteLock();
 }
 
-ScopedWriteLock::ScopedWriteLock(ScopedWriteLock&& other) : rw_lock_(std::move(other.rw_lock_)) {
+ScopedWriteLock::ScopedWriteLock(ScopedWriteLock&& other) : rw_lock_(other.rw_lock_) {
   other.rw_lock_ = nullptr;
 }
 
