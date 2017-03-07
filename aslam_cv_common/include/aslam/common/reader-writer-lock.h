@@ -22,16 +22,21 @@ class ReaderWriterMutex {
   // Attempt upgrade. If upgrade fails, relinquish read lock.
   virtual bool upgradeToWriteLock();
 
+  // Returns true if there are any active readers, writers, or threads that are waiting for read or
+  // write access.
+  bool isInUse();
+
  protected:
   ReaderWriterMutex(const ReaderWriterMutex&) = delete;
   ReaderWriterMutex& operator=(const ReaderWriterMutex&) = delete;
 
   std::mutex mutex_;
+  unsigned int pending_readers_;
   unsigned int num_readers_;
-  std::condition_variable cv_readers;
+  std::condition_variable cv_readers_;
   unsigned int num_pending_writers_;
   bool current_writer_;
-  std::condition_variable m_writerFinished;
+  std::condition_variable cv_writer_finished_;
   bool pending_upgrade_;
 };
 

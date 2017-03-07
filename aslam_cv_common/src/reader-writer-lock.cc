@@ -4,8 +4,9 @@
 namespace aslam {
 
 ReaderWriterMutex::ReaderWriterMutex()
-    : num_readers_(0),
-      num_pending_writers_(0),
+    : pending_readers_(0u),
+      num_readers_(0u),
+      num_pending_writers_(0u),
       current_writer_(false),
       pending_upgrade_(false) {}
 
@@ -13,28 +14,30 @@ ReaderWriterMutex::~ReaderWriterMutex() {}
 
 void ReaderWriterMutex::acquireReadLock() {
   std::unique_lock<std::mutex> lock(mutex_);
-  while (num_pending_writers_ != 0 || pending_upgrade_ || current_writer_) {
-    m_writerFinished.wait(lock);
+  ++pending_readers_;
+  while (num_pending_writers_ != 0u || pending_upgrade_ || current_writer_) {
+    cv_writer_finished_.wait(lock);
   }
+  --pending_readers_;
   ++num_readers_;
 }
 
 void ReaderWriterMutex::releaseReadLock() {
   std::unique_lock<std::mutex> lock(mutex_);
   --num_readers_;
-  if (num_readers_ == (pending_upgrade_ ? 1 : 0)) {
-    cv_readers.notify_all();
+  if (num_readers_ == (pending_upgrade_ ? 1u : 0u)) {
+    cv_readers_.notify_all();
   }
 }
 
 void ReaderWriterMutex::acquireWriteLock() {
   std::unique_lock<std::mutex> lock(mutex_);
   ++num_pending_writers_;
-  while (num_readers_ > (pending_upgrade_ ? 1 : 0)) {
-    cv_readers.wait(lock);
+  while (num_readers_ > (pending_upgrade_ ? 1u : 0u)) {
+    cv_readers_.wait(lock);
   }
   while (current_writer_ || pending_upgrade_) {
-    m_writerFinished.wait(lock);
+    cv_writer_finished_.wait(lock);
   }
   --num_pending_writers_;
   current_writer_ = true;
@@ -45,7 +48,7 @@ void ReaderWriterMutex::releaseWriteLock() {
     std::unique_lock<std::mutex> lock(mutex_);
     current_writer_ = false;
   }
-  m_writerFinished.notify_all();
+  cv_writer_finished_.notify_all();
 }
 
 // Attempt upgrade. If upgrade fails, relinquish read lock.
@@ -53,22 +56,32 @@ bool ReaderWriterMutex::upgradeToWriteLock() {
   std::unique_lock<std::mutex> lock(mutex_);
   if (pending_upgrade_) {
     --num_readers_;
-    if (num_readers_ == 1) {
-      cv_readers.notify_all();
+    if (num_readers_ == 1u) {
+      cv_readers_.notify_all();
     }
     return false;
   }
   pending_upgrade_ = true;
   while (num_readers_ > 1) {
-    cv_readers.wait(lock);
+    cv_readers_.wait(lock);
   }
   pending_upgrade_ = false;
   --num_readers_;
   current_writer_ = true;
-  if (num_readers_ == 0) {
-    cv_readers.notify_all();
+  if (num_readers_ == 0u) {
+    cv_readers_.notify_all();
   }
   return true;
+}
+
+bool ReaderWriterMutex::isInUse() {
+  std::unique_lock<std::mutex> lock(mutex_);
+  if (pending_readers_ > 0u || num_readers_ > 0u || num_pending_writers_ > 0u || current_writer_ ||
+      pending_upgrade_) {
+    // Active readers, writers, or threads are waiting for access.
+    return true;
+  }
+  return false;
 }
 
 ScopedReadLock::ScopedReadLock(ReaderWriterMutex* rw_lock) : rw_lock_(rw_lock) {
