@@ -63,8 +63,22 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
     const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
     int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
     aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
+  std::vector<double> inlier_distances_to_model;
+  return absoluteMultiPoseRansacPinholeCam(
+      measurements, measurement_camera_indices, G_landmark_positions, pixel_sigma, max_ransac_iters,
+      ncamera_ptr, T_G_I, inliers, &inlier_distances_to_model, num_iters);
+}
+
+bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
+    const Eigen::Matrix2Xd& measurements,
+    const std::vector<int>& measurement_camera_indices,
+    const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
+    int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
+    aslam::Transformation* T_G_I, std::vector<int>* inliers,
+    std::vector<double>* inlier_distances_to_model, int* num_iters) {
   CHECK_NOTNULL(T_G_I);
   CHECK_NOTNULL(inliers);
+  CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
   CHECK_EQ(measurements.cols(), G_landmark_positions.cols());
   CHECK_EQ(measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
@@ -109,7 +123,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
   return absoluteMultiPoseRansac(measurements, measurement_camera_indices,
                                  G_landmark_positions, ransac_threshold,
                                  max_ransac_iters, ncamera_ptr, T_G_I, inliers,
-                                 num_iters);
+                                 inlier_distances_to_model, num_iters);
 }
 
 bool PnpPoseEstimator::absolutePoseRansac(
@@ -164,8 +178,22 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
     const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
     int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
     aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
+  std::vector<double> inlier_distances_to_model;
+  return absoluteMultiPoseRansac(
+      measurements, measurement_camera_indices, G_landmark_positions, ransac_threshold,
+      max_ransac_iters, ncamera_ptr, T_G_I, inliers, &inlier_distances_to_model, num_iters);
+}
+
+bool PnpPoseEstimator::absoluteMultiPoseRansac(
+    const Eigen::Matrix2Xd& measurements,
+    const std::vector<int>& measurement_camera_indices,
+    const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
+    int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
+    aslam::Transformation* T_G_I, std::vector<int>* inliers,
+    std::vector<double>* inlier_distances_to_model, int* num_iters) {
   CHECK_NOTNULL(T_G_I);
   CHECK_NOTNULL(inliers);
+  CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
   CHECK_EQ(measurements.cols(), G_landmark_positions.cols());
   CHECK_EQ(measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
@@ -212,14 +240,14 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
       opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem> ransac;
   boost::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
       absposeproblem_ptr(
-          new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(
-              adapter,
+          new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(adapter,
               opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem::GP3P,
               random_seed_));
   ransac.sac_model_ = absposeproblem_ptr;
   ransac.threshold_ = ransac_threshold;
   ransac.max_iterations_ = max_ransac_iters;
   bool ransac_success = ransac.computeModel();
+  CHECK_EQ(ransac.inliers_.size(), ransac.inlier_distances_to_model_.size());
 
   if (ransac_success) {
     // Optional nonlinear model refinement over all inliers.
@@ -237,6 +265,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
   }
 
   *inliers = ransac.inliers_;
+  *inlier_distances_to_model = ransac.inlier_distances_to_model_;
   *num_iters = ransac.iterations_;
 
   return ransac_success;
