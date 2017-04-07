@@ -19,7 +19,6 @@ set(HEADERS
   include/aslam/common/hamming.h
   include/aslam/common/hamming-inl.h
   include/aslam/common/hash-id.h
-  include/aslam/common/lockable-container.h
   include/aslam/common/macros.h
   include/aslam/common/memory.h
   include/aslam/common/meta.h
@@ -78,11 +77,6 @@ target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME})
 catkin_add_gtest(test_hash_id test/test-hash-id.cc)
 target_link_libraries(test_hash_id ${PROJECT_NAME})
 
-catkin_add_gtest(test_lockable_container 
-  test/test-lockable-container.cc
-)
-target_link_libraries(test_lockable_container ${PROJECT_NAME}) 
-
 catkin_add_gtest(test_stl_helpers test/test-stl-helpers.cc)
 target_link_libraries(test_stl_helpers ${PROJECT_NAME})
 
@@ -99,4 +93,4 @@ target_link_libraries(test_reader_writer_lock_test ${PROJECT_NAME})
 # EXPORT #
 ##########
 cs_install()
-cs_export(CFG_EXTRAS export_flags.cmake)
+cs_export(CFG_EXTRAS aslam_build.cmake)

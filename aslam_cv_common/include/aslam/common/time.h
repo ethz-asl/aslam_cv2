@@ -49,7 +49,7 @@ FUNC_ALIAS from_microseconds = internal::convertToNanoseconds<internal::micro>;
 inline int64_t nanoSecondsSinceEpoch() {
     return std::chrono::duration_cast<std::chrono::nanoseconds>
         (std::chrono::system_clock::now().time_since_epoch()).count();
-};
+}
 
 /// \brief convert double seconds to integer nanoseconds since epoch.
 inline int64_t secondsToNanoSeconds(double seconds) {

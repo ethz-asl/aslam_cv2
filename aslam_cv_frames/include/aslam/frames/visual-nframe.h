@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include <aslam/common/lockable-container.h>
 #include <aslam/common/macros.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/unique-id.h>
@@ -175,8 +174,6 @@ class VisualNFrame {
   /// \brief The list of individual image frames.
   std::vector<std::shared_ptr<VisualFrame>> frames_;
 };
-
-ASLAM_DEFINE_LOCKABLE(VisualNFrame);
 
 } // namespace aslam
 

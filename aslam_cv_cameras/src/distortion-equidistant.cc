@@ -4,7 +4,7 @@ namespace aslam {
 std::ostream& operator<<(std::ostream& out, const EquidistantDistortion& distortion) {
   distortion.printParameters(out, std::string(""));
   return out;
-};
+}
 
 EquidistantDistortion::EquidistantDistortion(const Eigen::VectorXd& dist_coeffs)
 : Base(dist_coeffs, Distortion::Type::kEquidistant) {
