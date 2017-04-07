@@ -7,25 +7,13 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-set(HEADERS
-  include/aslam/frames/feature-track.h
-  include/aslam/frames/feature-track-inl.h
-  include/aslam/frames/keypoint-identifier.h
-  include/aslam/frames/visual-frame.h
-  include/aslam/frames/visual-nframe.h
-)
-
 set(SOURCES
   src/visual-frame.cc
   src/visual-nframe.cc
 )
-
-cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+cs_add_library(${PROJECT_NAME} ${SOURCES})
 
 add_doxygen(NOT_AUTOMATIC)
-
-add_definitions(-std=c++11)
-SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 ##########
 # GTESTS #
