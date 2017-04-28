@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(aslam_cv_common)
 
-find_package(catkin_simple REQUIRED)
-catkin_simple(ALL_DEPS_REQUIRED)
+find_package(aslam_cv_build REQUIRED)
+init_aslam_build()
 
 #############
 # LIBRARIES #
