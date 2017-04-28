@@ -11,7 +11,7 @@ std::ostream& operator<<(std::ostream& out,
                                   const UnifiedProjectionCamera& camera) {
   camera.printParameters(out, std::string(""));
   return out;
-};
+}
 
 UnifiedProjectionCamera::UnifiedProjectionCamera()
     : Base((Eigen::Matrix<double, 5, 1>() << 0.0, 0.0, 0.0, 0.0, 0.0).finished(), 0, 0,

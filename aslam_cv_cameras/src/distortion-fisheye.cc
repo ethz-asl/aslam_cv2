@@ -4,7 +4,7 @@ namespace aslam {
 std::ostream& operator<<(std::ostream& out, const FisheyeDistortion& distortion) {
   distortion.printParameters(out, std::string(""));
   return out;
-};
+}
 
 FisheyeDistortion::FisheyeDistortion(const Eigen::VectorXd& dist_coeffs)
 : Base(dist_coeffs, Distortion::Type::kFisheye) {

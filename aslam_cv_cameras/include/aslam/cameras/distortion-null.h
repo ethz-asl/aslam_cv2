@@ -156,7 +156,7 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
 inline std::ostream& operator<<(std::ostream& out, const NullDistortion& distortion) {
   distortion.printParameters(out, std::string(""));
   return out;
-};
+}
 
 } // namespace aslam
 

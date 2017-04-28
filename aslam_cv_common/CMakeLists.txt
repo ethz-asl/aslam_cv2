@@ -1,48 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(aslam_cv_common)
 
-find_package(catkin_simple REQUIRED)
-catkin_simple(ALL_DEPS_REQUIRED)
+find_package(aslam_cv_build REQUIRED)
+init_aslam_build()
 
 #############
 # LIBRARIES #
 #############
-set(HEADERS
-  include/aslam/common/channel.h
-  include/aslam/common/channel-declaration.h
-  include/aslam/common/channel-definitions.h
-  include/aslam/common/channel-serialization.h
-  include/aslam/common/crtp-clone.h
-  include/aslam/common/entrypoint.h
-  include/aslam/common/feature-descriptor-ref.h
-  include/aslam/common/feature-descriptor-ref-inl.h
-  include/aslam/common/hamming.h
-  include/aslam/common/hamming-inl.h
-  include/aslam/common/hash-id.h
-  include/aslam/common/lockable-container.h
-  include/aslam/common/macros.h
-  include/aslam/common/memory.h
-  include/aslam/common/meta.h
-  include/aslam/common/neon-helpers.h
-  include/aslam/common/numdiff-jacobian-tester.h
-  include/aslam/common/opencv-predicates.h
-  include/aslam/common/pose-types.h
-  include/aslam/common/predicates.h
-  include/aslam/common/reader-first-reader-writer-lock.h
-  include/aslam/common/reader-writer-lock.h
-  include/aslam/common/stl-helpers.h
-  include/aslam/common/thread-pool.h
-  include/aslam/common/time.h
-  include/aslam/common/types.h
-  include/aslam/common/undistort-helpers.h
-  include/aslam/common/unique-id.h
-  include/aslam/common/yaml-serialization.h
-  include/aslam/common/yaml-serialization-eigen.h
-  include/aslam/common/statistics/accumulator.h
-  include/aslam/common/statistics/statistics.h
-  include/aslam/common/timer.h
-)
-
 set(SOURCES
   src/channel.cc
   src/channel-serialization.cc
@@ -57,9 +21,6 @@ set(SOURCES
 cs_add_library(${PROJECT_NAME} ${SOURCES})
 
 add_doxygen(NOT_AUTOMATIC)
-
-add_definitions(-std=c++11)
-SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 ##########
 # GTESTS #
@@ -78,11 +39,6 @@ target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME})
 catkin_add_gtest(test_hash_id test/test-hash-id.cc)
 target_link_libraries(test_hash_id ${PROJECT_NAME})
 
-catkin_add_gtest(test_lockable_container 
-  test/test-lockable-container.cc
-)
-target_link_libraries(test_lockable_container ${PROJECT_NAME}) 
-
 catkin_add_gtest(test_stl_helpers test/test-stl-helpers.cc)
 target_link_libraries(test_stl_helpers ${PROJECT_NAME})
 
@@ -99,4 +55,4 @@ target_link_libraries(test_reader_writer_lock_test ${PROJECT_NAME})
 # EXPORT #
 ##########
 cs_install()
-cs_export(CFG_EXTRAS export_flags.cmake)
+cs_export()

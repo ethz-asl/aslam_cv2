@@ -10,7 +10,7 @@ namespace aslam {
 std::ostream& operator<<(std::ostream& out, const PinholeCamera& camera) {
   camera.printParameters(out, std::string(""));
   return out;
-};
+}
 
 PinholeCamera::PinholeCamera()
     : Base(Eigen::Vector4d::Zero(), 0, 0, Camera::Type::kPinhole) {}
