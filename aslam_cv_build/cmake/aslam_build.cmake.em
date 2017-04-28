@@ -4,7 +4,7 @@ macro(init_aslam_build)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra -Wpedantic")
   
   # Allow specific warnings.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wdeprecated-declarations")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=deprecated-declarations")
   
   # Enable some compiler specific options.
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
