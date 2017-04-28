@@ -55,4 +55,4 @@ target_link_libraries(test_reader_writer_lock_test ${PROJECT_NAME})
 # EXPORT #
 ##########
 cs_install()
-cs_export(CFG_EXTRAS aslam_build.cmake)
+cs_export()
