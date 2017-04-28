@@ -9,6 +9,8 @@ macro(init_aslam_build)
   # Enable some compiler specific options.
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wthread-safety -Wloop-analysis")
   endif()
   
   message(STATUS "Setting aslam_cv_build settings.")
