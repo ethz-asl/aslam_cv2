@@ -4,7 +4,7 @@
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/entrypoint.h>
 
-DECLARE_CHANNEL(TEST, Eigen::Matrix2Xd);
+DECLARE_CHANNEL(TEST, Eigen::Matrix2Xd)
 
 TEST(Channel, FailUnavailableChannel) {
 aslam::channels::ChannelGroup channels;
