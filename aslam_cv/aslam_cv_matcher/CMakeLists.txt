@@ -35,6 +35,7 @@ set(SOURCES
   src/matching-problem-landmarks-to-frame-multimap.cc
 )
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mssse3") # for ./aslam_cv/aslam_cv_common_private/include/aslam/common-private/hamming-inl.h
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
