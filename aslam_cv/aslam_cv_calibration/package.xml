@@ -2,7 +2,7 @@
 <package format="2">
   <name>aslam_cv_calibration</name>
   <version>0.0.1</version>
-  <description>aslam_cv_cameras</description>
+  <description>aslam_cv_calibration</description>
   <maintainer email="schneith@ethz.ch">schneith</maintainer>
   <license>closed</license>
 
