@@ -1,3 +1,5 @@
+#include <memory>
+
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/common/memory.h>
@@ -150,7 +152,7 @@ bool PnpPoseEstimator::absolutePoseRansac(
                                                         points);
   opengv::sac::Ransac<
       opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem> ransac;
-  boost::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
+  std::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
       absposeproblem_ptr(
           new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(
               adapter, opengv::sac_problems::absolute_pose::
@@ -238,7 +240,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
       cam_rotations);
   opengv::sac::Ransac<
       opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem> ransac;
-  boost::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
+  std::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
       absposeproblem_ptr(
           new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(adapter,
               opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem::GP3P,
