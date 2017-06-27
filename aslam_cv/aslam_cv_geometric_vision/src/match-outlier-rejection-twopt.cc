@@ -48,7 +48,7 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
 
   typedef opengv::sac_problems::relative_pose::RotationOnlySacProblem
       RotationOnlySacProblem;
-  boost::shared_ptr<RotationOnlySacProblem> rotation_sac_problem(
+  std::shared_ptr<RotationOnlySacProblem> rotation_sac_problem(
       new RotationOnlySacProblem(adapter, !fix_random_seed));
 
   opengv::sac::Ransac<RotationOnlySacProblem> rotation_ransac;
@@ -59,7 +59,7 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
 
   typedef opengv::sac_problems::relative_pose::TranslationOnlySacProblem
       TranslationOnlySacProblem;
-  boost::shared_ptr<TranslationOnlySacProblem> translation_sac_problem(
+  std::shared_ptr<TranslationOnlySacProblem> translation_sac_problem(
       new TranslationOnlySacProblem(
           adapter, !fix_random_seed));
   opengv::sac::Ransac<TranslationOnlySacProblem> translation_ransac;
