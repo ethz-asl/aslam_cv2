@@ -50,8 +50,8 @@ TEST_F(MatcherTest, EmptyMatch) {
 }
 
 TEST_F(MatcherTest, MatchIdentity) {
-  Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
-  Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
+  Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Ones(2, 1);
+  Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Ones(2, 1);
 
   Eigen::Matrix<unsigned char, 48, 1> apple_descriptors =
       Eigen::Matrix<unsigned char, 48, 1>::Zero();
