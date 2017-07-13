@@ -3,7 +3,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-factory.h>
-#include <aslam/common-private/undistort-helpers.h>
+#include <aslam/common/undistort-helpers.h>
 
 namespace aslam {
 

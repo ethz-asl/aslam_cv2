@@ -5,7 +5,7 @@
 #include <vector>
 
 #include <aslam/common/pose-types.h>
-#include <aslam/common-private/feature-descriptor-ref.h>
+#include <aslam/common/feature-descriptor-ref.h>
 #include <aslam/frames/visual-frame.h>
 #include <Eigen/Core>
 #include <glog/logging.h>

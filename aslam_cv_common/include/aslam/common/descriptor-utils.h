@@ -6,8 +6,8 @@
 #include <Eigen/Core>
 #include <glog/logging.h>
 
-#include "aslam/common-private/feature-descriptor-ref.h"
-#include "aslam/common-private/hamming.h"
+#include "aslam/common/feature-descriptor-ref.h"
+#include "aslam/common/hamming.h"
 
 namespace aslam {
 namespace common {

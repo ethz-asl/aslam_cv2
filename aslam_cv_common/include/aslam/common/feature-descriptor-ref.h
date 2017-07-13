@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "aslam/common-private/hamming.h"
+#include "aslam/common/hamming.h"
 
 namespace aslam {
 namespace common {

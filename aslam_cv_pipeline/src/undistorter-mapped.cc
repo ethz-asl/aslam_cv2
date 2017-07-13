@@ -1,7 +1,7 @@
 #include "aslam/pipeline/undistorter-mapped.h"
 
 #include <aslam/cameras/camera-factory.h>
-#include <aslam/common-private/undistort-helpers.h>
+#include <aslam/common/undistort-helpers.h>
 #include <aslam/frames/visual-frame.h>
 #include <glog/logging.h>
 #include <opencv2/imgproc/imgproc.hpp> // cv::remap

@@ -3,7 +3,7 @@
 #include <aslam/common/entrypoint.h>
 #include <Eigen/Core>
 
-#include "aslam/common-private/descriptor-utils.h"
+#include "aslam/common/descriptor-utils.h"
 
 namespace aslam {
 namespace common {

@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "aslam/common-private/occupancy-grid.h"
+#include "aslam/common/occupancy-grid.h"
 
 typedef aslam::common::WeightedKeypoint<double, double, size_t> Point;
 typedef aslam::common::WeightedOccupancyGrid<Point> WeightedOccupancyGrid;
