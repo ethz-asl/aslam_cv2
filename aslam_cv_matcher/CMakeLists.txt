@@ -35,7 +35,8 @@ set(SOURCES
   src/matching-problem-landmarks-to-frame-multimap.cc
 )
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mssse3") # for ./aslam_cv/aslam_cv_common_private/include/aslam/common-private/hamming-inl.h
+# for ./aslam_cv/aslam_cv_common/include/aslam/common-private/hamming-inl.h
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mssse3")
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
@@ -47,16 +48,16 @@ SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} 
 # GTESTS #
 ##########
 catkin_add_gtest(test_matcher test/test-matcher.cc)
-target_link_libraries(test_matcher ${PROJECT_NAME}) 
+target_link_libraries(test_matcher ${PROJECT_NAME})
 
 catkin_add_gtest(test_matcher_non_exclusive test/test-matcher-non-exclusive.cc)
 target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
 
-catkin_add_gtest(test_matching_problem_landmarks_to_frame_kd_tree 
+catkin_add_gtest(test_matching_problem_landmarks_to_frame_kd_tree
   test/test-matching-problem-landmarks-to-frame-kd-tree.cc)
 target_link_libraries(test_matching_problem_landmarks_to_frame_kd_tree ${PROJECT_NAME})
 
-catkin_add_gtest(test_matching_problem_landmarks_to_frame_multimap 
+catkin_add_gtest(test_matching_problem_landmarks_to_frame_multimap
   test/test-matching-problem-landmarks-to-frame-multimap.cc)
 target_link_libraries(test_matching_problem_landmarks_to_frame_multimap ${PROJECT_NAME})
 
