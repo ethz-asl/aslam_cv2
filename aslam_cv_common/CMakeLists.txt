@@ -4,6 +4,9 @@ project(aslam_cv_common)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
+# for ./aslam_cv/aslam_cv_common_private/include/aslam/common-private/hamming-inl.h
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mssse3")
+
 #############
 # LIBRARIES #
 #############
@@ -50,6 +53,13 @@ target_link_libraries(test_time ${PROJECT_NAME})
 
 catkin_add_gtest(test_reader_writer_lock_test test/reader_writer_lock_test.cc)
 target_link_libraries(test_reader_writer_lock_test ${PROJECT_NAME})
+
+catkin_add_gtest(test_occupancy_grid test/test-occupancy-grid.cc)
+target_link_libraries(test_occupancy_grid ${catkin_LIBRARIES})
+
+catkin_add_gtest(test_descriptor_utils test/test-descriptor-utils.cc)
+target_link_libraries(test_descriptor_utils ${catkin_LIBRARIES})
+
 
 ##########
 # EXPORT #
