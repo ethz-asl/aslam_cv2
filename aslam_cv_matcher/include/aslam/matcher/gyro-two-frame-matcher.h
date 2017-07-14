@@ -70,7 +70,7 @@ class GyroTwoFrameMatcher {
     int channel_index;
   };
 
-  typedef typename Aligned<std::vector, KeypointData>::type::const_iterator KeyPointIterator;
+  typedef typename Aligned<std::vector, KeypointData>::const_iterator KeyPointIterator;
   typedef typename FrameToFrameMatchesWithScore::iterator MatchesIterator;
 
   struct MatchData {
@@ -155,7 +155,7 @@ class GyroTwoFrameMatcher {
   // Descriptors of frame k.
   std::vector<common::FeatureDescriptorConstRef> descriptors_k_wrapped_;
   // Keypoints of frame (k+1) sorted from small to large y coordinates.
-  Aligned<std::vector, KeypointData>::type keypoints_kp1_sorted_by_y_;
+  Aligned<std::vector, KeypointData> keypoints_kp1_sorted_by_y_;
   // corner_row_LUT[i] is the number of keypoints that has y position
   // lower than i in the image.
   std::vector<int> corner_row_LUT_;

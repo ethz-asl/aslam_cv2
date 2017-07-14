@@ -10,8 +10,8 @@ namespace aslam {
 // Convert any kind of matches with score to any kind of match.
 template<typename MatchWithScore, typename Match>
 void convertMatchesWithScoreToMatches(
-    const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
-    typename Aligned<std::vector, Match>::type* matches_A_B);
+    const typename Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
+    typename Aligned<std::vector, Match>* matches_A_B);
 
 // Convert aslam::MatchesWithScore to aslam::Matches.
 inline void convertMatchesWithScoreToMatches(
@@ -31,7 +31,7 @@ void convertMatchesWithScoreToMatches(
 /// Convert MatchesWithScore to cv::DMatches.
 template<typename MatchWithScore>
 void convertMatchesWithScoreToOpenCvMatches(
-    const typename Aligned<std::vector, MatchWithScore>::type& matches_with_score_A_B,
+    const typename Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
     OpenCvMatches* matches_A_B);
 
 /// Select and return N random matches for each camera in the rig.
@@ -65,8 +65,8 @@ double getUnrotatedMatchPixelDisparityMedian(
 void getBearingVectorsFromMatches(
     const VisualFrame& frame_kp1, const VisualFrame& frame_k,
     const FrameToFrameMatches& matches_kp1_k,
-    Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_kp1,
-    Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_k);
+    Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_kp1,
+    Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_k);
 
 /// Rotate keypoints from a VisualFrame using a specified rotation. Note that if the back-,
 /// projection fails or the keypoint leaves the image region, the predicted keypoint will be left

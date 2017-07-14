@@ -90,8 +90,8 @@ class FeatureTrack {
   /// Keypoints on the track.
   KeypointIdentifierList keypoint_identifiers_;
 };
-typedef Aligned<std::vector, FeatureTrack>::type FeatureTracks;
-typedef Aligned<std::vector, FeatureTracks>::type FeatureTracksList;
+typedef Aligned<std::vector, FeatureTrack> FeatureTracks;
+typedef Aligned<std::vector, FeatureTracks> FeatureTracksList;
 
 struct ContinuedFeatureTrack {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -110,7 +110,7 @@ struct ContinuedFeatureTrack {
   int track_id;
   aslam::KeypointIdentifier keypoint_identifier;
 };
-typedef Aligned<std::vector, ContinuedFeatureTrack>::type ContinuedFeatureTracks;
+typedef Aligned<std::vector, ContinuedFeatureTrack> ContinuedFeatureTracks;
 
 }  // namespace aslam
 #include "aslam/frames/feature-track-inl.h"

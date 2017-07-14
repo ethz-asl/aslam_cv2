@@ -74,7 +74,7 @@ struct TriangulationResult {
 /// @param G_point Triangulated point in global frame.
 /// @return Was the triangulation successful?
 TriangulationResult linearTriangulateFromNViews(
-    const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
+    const Aligned<std::vector, Eigen::Vector2d>& measurements_normalized,
     const aslam::TransformationVector& T_G_B,
     const aslam::Transformation& T_B_C, Eigen::Vector3d* G_point);
 
@@ -89,8 +89,8 @@ TriangulationResult linearTriangulateFromNViews(
 /// @param G_point Triangulated point in global frame.
 /// @return Was the triangulation successful?
 TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
-    const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
-    const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
+    const Aligned<std::vector, Eigen::Vector2d>& measurements_normalized,
+    const Aligned<std::vector, aslam::Transformation>& T_G_B,
     const aslam::Transformation& T_B_C, Eigen::Vector3d* G_point);
 
 /// brief Triangulate a 3d point from a set of n keypoint measurements as
@@ -116,10 +116,10 @@ TriangulationResult linearTriangulateFromNViews(
 /// @param G_point Triangulated point in global frame.
 /// @return Was the triangulation successful?
 TriangulationResult linearTriangulateFromNViewsMultiCam(
-    const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
+    const Aligned<std::vector, Eigen::Vector2d>& measurements_normalized,
     const std::vector<size_t>& measurement_camera_indices,
-    const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
-    const Aligned<std::vector, aslam::Transformation>::type& T_B_C,
+    const Aligned<std::vector, aslam::Transformation>& T_G_B,
+    const Aligned<std::vector, aslam::Transformation>& T_B_C,
     Eigen::Vector3d* G_point);
 
 /// brief Triangulates a feature track together with a list of body poses.

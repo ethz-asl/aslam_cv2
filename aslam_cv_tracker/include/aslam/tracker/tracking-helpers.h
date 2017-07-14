@@ -12,7 +12,7 @@
 
 namespace aslam {
 class VisualFrame;
-typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Verctor2dList;
+typedef aslam::Aligned<std::vector, Eigen::Vector2d> Verctor2dList;
 
 void convertKeypointVectorToCvPointList(const Eigen::Matrix2Xd& keypoints,
                                         std::vector<cv::Point2f>* keypoints_cv);

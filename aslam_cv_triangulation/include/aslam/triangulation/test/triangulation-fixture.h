@@ -12,13 +12,13 @@
 constexpr double kDoubleTolerance = 1e-9;
 const Eigen::Vector3d kGPoint(0, 0, 5);
 
-typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
+typedef aslam::Aligned<std::vector, Eigen::Vector2d> Vector2dList;
 
 void fillObservations(
     size_t n_observations,
     const aslam::Transformation& T_I_C,
     Eigen::Matrix3Xd* C_bearing_vectors,
-    aslam::Aligned<std::vector, aslam::Transformation>::type* T_G_I) {
+    aslam::Aligned<std::vector, aslam::Transformation>* T_G_I) {
   CHECK_NOTNULL(C_bearing_vectors);
   CHECK_NOTNULL(T_G_I)->clear();
 
@@ -42,8 +42,8 @@ void fillObservations(
 void fillObservations(
     size_t n_observations,
     const aslam::Transformation& T_I_C,
-    aslam::Aligned<std::vector, Eigen::Vector2d>::type* measurements,
-    aslam::Aligned<std::vector, aslam::Transformation>::type* T_G_I) {
+    aslam::Aligned<std::vector, Eigen::Vector2d>* measurements,
+    aslam::Aligned<std::vector, aslam::Transformation>* T_G_I) {
   CHECK_NOTNULL(measurements);
   CHECK_NOTNULL(T_G_I);
   Eigen::Matrix3Xd C_bearing_vectors;
@@ -108,7 +108,7 @@ class TriangulationFixture : public testing::Test {
   aslam::Transformation T_I_C_;
   MeasurementsType measurements_;
   Eigen::Matrix3Xd C_bearing_measurements_;
-  aslam::Aligned<std::vector, aslam::Transformation>::type T_G_I_;
+  aslam::Aligned<std::vector, aslam::Transformation> T_G_I_;
   Eigen::Vector3d p_G_;
 
  public:

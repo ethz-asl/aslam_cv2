@@ -15,7 +15,7 @@ TriangulationResult::Status TriangulationResult::UNINITIALIZED =
     TriangulationResult::Status::kUninitialized;
 
 TriangulationResult linearTriangulateFromNViews(
-    const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
+    const Aligned<std::vector, Eigen::Vector2d>& measurements_normalized,
     const aslam::TransformationVector& T_G_B,
     const aslam::Transformation& T_B_C, Eigen::Vector3d* G_point) {
   CHECK_NOTNULL(G_point);
@@ -108,10 +108,10 @@ TriangulationResult linearTriangulateFromNViews(
 }
 
 TriangulationResult linearTriangulateFromNViewsMultiCam(
-    const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
+    const Aligned<std::vector, Eigen::Vector2d>& measurements_normalized,
     const std::vector<size_t>& measurement_camera_indices,
-    const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
-    const Aligned<std::vector, aslam::Transformation>::type& T_B_C,
+    const Aligned<std::vector, aslam::Transformation>& T_G_B,
+    const Aligned<std::vector, aslam::Transformation>& T_B_C,
     Eigen::Vector3d* G_point) {
   CHECK_NOTNULL(G_point);
   CHECK_EQ(measurements_normalized.size(), T_G_B.size());
@@ -156,8 +156,8 @@ TriangulationResult linearTriangulateFromNViewsMultiCam(
 // and Automation, pp. 10–14, 2007.
 // [2] T. Hinzmann, "Robust Vision-Based Navigation for Micro Air Vehicles", 2014.
 TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
-    const Aligned<std::vector, Eigen::Vector2d>::type& measurements_normalized,
-    const Aligned<std::vector, aslam::Transformation>::type& T_G_B,
+    const Aligned<std::vector, Eigen::Vector2d>& measurements_normalized,
+    const Aligned<std::vector, aslam::Transformation>& T_G_B,
     const aslam::Transformation& T_B_C, Eigen::Vector3d* G_point) {
   CHECK_NOTNULL(G_point);
   CHECK_EQ(measurements_normalized.size(), T_G_B.size());
@@ -185,8 +185,8 @@ TriangulationResult iterativeGaussNewtonTriangulateFromNViews(
   const Eigen::Vector3d& p_G_Cn = T_Cn_G.getPosition();
 
   // Cache matrices that are constant for every iteration.
-  Aligned<std::vector, Eigen::Matrix3d>::type R_Ci_Cn;
-  Aligned<std::vector, Eigen::Vector3d>::type p_Ci_Cn;
+  Aligned<std::vector, Eigen::Matrix3d> R_Ci_Cn;
+  Aligned<std::vector, Eigen::Vector3d> p_Ci_Cn;
   for (size_t i = 0; i < measurements_normalized.size(); ++i) {
     const aslam::Transformation T_Ci_G = T_B_C.inverse() * T_G_B[i].inverse();
     // Rotation from first camera to current camera.
@@ -278,7 +278,7 @@ TriangulationResult triangulateFeatureTrack(
   aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverse();
 
   // Get the normalized measurements for all observations on the track.
-  Aligned<std::vector, Eigen::Vector2d>::type normalized_measurements;
+  Aligned<std::vector, Eigen::Vector2d> normalized_measurements;
   normalized_measurements.reserve(track_length);
 
   size_t index = 0u;
