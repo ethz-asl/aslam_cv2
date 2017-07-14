@@ -1,5 +1,5 @@
-#ifndef ASLAM_MEMORY_HELPERS_H_
-#define ASLAM_MEMORY_HELPERS_H_
+#ifndef ASLAM_COMMON_MEMORY_H_
+#define ASLAM_COMMON_MEMORY_H_
 
 #include <functional>
 #include <map>
@@ -11,26 +11,28 @@
 #include <Eigen/Core>
 #include <Eigen/StdVector>
 
-namespace aslam {
+template <template <typename, typename> class Container, typename Type>
+using Aligned = Container<Type, Eigen::aligned_allocator<Type>>;
 
-template<template<typename, typename> class Container, typename Type>
-struct Aligned {
-  typedef Container<Type, Eigen::aligned_allocator<Type> > type;
-};
+template <typename KeyType, typename ValueType>
+using AlignedMap =
+    std::map<KeyType, ValueType, std::less<KeyType>,
+             Eigen::aligned_allocator<std::pair<const KeyType, ValueType>>>;
 
-template<typename KeyType, typename ValueType>
-struct AlignedUnorderedMap {
-  typedef std::unordered_map<KeyType, ValueType,
-      std::hash<KeyType>, std::equal_to<KeyType>,
-      Eigen::aligned_allocator<std::pair<const KeyType, ValueType> > > type;
-};
+template <typename KeyType, typename ValueType>
+using AlignedUnorderedMap = std::unordered_map<
+    KeyType, ValueType, std::hash<KeyType>, std::equal_to<KeyType>,
+    Eigen::aligned_allocator<std::pair<const KeyType, ValueType>>>;
 
-template<typename KeyType, typename ValueType>
-struct AlignedMap {
-  typedef std::map<KeyType, ValueType,
-      std::less<KeyType>,
-      Eigen::aligned_allocator<std::pair<const KeyType, ValueType> > > type;
-};
+template <typename KeyType, typename ValueType>
+using AlignedUnorderedMultimap = std::unordered_multimap<
+    KeyType, ValueType, std::hash<KeyType>, std::equal_to<KeyType>,
+    Eigen::aligned_allocator<std::pair<const KeyType, ValueType>>>;
+
+template <typename Type>
+using AlignedUnorderedSet =
+    std::unordered_set<Type, std::hash<Type>, std::equal_to<Type>,
+                       Eigen::aligned_allocator<Type>>;
 
 /// \brief Aligned allocator to be used like std::make_shared
 ///
@@ -43,7 +45,37 @@ inline std::shared_ptr<Type> aligned_shared(Arguments&&... arguments) {
                                     std::forward<Arguments>(arguments)...);
 }
 
-} // namespace aslam
+namespace internal {
+template <typename Type>
+struct aligned_delete {
+  constexpr aligned_delete() noexcept = default;
 
-#endif  // ASLAM_MEMORY_HELPERS_H_
+  template <typename TypeUp,
+            typename = typename std::enable_if<
+                std::is_convertible<TypeUp*, Type*>::value>::type>
+  aligned_delete(const aligned_delete<TypeUp>&) noexcept {}
+
+  void operator()(Type* ptr) const {
+    static_assert(sizeof(Type) > 0, "Can't delete pointer to incomplete type!");
+    typedef typename std::remove_const<Type>::type TypeNonConst;
+    Eigen::aligned_allocator<TypeNonConst> allocator;
+    allocator.deallocate(ptr, 1u /*num*/);
+  }
+};
+}  // namespace internal
+
+template <typename Type>
+using AlignedUniquePtr = std::unique_ptr<
+    Type, internal::aligned_delete<typename std::remove_const<Type>::type>>;
+
+template <typename Type, typename... Arguments>
+inline AlignedUniquePtr<Type> aligned_unique(Arguments&&... arguments) {
+  typedef typename std::remove_const<Type>::type TypeNonConst;
+  Eigen::aligned_allocator<TypeNonConst> allocator;
+  TypeNonConst* obj = ::new (allocator.allocate(1u))  // NOLINT
+      Type(std::forward<Arguments>(arguments)...);
+  return std::move(AlignedUniquePtr<Type>(obj));
+}
+
+#endif  // ASLAM_COMMON_MEMORY_H_
 
