@@ -181,8 +181,8 @@ double getUnrotatedMatchPixelDisparityMedian(
 void getBearingVectorsFromMatches(
     const VisualFrame& frame_kp1, const VisualFrame& frame_k,
     const FrameToFrameMatches& matches_kp1_k,
-    Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_kp1,
-    Aligned<std::vector, Eigen::Vector3d>::type* bearing_vectors_k) {
+    Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_kp1,
+    Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_k) {
   CHECK_NOTNULL(bearing_vectors_kp1);
   CHECK_NOTNULL(bearing_vectors_k);
 

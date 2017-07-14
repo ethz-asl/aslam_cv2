@@ -65,8 +65,8 @@ public:
     }
   };
 
-  typedef Aligned<std::vector, Candidate>::type Candidates;
-  typedef Aligned<std::vector, Candidates>::type CandidatesList;
+  typedef Aligned<std::vector, Candidate> Candidates;
+  typedef Aligned<std::vector, Candidates> CandidatesList;
 
   ASLAM_POINTER_TYPEDEFS(MatchingProblem);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblem);

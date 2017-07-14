@@ -80,7 +80,7 @@ class KeypointIdentifier {
   std::shared_ptr<const aslam::VisualNFrame> nframe_;
 };
 
-typedef Aligned<std::vector, KeypointIdentifier>::type KeypointIdentifierList;
+typedef Aligned<std::vector, KeypointIdentifier> KeypointIdentifierList;
 
 }  // namespace aslam
 #endif  // ASLAM_KEYPOINT_IDENTIFIER_H_

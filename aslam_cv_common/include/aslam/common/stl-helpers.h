@@ -160,10 +160,11 @@ size_t keepOnlyNSortedElements(size_t max_elements_to_keep,
   return container->size();
 }
 
-template<int VectorDim>
+template <int VectorDim>
 inline void convertEigenToStlVector(
     const Eigen::template Matrix<double, VectorDim, Eigen::Dynamic>& input,
-    typename Aligned<std::vector, Eigen::template Matrix<double, VectorDim, 1>>::type* output) {
+    Aligned<std::vector, Eigen::template Matrix<double, VectorDim, 1>>*
+        output) {
   CHECK_NOTNULL(output);
   size_t num_cols = input.cols();
   output->clear();

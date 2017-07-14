@@ -224,7 +224,7 @@ VisualNFrame::Ptr VisualNFrame::createEmptyTestVisualNFrame(const NCamera::Ptr& 
   const size_t kNumFrames = ncamera->getNumCameras();
   aslam::NFramesId id;
   id.randomize();
-  aslam::VisualNFrame::Ptr nframe = aslam::aligned_shared<aslam::VisualNFrame>(id, ncamera);
+  aslam::VisualNFrame::Ptr nframe = aligned_shared<aslam::VisualNFrame>(id, ncamera);
   for (size_t frame_idx = 0; frame_idx < kNumFrames; ++frame_idx) {
     aslam::VisualFrame::Ptr frame =
         VisualFrame::createEmptyTestVisualFrame(ncamera->getCameraShared(frame_idx),

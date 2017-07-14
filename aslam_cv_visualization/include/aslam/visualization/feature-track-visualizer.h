@@ -21,16 +21,16 @@ class VisualFrameFeatureTrackVisualizer {
       cv::Mat* image);
 
  private:
-  typedef aslam::AlignedUnorderedMap<int, size_t>::type TrackIdToIndexMap;
+  typedef AlignedUnorderedMap<int, size_t> TrackIdToIndexMap;
 
   void preprocessLastFrame(TrackIdToIndexMap* track_id_to_keypoint_index_map);
 
   struct Track {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    aslam::Aligned<std::vector, Eigen::Vector2d>::type keypoints;
+    Aligned<std::vector, Eigen::Vector2d> keypoints;
     cv::Scalar color;
   };
-  typedef aslam::AlignedUnorderedMap<int, Track>::type TrackMap;
+  typedef AlignedUnorderedMap<int, Track> TrackMap;
   TrackMap track_id_to_track_map_;
 
   aslam::VisualFrame::ConstPtr last_frame_;

@@ -48,7 +48,7 @@ bool initFocalLengthVanishingPoints(
     }
 
     // Try to fit circles to each row of observations.
-    aslam::Aligned<std::vector, Eigen::Vector2d>::type center(current_target->rows());
+    Aligned<std::vector, Eigen::Vector2d> center(current_target->rows());
     std::vector<double> radius(current_target->rows());
 
     for (size_t r = 0u; r < current_target->rows(); ++r) {

@@ -22,14 +22,14 @@ TEST(StlHelpers, EraseIndices) {
 }
 
 TEST(StlHelpers, EraseIndicesAligned) {
-  Aligned<std::vector, Eigen::Vector3i>::type test_vector;
+  Aligned<std::vector, Eigen::Vector3i> test_vector;
   test_vector.push_back(Eigen::Vector3i::Constant(0));
   test_vector.push_back(Eigen::Vector3i::Constant(1));
   test_vector.push_back(Eigen::Vector3i::Constant(2));
   test_vector.push_back(Eigen::Vector3i::Constant(3));
   std::vector<size_t> indices_to_remove = {2, 1};
 
-  Aligned<std::vector, Eigen::Vector3i>::type result_vector =
+  Aligned<std::vector, Eigen::Vector3i> result_vector =
       aslam::common::eraseIndicesFromVector(test_vector, indices_to_remove);
   ASSERT_EQ(result_vector.size(), test_vector.size() - indices_to_remove.size());
 
@@ -41,13 +41,13 @@ TEST(StlHelpers, EraseIndicesAligned) {
 }
 
 TEST(StlHelpers, DrawRandom) {
-  Aligned<std::vector, Eigen::Vector3i>::type test_vector;
+  Aligned<std::vector, Eigen::Vector3i> test_vector;
   test_vector.push_back(Eigen::Vector3i::Constant(0));
   test_vector.push_back(Eigen::Vector3i::Constant(1));
   test_vector.push_back(Eigen::Vector3i::Constant(2));
   test_vector.push_back(Eigen::Vector3i::Constant(3));
 
-  Aligned<std::vector, Eigen::Vector3i>::type output;
+  Aligned<std::vector, Eigen::Vector3i> output;
 
   const size_t kNum = 3;
   aslam::common::drawNRandomElements(kNum, test_vector, &output, true);
@@ -64,10 +64,10 @@ TEST(StlHelpers, DrawRandom) {
 
 TEST(StdHelpers, CountNestedListElements) {
   const size_t kArbitraryNumElementsOfList = 123u;
-  Aligned<std::vector, int>::type eigen_list(kArbitraryNumElementsOfList);
+  Aligned<std::vector, int> eigen_list(kArbitraryNumElementsOfList);
 
   const size_t kArbitraryNumElementsOfNestedList = 93u;
-  Aligned<std::vector, Aligned<std::vector, int>::type>::type eigen_nested_list(
+  Aligned<std::vector, Aligned<std::vector, int>> eigen_nested_list(
       kArbitraryNumElementsOfNestedList, eigen_list);
 
   size_t num_elements = aslam::common::countNumberOfElementsInNestedList(

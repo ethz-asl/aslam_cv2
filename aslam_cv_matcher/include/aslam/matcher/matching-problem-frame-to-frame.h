@@ -117,7 +117,7 @@ private:
   std::vector<bool> valid_bananas_;
 
   /// The banana keypoints projected into the apple frame, expressed in the apple frame.
-  aslam::Aligned<std::vector, Eigen::Vector2d>::type A_projected_keypoints_banana_;
+  Aligned<std::vector, Eigen::Vector2d> A_projected_keypoints_banana_;
 
   /// The apple descriptors.
   std::vector<common::FeatureDescriptorConstRef> apple_descriptors_;

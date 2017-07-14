@@ -22,9 +22,9 @@ class SimpleMatchProblem : public aslam::MatchingProblem {
   SimpleMatchProblem() {}
   ~SimpleMatchProblem() {}
   typedef aslam::MatchWithScore MatchWithScore;
-  typedef Aligned<std::vector, MatchWithScore>::type MatchesWithScore;
+  typedef Aligned<std::vector, MatchWithScore> MatchesWithScore;
   typedef aslam::Match Match;
-  typedef Aligned<std::vector, Match>::type Matches;
+  typedef Aligned<std::vector, Match> Matches;
 
   virtual size_t numApples() const {
     return apples_.size();

@@ -73,7 +73,7 @@ void VisualFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
         track_it != track_id_to_track_map_.end(); ++track_it) {
       CHECK_GT(track_it->second.keypoints.size(), 0u);
       bool terminated = (terminated_track_ids.count(track_it->first) > 0u);
-      aslam::Aligned<std::vector, Eigen::Vector2d>::type::const_iterator
+      Aligned<std::vector, Eigen::Vector2d>::const_iterator
         measurement_it = track_it->second.keypoints.begin();
       cv::Point point_start_line((*measurement_it)(0), (*measurement_it)(1));
       ++measurement_it;

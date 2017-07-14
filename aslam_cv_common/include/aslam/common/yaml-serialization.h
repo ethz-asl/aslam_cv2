@@ -51,8 +51,8 @@ template <class ValueType>
 struct convert<std::queue<ValueType> > {
   static Node encode(const std::queue<ValueType>& queue) {
     Node node;
-    typename aslam::Aligned<std::vector, ValueType>::type tmp_v;
-    typename aslam::Aligned<std::queue, ValueType>::type q_cpy = queue;
+    Aligned<std::vector, ValueType> tmp_v;
+    Aligned<std::queue, ValueType> q_cpy = queue;
     while (!q_cpy.empty()) {
       tmp_v.push_back(q_cpy.front());
       q_cpy.pop();
