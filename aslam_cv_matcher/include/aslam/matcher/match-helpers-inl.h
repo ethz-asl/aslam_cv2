@@ -10,8 +10,8 @@ namespace aslam {
 
 template<typename MatchWithScore, typename Match>
 void convertMatchesWithScoreToMatches(
-    const typename Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
-    typename Aligned<std::vector, Match>* matches_A_B) {
+    const Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
+    Aligned<std::vector, Match>* matches_A_B) {
   CHECK_NOTNULL(matches_A_B)->clear();
   matches_A_B->reserve(matches_with_score_A_B.size());
   for (const MatchWithScore& match : matches_with_score_A_B) {
@@ -23,9 +23,9 @@ void convertMatchesWithScoreToMatches(
   CHECK_EQ(matches_with_score_A_B.size(), matches_A_B->size());
 }
 
-template<typename MatchWithScore>
+template <typename MatchWithScore>
 void convertMatchesWithScoreToOpenCvMatches(
-    const typename Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
+    const Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
     OpenCvMatches* matches_A_B) {
   CHECK_NOTNULL(matches_A_B)->clear();
   matches_A_B->reserve(matches_with_score_A_B.size());

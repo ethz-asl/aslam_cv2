@@ -26,13 +26,13 @@ typedef Aligned<std::vector, Matches> MatchesList;
 typedef Aligned<std::vector, cv::DMatch> OpenCvMatches;
 
 struct MatchWithScore {
-  template<typename MatchWithScore, typename Match>
+  template <typename MatchWithScore, typename Match>
   friend void convertMatchesWithScoreToMatches(
-      const typename Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
-      typename Aligned<std::vector, Match>* matches_A_B);
-  template<typename MatchWithScore>
+      const Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
+      Aligned<std::vector, Match>* matches_A_B);
+  template <typename MatchWithScore>
   friend void convertMatchesWithScoreToOpenCvMatches(
-      const typename Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
+      const Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
       OpenCvMatches* matches_A_B);
   FRIEND_TEST(TestMatcherExclusive, ExclusiveMatcher);
   FRIEND_TEST(TestMatcher, GreedyMatcher);

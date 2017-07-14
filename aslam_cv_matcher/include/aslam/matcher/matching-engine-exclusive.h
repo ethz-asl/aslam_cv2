@@ -86,8 +86,8 @@ private:
   ///        (i.e. iterator_to_next_best_apple_[banana_index] points to the next best candidate
   ///        for the given banana. Points to candiates_[banana_index].end() if no next best
   ///        candidate available.
-  typename aslam::Aligned<std::vector,
-    typename MatchingProblem::Candidates::iterator>::type iterator_to_next_best_apple_;
+  Aligned<std::vector, typename MatchingProblem::Candidates::iterator>
+      iterator_to_next_best_apple_;
 };
 
 template<typename MatchingProblem>

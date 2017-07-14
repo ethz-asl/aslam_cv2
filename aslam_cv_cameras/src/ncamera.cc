@@ -99,7 +99,7 @@ const Transformation& NCamera::get_T_C_B(const CameraId& camera_id) const {
 Transformation& NCamera::get_T_C_B_Mutable(const CameraId& camera_id) {
   CHECK(camera_id.isValid());
   int camera_idx = getCameraIndex(camera_id);
-  CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id 
+  CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
                           << " not in NCamera! container";
   return get_T_C_B_Mutable(camera_idx);
 }
@@ -173,7 +173,7 @@ int NCamera::getCameraIndex(const CameraId& id) const {
 
 NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
   std::vector<aslam::Camera::Ptr> cameras;
-  aslam::Aligned<std::vector, aslam::Transformation> T_C_B_vector;
+  Aligned<std::vector, aslam::Transformation> T_C_B_vector;
 
   for(size_t camera_idx = 0u; camera_idx < num_cameras; ++camera_idx) {
     cameras.push_back(aslam::PinholeCamera::createTestCamera<aslam::RadTanDistortion>());
@@ -230,7 +230,8 @@ NCamera::Ptr NCamera::createSurroundViewTestNCamera() {
   rig_transformations.emplace_back(q_B_C2.inverse(), -t_B_C2);
   rig_transformations.emplace_back(q_B_C3.inverse(), -t_B_C3);
   std::string label = "Artificial Planar 4-Pinhole-Camera-Rig";
-  return aslam::aligned_shared<aslam::NCamera>(rig_id, rig_transformations, cameras, label);
+  return aligned_shared<aslam::NCamera>(
+      rig_id, rig_transformations, cameras, label);
 }
 
 aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {

@@ -10,8 +10,8 @@ namespace aslam {
 // Convert any kind of matches with score to any kind of match.
 template<typename MatchWithScore, typename Match>
 void convertMatchesWithScoreToMatches(
-    const typename Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
-    typename Aligned<std::vector, Match>* matches_A_B);
+    const Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
+    Aligned<std::vector, Match>* matches_A_B);
 
 // Convert aslam::MatchesWithScore to aslam::Matches.
 inline void convertMatchesWithScoreToMatches(
@@ -31,7 +31,7 @@ void convertMatchesWithScoreToMatches(
 /// Convert MatchesWithScore to cv::DMatches.
 template<typename MatchWithScore>
 void convertMatchesWithScoreToOpenCvMatches(
-    const typename Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
+    const Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
     OpenCvMatches* matches_A_B);
 
 /// Select and return N random matches for each camera in the rig.

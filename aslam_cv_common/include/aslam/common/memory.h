@@ -6,6 +6,7 @@
 #include <memory>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include <Eigen/Core>
@@ -78,4 +79,3 @@ inline AlignedUniquePtr<Type> aligned_unique(Arguments&&... arguments) {
 }
 
 #endif  // ASLAM_COMMON_MEMORY_H_
-
