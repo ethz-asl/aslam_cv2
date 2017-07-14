@@ -67,7 +67,7 @@ TEST(StdHelpers, CountNestedListElements) {
   Aligned<std::vector, int> eigen_list(kArbitraryNumElementsOfList);
 
   const size_t kArbitraryNumElementsOfNestedList = 93u;
-  Aligned<std::vector, Aligned<std::vector, int>::type> eigen_nested_list(
+  Aligned<std::vector, Aligned<std::vector, int>> eigen_nested_list(
       kArbitraryNumElementsOfNestedList, eigen_list);
 
   size_t num_elements = aslam::common::countNumberOfElementsInNestedList(

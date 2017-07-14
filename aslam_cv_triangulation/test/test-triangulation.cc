@@ -18,9 +18,9 @@ TYPED_TEST(TriangulationFixture, LinearTriangulateFromNViews) {
 class TriangulationMultiviewTest : public TriangulationFixture<Vector2dList> {};
 
 TEST_F(TriangulationMultiviewTest, linearTriangulateFromNViewsMultiCam) {
-  aslam::Aligned<std::vector, Eigen::Vector2d> measurements;
-  aslam::Aligned<std::vector, aslam::Transformation> T_G_I;
-  aslam::Aligned<std::vector, aslam::Transformation> T_I_C;
+  Aligned<std::vector, Eigen::Vector2d> measurements;
+  Aligned<std::vector, aslam::Transformation> T_G_I;
+  Aligned<std::vector, aslam::Transformation> T_I_C;
   std::vector<size_t> measurement_camera_indices;
   Eigen::Vector3d G_point;
 
@@ -31,8 +31,8 @@ TEST_F(TriangulationMultiviewTest, linearTriangulateFromNViewsMultiCam) {
 
   for (size_t i = 0; i < T_I_C.size(); ++i) {
     T_I_C[i].setRandom(0.2, 0.1);
-    aslam::Aligned<std::vector, Eigen::Vector2d> cam_measurements;
-    aslam::Aligned<std::vector, aslam::Transformation> cam_T_G_I;
+    Aligned<std::vector, Eigen::Vector2d> cam_measurements;
+    Aligned<std::vector, aslam::Transformation> cam_T_G_I;
     fillObservations(kNumObservations, T_I_C[i], &cam_measurements, &cam_T_G_I);
 
     // Append to the end of the vectors.
@@ -51,9 +51,9 @@ TEST_F(TriangulationMultiviewTest, linearTriangulateFromNViewsMultiCam) {
 }
 
 TEST_F(TriangulationMultiviewTest, iterativeGaussNewtonTriangulateFromNViews) {
-  aslam::Aligned<std::vector, Eigen::Vector2d> measurements;
-  aslam::Aligned<std::vector, aslam::Transformation> T_G_B;
-  aslam::Aligned<std::vector, aslam::Transformation> T_B_C;
+  Aligned<std::vector, Eigen::Vector2d> measurements;
+  Aligned<std::vector, aslam::Transformation> T_G_B;
+  Aligned<std::vector, aslam::Transformation> T_B_C;
   std::vector<size_t> measurement_camera_indices;
   Eigen::Vector3d G_point;
 
@@ -64,8 +64,8 @@ TEST_F(TriangulationMultiviewTest, iterativeGaussNewtonTriangulateFromNViews) {
 
   for (size_t i = 0; i < T_B_C.size(); ++i) {
     T_B_C[i].setRandom(0.2, 0.1);
-    aslam::Aligned<std::vector, Eigen::Vector2d> cam_measurements;
-    aslam::Aligned<std::vector, aslam::Transformation> cam_T_G_B;
+    Aligned<std::vector, Eigen::Vector2d> cam_measurements;
+    Aligned<std::vector, aslam::Transformation> cam_T_G_B;
     fillObservations(kNumObservations, T_B_C[i], &cam_measurements, &cam_T_G_B);
 
     // Append to the end of the vectors.
