@@ -1,5 +1,5 @@
-#ifndef MAPLAB_COMMON_EIGEN_HASH_H_
-#define MAPLAB_COMMON_EIGEN_HASH_H_
+#ifndef ASLAM_COMMON_EIGEN_HASH_H_
+#define ASLAM_COMMON_EIGEN_HASH_H_
 
 #include <functional>
 
@@ -23,4 +23,4 @@ struct hash<Eigen::Matrix<Scalar, Rows, Cols>> {
 
 }  // namespace std
 
-#endif  // MAPLAB_COMMON_EIGEN_HASH_H_
+#endif  // ASLAM_COMMON_EIGEN_HASH_H_
