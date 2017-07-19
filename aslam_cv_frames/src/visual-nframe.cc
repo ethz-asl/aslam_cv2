@@ -237,11 +237,11 @@ VisualNFrame::Ptr VisualNFrame::createEmptyTestVisualNFrame(const NCamera::Ptr& 
 bool VisualNFrame::hasRawImagesInAllFrames() const {
   for (const VisualFrame::Ptr& frame : frames_) {
     CHECK(frame);
-    if (frame->hasRawImage()) {
-      return true;
+    if (!frame->hasRawImage()) {
+      return false;
     }
   }
-  return false;
+  return true;
 }
 
 void VisualNFrame::releaseRawImagesOfAllFrames() {
