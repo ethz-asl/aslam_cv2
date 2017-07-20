@@ -37,6 +37,8 @@ typedef std::vector<ImagePositionOffset> Offsets;
 /// frames and draws keypoints on them.
 void visualizeKeypoints(const std::shared_ptr<const aslam::VisualNFrame>& nframe, cv::Mat* image);
 
+void visualizeNFrame(const aslam::VisualNFrame::ConstPtr& nframe, cv::Mat* image_ptr);
+
 /// Takes two frames and list of matches between them and draws the raw images and the matches.
 template<typename MatchesWithScore>
 void visualizeMatches(const aslam::VisualFrame& frame_kp1,

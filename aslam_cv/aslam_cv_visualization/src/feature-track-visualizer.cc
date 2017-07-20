@@ -9,6 +9,8 @@ namespace aslam_cv_visualization {
 const size_t kLineWidth = 1u;
 const size_t kCircleRadius = 1u;
 
+DEFINE_int32(feature_tracker_visualization_min_track_length, 4, "");
+
 void VisualFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
     const aslam::VisualFrame::ConstPtr& frame,
     const aslam::FeatureTracks& terminated_feature_tracks,
@@ -72,6 +74,9 @@ void VisualFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
     for (TrackMap::const_iterator track_it = track_id_to_track_map_.begin();
         track_it != track_id_to_track_map_.end(); ++track_it) {
       CHECK_GT(track_it->second.keypoints.size(), 0u);
+      if (track_it->second.keypoints.size() < FLAGS_feature_tracker_visualization_min_track_length) {
+        continue;
+      }
       bool terminated = (terminated_track_ids.count(track_it->first) > 0u);
       aslam::Aligned<std::vector, Eigen::Vector2d>::type::const_iterator
         measurement_it = track_it->second.keypoints.begin();

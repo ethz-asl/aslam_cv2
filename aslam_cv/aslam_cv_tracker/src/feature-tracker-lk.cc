@@ -84,9 +84,12 @@ void FeatureTrackerLk::initialize(const aslam::Camera& camera) {
   CHECK_LT(2 * kMinDistanceToImageBorderPx, camera.imageWidth());
   CHECK_LT(2 * kMinDistanceToImageBorderPx, camera.imageHeight());
   if (camera.hasMask()) {
+    VLOG(1) << "Loading camera mask.";
     detection_mask_image_border_ = camera.getMask();
     CHECK_EQ(detection_mask_image_border_.rows, camera.imageHeight());
     CHECK_EQ(detection_mask_image_border_.cols, camera.imageWidth());
+    VLOG(1) << "Mask has dimensions: " << detection_mask_image_border_.rows << 'x'
+        << detection_mask_image_border_.cols;
   } else {
     detection_mask_image_border_ = cv::Mat::zeros(
         camera.imageHeight(), camera.imageWidth(), CV_8UC1);
@@ -96,6 +99,8 @@ void FeatureTrackerLk::initialize(const aslam::Camera& camera) {
             camera.imageWidth() - 2 * kMinDistanceToImageBorderPx - 1,
             camera.imageHeight() - 2 * kMinDistanceToImageBorderPx - 1));
     region_of_interest = cv::Scalar(255);
+    VLOG(1) << "Created mask with dimension: " << detection_mask_image_border_.rows << 'x'
+        << detection_mask_image_border_.cols;
   }
 
   if (settings_.detector_type == LkTrackerSettings::DetectorType::kOcvBrisk) {

@@ -56,6 +56,18 @@ void visualizeKeypoints(const aslam::VisualNFrame::ConstPtr& nframe, cv::Mat* im
   }
 }
 
+void visualizeNFrame(const aslam::VisualNFrame::ConstPtr& nframe, cv::Mat* image_ptr) {
+  CHECK(nframe);
+  CHECK_NOTNULL(image_ptr);
+
+  const size_t num_frames = nframe->getNumFrames();
+  CHECK_EQ(nframe->getNumCameras(), num_frames);
+
+  Offsets offsets;
+  assembleMultiImage(nframe, image_ptr, &offsets);
+  CHECK_EQ(offsets.size(), num_frames);
+}
+
 void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
                          const aslam::VisualFrame& frame_k,
                          const aslam::Matches& matches_kp1_k,
