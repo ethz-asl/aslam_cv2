@@ -156,6 +156,10 @@ class VisualNFrame {
   static VisualNFrame::Ptr createEmptyTestVisualNFrame(
       const std::shared_ptr<NCamera>& ncamera, int64_t timestamp_nanoseconds);
 
+  /// \brief Checks if all frames have raw image each.
+  /// @return False if any one frame does not have raw image, true otherwise.
+  bool hasRawImagesInAllFrames() const;
+
   /// \brief Iterates over all frames and releases (removes) the raw image.
   void releaseRawImagesOfAllFrames();
 
