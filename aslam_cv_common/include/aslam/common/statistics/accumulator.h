@@ -2,6 +2,7 @@
 #define ASLAM_STATISTICS_ACCUMULATOR_H_
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <vector>
 
