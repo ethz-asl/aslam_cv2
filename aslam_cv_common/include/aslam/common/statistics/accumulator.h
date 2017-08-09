@@ -1,16 +1,17 @@
 #ifndef ASLAM_STATISTICS_ACCUMULATOR_H_
 #define ASLAM_STATISTICS_ACCUMULATOR_H_
+
 #include <algorithm>
 #include <limits>
 #include <vector>
 
 #include <glog/logging.h>
 
-namespace aslam {
 namespace statistics {
 static constexpr int kInfiniteWindowSize = std::numeric_limits<int>::max();
-
-template<typename SampleType, typename SumType, int WindowSize>
+// If the window size is set to -1, the vector will grow infinitely, otherwise,
+// the vector has a fixed size.
+template <typename SampleType, typename SumType, int WindowSize>
 class Accumulator {
  public:
   Accumulator()
@@ -99,7 +100,7 @@ class Accumulator {
   }
 
   SumType StandardDeviation() const {
-    return sqrt(LazyVariance());
+    return std::sqrt(LazyVariance());
   }
 
   const std::vector<SampleType>& GetSamples() const {
@@ -119,7 +120,6 @@ class Accumulator {
 
 typedef Accumulator<double, double, kInfiniteWindowSize> Accumulatord;
 
-}       // namespace statistics
-}       // namespace aslam
+}  // namespace statistics
 
 #endif  // ASLAM_STATISTICS_ACCUMULATOR_H_

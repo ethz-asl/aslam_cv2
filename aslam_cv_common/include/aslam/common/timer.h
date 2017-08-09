@@ -1,9 +1,9 @@
 /*
 * Copyright (c) 2011-2013, Paul Furgale and others.
 * All rights reserved.
-* 
+*
 * This code is published under the Revised BSD (New BSD) license.
-* 
+*
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are met:
 *     * Redistributions of source code must retain the above copyright
@@ -14,8 +14,9 @@
 *     * Neither the name of the <organization> nor the
 *       names of its contributors may be used to endorse or promote products
 *       derived from this software without specific prior written permission.
-* 
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+* AND
 * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 * DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
@@ -26,6 +27,7 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifndef ASLAM_TIMING_TIMER_H_
 #define ASLAM_TIMING_TIMER_H_
 
@@ -37,9 +39,8 @@
 #include <string>
 #include <vector>
 
-#include <aslam/common/statistics/statistics.h>
+#include "aslam/common/statistics/statistics.h"
 
-namespace aslam {
 namespace timing {
 
 // A class that has the timer interface but does nothing. Swapping this in
@@ -55,8 +56,12 @@ class DummyTimer {
   }
   ~DummyTimer() {}
   void Start() {}
-  double Stop() { return -1.0; }
-  bool IsTiming() { return false; }
+  double Stop() {
+    return -1.0;
+  }
+  bool IsTiming() {
+    return false;
+  }
 };
 
 class Timer {
@@ -130,6 +135,6 @@ typedef Timer DebugTimer;
 typedef DummyTimer DebugTimer;
 #endif
 
-}       // namespace timing
-}       // namespace aslam
+}  // namespace timing
+
 #endif  // ASLAM_TIMING_TIMER_H_

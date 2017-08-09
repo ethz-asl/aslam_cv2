@@ -1,3 +1,5 @@
+#include "aslam/common/timer.h"
+
 #include <algorithm>
 #include <math.h>
 #include <ostream>  //NOLINT
@@ -5,9 +7,6 @@
 #include <stdio.h>
 #include <string>
 
-#include <aslam/common/timer.h>
-
-namespace aslam {
 namespace timing {
 
 const double kNumSecondsPerNanosecond = 1.e-9;
@@ -17,9 +16,9 @@ Timing& Timing::Instance() {
   return t;
 }
 
-Timing::Timing() : max_tag_length_(0u) { }
+Timing::Timing() : max_tag_length_(0u) {}
 
-Timing::~Timing() { }
+Timing::~Timing() {}
 
 // Static functions to query the timers:
 size_t Timing::GetHandle(const std::string& tag) {
@@ -33,7 +32,8 @@ size_t Timing::GetHandle(const std::string& tag) {
     Instance().timers_.push_back(statistics::StatisticsMapValue());
     // Track the maximum tag length to help printing a table of timing values
     // later.
-    Instance().max_tag_length_ = std::max(Instance().max_tag_length_, tag.size());
+    Instance().max_tag_length_ =
+        std::max(Instance().max_tag_length_, tag.size());
     return handle;
   } else {
     return tag_iterator->second;
@@ -45,7 +45,7 @@ std::string Timing::GetTag(size_t handle) {
   std::string tag;
 
   // Perform a linear search for the tag.
-  for (typename map_t::value_type current_tag : Instance().tag_map_) {
+  for (const typename map_t::value_type& current_tag : Instance().tag_map_) {
     if (current_tag.second == handle) {
       return current_tag.first;
     }
@@ -74,9 +74,13 @@ void Timer::Start() {
 
 double Timer::Stop() {
   if (is_timing_) {
-    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-    double dt = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-        now - time_).count()) * kNumSecondsPerNanosecond;
+    std::chrono::time_point<std::chrono::system_clock> now =
+        std::chrono::system_clock::now();
+    double dt =
+        static_cast<double>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(now - time_)
+                .count()) *
+        kNumSecondsPerNanosecond;
     Timing::Instance().AddTime(handle_, dt);
     is_timing_ = false;
     return dt;
@@ -171,11 +175,16 @@ std::string Timing::SecondsToTimeString(double seconds) {
   minutes = minutes - (hours * 60);
 
   char buffer[256];
-  snprintf(buffer, sizeof(buffer), "%02d:" "%02d:" "%09.6f", hours, minutes, secs);
+  snprintf(
+      buffer, sizeof(buffer),
+      "%02d:"
+      "%02d:"
+      "%09.6f",
+      hours, minutes, secs);
   return buffer;
 }
 
-void Timing::Print(std::ostream& out) {  //NOLINT
+void Timing::Print(std::ostream& out) {  // NOLINT
   map_t tagMap;
   {
     std::lock_guard<std::mutex> lock(Instance().mutex_);
@@ -186,11 +195,11 @@ void Timing::Print(std::ostream& out) {  //NOLINT
     return;
   }
 
-  out << "SM Timing" << std::endl;
-  out << "-----------" << std::endl;
+  out << "SM Timing\n";
+  out << "-----------\n";
   for (typename map_t::value_type t : tagMap) {
     size_t time_i = t.second;
-    out.width((std::streamsize) Instance().max_tag_length_);
+    out.width((std::streamsize)Instance().max_tag_length_);
     out.setf(std::ios::left, std::ios::adjustfield);
     out << t.first << "\t";
     out.width(7);
@@ -208,7 +217,8 @@ void Timing::Print(std::ostream& out) {  //NOLINT
       double max_sec = GetMaxSeconds(time_i);
 
       // The min or max are out of bounds.
-      out << "[" << SecondsToTimeString(min_sec) << "," << SecondsToTimeString(max_sec) << "]";
+      out << "[" << SecondsToTimeString(min_sec) << ","
+          << SecondsToTimeString(max_sec) << "]";
     }
     out << std::endl;
   }
@@ -226,4 +236,3 @@ void Timing::Reset() {
 }
 
 }  // namespace timing
-}  // namespace aslam
