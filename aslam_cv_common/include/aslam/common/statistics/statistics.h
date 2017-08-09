@@ -53,6 +53,13 @@ struct StatisticsMapValue {
       return 0;
     }
   }
+  inline double GetLastValue() const {
+    if (values_.total_samples()) {
+      return values_.GetMostRecent();
+    } else {
+      return 0;
+    }
+  }
   inline double Sum() const {
     return values_.sum();
   }
