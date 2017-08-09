@@ -93,7 +93,7 @@ private:
 template<typename MatchingProblem>
 bool MatchingEngineExclusive<MatchingProblem>::match(
     MatchingProblem* problem, typename MatchingProblem::MatchesWithScore* matches_A_B) {
-  aslam::timing::Timer method_timer("MatchingEngineExclusive<MatchingProblem>::match()");
+  timing::Timer method_timer("MatchingEngineExclusive<MatchingProblem>::match()");
 
   CHECK_NOTNULL(problem);
   CHECK_NOTNULL(matches_A_B);

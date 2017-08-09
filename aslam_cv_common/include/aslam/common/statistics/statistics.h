@@ -16,7 +16,7 @@
 // #include <aslam/common/statistics/statistics.h>
 //
 // double my_distance = measureDistance();
-// aslam::statistics::DebugStatsCollector distance_stat("Distance measurement");
+// statistics::DebugStatsCollector distance_stat("Distance measurement");
 // distance_stat.AddSample(my_distance);
 //
 // std::cout << statistics::Statistics::Print();
