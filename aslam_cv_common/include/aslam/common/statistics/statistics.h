@@ -1,12 +1,13 @@
 #ifndef ASLAM_STATISTICS_H_
 #define ASLAM_STATISTICS_H_
+
 #include <chrono>
 #include <map>
 #include <mutex>
 #include <string>
 #include <vector>
 
-#include <aslam/common/statistics/accumulator.h>
+#include "aslam/common/statistics/accumulator.h"
 
 ///
 // Example usage:
@@ -15,14 +16,14 @@
 // #include <aslam/common/statistics/statistics.h>
 //
 // double my_distance = measureDistance();
-// aslam::statistics::DebugStatsCollector distance_stat("Distance measurement");
+// statistics::DebugStatsCollector distance_stat("Distance measurement");
 // distance_stat.AddSample(my_distance);
 //
 // std::cout << statistics::Statistics::Print();
 ///
 
-namespace aslam {
 namespace statistics {
+
 const double kNumSecondsPerNanosecond = 1.e-9;
 
 struct StatisticsMapValue {
@@ -37,7 +38,8 @@ struct StatisticsMapValue {
         std::chrono::system_clock::now();
     double dt = static_cast<double>(
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        now - time_last_called_).count()) *
+                        now - time_last_called_)
+                        .count()) *
                 kNumSecondsPerNanosecond;
     time_last_called_ = now;
 
@@ -51,13 +53,34 @@ struct StatisticsMapValue {
       return 0;
     }
   }
-  inline double Sum() const { return values_.sum(); }
-  int TotalSamples() const { return values_.total_samples(); }
-  double Mean() const { return values_.Mean(); }
-  double RollingMean() const { return values_.RollingMean(); }
-  double Max() const { return values_.max(); }
-  double Min() const { return values_.min(); }
-  double LazyVariance() const { return values_.LazyVariance(); }
+  inline double GetLastValue() const {
+    if (values_.total_samples()) {
+      return values_.GetMostRecent();
+    } else {
+      return 0;
+    }
+  }
+  inline double Sum() const {
+    return values_.sum();
+  }
+  int TotalSamples() const {
+    return values_.total_samples();
+  }
+  double Mean() const {
+    return values_.Mean();
+  }
+  double RollingMean() const {
+    return values_.RollingMean();
+  }
+  double Max() const {
+    return values_.max();
+  }
+  double Min() const {
+    return values_.min();
+  }
+  double LazyVariance() const {
+    return values_.LazyVariance();
+  }
   double MeanCallsPerSec() const {
     double mean_dt = time_deltas_.Mean();
     if (mean_dt != 0) {
@@ -67,11 +90,21 @@ struct StatisticsMapValue {
     }
   }
 
-  double MeanDeltaTime() const { return time_deltas_.Mean(); }
-  double RollingMeanDeltaTime() const { return time_deltas_.RollingMean(); }
-  double MaxDeltaTime() const { return time_deltas_.max(); }
-  double MinDeltaTime() const { return time_deltas_.min(); }
-  double LazyVarianceDeltaTime() const { return time_deltas_.LazyVariance(); }
+  double MeanDeltaTime() const {
+    return time_deltas_.Mean();
+  }
+  double RollingMeanDeltaTime() const {
+    return time_deltas_.RollingMean();
+  }
+  double MaxDeltaTime() const {
+    return time_deltas_.max();
+  }
+  double MinDeltaTime() const {
+    return time_deltas_.min();
+  }
+  double LazyVarianceDeltaTime() const {
+    return time_deltas_.LazyVariance();
+  }
 
  private:
   // Create an accumulator with specified window size.
@@ -110,7 +143,10 @@ class Statistics {
   friend class StatsCollector;
   // Definition of static functions to query the stats.
   static size_t GetHandle(std::string const& tag);
+  static bool HasHandle(std::string const& tag);
   static std::string GetTag(size_t handle);
+  static double GetLastValue(size_t handle);
+  static double GetLastValue(std::string const& tag);
   static double GetTotal(size_t handle);
   static double GetTotal(std::string const& tag);
   static double GetMean(size_t handle);
@@ -137,11 +173,14 @@ class Statistics {
   static double GetVarianceDeltaTime(std::string const& tag);
   static double GetVarianceDeltaTime(size_t handle);
 
+  static void WriteToYamlFile(std::string const& path);
   static void Print(std::ostream& out);  // NOLINT
   static std::string Print();
   static std::string SecondsToTimeString(double seconds);
   static void Reset();
-  static const map_t& GetStatsCollectors() { return Instance().tag_map_; }
+  static const map_t& GetStatsCollectors() {
+    return Instance().tag_map_;
+  }
 
  private:
   void AddSample(size_t handle, double sample);
@@ -165,6 +204,6 @@ typedef StatsCollector DebugStatsCollector;
 typedef DummyStatsCollector DebugStatsCollector;
 #endif
 
-}       // namespace statistics
-}       // namespace aslam
+}  // namespace statistics
+
 #endif  // ASLAM_STATISTICS_H_

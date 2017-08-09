@@ -263,11 +263,11 @@ void GyroTwoFrameMatcher::matchKeypoint(const int idx_k) {
           best_match_keypoint_idx_kp1, matches_kp1_k_->end() - 1).second);
     }
 
-    aslam::statistics::StatsCollector stats_distance_match(
+    statistics::StatsCollector stats_distance_match(
         "GyroTracker: number of matching bits");
     stats_distance_match.AddSample(best_score);
   }
-  aslam::statistics::StatsCollector stats_count_processed(
+  statistics::StatsCollector stats_count_processed(
       "GyroTracker: number of computed distances per keypoint");
   stats_count_processed.AddSample(n_processed_corners);
 }
