@@ -54,25 +54,25 @@ std::string Timing::GetTag(size_t handle) {
 }
 
 // Class functions used for timing.
-Timer::Timer(const std::string& tag, bool construct_stopped)
+TimerImpl::TimerImpl(const std::string& tag, bool construct_stopped)
     : is_timing_(false), handle_(Timing::GetHandle(tag)), tag_(tag) {
   if (!construct_stopped) {
     Start();
   }
 }
 
-Timer::~Timer() {
+TimerImpl::~TimerImpl() {
   if (IsTiming()) {
     Stop();
   }
 }
 
-void Timer::Start() {
+void TimerImpl::Start() {
   is_timing_ = true;
   time_ = std::chrono::system_clock::now();
 }
 
-double Timer::Stop() {
+double TimerImpl::Stop() {
   if (is_timing_) {
     std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
@@ -88,15 +88,15 @@ double Timer::Stop() {
   return 0.0;
 }
 
-void Timer::Discard() {
+void TimerImpl::Discard() {
   is_timing_ = false;
 }
 
-bool Timer::IsTiming() const {
+bool TimerImpl::IsTiming() const {
   return is_timing_;
 }
 
-size_t Timer::GetHandle() const {
+size_t TimerImpl::GetHandle() const {
   return handle_;
 }
 

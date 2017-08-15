@@ -56,18 +56,18 @@ std::string Statistics::GetTag(size_t handle) {
   return tag;
 }
 
-StatsCollector::StatsCollector(size_t handle) : handle_(handle) {}
+StatsCollectorImpl::StatsCollectorImpl(size_t handle) : handle_(handle) {}
 
-StatsCollector::StatsCollector(std::string const& tag)
+StatsCollectorImpl::StatsCollectorImpl(std::string const& tag)
     : handle_(Statistics::GetHandle(tag)) {}
 
-size_t StatsCollector::GetHandle() const {
+size_t StatsCollectorImpl::GetHandle() const {
   return handle_;
 }
-void StatsCollector::AddSample(double sample) const {
+void StatsCollectorImpl::AddSample(double sample) const {
   Statistics::Instance().AddSample(handle_, sample);
 }
-void StatsCollector::IncrementOne() const {
+void StatsCollectorImpl::IncrementOne() const {
   Statistics::Instance().AddSample(handle_, 1.0);
 }
 void Statistics::AddSample(size_t handle, double seconds) {
