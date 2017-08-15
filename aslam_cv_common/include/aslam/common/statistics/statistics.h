@@ -120,14 +120,18 @@ class DummyStatsCollector {
  public:
   explicit DummyStatsCollector(size_t /*handle*/) {}
   explicit DummyStatsCollector(std::string const& /*tag*/) {}
-  void AddSample(double /*sample*/) {}
+  void AddSample(double /*sample*/) const {}
+  void IncrementOne() const {}
+  size_t GetHandle() const {
+    return 0u;
+  }
 };
 
-class StatsCollector {
+class StatsCollectorImpl {
  public:
-  explicit StatsCollector(size_t handle);
-  explicit StatsCollector(std::string const& tag);
-  ~StatsCollector() = default;
+  explicit StatsCollectorImpl(size_t handle);
+  explicit StatsCollectorImpl(std::string const& tag);
+  ~StatsCollectorImpl() = default;
 
   void AddSample(double sample) const;
   void IncrementOne() const;
@@ -140,7 +144,7 @@ class StatsCollector {
 class Statistics {
  public:
   typedef std::map<std::string, size_t> map_t;
-  friend class StatsCollector;
+  friend class StatsCollectorImpl;
   // Definition of static functions to query the stats.
   static size_t GetHandle(std::string const& tag);
   static bool HasHandle(std::string const& tag);
@@ -199,9 +203,9 @@ class Statistics {
 };
 
 #if ENABLE_STATISTICS
-typedef StatsCollector DebugStatsCollector;
+typedef StatsCollectorImpl StatsCollector;
 #else
-typedef DummyStatsCollector DebugStatsCollector;
+typedef DummyStatsCollector StatsCollector;
 #endif
 
 }  // namespace statistics

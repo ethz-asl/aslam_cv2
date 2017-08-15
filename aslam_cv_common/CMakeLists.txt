@@ -4,8 +4,7 @@ project(aslam_cv_common)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
-# for ./aslam_cv/aslam_cv_common/include/aslam/common/hamming-inl.h
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mssse3")
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/export_flags.cmake)
 
 #############
 # LIBRARIES #

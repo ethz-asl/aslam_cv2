@@ -59,15 +59,19 @@ class DummyTimer {
   double Stop() {
     return -1.0;
   }
-  bool IsTiming() {
+  void Discard() {}
+  bool IsTiming() const {
     return false;
+  }
+  size_t GetHandle() const {
+    return 0u;
   }
 };
 
-class Timer {
+class TimerImpl {
  public:
-  Timer(const std::string& tag, bool construct_stopped = false);
-  ~Timer();
+  TimerImpl(const std::string& tag, bool construct_stopped = false);
+  ~TimerImpl();
 
   void Start();
   // Returns the amount of time passed between Start() and Stop().
@@ -87,7 +91,7 @@ class Timer {
 class Timing {
  public:
   typedef std::map<std::string, size_t> map_t;
-  friend class Timer;
+  friend class TimerImpl;
   // Definition of static functions to query the timers.
   static size_t GetHandle(const std::string& tag);
   static std::string GetTag(size_t handle);
@@ -109,7 +113,7 @@ class Timing {
   static std::string Print();
   static std::string SecondsToTimeString(double seconds);
   static void Reset();
-  static const map_t& GetTimers() {
+  static const map_t& GetTimerImpls() {
     return Instance().tag_map_;
   }
 
@@ -130,9 +134,9 @@ class Timing {
 };
 
 #if ENABLE_TIMING
-typedef Timer DebugTimer;
+typedef TimerImpl Timer;
 #else
-typedef DummyTimer DebugTimer;
+typedef DummyTimer Timer;
 #endif
 
 }  // namespace timing
