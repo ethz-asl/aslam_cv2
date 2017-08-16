@@ -32,7 +32,9 @@
 #include <queue>
 #include <stdexcept>
 #include <thread>
+#include <unordered_map>
 #include <vector>
+
 #include <glog/logging.h>
 
 namespace aslam {
@@ -49,10 +51,19 @@ class ThreadPool {
   ///
   /// Pass in a function and its arguments to enqueue work in the thread pool
   /// \param[in] function A function pointer to be called by a thread.
+  /// \param[in] exclusivity_group_id All tasks belonging to the same group id
+  ///            are executed in series and the order is guaranteed. A group id
+  ///            of -1 means there are no such guarantees.
   /// \returns A std::future that will return the result of calling function.
   ///          If this function is called after the thread pool has been stopped,
   ///          it will return an uninitialized future that will return
   ///          future.valid() == false
+  template<class Function, class ... Args>
+  std::future<typename std::result_of<Function(Args...)>::type>
+  enqueueOrdered(Function&& function, const int exclusivity_group_id,
+                 Args&&... args);
+  /// Same as method enqueueOrdered, but the group id is set to -1 per default and
+  /// all tasks are started in order but there is no guarantee on the result order.
   template<class Function, class... Args>
   std::future<typename std::result_of<Function(Args...)>::type>
   enqueue(Function&& function, Args&&... args);
@@ -60,33 +71,57 @@ class ThreadPool {
   /// \brief Stop the thread pool. This method is non-blocking.
   void stop(){ stop_ = true; }
 
+  // Number of queued tasks.
+  size_t numQueuedTasks() const;
   /// This method blocks until the queue is empty.
   void waitForEmptyQueue() const;
 
  private:
+  // This version is not threadsafe.
+  size_t numQueuedTasksImpl() const;
+
   /// \brief Run a single thread.
   void run();
   /// Need to keep track of threads so we can join them.
   std::vector<std::thread> workers_;
-  /// The task queue.
-  std::queue<std::function<void()>> tasks_;
-  // A mutex to protect the list of tasks.
+
+  // Internally we use an int (as compared to the size_t in the interface)
+  // for the group id such that we can use -1 for a task that needs no
+  // guarantees on its execution order. All tasks within a positive  group id
+  // have guaranteed execution order that corresponds to order of arrival.
+  static constexpr int kGroupdIdNonExclusiveTask = -1;
+  std::deque<std::pair<int, std::function<void()>>> groupid_tasks_;
+  std::unordered_map<size_t, bool> task_group_exclusivity_guards_;
+  // Count the number of non-exclusive tasks in groupid_tasks_;
+  // where groupid == kGroupdIdNonExclusiveTask
+  size_t num_queued_nonexclusive_tasks = 0u;
+
+  // A mutex to protect the list of tasks of the group list.
   mutable std::mutex tasks_mutex_;
-  // A condition variable for worker threads.
-  mutable std::condition_variable tasks_condition_;
-  // A condition variable to support waitForEmptyQueue().
-  mutable std::condition_variable wait_condition_;
+
+  // A condition variable that signals a change in the task queue; either a
+  // removed or inserted element.
+  mutable std::condition_variable tasks_queue_change_;
+
   // A counter of active threads
   unsigned active_threads_;
   // A signal to stop the threads.
   volatile bool stop_;
 };
 
-
 // Add new work item to the pool.
 template<class Function, class... Args>
 std::future<typename std::result_of<Function(Args...)>::type>
 ThreadPool::enqueue(Function&& function, Args&&... args) {
+  return enqueueOrdered(function, kGroupdIdNonExclusiveTask,
+                        std::forward<Args>(args)...);
+}
+
+// Add new work item to the pool.
+template<class Function, class... Args>
+std::future<typename std::result_of<Function(Args...)>::type>
+ThreadPool::enqueueOrdered(Function&& function, const int exclusivity_group_id,
+                           Args&&... args) {
   typedef typename std::result_of<Function(Args...)>::type return_type;
   // Don't allow enqueueing after stopping the pool.
   if(stop_) {
@@ -94,17 +129,25 @@ ThreadPool::enqueue(Function&& function, Args&&... args) {
     // An empty future will return valid() == false.
     return std::future<typename std::result_of<Function(Args...)>::type>();
   }
-
   auto task = std::make_shared<std::packaged_task<return_type()>>(
-      std::bind(std::forward<Function>(function), std::forward<Args>(args)...)
-  );
+      std::bind(function, std::forward<Args>(args)...));
 
   std::future<return_type> res = task->get_future();
   {
     std::unique_lock<std::mutex> lock(tasks_mutex_);
-    tasks_.push([task](){ (*task)(); });
+    groupid_tasks_.emplace_back(exclusivity_group_id, [task](){ (*task)();});
+
+    // Initialize a group id exclusivity guard.
+    if (exclusivity_group_id != kGroupdIdNonExclusiveTask &&
+        task_group_exclusivity_guards_.count(exclusivity_group_id) == 0u) {
+      task_group_exclusivity_guards_[exclusivity_group_id] = false;
+    }
+
+    if (exclusivity_group_id == kGroupdIdNonExclusiveTask) {
+      ++num_queued_nonexclusive_tasks;
+    }
   }
-  tasks_condition_.notify_one();
+  tasks_queue_change_.notify_one();
   return res;
 }
 
