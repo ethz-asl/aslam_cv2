@@ -36,7 +36,7 @@ void ThreadPool::run() {
       const bool all_guards_active = std::all_of(
           task_group_exclusivity_guards_.begin(),
           task_group_exclusivity_guards_.end(),
-          [](const std::pair<const int, bool>& value) {
+          [](const GuardMap::value_type& value) {
             CHECK_GE(value.second, 0u);
             return value.second;
           });
