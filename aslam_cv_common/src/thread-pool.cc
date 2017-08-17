@@ -31,13 +31,14 @@ void ThreadPool::run() {
     // Here we need to select the next task from a queue that is not already
     // serviced.
     std::function<void()> task;
-    int group_id = -2;
+    size_t group_id = kGroupdIdNonExclusiveTask;
     while (true) {
       const bool all_guards_active = std::all_of(
-          task_group_exclusivity_guards_.begin(),
-          task_group_exclusivity_guards_.end(),
+          groupid_exclusivity_guards_.begin(),
+          groupid_exclusivity_guards_.end(),
           [](const GuardMap::value_type& value) {
-            CHECK_GE(value.second, 0u);
+            CHECK_NE(value.second, kGroupdIdNonExclusiveTask)
+              << "There should never be a guard for a non-exclusive task.";
             return value.second;
           });
 
@@ -52,7 +53,7 @@ void ThreadPool::run() {
               groupid_task.first != kGroupdIdNonExclusiveTask;
           bool guard_active = false;
           if (is_exclusive_task) {
-            guard_active = task_group_exclusivity_guards_[groupid_task.first];
+            guard_active = groupid_exclusivity_guards_[groupid_task.first];
           }
 
           if (!(is_exclusive_task && guard_active)) {
@@ -86,16 +87,14 @@ void ThreadPool::run() {
 
     // We jump here if we found a task.
     CHECK(task);
-    CHECK_GE(group_id, kGroupdIdNonExclusiveTask);
-
     ++active_threads_;
 
     // Make sure the no other thread is currently working on this exclusivity
     // group.
     if (group_id != kGroupdIdNonExclusiveTask) {
       const GuardMap::iterator it_group_id_serviced =
-          task_group_exclusivity_guards_.find(group_id);
-      CHECK(it_group_id_serviced == task_group_exclusivity_guards_.end() ||
+          groupid_exclusivity_guards_.find(group_id);
+      CHECK(it_group_id_serviced == groupid_exclusivity_guards_.end() ||
             it_group_id_serviced->second == false);
       it_group_id_serviced->second = true;
     }
@@ -108,8 +107,8 @@ void ThreadPool::run() {
     // Release the group for other threads.
     if (group_id != kGroupdIdNonExclusiveTask) {
       const GuardMap::iterator it_group_id_servied =
-          task_group_exclusivity_guards_.find(group_id);
-      CHECK(it_group_id_servied != task_group_exclusivity_guards_.end() &&
+          groupid_exclusivity_guards_.find(group_id);
+      CHECK(it_group_id_servied != groupid_exclusivity_guards_.end() &&
             it_group_id_servied->second == true);
       it_group_id_servied->second = false;
     }
