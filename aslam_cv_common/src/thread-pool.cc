@@ -5,7 +5,7 @@
 namespace aslam {
 
 // The constructor just launches some amount of workers.
-ThreadPool::ThreadPool(size_t threads)
+ThreadPool::ThreadPool(const size_t threads)
     : active_threads_(0),
       stop_(false) {
   for (size_t i = 0; i < threads; ++i)
@@ -15,11 +15,11 @@ ThreadPool::ThreadPool(size_t threads)
 // The destructor joins all threads.
 ThreadPool::~ThreadPool() {
   {
-    std::unique_lock < std::mutex > lock(tasks_mutex_);
+    std::unique_lock<std::mutex> lock(tasks_mutex_);
     stop_ = true;
   }
   tasks_queue_change_.notify_all();
-  for (size_t i = 0; i < workers_.size(); ++i) {
+  for (size_t i = 0u; i < workers_.size(); ++i) {
     workers_[i].join();
   }
 }
@@ -28,24 +28,24 @@ void ThreadPool::run() {
   while (true) {
     std::unique_lock<std::mutex> lock(this->tasks_mutex_);
 
-    // Here we need to select the next task from from a queue that is not
-    // already serviced.
+    // Here we need to select the next task from a queue that is not already
+    // serviced.
     std::function<void()> task;
-    int group_id_of_task = -2;
+    int group_id = -2;
     while (true) {
       const bool all_guards_active = std::all_of(
           task_group_exclusivity_guards_.begin(),
           task_group_exclusivity_guards_.end(),
           [](const std::pair<const int, bool>& value) {
+            CHECK_GE(value.second, 0u);
             return value.second;
           });
 
       if (!all_guards_active || num_queued_nonexclusive_tasks > 0u) {
-        // If all guards are active, we can go back to sleep until a thread
-        // reports back for work.
+        // If not all guards are active, we select a task to process; otherwise
+        // we can go back to sleep until a thread reports back for work.
         size_t index = 0u;
-        for (const std::pair<const int, std::function<void()>>& groupid_task :
-            groupid_tasks_) {
+        for (const TaskDeque::value_type& groupid_task : groupid_tasks_) {
           // We have found a task to process if no thread is already working on
           // this group id.
           const bool is_exclusive_task =
@@ -56,7 +56,7 @@ void ThreadPool::run() {
           }
 
           if (!(is_exclusive_task && guard_active)) {
-            group_id_of_task = groupid_task.first;
+            group_id = groupid_task.first;
             task = groupid_task.second;
 
             groupid_tasks_.erase(groupid_tasks_.begin() + index);
@@ -84,18 +84,18 @@ void ThreadPool::run() {
     // We jump here if we found a task.
     task_found:
     CHECK(task);
-    CHECK_GE(group_id_of_task, kGroupdIdNonExclusiveTask);
+    CHECK_GE(group_id, kGroupdIdNonExclusiveTask);
 
     ++active_threads_;
 
     // Make sure the no other thread is currently working on this exclusivity
     // group.
-    if (group_id_of_task != kGroupdIdNonExclusiveTask) {
-      std::unordered_map<size_t, bool>::iterator it_group_id_servied =
-          task_group_exclusivity_guards_.find(group_id_of_task);
-      CHECK(it_group_id_servied == task_group_exclusivity_guards_.end() ||
-            it_group_id_servied->second == false);
-      it_group_id_servied->second = true;
+    if (group_id != kGroupdIdNonExclusiveTask) {
+      const GuardMap::iterator it_group_id_serviced =
+          task_group_exclusivity_guards_.find(group_id);
+      CHECK(it_group_id_serviced == task_group_exclusivity_guards_.end() ||
+            it_group_id_serviced->second == false);
+      it_group_id_serviced->second = true;
     }
 
     // Unlock the queue while we execute the task.
@@ -104,9 +104,9 @@ void ThreadPool::run() {
     lock.lock();
 
     // Release the group for other threads.
-    if (group_id_of_task != kGroupdIdNonExclusiveTask) {
-      std::unordered_map<size_t, bool>::iterator it_group_id_servied =
-          task_group_exclusivity_guards_.find(group_id_of_task);
+    if (group_id != kGroupdIdNonExclusiveTask) {
+      const GuardMap::iterator it_group_id_servied =
+          task_group_exclusivity_guards_.find(group_id);
       CHECK(it_group_id_servied != task_group_exclusivity_guards_.end() &&
             it_group_id_servied->second == true);
       it_group_id_servied->second = false;

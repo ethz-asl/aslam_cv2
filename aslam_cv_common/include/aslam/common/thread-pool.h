@@ -44,7 +44,7 @@ class ThreadPool {
   /// \brief Create a thread pool.
   ///
   /// \param[in] numThreads The number of threads in the pool.
-  ThreadPool(size_t numThreads);
+  ThreadPool(const size_t numThreads);
   ~ThreadPool();
 
   /// \brief Enqueue work for the thread pool
@@ -60,10 +60,11 @@ class ThreadPool {
   ///          future.valid() == false
   template<class Function, class ... Args>
   std::future<typename std::result_of<Function(Args...)>::type>
-  enqueueOrdered(Function&& function, const int exclusivity_group_id,
+  enqueueOrdered(const int exclusivity_group_id, Function&& function,
                  Args&&... args);
-  /// Same as method enqueueOrdered, but the group id is set to -1 per default and
-  /// all tasks are started in order but there is no guarantee on the result order.
+  /// Same as method enqueueOrdered but the group id is set to -1 per default
+  /// and all tasks are started in order but there is no guarantee on the result
+  /// order.
   template<class Function, class... Args>
   std::future<typename std::result_of<Function(Args...)>::type>
   enqueue(Function&& function, Args&&... args);
@@ -85,15 +86,18 @@ class ThreadPool {
   /// Need to keep track of threads so we can join them.
   std::vector<std::thread> workers_;
 
-  // Internally we use an int (as compared to the size_t in the interface)
-  // for the group id such that we can use -1 for a task that needs no
-  // guarantees on its execution order. All tasks within a positive  group id
-  // have guaranteed execution order that corresponds to order of arrival.
+  // We use an int for the group id such that we can use -1 for a task that
+  // needs no guarantees on its execution order. All tasks within a positive
+  // group id have guaranteed execution order that corresponds to order of
+  // arrival.
   static constexpr int kGroupdIdNonExclusiveTask = -1;
-  std::deque<std::pair<int, std::function<void()>>> groupid_tasks_;
-  std::unordered_map<size_t, bool> task_group_exclusivity_guards_;
+  typedef std::deque<std::pair<int, std::function<void()>>> TaskDeque;
+  TaskDeque groupid_tasks_;
+  // The guard map should never contain negative group ids.
+  typedef std::unordered_map<int, bool> GuardMap;
+  GuardMap task_group_exclusivity_guards_;
   // Count the number of non-exclusive tasks in groupid_tasks_;
-  // where groupid == kGroupdIdNonExclusiveTask
+  // where groupid == kGroupdIdNonExclusiveTask.
   size_t num_queued_nonexclusive_tasks = 0u;
 
   // A mutex to protect the list of tasks of the group list.
@@ -113,14 +117,14 @@ class ThreadPool {
 template<class Function, class... Args>
 std::future<typename std::result_of<Function(Args...)>::type>
 ThreadPool::enqueue(Function&& function, Args&&... args) {
-  return enqueueOrdered(function, kGroupdIdNonExclusiveTask,
+  return enqueueOrdered(kGroupdIdNonExclusiveTask, function,
                         std::forward<Args>(args)...);
 }
 
 // Add new work item to the pool.
 template<class Function, class... Args>
 std::future<typename std::result_of<Function(Args...)>::type>
-ThreadPool::enqueueOrdered(Function&& function, const int exclusivity_group_id,
+ThreadPool::enqueueOrdered(const int exclusivity_group_id, Function&& function,
                            Args&&... args) {
   typedef typename std::result_of<Function(Args...)>::type return_type;
   // Don't allow enqueueing after stopping the pool.
@@ -138,13 +142,11 @@ ThreadPool::enqueueOrdered(Function&& function, const int exclusivity_group_id,
     groupid_tasks_.emplace_back(exclusivity_group_id, [task](){ (*task)();});
 
     // Initialize a group id exclusivity guard.
-    if (exclusivity_group_id != kGroupdIdNonExclusiveTask &&
-        task_group_exclusivity_guards_.count(exclusivity_group_id) == 0u) {
-      task_group_exclusivity_guards_[exclusivity_group_id] = false;
-    }
-
     if (exclusivity_group_id == kGroupdIdNonExclusiveTask) {
       ++num_queued_nonexclusive_tasks;
+    } else if (task_group_exclusivity_guards_.count(
+        exclusivity_group_id) == 0u) {
+      task_group_exclusivity_guards_.emplace(exclusivity_group_id, false);
     }
   }
   tasks_queue_change_.notify_one();
