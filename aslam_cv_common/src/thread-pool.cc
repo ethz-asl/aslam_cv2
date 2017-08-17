@@ -66,10 +66,13 @@ void ThreadPool::run() {
 
             // We jump out of the nested for-structure here, because we have
             // found a task to process.
-            goto task_found;
+            break;
           }
           ++index;
         }
+      }
+      if (task) {
+        break;
       }
 
       // Wait until the queue has changed (addition/removal) before re-checking
@@ -82,7 +85,6 @@ void ThreadPool::run() {
     }
 
     // We jump here if we found a task.
-    task_found:
     CHECK(task);
     CHECK_GE(group_id, kGroupdIdNonExclusiveTask);
 
