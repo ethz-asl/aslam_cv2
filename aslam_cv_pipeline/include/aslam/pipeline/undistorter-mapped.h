@@ -14,7 +14,7 @@ namespace aslam {
 /// \brief Factory method to create a mapped undistorter for this camera geometry.
 ///        NOTE: The undistorter stores a copy of this camera and changes to the original geometry
 ///              are not connected with the undistorter!
-/// @param[in] camera_ptr Shared pointer to the camera object a mapped undistorter should be
+/// @param[in] camera     The camera object a mapped undistorter should be
 ///                       created for. Currently the method supports pinhole and unified projection
 ///                       cameras. Any other type of camera will result in the hard failure.
 /// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
@@ -25,7 +25,7 @@ namespace aslam {
 /// @return Pointer to the created mapped undistorter.
 template <typename CameraType>
 std::unique_ptr<MappedUndistorter> createMappedUndistorter(
-    const std::shared_ptr<CameraType>& camera_ptr, float alpha, float scale,
+    const CameraType& camera, float alpha, float scale,
     aslam::InterpolationMethod interpolation_type);
 
 /// \brief Factory method to create a mapped undistorter for this camera geometry to undistorts
@@ -40,7 +40,7 @@ std::unique_ptr<MappedUndistorter> createMappedUndistorter(
 /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
 /// @return Pointer to the created mapped undistorter.
 std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
-    const aslam::UnifiedProjectionCamera::Ptr& unified_proj_camera_ptr,
+    const aslam::UnifiedProjectionCamera& unified_proj_camera,
     float alpha, float scale, aslam::InterpolationMethod interpolation_type);
 
 /// \class MappedUndistorter
