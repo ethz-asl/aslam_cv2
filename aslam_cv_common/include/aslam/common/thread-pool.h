@@ -91,7 +91,7 @@ class ThreadPool {
 
   // The group id is a size_t where the number kGroupdIdNonExclusiveTask
   // represents a non-exclusive task that needs no guarantees on its execution
-  // order. All task with other group ids have guaranteed execution order that
+  // order. All tasks with other group ids have guaranteed execution order that
   // corresponds to order of enqueing the task.
   typedef std::deque<std::pair<size_t, std::function<void()>>> TaskDeque;
   TaskDeque groupid_tasks_;
