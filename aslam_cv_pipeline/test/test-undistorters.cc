@@ -68,7 +68,7 @@ TYPED_TEST_CASE(TestUndistortersNoPinhole, ImplementationsNoPinhole);
 ///////////////////////////////////////////////
 TYPED_TEST(TestUndistorters, TestMappedUndistorter) {
   std::unique_ptr<aslam::MappedUndistorter> undistorter =
-      aslam::createMappedUndistorter(this->camera_, 1.0, 1.0,
+      aslam::createMappedUndistorter(*(this->camera_), 1.0, 1.0,
                                      aslam::InterpolationMethod::Linear);
   ASSERT_EQ(undistorter->getOutputCamera().getType(), undistorter->getInputCamera().getType());
   ASSERT_EQ(undistorter->getOutputCamera().getDistortion().getType(),
@@ -120,7 +120,7 @@ TEST(TestUndistortersNoPinhole, TestMappedUndistorterUpcToPinhole) {
       aslam::RadTanDistortion>();
 
   std::unique_ptr<aslam::MappedUndistorter> undistorter =
-      aslam::createMappedUndistorterToPinhole(camera, 1.0, 1.0,
+      aslam::createMappedUndistorterToPinhole(*camera, 1.0, 1.0,
                                               aslam::InterpolationMethod::Linear);
   ASSERT_EQ(undistorter->getOutputCamera().getType(), aslam::Camera::Type::kPinhole);
   ASSERT_EQ(undistorter->getOutputCamera().getDistortion().getType(),
