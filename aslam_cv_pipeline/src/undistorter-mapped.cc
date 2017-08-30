@@ -9,16 +9,15 @@
 namespace aslam {
 
 std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
-    const aslam::UnifiedProjectionCamera::Ptr& unified_proj_camera_ptr,
-    float alpha, float scale, aslam::InterpolationMethod interpolation_type) {
-  CHECK(unified_proj_camera_ptr != nullptr);
-
-  CHECK_GE(alpha, 0.0); CHECK_LE(alpha, 1.0);
+    const aslam::UnifiedProjectionCamera& unified_proj_camera, float alpha,
+    float scale, aslam::InterpolationMethod interpolation_type) {
+  CHECK_GE(alpha, 0.0);
+  CHECK_LE(alpha, 1.0);
   CHECK_GT(scale, 0.0);
 
   // Create a copy of the input camera.
   UnifiedProjectionCamera::Ptr input_camera(
-      dynamic_cast<UnifiedProjectionCamera*>(unified_proj_camera_ptr->clone()));
+      dynamic_cast<UnifiedProjectionCamera*>(unified_proj_camera.clone()));
   CHECK(input_camera);
 
   // Create the scaled output camera with removed distortion.
