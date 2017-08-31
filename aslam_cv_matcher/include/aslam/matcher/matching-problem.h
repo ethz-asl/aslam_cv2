@@ -105,7 +105,7 @@ public:
   /// \param[in] banana_index The index of the banana queried for candidates.
   /// \param[out] candidates_for_bananas Candidates from the Apples-list that could potentially
   ///                                    match for each element of Bananas.
-  virtual void getAppleCandidatesForBanana(int banana_index, Candidates* candidates) {
+  virtual void getAppleCandidatesForBanana(int /*banana_index*/, Candidates* /*candidates*/) {
     LOG(FATAL) << "Not implemented.";
   }
 
