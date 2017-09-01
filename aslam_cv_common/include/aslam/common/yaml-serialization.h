@@ -112,18 +112,25 @@ struct convert<std::unordered_map<KeyType, ValueType> > {
 };
 
 template <typename ObjectType>
-void Save(const ObjectType& object, std::ostream* ofs) {
+bool Save(const ObjectType& object, std::ostream* ofs) {
   CHECK_NOTNULL(ofs);
   assert(ofs->good());
-  YAML::Node out;
-  out = object;
-  *ofs << out;
+
+  try {
+    YAML::Node out;
+    out = object;
+    *ofs << out;
+  } catch (const std::exception& e) {  // NOLINT
+    LOG(ERROR)<< "Encountered exception while saving yaml " << e.what();
+    return false;
+  }
+  return true;
 }
 
 template <typename T>
-void Save(const T& object, const std::string& filename) {
+bool Save(const T& object, const std::string& filename) {
   std::ofstream ofs(filename.c_str());
-  Save(object, &ofs);
+  return Save(object, &ofs);
 }
 
 template <typename ObjectType>
