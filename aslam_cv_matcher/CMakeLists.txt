@@ -19,9 +19,6 @@ set(HEADERS
   include/aslam/matcher/matching-engine-non-exclusive.h
   include/aslam/matcher/matching-problem.h
   include/aslam/matcher/matching-problem-frame-to-frame.h
-  include/aslam/matcher/matching-problem-landmarks-to-frame.h
-  include/aslam/matcher/matching-problem-landmarks-to-frame-kd-tree.h
-  include/aslam/matcher/matching-problem-landmarks-to-frame-multimap.h
 )
 
 set(SOURCES
@@ -30,9 +27,6 @@ set(SOURCES
   src/match-visualization.cc
   src/matching-problem.cc
   src/matching-problem-frame-to-frame.cc
-  src/matching-problem-landmarks-to-frame.cc
-  src/matching-problem-landmarks-to-frame-kd-tree.cc
-  src/matching-problem-landmarks-to-frame-multimap.cc
 )
 
 # for ./aslam_cv/aslam_cv_common/include/aslam/common/hamming-inl.h
@@ -52,17 +46,6 @@ target_link_libraries(test_matcher ${PROJECT_NAME})
 
 catkin_add_gtest(test_matcher_non_exclusive test/test-matcher-non-exclusive.cc)
 target_link_libraries(test_matcher_non_exclusive ${PROJECT_NAME})
-
-catkin_add_gtest(test_matching_problem_landmarks_to_frame_kd_tree
-  test/test-matching-problem-landmarks-to-frame-kd-tree.cc)
-target_link_libraries(test_matching_problem_landmarks_to_frame_kd_tree ${PROJECT_NAME})
-
-catkin_add_gtest(test_matching_problem_landmarks_to_frame_multimap
-  test/test-matching-problem-landmarks-to-frame-multimap.cc)
-target_link_libraries(test_matching_problem_landmarks_to_frame_multimap ${PROJECT_NAME})
-
-catkin_add_gtest(test_neighborhood_grid test/test-neighborhood-grid.cc)
-target_link_libraries(test_neighborhood_grid ${PROJECT_NAME})
 
 ##########
 # EXPORT #
