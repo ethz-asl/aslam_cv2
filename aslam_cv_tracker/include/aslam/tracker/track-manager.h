@@ -4,6 +4,7 @@
 #include <mutex>
 #include <unordered_set>
 
+#include <aslam/matcher/match.h>
 #include <glog/logging.h>
 
 namespace aslam {
