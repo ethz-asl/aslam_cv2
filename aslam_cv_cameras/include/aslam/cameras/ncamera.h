@@ -61,11 +61,15 @@ public:
   void operator=(const NCamera&) = delete;
   bool operator==(const NCamera& other) const;
 
-  /// Method to clone this instance. All contained camera objects are cloned.
+  /// Methods to clone this instance. All contained camera objects are cloned.
   /// (Make sure the Camera and NCamera ID's are set to your requirement after cloning!)
   NCamera* clone() const {
     return new NCamera(static_cast<NCamera const&>(*this));
   };
+
+  NCamera::Ptr cloneToShared() const {
+    return aligned_shared<NCamera>(*this);
+  }
 
   /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
   static std::shared_ptr<NCamera> loadFromYaml(const std::string& yaml_file);
