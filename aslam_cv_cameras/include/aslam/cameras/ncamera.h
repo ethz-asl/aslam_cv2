@@ -9,6 +9,7 @@
 #include <aslam/common/macros.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/unique-id.h>
+#include <aslam/common/yaml-serialization.h>
 #include <gtest/gtest_prod.h>
 
 namespace sm {
@@ -69,8 +70,11 @@ public:
 
   /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
   static std::shared_ptr<NCamera> loadFromYaml(const std::string& yaml_file);
+  static std::shared_ptr<NCamera> loadFromYaml(const YAML::Node& yaml_node);
+
   /// Save this ncamera to a yaml file.
   bool saveToYaml(const std::string& yaml_file) const;
+  void saveToYaml(YAML::Node* yaml_node) const;
 
   /// Get the number of cameras.
   size_t getNumCameras() const;

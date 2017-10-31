@@ -11,7 +11,6 @@
 #include <aslam/common/pose-types.h>
 #include <aslam/common/predicates.h>
 #include <aslam/common/unique-id.h>
-#include <aslam/common/yaml-serialization.h>
 
 namespace aslam {
 
@@ -44,9 +43,20 @@ NCamera::NCamera(const NCamera& other) :
 NCamera::Ptr NCamera::loadFromYaml(const std::string& yaml_file) {
   try {
     YAML::Node doc = YAML::LoadFile(yaml_file.c_str());
-    return doc.as<aslam::NCamera::Ptr>();
+    return loadFromYaml(doc);
   } catch (const std::exception& ex) {
     LOG(ERROR) << "Failed to load NCamera from file " << yaml_file << " with the error: \n"
+               << ex.what();
+  }
+  // Return nullptr in the failure case.
+  return NCamera::Ptr();
+}
+
+NCamera::Ptr NCamera::loadFromYaml(const YAML::Node& yaml_node) {
+  try {
+    return yaml_node.as<aslam::NCamera::Ptr>();
+  } catch (const std::exception& ex) {
+    LOG(ERROR) << "Failed to load NCamera from YAML node with the error: \n"
                << ex.what();
   }
   // Return nullptr in the failure case.
@@ -62,6 +72,10 @@ bool NCamera::saveToYaml(const std::string& yaml_file) const {
     return false;
   }
   return true;
+}
+
+void NCamera::saveToYaml(YAML::Node* yaml_node) const {
+  *CHECK_NOTNULL(yaml_node) = *this;
 }
 
 void NCamera::initInternal() {
