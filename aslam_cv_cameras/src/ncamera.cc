@@ -43,7 +43,7 @@ NCamera::NCamera(const NCamera& other) :
 NCamera::Ptr NCamera::loadFromYaml(const std::string& yaml_file) {
   try {
     YAML::Node doc = YAML::LoadFile(yaml_file.c_str());
-    return loadFromYaml(doc);
+    return deserializeFromYaml(doc);
   } catch (const std::exception& ex) {
     LOG(ERROR) << "Failed to load NCamera from file " << yaml_file << " with the error: \n"
                << ex.what();
@@ -52,7 +52,7 @@ NCamera::Ptr NCamera::loadFromYaml(const std::string& yaml_file) {
   return NCamera::Ptr();
 }
 
-NCamera::Ptr NCamera::loadFromYaml(const YAML::Node& yaml_node) {
+NCamera::Ptr NCamera::deserializeFromYaml(const YAML::Node& yaml_node) {
   try {
     return yaml_node.as<aslam::NCamera::Ptr>();
   } catch (const std::exception& ex) {
@@ -74,7 +74,7 @@ bool NCamera::saveToYaml(const std::string& yaml_file) const {
   return true;
 }
 
-void NCamera::saveToYaml(YAML::Node* yaml_node) const {
+void NCamera::serializeToYaml(YAML::Node* yaml_node) const {
   *CHECK_NOTNULL(yaml_node) = *this;
 }
 
