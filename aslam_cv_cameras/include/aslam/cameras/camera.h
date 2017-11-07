@@ -205,6 +205,9 @@ class Camera {
   /// @return CameraType value representing the camera model used by the derived class.
   inline Type getType() const { return camera_type_; }
 
+  /// \brief Returns the camera matrix.
+  virtual Eigen::Matrix3d getCameraMatrix() const = 0;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
