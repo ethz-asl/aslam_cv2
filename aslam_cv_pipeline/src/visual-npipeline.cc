@@ -220,7 +220,6 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image, int64_t ti
         }
         if (num_consecutive_complete >= kNumMinConsecutiveCompleteThreshold) {
           delete_upto_including_index = idx - kNumMinConsecutiveCompleteThreshold;
-          CHECK_GE(delete_upto_including_index, 0);
           break;
         }
         ++it_processing;
