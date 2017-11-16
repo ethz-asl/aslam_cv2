@@ -70,6 +70,21 @@ bool VisualNPipeline::processImageBlockingIfFull(size_t camera_index, const cv::
   return false;
 }
 
+bool VisualNPipeline::processImageNonBlockingDroppingIfFull(
+    size_t camera_index, const cv::Mat& image, int64_t timestamp,
+    size_t max_output_queue_size) {
+  CHECK_GE(max_output_queue_size, 1u);
+
+  bool result = false;
+  std::unique_lock<std::mutex> lock(mutex_);
+  if (completed_.size() >= max_output_queue_size) {
+    completed_.erase(completed_.begin());
+    result = true;
+  }
+  processImage(camera_index, image, timestamp);
+  return result;
+}
+
 bool VisualNPipeline::getNextBlocking(std::shared_ptr<VisualNFrame>* nframe) {
   CHECK_NOTNULL(nframe);
   while (!shutdown_) {

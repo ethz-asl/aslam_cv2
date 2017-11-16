@@ -96,6 +96,22 @@ class VisualNPipeline {
   bool processImageBlockingIfFull(size_t camera_index, const cv::Mat& image, int64_t timestamp,
                                   size_t max_output_queue_size);
 
+  /// \brief Same as \ref processImage with the difference that the function
+  ///        call erases an element of the queue if it exceeds the maximum size.
+  ///
+  /// \param[in] camera_index The index of the camera that this image corresponds to.
+  /// \param[in] image the image data.
+  /// \param[in] timestamp the time in integer nanoseconds.
+  /// \param[in] max_output_queue_size the max. size of the output queue. The
+  ///            function call will erase an element of the output queue once
+  ///            this limit has been reached. As the frames are processed in a
+  ///            thread pool it is possible that the real queue size will exceed
+  ///            the defined size by the number of currently processed nframes.
+  /// @return    Returns true if an element has been erased.
+  bool processImageNonBlockingDroppingIfFull(
+      size_t camera_index, const cv::Mat& image, int64_t timestamp,
+      size_t max_output_queue_size);
+
   /// How many completed VisualNFrames are waiting to be retrieved?
   size_t getNumFramesComplete() const;
 
