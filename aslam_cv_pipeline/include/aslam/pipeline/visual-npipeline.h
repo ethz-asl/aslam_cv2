@@ -108,8 +108,8 @@ class VisualNPipeline {
   ///            thread pool it is possible that the real queue size will exceed
   ///            the defined size by the number of currently processed nframes.
   /// @return    Returns true if an element has been erased.
-  bool processImageNonBlockingDroppingIfFull(
-      size_t camera_index, const cv::Mat& image, int64_t timestamp,
+  bool processImageNonBlockingDroppingOldestIfFull(
+      size_t camera_index, const cv::Mat &image, int64_t timestamp,
       size_t max_output_queue_size);
 
   /// How many completed VisualNFrames are waiting to be retrieved?

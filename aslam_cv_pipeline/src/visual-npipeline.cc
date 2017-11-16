@@ -70,8 +70,8 @@ bool VisualNPipeline::processImageBlockingIfFull(size_t camera_index, const cv::
   return false;
 }
 
-bool VisualNPipeline::processImageNonBlockingDroppingIfFull(
-    size_t camera_index, const cv::Mat& image, int64_t timestamp,
+bool VisualNPipeline::processImageNonBlockingDroppingOldestIfFull(
+    size_t camera_index, const cv::Mat &image, int64_t timestamp,
     size_t max_output_queue_size) {
   CHECK_GE(max_output_queue_size, 1u);
 
