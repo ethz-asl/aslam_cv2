@@ -82,8 +82,7 @@ bool VisualNPipeline::getNextBlocking(std::shared_ptr<VisualNFrame>* nframe) {
     }
 
     // Get the oldest frame.
-    lock.unlock();
-    *nframe = getNext();
+    *nframe = getNextImpl();
     CHECK(*nframe);
     return true;
   }
@@ -101,9 +100,13 @@ size_t VisualNPipeline::getNumFramesComplete() const {
 }
 
 std::shared_ptr<VisualNFrame> VisualNPipeline::getNext() {
+  std::unique_lock<std::mutex> lock(mutex_);
+  return getNextImpl();
+}
+
+std::shared_ptr<VisualNFrame> VisualNPipeline::getNextImpl() {
   // Initialize the return value as null
   std::shared_ptr<VisualNFrame> rval;
-  std::unique_lock<std::mutex> lock(mutex_);
   if(!completed_.empty()) {
     // Get the oldest frame.
     auto it = completed_.begin();

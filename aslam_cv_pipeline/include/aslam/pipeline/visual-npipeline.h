@@ -149,6 +149,8 @@ class VisualNPipeline {
   /// \param[in] timestamp The time in integer nanoseconds.
   void work(size_t camera_index, const cv::Mat& image, int64_t timestamp);
 
+  std::shared_ptr<VisualNFrame> getNextImpl();
+
   /// One visual pipeline for each camera.
   std::vector<std::shared_ptr<VisualPipeline>> pipelines_;
 
