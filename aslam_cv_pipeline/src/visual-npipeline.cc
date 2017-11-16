@@ -48,6 +48,7 @@ VisualNPipeline::~VisualNPipeline() {
 }
 
 void VisualNPipeline::shutdown() {
+  std::unique_lock<std::mutex> lock(mutex_);
   shutdown_ = true;
   condition_not_empty_.notify_all();
   condition_not_full_.notify_all();
@@ -87,22 +88,22 @@ bool VisualNPipeline::processImageNonBlockingDroppingOldestNFrameIfFull(
 
 bool VisualNPipeline::getNextBlocking(std::shared_ptr<VisualNFrame>* nframe) {
   CHECK_NOTNULL(nframe);
-  while (!shutdown_) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    if (completed_.empty()) {
-      condition_not_empty_.wait(lock);
-    }
-    if (completed_.empty()) {
-      continue;
-    }
-
-    // Get the oldest frame.
-    *nframe = getNextImpl();
-    CHECK(*nframe);
-    return true;
+  std::unique_lock<std::mutex> lock(mutex_);
+  if (shutdown_) {
+    return false;
   }
-  // Queue shutdown.
-  return false;
+  if (completed_.empty()) {
+    condition_not_empty_.wait(lock);
+    if (completed_.empty()) {
+      // Queue shutdown in the meantime.
+      return false;
+    }
+  }
+
+  // Get the oldest frame.
+  *nframe = getNextImpl();
+  CHECK(*nframe);
+  return true;
 }
 
 void VisualNPipeline::processImage(size_t camera_index, const cv::Mat& image, int64_t timestamp) {
@@ -133,12 +134,12 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getNextImpl() {
 }
 
 std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
-  std::shared_ptr<VisualNFrame> rval;
+  std::shared_ptr<VisualNFrame> nframe;
   std::unique_lock<std::mutex> lock(mutex_);
   if(!completed_.empty()) {
     /// Get the latest frame.
     auto it = completed_.rbegin();
-    rval = it->second;
+    nframe = it->second;
     int64_t timestamp = it->first;
     completed_.clear();
     // Clear any processing frames older than this one.
@@ -147,7 +148,40 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
       pit = processing_.erase(pit);
     }
   }
-  return rval;
+  return nframe;
+}
+
+bool VisualNPipeline::getLatestAndClearBlocking(
+    std::shared_ptr<VisualNFrame>* nframe)  {
+  CHECK_NOTNULL(nframe);
+  std::unique_lock<std::mutex> lock(mutex_);
+  if (shutdown_) {
+    return false;
+  }
+  if (completed_.empty()) {
+    condition_not_empty_.wait(lock);
+    if (completed_.empty()) {
+      // Queue shutdown in the meantime.
+      return false;
+    }
+  }
+
+  /// Get the latest frame.
+  TimestampVisualNFrameMap::const_reverse_iterator nframe_iterator =
+      completed_.rbegin();
+  CHECK(nframe_iterator != completed_.rend());
+  *nframe = nframe_iterator->second;
+  CHECK(*nframe);
+  const int64_t timestamp_nanoseconds = nframe_iterator->first;
+  completed_.clear();
+  // Clear any processing frames older than this one.
+  TimestampVisualNFrameMap::iterator processing_iterator = processing_.begin();
+  while(processing_iterator != processing_.end() &&
+      processing_iterator->first <= timestamp_nanoseconds) {
+    processing_iterator = processing_.erase(processing_iterator);
+  }
+
+  return true;
 }
 
 std::shared_ptr<const NCamera> VisualNPipeline::getInputNCameras() const {

@@ -43,7 +43,7 @@ namespace aslam {
 /// function retrieves the oldest complete VisualNFrames and leaves the remaining.
 /// The getLatestAndClear() function gets the newest VisualNFrames and discards
 /// anything older.
-class VisualNPipeline {
+class VisualNPipeline final {
  public:
   ASLAM_POINTER_TYPEDEFS(VisualNPipeline);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(VisualNPipeline);
@@ -130,6 +130,7 @@ class VisualNPipeline {
   /// Get the latest available data and clear anything older.
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
   std::shared_ptr<VisualNFrame> getLatestAndClear();
+  bool getLatestAndClearBlocking(std::shared_ptr<VisualNFrame>* nframe);
 
   /// Get the input camera system that corresponds to the images
   /// passed in to processImage().
