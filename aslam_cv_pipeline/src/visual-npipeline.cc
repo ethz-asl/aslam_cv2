@@ -65,7 +65,7 @@ bool VisualNPipeline::processImageBlockingIfFull(size_t camera_index, const cv::
         continue;
       }
     }
-    processImage(camera_index, image, timestamp);
+    processImageImpl(camera_index, image, timestamp);
     return true;
   }
   return false;
@@ -82,7 +82,7 @@ bool VisualNPipeline::processImageNonBlockingDroppingOldestNFrameIfFull(
     completed_.erase(completed_.begin());
     result = true;
   }
-  processImage(camera_index, image, timestamp);
+  processImageImpl(camera_index, image, timestamp);
   return result;
 }
 
@@ -107,6 +107,7 @@ bool VisualNPipeline::getNextBlocking(std::shared_ptr<VisualNFrame>* nframe) {
 }
 
 void VisualNPipeline::processImage(size_t camera_index, const cv::Mat& image, int64_t timestamp) {
+  std::unique_lock<std::mutex> lock(mutex_);
   thread_pool_->enqueue(&VisualNPipeline::work, this, camera_index, image, timestamp);
 }
 
@@ -131,6 +132,11 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getNextImpl() {
     condition_not_full_.notify_all();
   }
   return rval;
+}
+
+void VisualNPipeline::processImageImpl(
+    size_t camera_index, const cv::Mat& image, int64_t timestamp) {
+  thread_pool_->enqueue(&VisualNPipeline::work, this, camera_index, image, timestamp);
 }
 
 std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
