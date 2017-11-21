@@ -49,6 +49,7 @@ VisualNPipeline::~VisualNPipeline() {
 
 void VisualNPipeline::shutdown() {
   std::unique_lock<std::mutex> lock(mutex_);
+  LOG(FATAL) << "Shutting down visual npipeline.";
   shutdown_ = true;
   condition_not_empty_.notify_all();
   condition_not_full_.notify_all();
@@ -156,12 +157,14 @@ bool VisualNPipeline::getLatestAndClearBlocking(
   CHECK_NOTNULL(nframe);
   std::unique_lock<std::mutex> lock(mutex_);
   if (shutdown_) {
+    LOG(WARNING) << "NFrame queue shutdown.";
     return false;
   }
   if (completed_.empty()) {
     condition_not_empty_.wait(lock);
     if (completed_.empty()) {
       // Queue shutdown in the meantime.
+      LOG(WARNING) << "NFrame queue shutdown in the meantime.";
       return false;
     }
   }
