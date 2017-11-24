@@ -153,13 +153,13 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
   }
   auto reverse_it_completed = completed_.rbegin();
   nframe = reverse_it_completed->second;
-  const int64_t timestamp = reverse_it_completed->first;
+  const int64_t timestamp_nanoseconds = reverse_it_completed->first;
   completed_.clear();
   condition_not_full_.notify_all();
   // Clear any processing frames older than this one.
   auto it_processing = processing_.begin();
   while (it_processing != processing_.end()
-      && it_processing->first <= timestamp) {
+      && it_processing->first <= timestamp_nanoseconds) {
     it_processing = processing_.erase(it_processing);
   }
   return nframe;
@@ -240,7 +240,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
       if (++it_processing != processing_.end()) {
         const int64_t time_diff = std::abs(
             it_processing->first - frame->getTimestampNanoseconds());
-        if(time_diff < min_time_diff) {
+        if (time_diff < min_time_diff) {
           proc_it = it_processing;
           min_time_diff = time_diff;
         }
