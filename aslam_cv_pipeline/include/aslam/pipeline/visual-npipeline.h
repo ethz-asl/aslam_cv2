@@ -168,8 +168,8 @@ class VisualNPipeline final {
   ///
   /// \param[in] camera_index The index of the camera that this image corresponds to.
   /// \param[in] image The image data.
-  /// \param[in] timestamp The time in integer nanoseconds.
-  void work(size_t camera_index, const cv::Mat& image, int64_t timestamp);
+  /// \param[in] timestamp_nanoseconds The time in integer nanoseconds.
+  void work(size_t camera_index, const cv::Mat& image, int64_t timestamp_nanoseconds);
 
   std::shared_ptr<VisualNFrame> getNextImpl();
 

@@ -188,7 +188,7 @@ bool VisualNPipeline::getLatestAndClearBlocking(
     // Clear any processing frames older than this one.
     TimestampVisualNFrameMap::iterator processing_iterator =
         processing_.begin();
-    while(processing_iterator != processing_.end() &&
+    while (processing_iterator != processing_.end() &&
         processing_iterator->first <= timestamp_nanoseconds) {
       processing_iterator = processing_.erase(processing_iterator);
     }
@@ -211,17 +211,17 @@ size_t VisualNPipeline::getNumFramesProcessing() const {
 }
 
 void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
-                           int64_t timestamp) {
+                           int64_t timestamp_nanoseconds) {
   CHECK_LE(camera_index, pipelines_.size());
   std::shared_ptr<VisualFrame> frame;
-  frame = pipelines_[camera_index]->processImage(image, timestamp);
+  frame = pipelines_[camera_index]->processImage(image, timestamp_nanoseconds);
 
   /// Create an iterator into the processing queue.
   std::map<int64_t, std::shared_ptr<VisualNFrame>>::iterator proc_it;
   {
     std::lock_guard<std::mutex> lock(mutex_);
     bool create_new_nframes = false;
-    if(processing_.empty()) {
+    if (processing_.empty()) {
       create_new_nframes = true;
     } else {
       // Try to find an existing NFrame in the processing list.
@@ -231,14 +231,14 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
           frame->getTimestampNanoseconds());
       // Lower bound returns the first element that is not less than the value
       // (i.e. greater than or equal to the value).
-      if(it_processing != processing_.begin()) { --it_processing; }
+      if (it_processing != processing_.begin()) { --it_processing; }
       // Now it_processing points to the first element that is less than the
       // value. Check both this value, and the one >=.
       int64_t min_time_diff = std::abs(
           it_processing->first - frame->getTimestampNanoseconds());
       proc_it = it_processing;
-      if(++it_processing != processing_.end()) {
-        int64_t time_diff = std::abs(
+      if (++it_processing != processing_.end()) {
+        const int64_t time_diff = std::abs(
             it_processing->first - frame->getTimestampNanoseconds());
         if(time_diff < min_time_diff) {
           proc_it = it_processing;
@@ -246,12 +246,12 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
         }
       }
       // Now proc_it points to the closest nframes element.
-      if(min_time_diff > timestamp_tolerance_ns_) {
+      if (min_time_diff > timestamp_tolerance_ns_) {
        create_new_nframes = true;
       }
     }
 
-    if(create_new_nframes) {
+    if (create_new_nframes) {
       std::shared_ptr<VisualNFrame> nframes(
           new VisualNFrame(output_camera_system_));
       bool not_replaced;
@@ -290,8 +290,8 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
           num_consecutive_complete = 0u;
         }
         if (num_consecutive_complete >= kNumMinConsecutiveCompleteThreshold) {
-          delete_upto_including_index = static_cast<int>(
-              idx - kNumMinConsecutiveCompleteThreshold);
+          delete_upto_including_index = static_cast<int>(idx) -
+              static_cast<int>(kNumMinConsecutiveCompleteThreshold);
           break;
         }
         ++it_processing;
