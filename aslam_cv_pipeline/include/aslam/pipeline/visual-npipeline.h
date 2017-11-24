@@ -74,8 +74,6 @@ class VisualNPipeline final {
   ///
   /// This function is called by a user when an image is received.
   /// The pipeline then processes the images and constructs VisualNFrames
-  /// call numVisualNFramesComplete() to find out how many VisualNFrames are
-  /// completed.
   ///
   /// \param[in] camera_index The index of the camera that this image corresponds to
   /// \param[in] image the image data
@@ -92,22 +90,23 @@ class VisualNPipeline final {
   ///            block once this limit has been reached. As the frames are processed in a thread
   ///            pool it is possible that the real queue size will exceed the defined size by the
   ///            number of currently processed nframes.
-  /// @return    Returns false if the queue is shuting down.
+  /// @return    Returns false if the queue is shut down.
   bool processImageBlockingIfFull(size_t camera_index, const cv::Mat& image, int64_t timestamp,
                                   size_t max_output_queue_size);
 
   /// \brief Same as \ref processImage with the difference that the function
-  ///        call erases an element of the queue if it exceeds the maximum size.
+  ///        call erases the oldest element of the queue if it exceeds the maximum size.
   ///
   /// \param[in] camera_index The index of the camera that this image corresponds to.
   /// \param[in] image the image data.
   /// \param[in] timestamp the time in integer nanoseconds.
   /// \param[in] max_output_queue_size the max. size of the output queue. The
-  ///            function call will erase an element of the output queue once
-  ///            this limit has been reached. As the frames are processed in a
-  ///            thread pool it is possible that the real queue size will exceed
-  ///            the defined size by the number of currently processed nframes.
-  /// @return    Returns true if an element has been erased.
+  ///            function call will erase the oldest element of the output queue
+  ///            once this limit has been reached. As the frames are processed
+  ///            in a thread pool it is possible that the real queue size will
+  ///            exceed the defined size by the number of currently processed
+  ///            nframes.
+  /// @return    Returns true if oldest nframe has been dropped.
   bool processImageNonBlockingDroppingOldestNFrameIfFull(
       size_t camera_index, const cv::Mat &image, int64_t timestamp,
       size_t max_output_queue_size);
@@ -123,13 +122,19 @@ class VisualNPipeline final {
   /// If there are no VisualNFrames waiting, this returns a NULL pointer.
   std::shared_ptr<VisualNFrame> getNext();
 
-  /// Get the next available set of processed frames.
-  /// @return Returns true on success and false if the queue is shutting down.
+  /// Get the next available set of processed frames. Blocks if the queue is
+  /// empty.
+  /// @return Returns false if the queue is shut down.
   bool getNextBlocking(std::shared_ptr<VisualNFrame>* nframe);
 
   /// Get the latest available data and clear anything older.
-  /// If there are no VisualNFrames waiting, this returns a NULL pointer.
+  /// @return If there are no VisualNFrames waiting, this returns a NULL
+  ///         pointer.
   std::shared_ptr<VisualNFrame> getLatestAndClear();
+
+  /// Get the latest available data and clear anything older. Block if the
+  /// queue is empty.
+  /// @return Returns false if the queue is shut down.
   bool getLatestAndClearBlocking(std::shared_ptr<VisualNFrame>* nframe);
 
   /// Get the input camera system that corresponds to the images
@@ -163,10 +168,13 @@ class VisualNPipeline final {
   ///
   /// \param[in] camera_index The index of the camera that this image corresponds to.
   /// \param[in] image The image data.
-  /// \param[in] timestamp The time in integer nanoseconds.
-  void work(size_t camera_index, const cv::Mat& image, int64_t timestamp);
+  /// \param[in] timestamp_nanoseconds The time in integer nanoseconds.
+  void work(size_t camera_index, const cv::Mat& image, int64_t timestamp_nanoseconds);
 
   std::shared_ptr<VisualNFrame> getNextImpl();
+
+  void processImageImpl(size_t camera_index, const cv::Mat& image,
+                        int64_t timestamp);
 
   /// One visual pipeline for each camera.
   std::vector<std::shared_ptr<VisualPipeline>> pipelines_;
