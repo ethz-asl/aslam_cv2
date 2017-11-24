@@ -106,7 +106,7 @@ class VisualNPipeline final {
   ///            in a thread pool it is possible that the real queue size will
   ///            exceed the defined size by the number of currently processed
   ///            nframes.
-  /// @return    Returns false if the queue is shut down.
+  /// @return    Returns true if oldest nframe has been dropped.
   bool processImageNonBlockingDroppingOldestNFrameIfFull(
       size_t camera_index, const cv::Mat &image, int64_t timestamp,
       size_t max_output_queue_size);
