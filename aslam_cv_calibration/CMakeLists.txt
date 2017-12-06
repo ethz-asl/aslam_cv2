@@ -15,6 +15,7 @@ set(HEADERS
 
 set(SOURCES
   src/focallength-initializers.cc
+  src/target-algorithms.cc
   src/target-aprilgrid.cc
   src/target-base.cc
 )
