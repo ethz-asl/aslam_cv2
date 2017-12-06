@@ -10,6 +10,7 @@ namespace aslam {
 namespace calibration {
 
 // TODO(fabianbl): Add description.
+// TODO(fabianbl): Add option to reproject keypoints.
 bool estimateTargetTransformation(
     const TargetObservation& target_observation,
     const aslam::Camera::ConstPtr& camera_ptr, aslam::Transformation* T_G_C);
