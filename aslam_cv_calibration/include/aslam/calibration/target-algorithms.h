@@ -14,6 +14,12 @@ bool estimateTargetTransformation(
     const TargetObservation& target_observation,
     const aslam::Camera::ConstPtr& camera_ptr, aslam::Transformation* T_G_C);
 
+bool estimateTargetTransformation(
+    const TargetObservation& target_observation,
+    const aslam::Camera::ConstPtr& camera_ptr,
+    const bool run_nonlinear_refinement, const double ransac_pixel_sigma,
+    const int ransac_max_iters, aslam::Transformation* T_G_C);
+
 }  // namespace calibration
 }  // namespace aslam
 
