@@ -33,9 +33,12 @@ bool estimateTargetTransformation(
   aslam::geometric_vision::PnpPoseEstimator pnp(run_nonlinear_refinement);
   std::vector<int> inliers;
   int num_iters = 0;
-  return pnp.absolutePoseRansacPinholeCam(
+  bool pnp_success = pnp.absolutePoseRansacPinholeCam(
       observed_corners, G_corner_positions, ransac_pixel_sigma,
       ransac_max_iters, camera_ptr, T_G_C, &inliers, &num_iters);
+  VLOG(3) << "Num inliers: " << inliers.size() << "/"
+          << observed_corners.cols();
+  return pnp_success;
 }
 
 }  // namespace calibration
