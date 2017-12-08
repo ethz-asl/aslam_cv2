@@ -9,6 +9,8 @@ namespace calibration {
 bool estimateTargetTransformation(
     const TargetObservation& target_observation,
     const aslam::Camera::ConstPtr& camera_ptr, aslam::Transformation* T_G_C) {
+  CHECK(camera_ptr);
+  CHECK_NOTNULL(T_G_C);
   constexpr bool kRunNonlinearRefinement = true;
   constexpr double kRansacPixelSigma = 1.0;
   constexpr int kRansacMaxIters = 200;
@@ -36,8 +38,12 @@ bool estimateTargetTransformation(
   bool pnp_success = pnp.absolutePoseRansacPinholeCam(
       observed_corners, G_corner_positions, ransac_pixel_sigma,
       ransac_max_iters, camera_ptr, T_G_C, &inliers, &num_iters);
-  VLOG(3) << "Num inliers: " << inliers.size() << "/"
-          << observed_corners.cols();
+  if (pnp_success) {
+    VLOG(4) << "Found " << inliers.size() << "/" << observed_corners.cols()
+            << " inliers in" << num_iters << " iterations.";
+  } else{
+    LOG(WARNING) << "Target transformation estimation failed.";
+  }
   return pnp_success;
 }
 
