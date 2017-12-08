@@ -14,6 +14,7 @@
 add_definitions(-std=c++11 -march=native)
 get_filename_component(_currentDir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include("${_currentDir}/OptimizeForArchitecture.cmake")
+include("${_currentDir}/FindARM.cmake")
 # OptimizeForArchitecture()
 
 set(ENABLE_TIMING FALSE CACHE BOOL "Set to TRUE to enable timing")
