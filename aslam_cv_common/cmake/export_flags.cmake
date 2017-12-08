@@ -1,21 +1,14 @@
-# set(IS_ARM_ARCHITECTURE TRUE)
-# execute_process(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
-# if (ARCHITECTURE MATCHES "^(arm)")
-  # set(IS_ARM_ARCHITECTURE TRUE)
-# endif()
-
-# if (NOT ANDROID AND NOT IS_ARM_ARCHITECTURE)
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mssse3")
-# elseif (IS_ARM_ARCHITECTURE)
-  # message(STATUS "Setting ARM compilation flags.")
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon -march=armv7-a")
-# endif()
-
-add_definitions(-std=c++11 -march=native)
-get_filename_component(_currentDir "${CMAKE_CURRENT_LIST_FILE}" PATH)
-include("${_currentDir}/OptimizeForArchitecture.cmake")
-include("${_currentDir}/FindARM.cmake")
-# OptimizeForArchitecture()
+# Enable compiler optimizations.
+add_definitions(-march=native -mtune=native -std=c++11)
+execute_process(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCH)
+if (ARCH MATCHES "^(arm)")
+  # Assume that neon is available.
+  add_definitions(-mfpu=neon)
+else()
+  # Assume a processor with which supports Streaming SIMD Extensions in this
+  # case.
+  add_definitions(-mssse2 -mssse3)
+endif()
 
 set(ENABLE_TIMING FALSE CACHE BOOL "Set to TRUE to enable timing")
 message(STATUS "Timers enabled? ${ENABLE_TIMING}")
