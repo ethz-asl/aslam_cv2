@@ -29,13 +29,10 @@ set(SOURCES
   src/matching-problem-frame-to-frame.cc
 )
 
-# for ./aslam_cv/aslam_cv_common/include/aslam/common/hamming-inl.h
-# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 
-add_definitions(-std=c++11 -march=native)
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 ##########
