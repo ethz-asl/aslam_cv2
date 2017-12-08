@@ -1,4 +1,4 @@
-add_definitions(-march=native -mtune=native -std=c++11)
+add_definitions(-std=c++11)
 execute_process(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCH)
 if (ARCH MATCHES "^(arm)")
   add_definitions(-mfpu=neon)
