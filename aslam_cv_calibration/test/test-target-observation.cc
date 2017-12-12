@@ -16,7 +16,6 @@
 class TargetObservationTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    LOG(INFO) << "In setup.";
     const aslam::calibration::TargetAprilGrid::TargetConfiguration april_config;
     april_grid = aslam::calibration::TargetAprilGrid::Ptr(
         new aslam::calibration::TargetAprilGrid(april_config));
@@ -25,9 +24,9 @@ class TargetObservationTest : public ::testing::Test {
     setTargetObservation();
   }
 
-  aslam::calibration::TargetAprilGrid::Ptr april_grid;
-  aslam::PinholeCamera::ConstPtr camera;
-  aslam::Transformation T_B_C;
+  aslam::calibration::TargetBase::Ptr april_grid;
+  aslam::Camera::ConstPtr camera;
+  aslam::Transformation T_G_C;
   aslam::calibration::TargetObservation::ConstPtr april_grid_observation;
 
  private:
@@ -52,7 +51,7 @@ class TargetObservationTest : public ::testing::Test {
     setTargetTransformation();
     Eigen::Matrix3Xd corner_points_B = april_grid->points();
     Eigen::Matrix3Xd corner_points_C =
-        T_B_C.inverse().transformVectorized(corner_points_B);
+        T_G_C.inverse().transformVectorized(corner_points_B);
     Eigen::Matrix2Xd corner_points_reprojected;
     std::vector<aslam::ProjectionResult> projection_results;
     camera->project3Vectorized(
@@ -67,7 +66,7 @@ class TargetObservationTest : public ::testing::Test {
 
   void setTargetTransformation() {
     constexpr double kDistanceFromTargetMeters = 2.0;
-    T_B_C = aslam::Transformation(
+    T_G_C = aslam::Transformation(
         aslam::Quaternion(0.0, 1.0, 0.0, 0.0),
         aslam::Position3D(
             0.5 * april_grid->width(), 0.5 * april_grid->height(),
@@ -86,9 +85,15 @@ class TargetObservationTest : public ::testing::Test {
   }
 };
 
-TEST_F(TargetObservationTest, AprilGridDetection) {
-  LOG(INFO) << "In test.";
-  // This test should test the pnp algorithm for the target observation.
+TEST_F(TargetObservationTest, AprilGridPoseEstimation) {
+  constexpr double kTolerance = 1e-10;
+  aslam::Transformation T_G_C_estimated;
+  ASSERT_TRUE(
+      aslam::calibration::estimateTargetTransformation(
+          *april_grid_observation, camera, &T_G_C_estimated));
+  EXPECT_TRUE(
+      EIGEN_MATRIX_NEAR(
+          T_G_C.asVector(), T_G_C_estimated.asVector(), kTolerance));
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
