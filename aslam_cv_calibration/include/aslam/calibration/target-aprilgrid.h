@@ -61,11 +61,13 @@ class TargetAprilGrid : public TargetBase {
     return target_config_;
   }
 
+  double getWidthMeters() const;
+  double getHeightMeters() const;
+
  private:
   static Eigen::Matrix3Xd createGridPoints(
       const TargetConfiguration& target_config);
 
- private:
   const TargetConfiguration target_config_;
 };
 

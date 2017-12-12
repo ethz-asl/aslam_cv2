@@ -45,11 +45,16 @@ class TargetBase {
   size_t gridCoordinatesToPoint(size_t row_idx, size_t col_idx) const;
 
   /// Number of rows in the calibration target.
-  size_t rows() const { return rows_; };
+  inline size_t rows() const { return rows_; };
   /// Number of columns in the calibration target.
-  size_t cols() const { return cols_; };
+  inline size_t cols() const { return cols_; };
   /// Get the number of points of the full grid.
-  size_t size() const { return rows_ * cols_; };
+  inline size_t size() const { return rows_ * cols_; };
+
+  /// Extent of the grid in row dimension (x by default).
+  virtual double width() const;
+  /// Extent of the grid in column dimension (y by default).
+  virtual double height() const;
 
  protected:
   /// Number of point rows in the calibration target.
