@@ -47,10 +47,10 @@ Eigen::Matrix3Xd TargetAprilGrid::createGridPoints(
   for (size_t row_idx = 0u; row_idx < num_point_rows; ++row_idx) {
     for (size_t col_idx = 0u; col_idx < num_point_cols; ++col_idx) {
       Eigen::Vector3d point;
-      point(0) =
-          static_cast<int>(col_idx / 2) * (tag_size + tag_spacing) + (col_idx % 2) * tag_size;
-      point(1) =
-          static_cast<int>(row_idx / 2) * (tag_size + tag_spacing) + (row_idx % 2) * tag_size;
+      point(0) = static_cast<double>(col_idx / 2u) * (tag_size + tag_spacing) +
+                 static_cast<double>(col_idx % 2u) * tag_size;
+      point(1) = static_cast<double>(row_idx / 2u) * (tag_size + tag_spacing) +
+                 static_cast<double>(row_idx % 2u) * tag_size;
       point(2) = 0.0;
 
       points_target_frame.col(row_idx * num_point_cols + col_idx) = point;
