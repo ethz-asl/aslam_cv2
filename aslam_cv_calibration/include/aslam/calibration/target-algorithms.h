@@ -14,7 +14,7 @@ bool estimateTargetTransformation(
     const TargetObservation& target_observation,
     const aslam::Camera::ConstPtr& camera_ptr, aslam::Transformation* T_G_C);
 
-// Estimates the target transform from the given corner observations (with some
+// Estimates the target transform from the given corner observations (with
 // additional options).
 bool estimateTargetTransformation(
     const TargetObservation& target_observation,

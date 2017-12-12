@@ -29,6 +29,9 @@ add_doxygen(NOT_AUTOMATIC)
 catkin_add_gtest(test_init_intrinsics test/test-init-intrinsics.cc)
 target_link_libraries(test_init_intrinsics ${PROJECT_NAME})
 
+catkin_add_gtest(test_target_observation test/test-target-observation.cc)
+target_link_libraries(test_target_observation ${PROJECT_NAME})
+
 ##########
 # EXPORT #
 ##########
