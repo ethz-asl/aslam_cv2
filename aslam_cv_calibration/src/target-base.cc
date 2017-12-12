@@ -51,17 +51,17 @@ double* TargetBase::pointMutable(size_t point_idx) {
 }
 
 double TargetBase::width() const {
-  CHECK_GT(rows_, 0u);
-  const Eigen::Vector3d horizontal_difference =
-      gridPoint(rows_ - 1u, 0u) - gridPoint(0u, 0u);
-  return std::abs(horizontal_difference.x());
-}
-
-double TargetBase::height() const {
   CHECK_GT(cols_, 0u);
   const Eigen::Vector3d vertical_difference =
       gridPoint(0u, cols_ - 1u) - gridPoint(0u, 0u);
-  return std::abs(vertical_difference.y());
+  return std::abs(vertical_difference.x());
+}
+
+double TargetBase::height() const {
+  CHECK_GT(rows_, 0u);
+  const Eigen::Vector3d horizontal_difference =
+      gridPoint(rows_ - 1u, 0u) - gridPoint(0u, 0u);
+  return std::abs(horizontal_difference.y());
 }
 
 }  // namespace calibration

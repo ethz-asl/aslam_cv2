@@ -91,8 +91,9 @@ class TargetObservation  {
     CHECK_NOTNULL(out_image);
     size_t num_corners = image_corners_.cols();
     for (size_t idx = 0u; idx < num_corners; ++idx) {
-      cv::circle(*out_image, cv::Point(image_corners_(0, idx), image_corners_(1, idx)), 1,
-                 cv::Scalar(0, 0, 255), 2, CV_AA);
+      cv::circle(
+          *out_image, cv::Point(image_corners_(0, idx), image_corners_(1, idx)),
+          1.0, cv::Scalar(0, 0, 255), 2, CV_AA);
     }
   }
 
@@ -101,8 +102,7 @@ class TargetObservation  {
     for (size_t obs_idx = 0; obs_idx < numObservedCorners(); ++obs_idx) {
       corners_target_frame.col(obs_idx) = target_->point(corner_ids_(obs_idx));
     }
-    return corners_target_frame;
-  }
+    return corners_target_frame; }
 
  private:
   void buildIndex() {
