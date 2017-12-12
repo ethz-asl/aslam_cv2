@@ -61,9 +61,7 @@ class TargetAprilGrid : public TargetBase {
     return target_config_;
   }
 
-  // Returns a matrix of the grid corner points given a target configuration.
-  // The origin is set to the bottom left corner of the grid, and the z
-  // component of all grid points is zero.
+ private:
   static Eigen::Matrix3Xd createGridPoints(
       const TargetConfiguration& target_config);
 

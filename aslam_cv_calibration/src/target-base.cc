@@ -17,7 +17,7 @@ TargetBase::TargetBase(size_t rows, size_t cols, const Eigen::Matrix3Xd& points_
   CHECK_EQ(static_cast<int>(size()), points_target_frame_.cols());
 }
 
-Eigen::Matrix3Xd TargetBase::points() const {
+const Eigen::Matrix3Xd& TargetBase::points() const {
   return points_target_frame_;
 }
 

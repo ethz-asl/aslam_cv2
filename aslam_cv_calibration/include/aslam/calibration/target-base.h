@@ -31,7 +31,7 @@ class TargetBase {
   virtual ~TargetBase() {};
 
   /// Get all points from the target expressed in the target frame.
-  Eigen::Matrix3Xd points() const;
+  const Eigen::Matrix3Xd& points() const;
   /// Get a point from the target expressed in the target frame.
   Eigen::Vector3d point(size_t point_idx) const;
   /// Return pointer to the i-th grid point in target frame.
