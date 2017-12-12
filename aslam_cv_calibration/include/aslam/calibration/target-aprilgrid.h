@@ -33,7 +33,6 @@ namespace calibration {
 class TargetAprilGrid : public TargetBase {
  public:
   ASLAM_POINTER_TYPEDEFS(TargetAprilGrid);
-  friend class TargetObservationTest;
 
   struct TargetConfiguration {
     TargetConfiguration()
@@ -62,9 +61,13 @@ class TargetAprilGrid : public TargetBase {
     return target_config_;
   }
 
- private:
-  static Eigen::Matrix3Xd createGridPoints(const TargetConfiguration& target_config);
+  // Returns a matrix of the grid corner points given a target configuration.
+  // The origin is set to the bottom left corner of the grid, and the z
+  // component of all grid points is zero.
+  static Eigen::Matrix3Xd createGridPoints(
+      const TargetConfiguration& target_config);
 
+ private:
   const TargetConfiguration target_config_;
 };
 
