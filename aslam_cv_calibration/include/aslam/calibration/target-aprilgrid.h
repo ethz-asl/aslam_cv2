@@ -33,6 +33,7 @@ namespace calibration {
 class TargetAprilGrid : public TargetBase {
  public:
   ASLAM_POINTER_TYPEDEFS(TargetAprilGrid);
+  friend class TargetObservationTest;
 
   struct TargetConfiguration {
     TargetConfiguration()
