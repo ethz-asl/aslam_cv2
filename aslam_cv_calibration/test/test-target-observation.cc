@@ -52,9 +52,9 @@ class TargetObservationTest : public ::testing::Test {
     CHECK_NOTNULL(reprojected_corners);
     CHECK_NOTNULL(corner_ids);
     setTargetTransformation();
-    Eigen::Matrix3Xd corner_points_B = april_grid->points();
-    Eigen::Matrix3Xd corner_points_C =
-        T_G_C.inverse().transformVectorized(corner_points_B);
+    const Eigen::Matrix3Xd corner_points_G = april_grid->points();
+    const Eigen::Matrix3Xd corner_points_C =
+        T_G_C.inverse().transformVectorized(corner_points_G);
     Eigen::Matrix2Xd corner_points_reprojected;
     std::vector<aslam::ProjectionResult> projection_results;
     Eigen::Matrix2Xd reprojected_corners_without_noise;
@@ -120,6 +120,10 @@ class TargetObservationTest : public ::testing::Test {
   }
 };
 
+// Simulates a pinhole camera observing an AprilTag grid. The reprojected
+// corners of the target are corrupted with Gaussian noise, and this test
+// verifies that the pnp problem achieves a reasonable accuracy when estimating
+// the transform of the camera w.r.t. the target origin.
 TEST_F(TargetObservationTest, AprilGridPoseEstimation) {
   constexpr double kTolerancePositionMeters = 0.01;
   constexpr double kToleranceRotationDeg = 0.01;
@@ -128,9 +132,9 @@ TEST_F(TargetObservationTest, AprilGridPoseEstimation) {
       aslam::calibration::estimateTargetTransformation(
           *april_grid_observation, camera, &T_G_Cest));
   const aslam::Transformation T_C_Cest = T_G_C.inverse() * T_G_Cest;
-  ASSERT_LT(T_C_Cest.getPosition().norm(), kTolerancePositionMeters);
+  EXPECT_LT(T_C_Cest.getPosition().norm(), kTolerancePositionMeters);
   const aslam::AngleAxis angle_axis(T_C_Cest.getRotation());
-  ASSERT_LT(angle_axis.angle(), kToleranceRotationDeg);
+  EXPECT_LT(angle_axis.angle(), kToleranceRotationDeg);
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
