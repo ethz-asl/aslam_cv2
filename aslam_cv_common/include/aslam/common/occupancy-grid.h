@@ -47,7 +47,6 @@ class WeightedOccupancyGrid {
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   ASLAM_POINTER_TYPEDEFS(WeightedOccupancyGrid);
-  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(WeightedOccupancyGrid);
 
  private:
   struct GridCoordinates {
@@ -95,6 +94,8 @@ class WeightedOccupancyGrid {
   inline PointList& getGridCell(CoordinatesType u_rows, CoordinatesType v_cols);
   inline const PointList& getGridCell(CoordinatesType u_rows, CoordinatesType v_cols) const;
 
+  inline GridCoordinates getFullestGridCell() const;
+
   /// Return a mask that covers a square of specified size around all points and masked cells
   /// if selected.
   cv::Mat getOccupancyMask(CoordinatesType radius_mask_around_points,
@@ -115,6 +116,13 @@ class WeightedOccupancyGrid {
   /// Remove points from cells that contain more points than specified. Points with the lowest
   /// score will be removed first.
   size_t removeWeightedPointsFromOverfullCells(size_t max_points_per_cell);
+
+  size_t removeWeightedPointsFromOverfullCell(
+      const GridCoordinates& grid_coords, size_t max_points_per_cell);
+
+  /// Remove the weakest point from the fullest cells until the total number of
+  /// points in the grid is met.
+  void removePointsFromFullestCellsUntilSize(size_t max_total_num_points);
   /// @}
 
  private:
