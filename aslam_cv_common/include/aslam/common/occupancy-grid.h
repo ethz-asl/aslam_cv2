@@ -120,9 +120,9 @@ class WeightedOccupancyGrid {
   size_t removeWeightedPointsFromOverfullCell(
       const GridCoordinates& grid_coords, size_t max_points_per_cell);
 
-  /// Remove the weakest point from the largest cell until the total number of
+  /// Remove the weakest point from the fullest cells until the total number of
   /// points in the grid is met.
-  void removePointsFromLargestCellsUntilSize(size_t max_total_num_points);
+  void removePointsFromFullestCellsUntilSize(size_t max_total_num_points);
   /// @}
 
  private:

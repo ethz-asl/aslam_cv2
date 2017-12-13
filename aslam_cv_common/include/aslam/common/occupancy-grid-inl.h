@@ -254,14 +254,14 @@ WeightedOccupancyGrid<PointType>::getFullestGridCell() const {
 }
 
 template<typename PointType>
-void WeightedOccupancyGrid<PointType>::removePointsFromLargestCellsUntilSize(
+void WeightedOccupancyGrid<PointType>::removePointsFromFullestCellsUntilSize(
     size_t max_total_num_points) {
   CHECK_GT(max_total_num_points, 0u);
   while (getNumPoints() > max_total_num_points) {
     const GridCoordinates fullest_cell_coords = getFullestGridCell();
-    const size_t max_cell_size = getGridCell(fullest_cell_coords).size();
+    const size_t max_cell_count = getGridCell(fullest_cell_coords).size();
     removeWeightedPointsFromOverfullCell(
-        fullest_cell_coords, max_cell_size - 1);
+        fullest_cell_coords, max_cell_count - 1);
   }
 }
 
@@ -277,7 +277,8 @@ size_t WeightedOccupancyGrid<PointType>::removeWeightedPointsFromOverfullCell(
 
   // Remove the points with the lowest score.
   size_t num_removed = cell.size() - max_points_per_cell;
-  std::sort(cell.begin(), cell.end(), std::greater<PointType>());
+  std::partial_sort(cell.begin(), cell.begin() + max_points_per_cell + 1,
+                    cell.end(), std::greater<PointType>());
   cell.resize(max_points_per_cell);
   current_num_points_ -= num_removed;
   return num_removed;
@@ -291,7 +292,7 @@ size_t WeightedOccupancyGrid<PointType>::removeWeightedPointsFromOverfullCells(
   size_t num_removed = 0u;
   for (size_t i_row = 0u; i_row < num_grid_rows_; ++i_row) {
     for (size_t j_col = 0u; j_col < num_grid_cols_; ++j_col) {
-      num_removed = removeWeightedPointsFromOverfullCell(
+      num_removed += removeWeightedPointsFromOverfullCell(
           GridCoordinates(i_row, j_col), max_points_per_cell);
     }
   }
