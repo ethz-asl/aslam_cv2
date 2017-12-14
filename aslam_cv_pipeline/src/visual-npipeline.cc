@@ -276,7 +276,7 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
     // E.g. N=3    I I C I C C C C C   (I: incomplete, C: complete)
     //      idx    0 1 2 3 4 5 6 7 8
     //                     # --> first index with N complete = 4
-    const size_t kNumMinConsecutiveCompleteThreshold = 2u;
+    const size_t kNumMinConsecutiveCompleteThreshold = 1u;
     int delete_upto_including_index = -1;
     if (processing_.size() > kNumMinConsecutiveCompleteThreshold + 1) {
       size_t num_consecutive_complete = 0u;
