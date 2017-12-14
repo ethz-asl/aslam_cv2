@@ -13,6 +13,11 @@
 
 namespace aslam {
 
+DEFINE_int32(
+    visual_npipeline_min_num_consecutive_complete_nframes, 2,
+    "The minimum number of consecutive complete nframes required for dropping older incomplete "
+    "nframes.");
+
 VisualNPipeline::VisualNPipeline(
     size_t num_threads,
     const std::vector<std::shared_ptr<VisualPipeline> >& pipelines,
@@ -23,7 +28,12 @@ VisualNPipeline::VisualNPipeline(
       shutdown_(false),
       input_camera_system_(input_camera_system),
       output_camera_system_(output_camera_system),
-      timestamp_tolerance_ns_(timestamp_tolerance_ns)  {
+      timestamp_tolerance_ns_(timestamp_tolerance_ns) {
+  CHECK_GE(FLAGS_visual_npipeline_min_num_consecutive_complete_nframes, 1);
+  min_num_consecutive_complete_nframes_threshold_ =
+      static_cast<size_t>(
+          FLAGS_visual_npipeline_min_num_consecutive_complete_nframes);
+
   // Defensive programming ninjitsu.
   CHECK_NOTNULL(input_camera_system_.get());
   CHECK_NOTNULL(output_camera_system.get());
@@ -276,9 +286,13 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
     // E.g. N=3    I I C I C C C C C   (I: incomplete, C: complete)
     //      idx    0 1 2 3 4 5 6 7 8
     //                     # --> first index with N complete = 4
-    const size_t kNumMinConsecutiveCompleteThreshold = 1u;
+    const int minnt_num_consecutive_complete_nframes_threshold =
+        FLAGS_visual_npipeline_min_num_consecutive_complete_nframes;
+    CHECK_GE(minnt_num_consecutive_complete_nframes_threshold, 1);
+
     int delete_upto_including_index = -1;
-    if (processing_.size() > kNumMinConsecutiveCompleteThreshold + 1) {
+    if (processing_.size() >
+       min_num_consecutive_complete_nframes_threshold_ + 1u) {
       size_t num_consecutive_complete = 0u;
       size_t idx = 0u;
       auto it_processing = processing_.begin();
@@ -289,9 +303,9 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
         } else {
           num_consecutive_complete = 0u;
         }
-        if (num_consecutive_complete >= kNumMinConsecutiveCompleteThreshold) {
+        if (num_consecutive_complete >= min_num_consecutive_complete_nframes_threshold_) {
           delete_upto_including_index = static_cast<int>(idx) -
-              static_cast<int>(kNumMinConsecutiveCompleteThreshold);
+              static_cast<int>(min_num_consecutive_complete_nframes_threshold_);
           break;
         }
         ++it_processing;
