@@ -51,9 +51,9 @@ class TargetBase {
   /// Get the number of points of the full grid.
   inline size_t size() const { return rows_ * cols_; };
 
-  /// Extent of the grid in row dimension (x by default).
+  /// Extent of the grid in row dimension.
   virtual double width() const;
-  /// Extent of the grid in column dimension (y by default).
+  /// Extent of the grid in column dimension.
   virtual double height() const;
 
  protected:
