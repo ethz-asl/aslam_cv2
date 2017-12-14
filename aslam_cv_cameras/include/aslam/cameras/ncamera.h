@@ -73,8 +73,8 @@ public:
   }
 
   /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
-  static std::shared_ptr<NCamera> loadFromYaml(const std::string& yaml_file);
-  static std::shared_ptr<NCamera> deserializeFromYaml(
+  static NCamera::Ptr loadFromYaml(const std::string& yaml_file);
+  static NCamera::Ptr deserializeFromYaml(
       const YAML::Node& yaml_node);
 
   /// Save this ncamera to a yaml file.

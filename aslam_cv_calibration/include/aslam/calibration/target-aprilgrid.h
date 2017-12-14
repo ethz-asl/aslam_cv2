@@ -62,7 +62,8 @@ class TargetAprilGrid : public TargetBase {
   }
 
  private:
-  static Eigen::Matrix3Xd createGridPoints(const TargetConfiguration& target_config);
+  static Eigen::Matrix3Xd createGridPoints(
+      const TargetConfiguration& target_config);
 
   const TargetConfiguration target_config_;
 };

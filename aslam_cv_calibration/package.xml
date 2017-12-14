@@ -11,6 +11,7 @@
 
   <depend>aslam_cv_cameras</depend>
   <depend>aslam_cv_common</depend>
+  <depend>aslam_cv_geometric_vision</depend>
   <depend>doxygen_catkin</depend>
   <depend>eigen_catkin</depend>
   <depend>eigen_checks</depend>

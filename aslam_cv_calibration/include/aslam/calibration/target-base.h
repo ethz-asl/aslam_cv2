@@ -31,7 +31,7 @@ class TargetBase {
   virtual ~TargetBase() {};
 
   /// Get all points from the target expressed in the target frame.
-  Eigen::Matrix3Xd points() const;
+  const Eigen::Matrix3Xd& points() const;
   /// Get a point from the target expressed in the target frame.
   Eigen::Vector3d point(size_t point_idx) const;
   /// Return pointer to the i-th grid point in target frame.
@@ -45,11 +45,16 @@ class TargetBase {
   size_t gridCoordinatesToPoint(size_t row_idx, size_t col_idx) const;
 
   /// Number of rows in the calibration target.
-  size_t rows() const { return rows_; };
+  inline size_t rows() const { return rows_; };
   /// Number of columns in the calibration target.
-  size_t cols() const { return cols_; };
+  inline size_t cols() const { return cols_; };
   /// Get the number of points of the full grid.
-  size_t size() const { return rows_ * cols_; };
+  inline size_t size() const { return rows_ * cols_; };
+
+  /// Extent of the grid in row dimension.
+  virtual double width() const;
+  /// Extent of the grid in column dimension.
+  virtual double height() const;
 
  protected:
   /// Number of point rows in the calibration target.

@@ -26,37 +26,37 @@ TargetAprilGrid::TargetAprilGrid(const TargetAprilGrid::TargetConfiguration& tar
 }
 
 Eigen::Matrix3Xd TargetAprilGrid::createGridPoints(
-    const TargetAprilGrid::TargetConfiguration& target_config) {
-  /// \brief initialize an april grid
-  ///   point ordering: (e.g. 2x2 grid)
-  ///          12-----13  14-----15
-  ///          | TAG 2 |  | TAG 3 |
-  ///          8-------9  10-----11
-  ///          4-------5  6-------7
-  ///    y     | TAG 0 |  | TAG 1 |
-  ///   ^      0-------1  2-------3
-  ///   |-->x
+    const TargetConfiguration& target_config) {
+  // Point ordering (e.g. 2x2 grid):
+  //
+  //          12-----13  14-----15
+  //          | TAG 2 |  | TAG 3 |
+  //          8-------9  10-----11
+  //          4-------5  6-------7
+  //    y     | TAG 0 |  | TAG 1 |
+  //   ^      0-------1  2-------3
+  //   |-->x
   const double tag_size = target_config.tag_size_meter;
   const double tag_spacing = target_config.tag_inbetween_space_meter;
   const size_t num_point_rows = 2u * target_config.num_tag_rows;
   const size_t num_point_cols = 2u * target_config.num_tag_cols;
   CHECK_GT(tag_size, 0.0);
   CHECK_GT(tag_spacing, 0.0);
-
-  Eigen::Matrix3Xd points_target_frame(3, num_point_rows * num_point_cols);
+  Eigen::Matrix3Xd grid_points_meters =
+      Eigen::Matrix3Xd(3, num_point_rows * num_point_cols);
   for (size_t row_idx = 0u; row_idx < num_point_rows; ++row_idx) {
     for (size_t col_idx = 0u; col_idx < num_point_cols; ++col_idx) {
       Eigen::Vector3d point;
-      point(0) =
-          static_cast<int>(col_idx / 2) * (tag_size + tag_spacing) + (col_idx % 2) * tag_size;
-      point(1) =
-          static_cast<int>(row_idx / 2) * (tag_size + tag_spacing) + (row_idx % 2) * tag_size;
+      point(0) = static_cast<double>(col_idx / 2u) * (tag_size + tag_spacing) +
+                 static_cast<double>(col_idx % 2u) * tag_size;
+      point(1) = static_cast<double>(row_idx / 2u) * (tag_size + tag_spacing) +
+                 static_cast<double>(row_idx % 2u) * tag_size;
       point(2) = 0.0;
 
-      points_target_frame.col(row_idx * num_point_cols + col_idx) = point;
+      grid_points_meters.col(row_idx * num_point_cols + col_idx) = point;
     }
   }
-  return points_target_frame;
+  return grid_points_meters;
 }
 
 DetectorAprilGrid::DetectorAprilGrid(
