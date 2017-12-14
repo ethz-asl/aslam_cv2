@@ -34,7 +34,7 @@ class TargetObservation {
     buildIndex();
   }
 
-  virtual ~TargetObservation(){};
+  virtual ~TargetObservation() {};
 
   TargetBase::Ptr getTarget() {
     return target_;
