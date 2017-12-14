@@ -176,6 +176,8 @@ class VisualNPipeline final {
   void processImageImpl(size_t camera_index, const cv::Mat& image,
                         int64_t timestamp);
 
+  void printQueues() const;
+
   /// One visual pipeline for each camera.
   std::vector<std::shared_ptr<VisualPipeline>> pipelines_;
 

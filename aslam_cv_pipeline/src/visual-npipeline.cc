@@ -210,6 +210,24 @@ size_t VisualNPipeline::getNumFramesProcessing() const {
   return processing_.size();
 }
 
+void VisualNPipeline::printQueues() const {
+  LOG(INFO) << "Dumping processing queue...";
+  for (const TimestampVisualNFrameMap::value_type& timestamp_nframe_pair : processing_) {
+    size_t num_frames_set = 0u;
+    for (size_t frame_idx = 0u;
+        frame_idx < timestamp_nframe_pair.second->getNumFrames(); ++frame_idx) {
+      num_frames_set += static_cast<int>(
+          timestamp_nframe_pair.second->isFrameSet(frame_idx));
+    }
+    LOG(INFO) << "t: " << timestamp_nframe_pair.first << ": " << num_frames_set;
+  }
+  LOG(INFO) << "Dumping completed queue...";
+  for (const TimestampVisualNFrameMap::value_type& timestamp_nframe_pair : completed_) {
+    LOG(INFO) << "t: " << timestamp_nframe_pair.first;
+  }
+  LOG(INFO) << "Done";
+}
+
 void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
                            int64_t timestamp_nanoseconds) {
   CHECK_LE(camera_index, pipelines_.size());
@@ -271,12 +289,14 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
     }
     proc_it->second->setFrame(camera_index, frame);
 
+    //printQueues();
+
     // Find the first index that has N consecutive complete nframes following in chronological
     // ordering.
     // E.g. N=3    I I C I C C C C C   (I: incomplete, C: complete)
     //      idx    0 1 2 3 4 5 6 7 8
     //                     # --> first index with N complete = 4
-    const size_t kNumMinConsecutiveCompleteThreshold = 2u;
+    const size_t kNumMinConsecutiveCompleteThreshold = 1u;
     int delete_upto_including_index = -1;
     if (processing_.size() > kNumMinConsecutiveCompleteThreshold + 1) {
       size_t num_consecutive_complete = 0u;
@@ -311,11 +331,13 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
                    << " nframes from the queue.";
     }
 
+    size_t num_moved_to_complete = 0u;
     // Move all completed nframes from the processed_ queue to the completed_ queue chronologically.
     auto it_processing = processing_.begin();
     while (it_processing != processing_.end()) {
       // Check if all images have been received.
       if (it_processing->second->areAllFramesSet()) {
+        ++num_moved_to_complete;
         completed_.insert(*it_processing);
         it_processing = processing_.erase(it_processing);
         condition_not_empty_.notify_all();
@@ -325,6 +347,8 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
         break;
       }
     }
+    //LOG(INFO) << "Moved " << num_moved_to_complete
+    //    << " to complete. Processing size: " << processing_.size();
   }
 }
 
