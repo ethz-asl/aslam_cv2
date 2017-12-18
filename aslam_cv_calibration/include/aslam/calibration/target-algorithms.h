@@ -11,13 +11,13 @@ namespace calibration {
 
 // Estimates the target transform from the given corner observations.
 bool estimateTargetTransformation(
-    const TargetObservation::ConstPtr& target_observation,
+    const TargetObservation& target_observation,
     const aslam::Camera::ConstPtr& camera_ptr, aslam::Transformation* T_G_C);
 
 // Estimates the target transform from the given corner observations (with
 // additional options).
 bool estimateTargetTransformation(
-    const TargetObservation::ConstPtr& target_observation,
+    const TargetObservation& target_observation,
     const aslam::Camera::ConstPtr& camera_ptr, aslam::Transformation* T_G_C,
     const bool run_nonlinear_refinement, const double ransac_pixel_sigma,
     const int ransac_max_iters);

@@ -130,7 +130,7 @@ TEST_F(TargetObservationTest, AprilGridPoseEstimation) {
   aslam::Transformation T_G_Cest;
   ASSERT_TRUE(
       aslam::calibration::estimateTargetTransformation(
-          april_grid_observation, camera, &T_G_Cest));
+          *april_grid_observation, camera, &T_G_Cest));
   const aslam::Transformation T_C_Cest = T_G_C.inverse() * T_G_Cest;
   const double position_error_meters = T_C_Cest.getPosition().norm();
   EXPECT_LT(position_error_meters, kTolerancePositionMeters);
