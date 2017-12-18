@@ -125,8 +125,8 @@ class TargetObservationTest : public ::testing::Test {
 // verifies that the pnp problem achieves a reasonable accuracy when estimating
 // the transform of the camera w.r.t. the target origin.
 TEST_F(TargetObservationTest, AprilGridPoseEstimation) {
-  constexpr double kTolerancePositionMeters = 0.02;
-  constexpr double kToleranceRotationRad = 0.01;
+  constexpr double kTolerancePositionMeters = 0.03;
+  constexpr double kToleranceRotationRad = 0.03;
   aslam::Transformation T_G_Cest;
   ASSERT_TRUE(
       aslam::calibration::estimateTargetTransformation(
