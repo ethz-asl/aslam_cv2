@@ -7,8 +7,9 @@ namespace aslam {
 namespace calibration {
 
 bool estimateTargetTransformation(
-    const TargetObservation& target_observation,
+    const TargetObservation::ConstPtr& target_observation,
     const aslam::Camera::ConstPtr& camera_ptr, aslam::Transformation* T_G_C) {
+  CHECK(target_observation);
   CHECK(camera_ptr);
   CHECK_NOTNULL(T_G_C);
   constexpr bool kRunNonlinearRefinement = true;
@@ -20,19 +21,20 @@ bool estimateTargetTransformation(
 }
 
 bool estimateTargetTransformation(
-    const TargetObservation& target_observation,
+    const TargetObservation::ConstPtr& target_observation,
     const aslam::Camera::ConstPtr& camera_ptr, aslam::Transformation* T_G_C,
     const bool run_nonlinear_refinement, const double ransac_pixel_sigma,
     const int ransac_max_iters) {
+  CHECK(target_observation);
   CHECK(camera_ptr);
   CHECK_GT(ransac_pixel_sigma, 0.0);
   CHECK_GT(ransac_max_iters, 0);
   CHECK_NOTNULL(T_G_C);
   const Eigen::Matrix2Xd& observed_corners =
-      target_observation.getObservedCorners();
+      target_observation->getObservedCorners();
   // Corner positions in target coordinates (global frame).
   const Eigen::Matrix3Xd corner_positions_G =
-      target_observation.getCorrespondingTargetPoints();
+      target_observation->getCorrespondingTargetPoints();
   aslam::geometric_vision::PnpPoseEstimator pnp(run_nonlinear_refinement);
   std::vector<int> inliers;
   int num_iters = 0;
