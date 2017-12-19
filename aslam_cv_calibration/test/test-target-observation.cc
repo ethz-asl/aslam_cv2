@@ -137,10 +137,10 @@ TEST_F(TargetObservationTest, AprilGridPoseEstimation) {
   VLOG(1) << "Position error of target pose estimation in meters: "
           << position_error_meters;
   const aslam::AngleAxis angle_axis(T_C_Cest.getRotation());
-  double angle_error_rad = angle_axis.angle();
+  const double angle_error_rad = angle_axis.angle();
   EXPECT_LT(angle_error_rad, kToleranceRotationRad);
   VLOG(1) << "Angle error of target pose estimation in radians: "
-          << angle_axis.angle();
+          << angle_error_rad;
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
