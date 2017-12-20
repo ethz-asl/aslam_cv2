@@ -47,8 +47,9 @@ VisualNPipeline::VisualNPipeline(
 }
 
 VisualNPipeline::~VisualNPipeline() {
-  CHECK(shutdown_) << "The pipeline needs to be shutdown properly by calling "
-      << "shutdown() prior to executing its destructor.";
+  LOG_IF(WARNING, !shutdown_)
+      << "This pipeline has not been shut down properly. Call "
+      << "shutdown() before destructing this object.";
 }
 
 void VisualNPipeline::shutdown() {
