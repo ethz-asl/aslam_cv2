@@ -93,19 +93,19 @@ class TargetObservationTest : public ::testing::Test {
 
   void corruptWithGaussianNoise(
       const Eigen::Matrix2Xd& image_points,
-      Eigen::Matrix2Xd* image_points_corruped) {
+      Eigen::Matrix2Xd* image_points_corrupted) {
     const size_t num_rows = image_points.rows();
     CHECK_EQ(num_rows, 2u);
     const size_t num_cols = image_points.cols();
-    *CHECK_NOTNULL(image_points_corruped) = image_points;
+    *CHECK_NOTNULL(image_points_corrupted) = image_points;
     std::random_device random_device{};
     std::mt19937 random_generator{random_device()};
     constexpr double kStandardDeviationPixels = 0.5;
     std::normal_distribution<> normal_distribution{0.0,
                                                    kStandardDeviationPixels};
-    for (size_t col_index = 0u; col_index < num_cols; ++col_index) {
-      for (size_t row_index = 0u; row_index < num_rows; ++row_index) {
-        (*image_points_corruped)(col_index, row_index) +=
+    for (size_t row_index = 0u; row_index < num_rows; ++row_index) {
+      for (size_t col_index = 0u; col_index < num_cols; ++col_index) {
+        (*image_points_corrupted)(row_index, col_index) +=
             normal_distribution(random_generator);
       }
     }
@@ -125,16 +125,22 @@ class TargetObservationTest : public ::testing::Test {
 // verifies that the pnp problem achieves a reasonable accuracy when estimating
 // the transform of the camera w.r.t. the target origin.
 TEST_F(TargetObservationTest, AprilGridPoseEstimation) {
-  constexpr double kTolerancePositionMeters = 0.01;
-  constexpr double kToleranceRotationDeg = 0.01;
+  constexpr double kTolerancePositionMeters = 0.03;
+  constexpr double kToleranceRotationRad = 0.03;
   aslam::Transformation T_G_Cest;
   ASSERT_TRUE(
       aslam::calibration::estimateTargetTransformation(
           *april_grid_observation, camera, &T_G_Cest));
   const aslam::Transformation T_C_Cest = T_G_C.inverse() * T_G_Cest;
-  EXPECT_LT(T_C_Cest.getPosition().norm(), kTolerancePositionMeters);
+  const double position_error_meters = T_C_Cest.getPosition().norm();
+  EXPECT_LT(position_error_meters, kTolerancePositionMeters);
+  VLOG(1) << "Position error of target pose estimation in meters: "
+          << position_error_meters;
   const aslam::AngleAxis angle_axis(T_C_Cest.getRotation());
-  EXPECT_LT(angle_axis.angle(), kToleranceRotationDeg);
+  const double angle_error_rad = angle_axis.angle();
+  EXPECT_LT(angle_error_rad, kToleranceRotationRad);
+  VLOG(1) << "Angle error of target pose estimation in radians: "
+          << angle_error_rad;
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
