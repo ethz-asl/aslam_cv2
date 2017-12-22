@@ -1,10 +1,6 @@
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/detect_simd.cmake)
+
 add_definitions(-std=c++11)
-execute_process(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCH)
-if (ARCH MATCHES "^(arm)")
-  add_definitions(-mfpu=neon)
-else()
-  add_definitions(-mssse3)
-endif()
 
 set(ENABLE_TIMING FALSE CACHE BOOL "Set to TRUE to enable timing")
 message(STATUS "Timers enabled? ${ENABLE_TIMING}")
