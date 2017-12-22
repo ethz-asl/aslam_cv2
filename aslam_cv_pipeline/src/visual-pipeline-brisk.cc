@@ -43,7 +43,7 @@ void BriskVisualPipeline::initializeBrisk(size_t octaves,
   max_number_of_keypoints_ = max_number_of_keypoints;
   rotation_invariant_ = rotation_invariant;
   scale_invariant_ = scale_invariant;
-#if __arm__
+#if __ARM_NEON
   // \TODO(slynen): Currently no Harris on ARM. Adapt if we port it to ARM.
   static const int kAstThreshold = 70;
   detector_.reset(new brisk::BriskFeatureDetector(kAstThreshold));
@@ -52,7 +52,7 @@ void BriskVisualPipeline::initializeBrisk(size_t octaves,
       new brisk::ScaleSpaceFeatureDetector<brisk::HarrisScoreCalculator>(
           octaves_, uniformity_radius_, absolute_threshold_, max_number_of_keypoints_)
   );
-#endif
+#endif  // __ARM_NEON
   extractor_.reset(new brisk::BriskDescriptorExtractor(rotation_invariant_,
                                                        scale_invariant_));
 }

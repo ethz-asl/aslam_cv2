@@ -41,9 +41,9 @@
 #ifndef ASLAM_COMMON_HAMMING_INL_H_
 #define ASLAM_COMMON_HAMMING_INL_H_
 
-#ifdef __ARM_NEON__
+#ifdef __ARM_NEON
 #include <aslam/common/neon-helpers.h>
-#endif  // __ARM_NEON__
+#endif  // __ARM_NEON
 
 namespace aslam {
 namespace common {
@@ -63,7 +63,7 @@ __declspec(align(16)) static const uint8_t POPCOUNT_4bit[16] = {0, 1, 1, 2,
 static const __m128i shiftval = _mm_set_epi32(0, 0, 0, 4);
 #endif  // _MSC_VER
 
-#ifdef __ARM_NEON__
+#ifdef __ARM_NEON
 __inline__ uint32_t Hamming::NEONPopcntofXORed(const uint8x16_t* signature1,
                                                const uint8x16_t* signature2,
                                                const int numberOf128BitWords) {
@@ -135,7 +135,7 @@ const int numberOf128BitWords) {
   result = _mm_cvtsi128_si32(xmm0);
   return result;
 }
-#endif  // __ARM_NEON__
+#endif  // __ARM_NEON
 
 }  // namespace common
 }  // namespace aslam

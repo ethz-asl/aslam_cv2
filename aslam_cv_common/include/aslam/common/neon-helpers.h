@@ -37,7 +37,7 @@
 
 #ifndef ASLAM_NEON_HELPERS_H_
 #define ASLAM_NEON_HELPERS_H_
-#ifdef __ARM_NEON__
+#ifdef __ARM_NEON
 #include <arm_neon.h>
 
 namespace brisk {
@@ -58,5 +58,5 @@ inline uint8x16_t shuffle_epi8_neon(const uint8x16_t& lhs,
 }
 }  // namespace brisk
 
-#endif  // __ARM_NEON__
+#endif  // __ARM_NEON
 #endif  // ASLAM_NEON_HELPERS_H_
