@@ -1,4 +1,4 @@
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/detect_simd.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/detect_simd.cmake)
 
 add_definitions(-std=c++11)
 
