@@ -43,9 +43,9 @@ void BriskVisualPipeline::initializeBrisk(size_t octaves,
   max_number_of_keypoints_ = max_number_of_keypoints;
   rotation_invariant_ = rotation_invariant;
   scale_invariant_ = scale_invariant;
-#if __ARM_NEON
+#ifdef __ARM_NEON
   // \TODO(slynen): Currently no Harris on ARM. Adapt if we port it to ARM.
-  static const int kAstThreshold = 70;
+  static constexpr int kAstThreshold = 70;
   detector_.reset(new brisk::BriskFeatureDetector(kAstThreshold));
 #else
   detector_.reset(
