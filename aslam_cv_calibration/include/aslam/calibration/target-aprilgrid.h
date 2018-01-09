@@ -2,8 +2,8 @@
 #define ASLAM_CALIBRATION_TARGET_APRILGRID_H
 
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include <apriltags/TagDetector.h>
 #include <apriltags/Tag36h11.h>
