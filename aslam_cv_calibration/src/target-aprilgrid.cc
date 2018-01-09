@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 
+#include <aslam/common/yaml-serialization.h>
 #include <apriltags/TagDetector.h>
 #include <apriltags/Tag36h11.h>
 #include <Eigen/Core>
@@ -15,6 +16,32 @@
 
 namespace aslam {
 namespace calibration {
+
+TargetAprilGrid::TargetConfiguration
+TargetAprilGrid::TargetConfiguration::fromYaml(const std::string& yaml_file) {
+  TargetConfiguration target_config;
+  try {
+    YAML::Node yaml_node = YAML::LoadFile(yaml_file.c_str());
+    std::string target_type;
+    YAML::safeGet(yaml_node, "target_type", &target_type);
+    CHECK_EQ(target_type, "aprilgrid");
+    YAML::safeGet(yaml_node, "tagCols", &target_config.num_tag_cols);
+    CHECK_GT(target_config.num_tag_cols, 0u);
+    YAML::safeGet(yaml_node, "tagRows", &target_config.num_tag_rows);
+    CHECK_GT(target_config.num_tag_rows, 0u);
+    YAML::safeGet(yaml_node, "tagSize", &target_config.tag_size_meter);
+    CHECK_GT(target_config.tag_size_meter, 0.0);
+    double relative_tag_spacing;
+    YAML::safeGet(yaml_node, "tagSpacing", &relative_tag_spacing);
+    target_config.tag_inbetween_space_meter =
+        relative_tag_spacing * target_config.tag_size_meter;
+    CHECK_GT(target_config.tag_inbetween_space_meter, 0.0);
+  } catch (const std::exception& ex) {
+    LOG(FATAL) << "Failed to load yaml file " << yaml_file
+               << " with the error: \n " << ex.what() << ".";
+  }
+  return target_config;
+}
 
 TargetAprilGrid::TargetAprilGrid(const TargetAprilGrid::TargetConfiguration& target_config)
     : TargetBase(2u * target_config.num_tag_rows,
