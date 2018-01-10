@@ -2,6 +2,7 @@
 #define ASLAM_CALIBRATION_TARGET_APRILGRID_H
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <apriltags/TagDetector.h>
@@ -52,6 +53,8 @@ class TargetAprilGrid : public TargetBase {
     double tag_inbetween_space_meter;
     /// Size of black border around the tags [bits].
     size_t black_tag_border_bits;
+
+    static TargetConfiguration fromYaml(const std::string& yaml_file);
   };
 
   TargetAprilGrid(const TargetConfiguration& target_config);
