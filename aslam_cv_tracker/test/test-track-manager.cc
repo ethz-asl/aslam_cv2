@@ -150,10 +150,10 @@ TEST(TrackManagerTests, TestApplyMatchesUniformly) {
 
   for (size_t idx = 1; idx <= half_num_keypoints; ++idx) {
     double x = image_width -
-        (image_width /
-            static_cast<double>(half_num_keypoints) * static_cast<double>(idx));
-    double y = image_height /
-        static_cast<double>(half_num_keypoints + 1) * static_cast<double>(idx);
+               (image_width / static_cast<double>(half_num_keypoints + 1) *
+                static_cast<double>(idx));
+    double y = image_height / static_cast<double>(half_num_keypoints + 1) *
+               static_cast<double>(idx);
     CHECK_GE(x, 0.0); CHECK_LE(x, image_width);
     CHECK_GE(y, 0.0); CHECK_LT(y, image_height);
 
