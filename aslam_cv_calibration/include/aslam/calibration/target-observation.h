@@ -69,7 +69,7 @@ class TargetObservation {
   }
 
   Eigen::Vector2d getObservedCorner(size_t idx) const {
-    CHECK_LT(idx, image_corners_.cols());
+    CHECK_LT(idx, static_cast<size_t>(image_corners_.cols()));
     return image_corners_.col(idx);
   }
 
