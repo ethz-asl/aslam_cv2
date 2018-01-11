@@ -50,11 +50,6 @@ class VisualNPipelineTest : public ::testing::Test {
                    CV_8UC1, uint8_t(camera_index));
   }
 
-  void TearDown() override {
-    pipeline_->shutdown();
-    pipeline_->waitForAllWorkToComplete();
-  }
-
   NCamera::Ptr camera_rig_;
   VisualNPipeline::Ptr pipeline_;
 };

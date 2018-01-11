@@ -47,9 +47,8 @@ VisualNPipeline::VisualNPipeline(
 }
 
 VisualNPipeline::~VisualNPipeline() {
-  CHECK(shutdown_)
-      << "This pipeline has not been shut down properly. Call "
-      << "shutdown() before destructing this object.";
+  shutdown();
+  waitForAllWorkToComplete();
 }
 
 void VisualNPipeline::shutdown() {
@@ -267,7 +266,8 @@ void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
     VisualFrame::Ptr existing_frame = proc_it->second->getFrameShared(
         camera_index);
     if (existing_frame) {
-      LOG(ERROR) << "Overwriting a frame at index " << camera_index << ":" << std::endl
+      LOG(ERROR) << "Overwriting a frame at index " << camera_index;
+      << ":" << std::endl
           << *existing_frame << std::endl << "with a new frame: "
           << *frame << std::endl << "because the timestamp was the same.";
     }
