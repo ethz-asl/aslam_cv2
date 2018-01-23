@@ -101,7 +101,7 @@ class GyroTwoFrameMatcher {
 
   void getKeypointIteratorsInWindow(
       const Eigen::Vector2d& predicted_keypoint_position,
-      const int WindowHalfSideLength,
+      const int window_half_side_length,
       KeyPointIterator* it_keypoints_begin,
       KeyPointIterator* it_keypoints_end) const;
 
@@ -185,17 +185,17 @@ class GyroTwoFrameMatcher {
   // Two descriptors could match if they pass the Lowe ratio test.
   static constexpr float kLoweRatio = 0.8f;
   // Small image space distances for keypoint matches.
-  const int kSmallSearchDistance;
+  const int small_search_distance_px_;
   // Large image space distances for keypoint matches.
   // Only used if small search was unsuccessful.
-  const int kLargeSearchDistance;
+  const int large_search_distance_px_;
   // Number of iterations to match inferior matches.
   static constexpr size_t kMaxNumInferiorIterations = 3u;
 };
 
 void GyroTwoFrameMatcher::getKeypointIteratorsInWindow(
     const Eigen::Vector2d& predicted_keypoint_position,
-    const int WindowHalfSideLength,
+    const int window_half_side_length,
     KeyPointIterator* it_keypoints_begin,
     KeyPointIterator* it_keypoints_end) const {
   CHECK_NOTNULL(it_keypoints_begin);
@@ -203,9 +203,9 @@ void GyroTwoFrameMatcher::getKeypointIteratorsInWindow(
 
   // Compute search area for LUT iterators row-wise.
   int LUT_index_top = clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position(1) + 0.5 - WindowHalfSideLength));
+      predicted_keypoint_position(1) + 0.5 - window_half_side_length));
   int LUT_index_bottom = clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position(1) + 0.5 + WindowHalfSideLength));
+      predicted_keypoint_position(1) + 0.5 + window_half_side_length));
 
   *it_keypoints_begin = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_top];
   *it_keypoints_end = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_bottom];

@@ -29,8 +29,8 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
     matches_kp1_k_(matches_with_score_kp1_k),
     is_keypoint_kp1_matched_(kNumPointsKp1, false),
     iteration_processed_keypoints_kp1_(kNumPointsKp1, false),
-    kSmallSearchDistance(FLAGS_gyro_matcher_small_search_distance_px), 
-    kLargeSearchDistance(FLAGS_gyro_matcher_large_search_distance_px) {
+    small_search_distance_px_(FLAGS_gyro_matcher_small_search_distance_px), 
+    large_search_distance_px_(FLAGS_gyro_matcher_large_search_distance_px) {
   CHECK(frame_kp1.isValid());
   CHECK(frame_k.isValid());
   CHECK(frame_kp1.hasDescriptors());
@@ -144,12 +144,12 @@ void GyroTwoFrameMatcher::matchKeypoint(const int idx_k) {
       predicted_keypoint_positions_kp1_.block<2, 1>(0, idx_k);
   KeyPointIterator nearest_corners_begin, nearest_corners_end;
   getKeypointIteratorsInWindow(
-      predicted_keypoint_position_kp1, kSmallSearchDistance, &nearest_corners_begin, &nearest_corners_end);
+      predicted_keypoint_position_kp1, small_search_distance_px_, &nearest_corners_begin, &nearest_corners_end);
 
   const int bound_left_nearest =
-      predicted_keypoint_position_kp1(0) - kSmallSearchDistance;
+      predicted_keypoint_position_kp1(0) - small_search_distance_px_;
   const int bound_right_nearest =
-      predicted_keypoint_position_kp1(0) + kSmallSearchDistance;
+      predicted_keypoint_position_kp1(0) + small_search_distance_px_;
 
   MatchData current_match_data;
 
@@ -187,13 +187,13 @@ void GyroTwoFrameMatcher::matchKeypoint(const int idx_k) {
   // If no match in small window, increase window and search again.
   if (!found) {
     const int bound_left_near =
-        predicted_keypoint_position_kp1(0) - kLargeSearchDistance;
+        predicted_keypoint_position_kp1(0) - large_search_distance_px_;
     const int bound_right_near =
-        predicted_keypoint_position_kp1(0) + kLargeSearchDistance;
+        predicted_keypoint_position_kp1(0) + large_search_distance_px_;
 
     KeyPointIterator near_corners_begin, near_corners_end;
     getKeypointIteratorsInWindow(
-        predicted_keypoint_position_kp1, kLargeSearchDistance, &near_corners_begin, &near_corners_end);
+        predicted_keypoint_position_kp1, large_search_distance_px_, &near_corners_begin, &near_corners_end);
 
     for (KeyPointIterator it = near_corners_begin; it != near_corners_end; ++it) {
       if (iteration_processed_keypoints_kp1_[it->channel_index]) {
