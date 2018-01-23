@@ -3,8 +3,11 @@
 #include <aslam/common/statistics/statistics.h>
 #include <gflags/gflags.h>
 
-DEFINE_int(gyro_matcher_small_search_distance_px, 10, "Small image space distances for keypoint matches.");
-DEFINE_int(gyro_matcher_large_search_distance_px, 20, "Large image space distances for keypoint matches. Only used if small search was unsuccessful.");
+DEFINE_int(gyro_matcher_small_search_distance_px, 10, 
+    "Small image space distances for keypoint matches.");
+DEFINE_int(gyro_matcher_large_search_distance_px, 20, 
+    "Large image space distances for keypoint matches."
+    " Only used if small search was unsuccessful.");
 
 namespace aslam {
 
