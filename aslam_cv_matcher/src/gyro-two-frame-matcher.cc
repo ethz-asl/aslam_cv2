@@ -1,11 +1,11 @@
 #include "aslam/matcher/gyro-two-frame-matcher.h"
 
 #include <aslam/common/statistics/statistics.h>
-#include <gflags/gflags.h>
+#include <glog/logging.h>
 
-DEFINE_int(gyro_matcher_small_search_distance_px, 10, 
+DEFINE_int32(gyro_matcher_small_search_distance_px, 10, 
     "Small image space distances for keypoint matches.");
-DEFINE_int(gyro_matcher_large_search_distance_px, 20, 
+DEFINE_int32(gyro_matcher_large_search_distance_px, 20, 
     "Large image space distances for keypoint matches."
     " Only used if small search was unsuccessful.");
 
@@ -29,8 +29,8 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
     matches_kp1_k_(matches_with_score_kp1_k),
     is_keypoint_kp1_matched_(kNumPointsKp1, false),
     iteration_processed_keypoints_kp1_(kNumPointsKp1, false),
-    kSmallSearchDistance_(FLAGS_gyro_small_search_distance_px), 
-    kLargeSearchDistance_(FLAGS_gyro_large_search_distance_px) {
+    kSmallSearchDistance(FLAGS_gyro_matcher_small_search_distance_px), 
+    kLargeSearchDistance(FLAGS_gyro_matcher_large_search_distance_px) {
   CHECK(frame_kp1.isValid());
   CHECK(frame_k.isValid());
   CHECK(frame_kp1.hasDescriptors());
@@ -143,8 +143,8 @@ void GyroTwoFrameMatcher::matchKeypoint(const int idx_k) {
   Eigen::Vector2d predicted_keypoint_position_kp1 =
       predicted_keypoint_positions_kp1_.block<2, 1>(0, idx_k);
   KeyPointIterator nearest_corners_begin, nearest_corners_end;
-  getKeypointIteratorsInWindow<kSmallSearchDistance>(
-      predicted_keypoint_position_kp1, &nearest_corners_begin, &nearest_corners_end);
+  getKeypointIteratorsInWindow(
+      predicted_keypoint_position_kp1, kSmallSearchDistance, &nearest_corners_begin, &nearest_corners_end);
 
   const int bound_left_nearest =
       predicted_keypoint_position_kp1(0) - kSmallSearchDistance;
@@ -192,8 +192,8 @@ void GyroTwoFrameMatcher::matchKeypoint(const int idx_k) {
         predicted_keypoint_position_kp1(0) + kLargeSearchDistance;
 
     KeyPointIterator near_corners_begin, near_corners_end;
-    getKeypointIteratorsInWindow<kLargeSearchDistance>(
-        predicted_keypoint_position_kp1, &near_corners_begin, &near_corners_end);
+    getKeypointIteratorsInWindow(
+        predicted_keypoint_position_kp1, kLargeSearchDistance, &near_corners_begin, &near_corners_end);
 
     for (KeyPointIterator it = near_corners_begin; it != near_corners_end; ++it) {
       if (iteration_processed_keypoints_kp1_[it->channel_index]) {

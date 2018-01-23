@@ -99,9 +99,9 @@ class GyroTwoFrameMatcher {
   /// already existing match.
   void matchKeypoint(const int idx_k);
 
-  template <int WindowHalfSideLength>
   void getKeypointIteratorsInWindow(
       const Eigen::Vector2d& predicted_keypoint_position,
+      const int WindowHalfSideLength,
       KeyPointIterator* it_keypoints_begin,
       KeyPointIterator* it_keypoints_end) const;
 
@@ -185,17 +185,17 @@ class GyroTwoFrameMatcher {
   // Two descriptors could match if they pass the Lowe ratio test.
   static constexpr float kLoweRatio = 0.8f;
   // Small image space distances for keypoint matches.
-  int kSmallSearchDistance;
+  const int kSmallSearchDistance;
   // Large image space distances for keypoint matches.
   // Only used if small search was unsuccessful.
-  int kLargeSearchDistance;
+  const int kLargeSearchDistance;
   // Number of iterations to match inferior matches.
   static constexpr size_t kMaxNumInferiorIterations = 3u;
 };
 
-template <int WindowHalfSideLength>
 void GyroTwoFrameMatcher::getKeypointIteratorsInWindow(
     const Eigen::Vector2d& predicted_keypoint_position,
+    const int WindowHalfSideLength,
     KeyPointIterator* it_keypoints_begin,
     KeyPointIterator* it_keypoints_end) const {
   CHECK_NOTNULL(it_keypoints_begin);
