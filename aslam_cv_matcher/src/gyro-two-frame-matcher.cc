@@ -1,6 +1,10 @@
 #include "aslam/matcher/gyro-two-frame-matcher.h"
 
 #include <aslam/common/statistics/statistics.h>
+#include <gflags/gflags.h>
+
+DEFINE_int(gyro_matcher_small_search_distance_px, 10, "Small image space distances for keypoint matches.");
+DEFINE_int(gyro_matcher_large_search_distance_px, 20, "Large image space distances for keypoint matches. Only used if small search was unsuccessful.");
 
 namespace aslam {
 
@@ -21,7 +25,9 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
     kImageHeight(image_height),
     matches_kp1_k_(matches_with_score_kp1_k),
     is_keypoint_kp1_matched_(kNumPointsKp1, false),
-    iteration_processed_keypoints_kp1_(kNumPointsKp1, false) {
+    iteration_processed_keypoints_kp1_(kNumPointsKp1, false),
+    kSmallSearchDistance_(FLAGS_gyro_small_search_distance_px), 
+    kLargeSearchDistance_(FLAGS_gyro_large_search_distance_px) {
   CHECK(frame_kp1.isValid());
   CHECK(frame_k.isValid());
   CHECK(frame_kp1.hasDescriptors());

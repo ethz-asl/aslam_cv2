@@ -185,10 +185,10 @@ class GyroTwoFrameMatcher {
   // Two descriptors could match if they pass the Lowe ratio test.
   static constexpr float kLoweRatio = 0.8f;
   // Small image space distances for keypoint matches.
-  static constexpr int kSmallSearchDistance = 10;
+  int kSmallSearchDistance;
   // Large image space distances for keypoint matches.
   // Only used if small search was unsuccessful.
-  static constexpr int kLargeSearchDistance = 20;
+  int kLargeSearchDistance;
   // Number of iterations to match inferior matches.
   static constexpr size_t kMaxNumInferiorIterations = 3u;
 };
