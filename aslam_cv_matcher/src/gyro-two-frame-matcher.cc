@@ -4,9 +4,9 @@
 #include <glog/logging.h>
 
 DEFINE_int32(gyro_matcher_small_search_distance_px, 10, 
-    "Small image space distances for keypoint matches.");
+    "Small search rectangle size for keypoint matches.");
 DEFINE_int32(gyro_matcher_large_search_distance_px, 20, 
-    "Large image space distances for keypoint matches."
+    "Large search rectangle size for keypoint matches."
     " Only used if small search was unsuccessful.");
 
 namespace aslam {
@@ -50,6 +50,9 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
   CHECK_EQ(iteration_processed_keypoints_kp1_.size(), kNumPointsKp1);
   CHECK_EQ(is_keypoint_kp1_matched_.size(), kNumPointsKp1);
   CHECK_EQ(prediction_success_.size(), predicted_keypoint_positions_kp1_.cols());
+  CHECK_GT(small_search_distance_px_, 0);
+  CHECK_GT(large_search_distance_px_, 0);
+  CHECK_GE(large_search_distance_px_, small_search_distance_px_);
 
   descriptors_kp1_wrapped_.reserve(kNumPointsKp1);
   keypoints_kp1_sorted_by_y_.reserve(kNumPointsKp1);

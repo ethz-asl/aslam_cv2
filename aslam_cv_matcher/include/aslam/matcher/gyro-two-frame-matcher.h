@@ -101,7 +101,7 @@ class GyroTwoFrameMatcher {
 
   void getKeypointIteratorsInWindow(
       const Eigen::Vector2d& predicted_keypoint_position,
-      const int window_half_side_length,
+      const int window_half_side_length_px,
       KeyPointIterator* it_keypoints_begin,
       KeyPointIterator* it_keypoints_end) const;
 
@@ -195,11 +195,12 @@ class GyroTwoFrameMatcher {
 
 void GyroTwoFrameMatcher::getKeypointIteratorsInWindow(
     const Eigen::Vector2d& predicted_keypoint_position,
-    const int window_half_side_length,
+    const int window_half_side_length_px,
     KeyPointIterator* it_keypoints_begin,
     KeyPointIterator* it_keypoints_end) const {
   CHECK_NOTNULL(it_keypoints_begin);
   CHECK_NOTNULL(it_keypoints_end);
+CHECK_GT(window_half_side_length_px, 0);
 
   // Compute search area for LUT iterators row-wise.
   int LUT_index_top = clamp(0, kImageHeight - 1, static_cast<int>(
