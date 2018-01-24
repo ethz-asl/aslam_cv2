@@ -204,9 +204,9 @@ CHECK_GT(window_half_side_length_px, 0);
 
   // Compute search area for LUT iterators row-wise.
   int LUT_index_top = clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position(1) + 0.5 - window_half_side_length));
+      predicted_keypoint_position(1) + 0.5 - window_half_side_length_px));
   int LUT_index_bottom = clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position(1) + 0.5 + window_half_side_length));
+      predicted_keypoint_position(1) + 0.5 + window_half_side_length_px));
 
   *it_keypoints_begin = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_top];
   *it_keypoints_end = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_bottom];
