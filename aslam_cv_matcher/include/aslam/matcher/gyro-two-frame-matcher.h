@@ -99,9 +99,9 @@ class GyroTwoFrameMatcher {
   /// already existing match.
   void matchKeypoint(const int idx_k);
 
-  template <int WindowHalfSideLength>
   void getKeypointIteratorsInWindow(
       const Eigen::Vector2d& predicted_keypoint_position,
+      const int window_half_side_length_px,
       KeyPointIterator* it_keypoints_begin,
       KeyPointIterator* it_keypoints_end) const;
 
@@ -185,27 +185,28 @@ class GyroTwoFrameMatcher {
   // Two descriptors could match if they pass the Lowe ratio test.
   static constexpr float kLoweRatio = 0.8f;
   // Small image space distances for keypoint matches.
-  static constexpr int kSmallSearchDistance = 10;
+  const int small_search_distance_px_;
   // Large image space distances for keypoint matches.
   // Only used if small search was unsuccessful.
-  static constexpr int kLargeSearchDistance = 20;
+  const int large_search_distance_px_;
   // Number of iterations to match inferior matches.
   static constexpr size_t kMaxNumInferiorIterations = 3u;
 };
 
-template <int WindowHalfSideLength>
 void GyroTwoFrameMatcher::getKeypointIteratorsInWindow(
     const Eigen::Vector2d& predicted_keypoint_position,
+    const int window_half_side_length_px,
     KeyPointIterator* it_keypoints_begin,
     KeyPointIterator* it_keypoints_end) const {
   CHECK_NOTNULL(it_keypoints_begin);
   CHECK_NOTNULL(it_keypoints_end);
+CHECK_GT(window_half_side_length_px, 0);
 
   // Compute search area for LUT iterators row-wise.
   int LUT_index_top = clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position(1) + 0.5 - WindowHalfSideLength));
+      predicted_keypoint_position(1) + 0.5 - window_half_side_length_px));
   int LUT_index_bottom = clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position(1) + 0.5 + WindowHalfSideLength));
+      predicted_keypoint_position(1) + 0.5 + window_half_side_length_px));
 
   *it_keypoints_begin = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_top];
   *it_keypoints_end = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_bottom];
