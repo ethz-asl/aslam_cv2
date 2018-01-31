@@ -62,6 +62,7 @@ struct aligned_delete {
     static_assert(sizeof(Type) > 0, "Can't delete pointer to incomplete type!");
     typedef typename std::remove_const<Type>::type TypeNonConst;
     Eigen::aligned_allocator<TypeNonConst> allocator;
+    allocator.destroy(ptr);
     allocator.deallocate(ptr, 1u /*num*/);
   }
 };
@@ -75,8 +76,8 @@ template <typename Type, typename... Arguments>
 inline AlignedUniquePtr<Type> aligned_unique(Arguments&&... arguments) {
   typedef typename std::remove_const<Type>::type TypeNonConst;
   Eigen::aligned_allocator<TypeNonConst> allocator;
-  TypeNonConst* obj = ::new (allocator.allocate(1u))  // NOLINT
-      Type(std::forward<Arguments>(arguments)...);
+  TypeNonConst* obj = allocator.allocate(1u);
+  allocator.construct(obj, std::forward<Arguments>(arguments)...);
   return std::move(AlignedUniquePtr<Type>(obj));
 }
 
