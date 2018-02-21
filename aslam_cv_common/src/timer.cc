@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <math.h>
+#include <fstream>  // NOLINT
 #include <ostream>  //NOLINT
 #include <sstream>
 #include <stdio.h>
@@ -182,6 +183,44 @@ std::string Timing::SecondsToTimeString(double seconds) {
       "%09.6f",
       hours, minutes, secs);
   return buffer;
+}
+
+void Timing::WriteToYamlFile(std::string const& path) {
+  const map_t& tag_map = Instance().tag_map_;
+
+  if (tag_map.empty()) {
+    return;
+  }
+
+  std::ofstream output_file(path);
+
+  if (!output_file) {
+    VLOG(0) << "Could not write timing: Unable to open file: " << path;
+    return;
+  }
+
+  VLOG(0) << "Writing timing to file: " << path;
+  for (const typename map_t::value_type& t : tag_map) {
+    const size_t i = t.second;
+
+    if (GetNumSamples(i) > 0) {
+      std::string label = t.first;
+
+      // We do not want colons or hashes in a label, as they might interfere
+      // with reading the yaml later.
+      std::replace(label.begin(), label.end(), ':', '_');
+      std::replace(label.begin(), label.end(), '#', '_');
+
+      output_file << label << ":" << std::endl;
+      output_file << "  num_samples: " << GetNumSamples(i) << std::endl;
+      output_file << "  total: " << GetTotalSeconds(i) << std::endl;
+      output_file << "  mean: " << GetMeanSeconds(i) << std::endl;
+      output_file << "  std_dev: " << sqrt(GetVarianceSeconds(i)) << std::endl;
+      output_file << "  min: " << GetMinSeconds(i) << std::endl;
+      output_file << "  max: " << GetMaxSeconds(i) << std::endl;
+    }
+    output_file << std::endl;
+  }
 }
 
 void Timing::Print(std::ostream& out) {  // NOLINT
