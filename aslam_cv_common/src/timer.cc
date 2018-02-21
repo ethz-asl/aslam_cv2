@@ -201,9 +201,9 @@ void Timing::WriteToYamlFile(const std::string& path) {
 
   VLOG(1) << "Writing timing to file: " << path;
   for (const map_t::value_type& tag : tag_map) {
-    const size_t i = tag.second;
+    const size_t index = tag.second;
 
-    if (GetNumSamples(i) > 0) {
+    if (GetNumSamples(index) > 0) {
       std::string label = tag.first;
 
       // We do not want colons or hashes in a label, as they might interfere
@@ -212,12 +212,12 @@ void Timing::WriteToYamlFile(const std::string& path) {
       std::replace(label.begin(), label.end(), '#', '_');
 
       output_file << label << ":" << "\n";
-      output_file << "  num_samples: " << GetNumSamples(i) << "\n";
-      output_file << "  total: " << GetTotalSeconds(i) << "\n";
-      output_file << "  mean: " << GetMeanSeconds(i) << "\n";
-      output_file << "  std_dev: " << sqrt(GetVarianceSeconds(i)) << "\n";
-      output_file << "  min: " << GetMinSeconds(i) << "\n";
-      output_file << "  max: " << GetMaxSeconds(i) << "\n";
+      output_file << "  num_samples: " << GetNumSamples(index) << "\n";
+      output_file << "  total: " << GetTotalSeconds(index) << "\n";
+      output_file << "  mean: " << GetMeanSeconds(index) << "\n";
+      output_file << "  std_dev: " << sqrt(GetVarianceSeconds(index)) << "\n";
+      output_file << "  min: " << GetMinSeconds(index) << "\n";
+      output_file << "  max: " << GetMaxSeconds(index) << "\n";
     }
     output_file << "\n";
   }

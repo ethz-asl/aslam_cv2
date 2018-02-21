@@ -254,9 +254,9 @@ void Statistics::WriteToYamlFile(const std::string& path) {
 
   VLOG(1) << "Writing statistics to file: " << path;
   for (const map_t::value_type& tag : tag_map) {
-    const size_t i = tag.second;
+    const size_t index = tag.second;
 
-    if (GetNumSamples(i) > 0) {
+    if (GetNumSamples(index) > 0) {
       std::string label = tag.first;
 
       // We do not want colons or hashes in a label, as they might interfere
@@ -265,11 +265,11 @@ void Statistics::WriteToYamlFile(const std::string& path) {
       std::replace(label.begin(), label.end(), '#', '_');
 
       output_file << label << ":" << "\n";
-      output_file << "  samples: " << GetNumSamples(i) << "\n";
-      output_file << "  mean: " << GetMean(i) << "\n";
-      output_file << "  stddev: " << sqrt(GetVariance(i)) << "\n";
-      output_file << "  min: " << GetMin(i) << "\n";
-      output_file << "  max: " << GetMax(i) << "\n";
+      output_file << "  samples: " << GetNumSamples(index) << "\n";
+      output_file << "  mean: " << GetMean(index) << "\n";
+      output_file << "  stddev: " << sqrt(GetVariance(index)) << "\n";
+      output_file << "  min: " << GetMin(index) << "\n";
+      output_file << "  max: " << GetMax(index) << "\n";
     }
     output_file << "\n";
   }
