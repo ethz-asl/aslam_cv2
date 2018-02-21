@@ -1,6 +1,7 @@
 #include "aslam/common/timer.h"
 
 #include <algorithm>
+#include <fstream>  // NOLINT
 #include <math.h>
 #include <ostream>  //NOLINT
 #include <sstream>
@@ -182,6 +183,44 @@ std::string Timing::SecondsToTimeString(double seconds) {
       "%09.6f",
       hours, minutes, secs);
   return buffer;
+}
+
+void Timing::WriteToYamlFile(const std::string& path) {
+  const map_t& tag_map = Instance().tag_map_;
+
+  if (tag_map.empty()) {
+    return;
+  }
+
+  std::ofstream output_file(path);
+
+  if (!output_file) {
+    LOG(ERROR) << "Could not write timing: Unable to open file: " << path;
+    return;
+  }
+
+  VLOG(1) << "Writing timing to file: " << path;
+  for (const map_t::value_type& tag : tag_map) {
+    const size_t index = tag.second;
+
+    if (GetNumSamples(index) > 0) {
+      std::string label = tag.first;
+
+      // We do not want colons or hashes in a label, as they might interfere
+      // with reading the yaml later.
+      std::replace(label.begin(), label.end(), ':', '_');
+      std::replace(label.begin(), label.end(), '#', '_');
+
+      output_file << label << ":" << "\n";
+      output_file << "  num_samples: " << GetNumSamples(index) << "\n";
+      output_file << "  total: " << GetTotalSeconds(index) << "\n";
+      output_file << "  mean: " << GetMeanSeconds(index) << "\n";
+      output_file << "  std_dev: " << sqrt(GetVarianceSeconds(index)) << "\n";
+      output_file << "  min: " << GetMinSeconds(index) << "\n";
+      output_file << "  max: " << GetMaxSeconds(index) << "\n";
+    }
+    output_file << "\n";
+  }
 }
 
 void Timing::Print(std::ostream& out) {  // NOLINT
