@@ -1,8 +1,8 @@
 #include "aslam/common/timer.h"
 
 #include <algorithm>
-#include <math.h>
 #include <fstream>  // NOLINT
+#include <math.h>
 #include <ostream>  //NOLINT
 #include <sstream>
 #include <stdio.h>
@@ -185,7 +185,7 @@ std::string Timing::SecondsToTimeString(double seconds) {
   return buffer;
 }
 
-void Timing::WriteToYamlFile(std::string const& path) {
+void Timing::WriteToYamlFile(const std::string& path) {
   const map_t& tag_map = Instance().tag_map_;
 
   if (tag_map.empty()) {
@@ -195,31 +195,31 @@ void Timing::WriteToYamlFile(std::string const& path) {
   std::ofstream output_file(path);
 
   if (!output_file) {
-    VLOG(0) << "Could not write timing: Unable to open file: " << path;
+    LOG(ERROR) << "Could not write timing: Unable to open file: " << path;
     return;
   }
 
-  VLOG(0) << "Writing timing to file: " << path;
-  for (const typename map_t::value_type& t : tag_map) {
-    const size_t i = t.second;
+  VLOG(1) << "Writing timing to file: " << path;
+  for (const map_t::value_type& tag : tag_map) {
+    const size_t i = tag.second;
 
     if (GetNumSamples(i) > 0) {
-      std::string label = t.first;
+      std::string label = tag.first;
 
       // We do not want colons or hashes in a label, as they might interfere
       // with reading the yaml later.
       std::replace(label.begin(), label.end(), ':', '_');
       std::replace(label.begin(), label.end(), '#', '_');
 
-      output_file << label << ":" << std::endl;
-      output_file << "  num_samples: " << GetNumSamples(i) << std::endl;
-      output_file << "  total: " << GetTotalSeconds(i) << std::endl;
-      output_file << "  mean: " << GetMeanSeconds(i) << std::endl;
-      output_file << "  std_dev: " << sqrt(GetVarianceSeconds(i)) << std::endl;
-      output_file << "  min: " << GetMinSeconds(i) << std::endl;
-      output_file << "  max: " << GetMaxSeconds(i) << std::endl;
+      output_file << label << ":" << "\n";
+      output_file << "  num_samples: " << GetNumSamples(i) << "\n";
+      output_file << "  total: " << GetTotalSeconds(i) << "\n";
+      output_file << "  mean: " << GetMeanSeconds(i) << "\n";
+      output_file << "  std_dev: " << sqrt(GetVarianceSeconds(i)) << "\n";
+      output_file << "  min: " << GetMinSeconds(i) << "\n";
+      output_file << "  max: " << GetMaxSeconds(i) << "\n";
     }
-    output_file << std::endl;
+    output_file << "\n";
   }
 }
 

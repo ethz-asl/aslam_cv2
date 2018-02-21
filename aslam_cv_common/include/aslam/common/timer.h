@@ -109,7 +109,7 @@ class Timing {
   static double GetMaxSeconds(const std::string& tag);
   static double GetHz(size_t handle);
   static double GetHz(const std::string& tag);
-  static void WriteToYamlFile(std::string const& path);
+  static void WriteToYamlFile(const std::string& path);
   static void Print(std::ostream& out);  // NOLINT
   static std::string Print();
   static std::string SecondsToTimeString(double seconds);

@@ -238,7 +238,7 @@ void Statistics::Print(std::ostream& out) {  // NOLINT
   }
 }
 
-void Statistics::WriteToYamlFile(std::string const& path) {
+void Statistics::WriteToYamlFile(const std::string& path) {
   const map_t& tag_map = Instance().tag_map_;
 
   if (tag_map.empty()) {
@@ -248,30 +248,30 @@ void Statistics::WriteToYamlFile(std::string const& path) {
   std::ofstream output_file(path);
 
   if (!output_file) {
-    VLOG(0) << "Could not write statistics: Unable to open file: " << path;
+    LOG(ERROR) << "Could not write statistics: Unable to open file: " << path;
     return;
   }
 
-  VLOG(0) << "Writing statistics to file: " << path;
-  for (const typename map_t::value_type& t : tag_map) {
-    const size_t i = t.second;
+  VLOG(1) << "Writing statistics to file: " << path;
+  for (const map_t::value_type& tag : tag_map) {
+    const size_t i = tag.second;
 
     if (GetNumSamples(i) > 0) {
-      std::string label = t.first;
+      std::string label = tag.first;
 
       // We do not want colons or hashes in a label, as they might interfere
       // with reading the yaml later.
       std::replace(label.begin(), label.end(), ':', '_');
       std::replace(label.begin(), label.end(), '#', '_');
 
-      output_file << label << ":" << std::endl;
-      output_file << "  samples: " << GetNumSamples(i) << std::endl;
-      output_file << "  mean: " << GetMean(i) << std::endl;
-      output_file << "  stddev: " << sqrt(GetVariance(i)) << std::endl;
-      output_file << "  min: " << GetMin(i) << std::endl;
-      output_file << "  max: " << GetMax(i) << std::endl;
+      output_file << label << ":" << "\n";
+      output_file << "  samples: " << GetNumSamples(i) << "\n";
+      output_file << "  mean: " << GetMean(i) << "\n";
+      output_file << "  stddev: " << sqrt(GetVariance(i)) << "\n";
+      output_file << "  min: " << GetMin(i) << "\n";
+      output_file << "  max: " << GetMax(i) << "\n";
     }
-    output_file << std::endl;
+    output_file << "\n";
   }
 }
 

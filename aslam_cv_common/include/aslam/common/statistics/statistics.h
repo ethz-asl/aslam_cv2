@@ -177,7 +177,7 @@ class Statistics {
   static double GetVarianceDeltaTime(std::string const& tag);
   static double GetVarianceDeltaTime(size_t handle);
 
-  static void WriteToYamlFile(std::string const& path);
+  static void WriteToYamlFile(const std::string& path);
   static void Print(std::ostream& out);  // NOLINT
   static std::string Print();
   static std::string SecondsToTimeString(double seconds);
