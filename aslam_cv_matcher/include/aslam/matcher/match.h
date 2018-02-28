@@ -135,6 +135,8 @@ namespace aslam {
 ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
     FrameToFrame, getKeypointIndexAppleFrame, getKeypointIndexBananaFrame);
 ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
+    Stereo, getKeypointIndexAppleFrame, getKeypointIndexBananaFrame);
+ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
     LandmarksToFrame, getKeypointIndex, getLandmarkIndex);
 }  // namespace aslam
 

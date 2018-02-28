@@ -39,14 +39,10 @@ class StereoMatcher {
 
   /// \brief Constructs the StereoMatcher.
   /// @param[in]  stereo_pairs  The stereo pairs found in the current setup.
-  explicit StereoMatcher(
+  StereoMatcher(
       const dense_reconstruction::StereoPairIdentifier& stereo_pair,
-      const alsam::NCamera::ConstPtr camera_rig)
-      : stereo_pair_(stereo_pair),
-        camera_rig_(camera_rig_),
-        kImageHeight(
-            camera_rig_->getCameraShared(stereo_pair.first_camera_id)
-                ->imageHeight()){};
+      const alsam::NCamera::ConstPtr camera_rig, const VisualFrame& frame0,
+      const VisualFrame& frame1, StereoMatchesWithScore* matches_frame0_frame1);
   virtual ~StereoMatcher(){};
 
   /// @param[in]  frame0        The first VisualFrame that needs to contain
@@ -60,9 +56,7 @@ class StereoMatcher {
   ///                           Indices correspond to the ordering of the
   ///                           keypoint/descriptor vector in the respective
   ///                           frame channels.
-  void match(
-      const VisualFrame& frame0, const VisualFrame& frame1,
-      StereoMatchesWithScore* matches_frame0_frame1);
+  void match();
 
  private:
   struct KeypointData {
@@ -132,12 +126,28 @@ class StereoMatcher {
 
   const dense_reconstruction::StereoPairIdentifier& stereo_pair_;
   const alsam::NCamera::ConstPtr camera_rig_;
-  const uint32_t kImageHeight;
+  StereoMatchesWithScore* matches_frame0_frame1_;
+  
+  const aslam::VisualFrame::ConstPtr frame0_;
+  const aslam::VisualFrame::ConstPtr frame1_;
 
+  std::vector<common::FeatureDescriptorConstRef> descriptors_frame0_wrapped_;
+  std::vector<common::FeatureDescriptorConstRef> descriptors_frame1_wrapped_;
+
+  // Keypoints of frame1 sorted from small to large y coordinates.
+  Aligned<std::vector, KeypointData> keypoints_frame1_sorted_by_y_;
+  // corner_row_LUT[i] is the number of keypoints that has y position
+  // lower than i in the image.
+  std::vector<int> corner_row_LUT_;
+  // Remember matched keypoints of frame1.
+  std::vector<bool> is_keypoint_frame1_matched_;
+  // Keep track of processed keypoints s.t. we don't process them again in the
+  // large window. Set every element to false for each keypoint (of frame0)
+  // iteration!
+  std::vector<bool> iteration_processed_keypoints_frame1_;
   // Map from keypoint indices of frame1 to
   // the corresponding match iterator.
   std::unordered_map<int, MatchesIterator> frame1_idx_to_matches_iterator_map_;
-
   // The queried keypoints in frame1 and the corresponding
   // matching score are stored for each attempted match.
   // A map from the keypoint in frame0 to the corresponding
@@ -147,6 +157,11 @@ class StereoMatcher {
   // Remeber indices of keypoints in frame0 that are deemed inferior matches.
   std::vector<int> inferior_match_keypoint_idx_frame0_;
 
+  
+  const uint32_t kImageHeight;
+  const int kNumPointsFrame0;
+  const int kNumPointsFrame1;
+  const size_t kDescriptorSizeBytes;
   // Two descriptors could match if the number of matching bits normalized
   // with the descriptor length in bits is higher than this threshold.
   static constexpr float kMatchingThresholdBitsRatioRelaxed = 0.8f;
@@ -159,34 +174,10 @@ class StereoMatcher {
   static constexpr size_t kMaxNumInferiorIterations = 3u;
 };
 
-void StereoMatcher::getKeypointIteratorsInWindow(
-    const Eigen::Vector2d& predicted_keypoint_position,
-    const int window_half_side_length_px, KeyPointIterator* it_keypoints_begin,
-    KeyPointIterator* it_keypoints_end) const {
-  CHECK_NOTNULL(it_keypoints_begin);
-  CHECK_NOTNULL(it_keypoints_end);
-  CHECK_GT(window_half_side_length_px, 0);
-
-  // Compute search area for LUT iterators row-wise.
-  int LUT_index_top = clamp(
-      0, kImageHeight - 1,
-      static_cast<int>(
-          predicted_keypoint_position(1) + 0.5 - window_half_side_length_px));
-  int LUT_index_bottom = clamp(
-      0, kImageHeight - 1,
-      static_cast<int>(
-          predicted_keypoint_position(1) + 0.5 + window_half_side_length_px));
-
-  *it_keypoints_begin =
-      keypoints_frame1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_top];
-  *it_keypoints_end =
-      keypoints_frame1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_bottom];
-
-  CHECK_LE(LUT_index_top, LUT_index_bottom);
-  CHECK_GE(LUT_index_bottom, 0);
-  CHECK_GE(LUT_index_top, 0);
-  CHECK_LT(LUT_index_top, kImageHeight);
-  CHECK_LT(LUT_index_bottom, kImageHeight);
+bool StereoMatcher::epipolarConstraint(
+    const common::FeatureDescriptorConstRef& descriptor_frame0,
+    const common::FeatureDescriptorConstRef& descriptor_frame1) const {
+  return true;
 }
 
 inline int StereoMatcher::clamp(
