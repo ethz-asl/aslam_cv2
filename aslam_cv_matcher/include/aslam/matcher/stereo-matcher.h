@@ -38,24 +38,25 @@ class StereoMatcher {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /// \brief Constructs the StereoMatcher.
+  /// @param[in]  stereo_pairs  The stereo pairs found in the current setup.
+  explicit StereoMatcher(
+      const dense_reconstruction::StereoPairIdsVector& stereo_pairs)
+    : stereo_pairs_(stereo_pairs),
+      kImageHeight() { };
+  virtual ~StereoMatcher(){};
+
   /// @param[in]  frame0        The first VisualFrame that needs to contain
   ///                           the keypoints and descriptor channels. Usually
   ///                           this is an output of the VisualPipeline.
   /// @param[in]  frame1        The second VisualFrame that needs to contain
   ///                           the keypoints and descriptor channels. Usually 
   ///                           this is an output of the VisualPipeline.
-  /// @param[in]  image_height  The image height of the given camera.
   /// @param[out] matches_frame0_frame1 Vector of structs containing the found matches.
   ///                           Indices correspond to the ordering of the
   ///                           keypoint/descriptor vector in the respective
   ///                           frame channels.
-  StereoMatcher(
-      const VisualFrame& frame0, const VisualFrame& frame1, 
-      const uint32_t image_height,
+  void match(const VisualFrame& frame0, const VisualFrame& frame1,  
       StereoMatchesWithScore* matches_frame0_frame1);
-  virtual ~StereoMatcher(){};
-
-  void match();
 
  private:
   struct KeypointData {
@@ -87,8 +88,6 @@ class StereoMatcher {
     std::vector<double> match_candidate_matching_scores;
   };
 
-  /// \brief Initialize data the matcher relies on.
-  void initialize();
 
   /// \brief Match a keypoint of frame0 with one of frame1 if possible.
   ///
@@ -126,26 +125,9 @@ class StereoMatcher {
       const unsigned int distance_shortest,
       const unsigned int distance_second_shortest) const;
 
-  // The first frame to match.
-  const VisualFrame& frame0_;
-  // The second frame.
-  const VisualFrame& frame1_;
-  // Descriptor size in bytes.
-  const size_t kDescriptorSizeBytes;
-  // Number of keypoints/descriptors in frame0.
-  const int kNumPointsFrame0;
-  // Number of keypoints/descriptors in frame1.
-  const int kNumPointsFrame1;
+
   const uint32_t kImageHeight;
 
-  // Matches with scores with indices corresponding
-  // to the ordering of the keypoint/descriptors in
-  // the respective channels.
-  StereoMatchesWithScore* const matches_frame0_frame1_;
-  // Descriptors of frame0.
-  std::vector<common::FeatureDescriptorConstRef> descriptors_frame0_wrapped_;
-  // Descriptors of frame1.
-  std::vector<common::FeatureDescriptorConstRef> descriptors_frame1_wrapped_;
   // Keypoints of frame1 sorted from small to large y coordinates.
   Aligned<std::vector, KeypointData> keypoints_frame1_sorted_by_y_;
   // corner_row_LUT[i] is the number of keypoints that has y position
@@ -177,11 +159,6 @@ class StereoMatcher {
   static constexpr float kMatchingThresholdBitsRatioStrict = 0.85f;
   // Two descriptors could match if they pass the Lowe ratio test.
   static constexpr float kLoweRatio = 0.8f;
-  // Small image space distances for keypoint matches.
-  const int small_search_distance_px_;
-  // Large image space distances for keypoint matches.
-  // Only used if small search was unsuccessful.
-  const int large_search_distance_px_;
   // Number of iterations to match inferior matches.
   static constexpr size_t kMaxNumInferiorIterations = 3u;
 };
@@ -216,18 +193,18 @@ void StereoMatcher::getKeypointIteratorsInWindow(
   CHECK_LT(LUT_index_bottom, kImageHeight);
 }
 
-inline int GyroTwoFrameMatcher::clamp(
+inline int StereoMatcher::clamp(
     const int lower, const int upper, const int in) const {
   return std::min<int>(std::max<int>(in, lower), upper);
 }
 
-inline double GyroTwoFrameMatcher::computeMatchingScore(
+inline double StereoMatcher::computeMatchingScore(
     const int num_matching_bits,
     const unsigned int descriptor_size_bits) const {
   return static_cast<double>(num_matching_bits) / descriptor_size_bits;
 }
 
-inline bool GyroTwoFrameMatcher::ratioTest(
+inline bool StereoMatcher::ratioTest(
     const unsigned int descriptor_size_bits,
     const unsigned int distance_closest,
     const unsigned int distance_second_closest) const {
