@@ -19,6 +19,7 @@ set(HEADERS
   include/aslam/matcher/matching-engine-non-exclusive.h
   include/aslam/matcher/matching-problem.h
   include/aslam/matcher/matching-problem-frame-to-frame.h
+  include/aslam/matcher/stereo-matcher.h
 )
 
 set(SOURCES
@@ -27,6 +28,7 @@ set(SOURCES
   src/match-visualization.cc
   src/matching-problem.cc
   src/matching-problem-frame-to-frame.cc
+  src/stereo-matcher.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})

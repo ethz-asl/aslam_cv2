@@ -1,17 +1,17 @@
 #include "aslam/matcher/stereo-matcher.h"
 
 #include <aslam/common/statistics/statistics.h>
-#include <dense-reconstruction/stereo-pair-detection.h>
 #include <glog/logging.h>
 
 namespace aslam {
 
 Stereo::Matcher::StereoMatcher(
-    const dense_reconstruction::StereoPairIdentifier& stereo_pair,
+    const size_t first_camera_idx, const size_t second_camera_id,
     const alsam::NCamera::ConstPtr camera_rig, const VisualFrame& frame0,
     const VisualFrame& frame1, StereoMatchesWithScore* matches_frame0_frame1)
-    : stereo_pair_(stereo_pair),
-      camera_rig_(camera_rig_),
+    : first_camera_idx_(first_camera_idx),
+      second_camera_idx_(second_camera_idx),
+      camera_rig_(camera_rig),
       frame0_(frame0),
       frame1_(frame1),
       matches_frame0_frame1_(matches_frame0_frame1),

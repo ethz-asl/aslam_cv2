@@ -40,8 +40,8 @@ class StereoMatcher {
   /// \brief Constructs the StereoMatcher.
   /// @param[in]  stereo_pairs  The stereo pairs found in the current setup.
   StereoMatcher(
-      const dense_reconstruction::StereoPairIdentifier& stereo_pair,
-      const alsam::NCamera::ConstPtr camera_rig, const VisualFrame& frame0,
+      const size_t first_camera_idx, const size_t second_camera_id,
+      const aslam::NCamera::ConstPtr camera_rig, const VisualFrame& frame0,
       const VisualFrame& frame1, StereoMatchesWithScore* matches_frame0_frame1);
   virtual ~StereoMatcher(){};
 
@@ -124,8 +124,9 @@ class StereoMatcher {
       const unsigned int distance_shortest,
       const unsigned int distance_second_shortest) const;
 
-  const dense_reconstruction::StereoPairIdentifier& stereo_pair_;
-  const alsam::NCamera::ConstPtr camera_rig_;
+  const size_t first_camera_idx_;
+  const size_t second_camera_idx_;
+  const aslam::NCamera::ConstPtr camera_rig_;
   StereoMatchesWithScore* matches_frame0_frame1_;
   
   const aslam::VisualFrame::ConstPtr frame0_;
