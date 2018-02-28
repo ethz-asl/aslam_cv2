@@ -18,10 +18,10 @@ namespace aslam {
 /// \brief Frame to frame matcher using the epipolar constraint to restrict
 /// the search window.
 /// The initial matcher attempts to match every keypoint of frame k to a
-/// keypoint in frame (k+1). This is done by predicting the keypoint location 
-/// by using an interframe rotation matrix. Then a rectangular search window 
-/// around that location is searched for the best match greater than a 
-/// threshold. If the initial search was not successful, the search window is 
+/// keypoint in frame (k+1). This is done by predicting the keypoint location
+/// by using an interframe rotation matrix. Then a rectangular search window
+/// around that location is searched for the best match greater than a
+/// threshold. If the initial search was not successful, the search window is
 /// increased once.
 /// The initial matcher is allowed to discard a previous match if the new one
 /// has a higher score. The discarded matches are called inferior matches and
@@ -40,22 +40,28 @@ class StereoMatcher {
   /// \brief Constructs the StereoMatcher.
   /// @param[in]  stereo_pairs  The stereo pairs found in the current setup.
   explicit StereoMatcher(
-      const dense_reconstruction::StereoPairIdsVector& stereo_pairs)
-    : stereo_pairs_(stereo_pairs),
-      kImageHeight() { };
+      const dense_reconstruction::StereoPairIdentifier& stereo_pair,
+      const alsam::NCamera::ConstPtr camera_rig)
+      : stereo_pair_(stereo_pair),
+        camera_rig_(camera_rig_),
+        kImageHeight(
+            camera_rig_->getCameraShared(stereo_pair.first_camera_id)
+                ->imageHeight()){};
   virtual ~StereoMatcher(){};
 
   /// @param[in]  frame0        The first VisualFrame that needs to contain
   ///                           the keypoints and descriptor channels. Usually
   ///                           this is an output of the VisualPipeline.
   /// @param[in]  frame1        The second VisualFrame that needs to contain
-  ///                           the keypoints and descriptor channels. Usually 
+  ///                           the keypoints and descriptor channels. Usually
   ///                           this is an output of the VisualPipeline.
-  /// @param[out] matches_frame0_frame1 Vector of structs containing the found matches.
+  /// @param[out] matches_frame0_frame1 Vector of structs containing the found
+  /// matches.
   ///                           Indices correspond to the ordering of the
   ///                           keypoint/descriptor vector in the respective
   ///                           frame channels.
-  void match(const VisualFrame& frame0, const VisualFrame& frame1,  
+  void match(
+      const VisualFrame& frame0, const VisualFrame& frame1,
       StereoMatchesWithScore* matches_frame0_frame1);
 
  private:
@@ -87,7 +93,6 @@ class StereoMatcher {
     std::vector<KeyPointIterator> keypoint_match_candidates_frame1;
     std::vector<double> match_candidate_matching_scores;
   };
-
 
   /// \brief Match a keypoint of frame0 with one of frame1 if possible.
   ///
@@ -125,23 +130,14 @@ class StereoMatcher {
       const unsigned int distance_shortest,
       const unsigned int distance_second_shortest) const;
 
-
+  const dense_reconstruction::StereoPairIdentifier& stereo_pair_;
+  const alsam::NCamera::ConstPtr camera_rig_;
   const uint32_t kImageHeight;
 
-  // Keypoints of frame1 sorted from small to large y coordinates.
-  Aligned<std::vector, KeypointData> keypoints_frame1_sorted_by_y_;
-  // corner_row_LUT[i] is the number of keypoints that has y position
-  // lower than i in the image.
-  std::vector<int> corner_row_LUT_;
-  // Remember matched keypoints of frame1.
-  std::vector<bool> is_keypoint_frame1_matched_;
   // Map from keypoint indices of frame1 to
   // the corresponding match iterator.
   std::unordered_map<int, MatchesIterator> frame1_idx_to_matches_iterator_map_;
-  // Keep track of processed keypoints s.t. we don't process them again in the
-  // large window. Set every element to false for each keypoint (of frame0)
-  // iteration!
-  std::vector<bool> iteration_processed_keypoints_frame1_;
+
   // The queried keypoints in frame1 and the corresponding
   // matching score are stored for each attempted match.
   // A map from the keypoint in frame0 to the corresponding
