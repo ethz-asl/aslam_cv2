@@ -5,22 +5,24 @@
 
 namespace aslam {
 
-Stereo::Matcher::StereoMatcher(
-    const size_t first_camera_idx, const size_t second_camera_id,
-    const alsam::NCamera::ConstPtr camera_rig, const VisualFrame& frame0,
-    const VisualFrame& frame1, StereoMatchesWithScore* matches_frame0_frame1)
+StereoMatcher::StereoMatcher(
+    const size_t first_camera_idx, const size_t second_camera_idx,
+    const aslam::NCamera::ConstPtr camera_rig,
+    const aslam::VisualFrame::ConstPtr frame0,
+    const aslam::VisualFrame::ConstPtr frame1,
+    StereoMatchesWithScore* matches_frame0_frame1)
     : first_camera_idx_(first_camera_idx),
       second_camera_idx_(second_camera_idx),
       camera_rig_(camera_rig),
       frame0_(frame0),
       frame1_(frame1),
       matches_frame0_frame1_(matches_frame0_frame1),
-      kImageHeight(frame0->imageHeight()),
-      kNumPointFrame0(frame0->getKeypointMeasurements().cols()),
-      kNumPointFrame1(frame1->getKeypointMeasurements().cols()),
+      kImageHeight(camera_rig->getCameraShared(first_camera_idx)->imageHeight()),
+      kNumPointsFrame0(frame0->getKeypointMeasurements().cols()),
+      kNumPointsFrame1(frame1->getKeypointMeasurements().cols()),
       kDescriptorSizeBytes(frame0->getDescriptorSizeBytes()),
       is_keypoint_frame1_matched_(kNumPointsFrame1, false),
-      iteration_processed_keypoints_frame1(kNumPointsFrame1, false) {
+      iteration_processed_keypoints_frame1_(kNumPointsFrame1, false) {
   CHECK(frame0_.isValid());
   CHECK(frame1_.isValid());
   CHECK(frame0_.hasDescriptors());
@@ -77,7 +79,7 @@ void StereoMatcher::match() {
   // Sort keypoints of frame1 from small to large y coordinates.
   for (int i = 0; i < kNumPointsFrame1; ++i) {
     keypoints_frame1_sorted_by_y_.emplace_back(
-        frame1.getKeypointMeasurement(i), i);
+        frame1_.getKeypointMeasurement(i), i);
   }
 
   std::sort(
@@ -102,12 +104,12 @@ void StereoMatcher::match() {
   CHECK_EQ(static_cast<int>(corner_row_LUT_.size()), kImageHeight);
 
   // Remember matched keypoints of frame1.
-  std::vector<bool> for (int i = 0; i < kNumPointsFrame0; ++i) {
+  for (int i = 0; i < kNumPointsFrame0; ++i) {
     matchKeypoint(i);
   }
 
   std::vector<bool> is_inferior_keypoint_frame1_matched(
-     is_keypoint_frame1_matched_);
+      is_keypoint_frame1_matched_);
   for (size_t i = 0u; i < kMaxNumInferiorIterations; ++i) {
     if (!matchInferiorMatches(&is_inferior_keypoint_frame1_matched)) {
       return;
@@ -137,11 +139,11 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
 
   // Perform the search.
   for (KeyPointIterator it = descriptor_frame1_wrapped_.begin();
-       it != descriptor_frame1_wrapped_.end(); ++it) {
+       it != descriptors_frame1_wrapped_.end(); ++it) {
     CHECK_LT(it->channel_index, kNumPointsFrame1);
     CHECK_GE(it->channel_index, 0u);
     const common::FeatureDescriptorConstRef& descriptor_frame1 =
-        descriptors_frame1_wrapped[it->channel_index];
+        descriptors_frame1_wrapped_[it->channel_index];
 
     if (!epipolarConstraint(descriptor_frame0, descriptor_frame1)) {
       continue;
@@ -191,7 +193,8 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
         const int inferior_keypoint_idx_frame0 =
             frame1_idx_to_matches_iterator_map_[best_match_keypoint_idx_frame1]
                 ->getKeypointIndexBananaFrame();
-        inferior_match_keypoint_idx_frame0_.push_back(inferior_keypoint_idx_frame0);
+        inferior_match_keypoint_idx_frame0_.push_back(
+            inferior_keypoint_idx_frame0);
 
         frame1_idx_to_matches_iterator_map_[best_match_keypoint_idx_frame1]
             ->setScore(matching_score);
@@ -282,7 +285,8 @@ bool StereoMatcher::matchInferiorMatches(
                       ->getKeypointIndexBananaFrame();
           // The current keypoint k does not have to be matched anymore
           // in the next iteration.
-          erase_inferior_match_keypoint_idx_frame0.insert(inferior_keypoint_idx_frame0);
+          erase_inferior_match_keypoint_idx_frame0.insert(
+              inferior_keypoint_idx_frame0);
           // The keypoint k that was revoked. That means that it can be matched
           // again in the next iteration.
           erase_inferior_match_keypoint_idx_frame0.erase(
@@ -299,9 +303,10 @@ bool StereoMatcher::matchInferiorMatches(
         (*is_inferior_keypoint_frame1_matched)[best_match_keypoint_idx_frame1] =
             true;
         matches_frame0_frame1_->emplace_back(
-            best_match_keypoint_idx_frame0, inferior_keypoint_idx_frame1,
+            best_match_keypoint_idx_frame0, inferior_keypoint_idx_frame0,
             best_matching_score);
-        erase_inferior_match_keypoint_idx_frame0.insert(inferior_keypoint_idx_frame0);
+        erase_inferior_match_keypoint_idx_frame0.insert(
+            inferior_keypoint_idx_frame0);
 
         CHECK(matches_frame0_frame1_->end() != matches_frame0_frame1_->begin())
             << "Match vector should not be empty.";

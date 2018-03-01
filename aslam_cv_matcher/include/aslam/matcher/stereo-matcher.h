@@ -5,6 +5,8 @@
 #include <vector>
 
 #include <Eigen/Core>
+#include <aslam/cameras/camera.h>
+#include <aslam/cameras/ncamera.h>
 #include <aslam/common/feature-descriptor-ref.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/frames/visual-frame.h>
@@ -40,9 +42,11 @@ class StereoMatcher {
   /// \brief Constructs the StereoMatcher.
   /// @param[in]  stereo_pairs  The stereo pairs found in the current setup.
   StereoMatcher(
-      const size_t first_camera_idx, const size_t second_camera_id,
-      const aslam::NCamera::ConstPtr camera_rig, const VisualFrame& frame0,
-      const VisualFrame& frame1, StereoMatchesWithScore* matches_frame0_frame1);
+      const size_t first_camera_idx, const size_t second_camera_idx,
+      const aslam::NCamera::ConstPtr camera_rig,
+      const aslam::VisualFrame::ConstPtr frame0,
+      const aslam::VisualFrame::ConstPtr frame1,
+      StereoMatchesWithScore* matches_frame0_frame1);
   virtual ~StereoMatcher(){};
 
   /// @param[in]  frame0        The first VisualFrame that needs to contain
@@ -95,11 +99,9 @@ class StereoMatcher {
   /// already existing match.
   void matchKeypoint(const int idx_k);
 
-  void getKeypointIteratorsInWindow(
-      const Eigen::Vector2d& predicted_keypoint_position,
-      const int window_half_side_length_px,
-      KeyPointIterator* it_keypoints_begin,
-      KeyPointIterator* it_keypoints_end) const;
+  bool epipolarConstraint(
+      const common::FeatureDescriptorConstRef& descriptor_frame0,
+      const common::FeatureDescriptorConstRef& descriptor_frame1) const;
 
   /// \brief Try to match inferior matches without modifying initial matches.
   ///
@@ -128,7 +130,7 @@ class StereoMatcher {
   const size_t second_camera_idx_;
   const aslam::NCamera::ConstPtr camera_rig_;
   StereoMatchesWithScore* matches_frame0_frame1_;
-  
+
   const aslam::VisualFrame::ConstPtr frame0_;
   const aslam::VisualFrame::ConstPtr frame1_;
 
@@ -158,7 +160,6 @@ class StereoMatcher {
   // Remeber indices of keypoints in frame0 that are deemed inferior matches.
   std::vector<int> inferior_match_keypoint_idx_frame0_;
 
-  
   const uint32_t kImageHeight;
   const int kNumPointsFrame0;
   const int kNumPointsFrame1;
