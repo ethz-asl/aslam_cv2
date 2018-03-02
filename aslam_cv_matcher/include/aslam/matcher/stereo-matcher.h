@@ -176,12 +176,6 @@ class StereoMatcher {
   static constexpr size_t kMaxNumInferiorIterations = 3u;
 };
 
-bool StereoMatcher::epipolarConstraint(
-    const common::FeatureDescriptorConstRef& descriptor_frame0,
-    const common::FeatureDescriptorConstRef& descriptor_frame1) const {
-  return true;
-}
-
 inline int StereoMatcher::clamp(
     const int lower, const int upper, const int in) const {
   return std::min<int>(std::max<int>(in, lower), upper);
