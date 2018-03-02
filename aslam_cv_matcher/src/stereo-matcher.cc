@@ -306,7 +306,7 @@ bool StereoMatcher::matchInferiorMatches(
         (*is_inferior_keypoint_frame1_matched)[best_match_keypoint_idx_frame1] =
             true;
         matches_frame0_frame1_->emplace_back(
-            best_match_keypoint_idx_frame1, inferior_keypoint_idx_frame0,
+            inferior_keypoint_idx_frame0, best_match_keypoint_idx_frame1,
             best_matching_score);
         erase_inferior_match_keypoint_idx_frame0.insert(
             inferior_keypoint_idx_frame0);
