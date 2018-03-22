@@ -3,22 +3,31 @@
 #include <aslam/common/statistics/statistics.h>
 #include <glog/logging.h>
 
+DEFINE_double(
+    stereo_matcher_epipolar_threshold, 20,
+    "Threshold whether a point is considered as fulfilling the epipolar "
+    "constraint. The higher this value, the more points are considered for the "
+    "correspondance search.");
+
 namespace aslam {
 
 StereoMatcher::StereoMatcher(
     const size_t first_camera_idx, const size_t second_camera_idx,
     const aslam::NCamera::ConstPtr camera_rig,
+    const Eigen::Matrix3d& fundamental_matrix,
     const aslam::VisualFrame::ConstPtr frame0,
     const aslam::VisualFrame::ConstPtr frame1,
     StereoMatchesWithScore* matches_frame0_frame1)
     : first_camera_idx_(first_camera_idx),
       second_camera_idx_(second_camera_idx),
       camera_rig_(camera_rig),
+      fundamental_matrix_(fundamental_matrix_),
       frame0_(frame0),
       frame1_(frame1),
       matches_frame0_frame1_(matches_frame0_frame1),
       kImageHeight(
           camera_rig->getCameraShared(first_camera_idx)->imageHeight()),
+      kEpipolarThreshold(FLAGS_stereo_matcher_epipolar_threshold),
       kNumPointsFrame0(frame0->getKeypointMeasurements().cols()),
       kNumPointsFrame1(frame1->getKeypointMeasurements().cols()),
       kDescriptorSizeBytes(frame0->getDescriptorSizeBytes()),
@@ -35,8 +44,7 @@ StereoMatcher::StereoMatcher(
   CHECK_EQ(
       frame0_->getTimestampNanoseconds(), frame1_->getTimestampNanoseconds())
       << "The two frames have different time stamps.";
-  CHECK_NOTNULL(matches_frame0_frame1_)->clear();
-
+  CHECK_NOTNULL(matches_frame0_frame1_)->clear(); 
   if (kNumPointsFrame0 == 0 || kNumPointsFrame1 == 0) {
     return;
   }
@@ -49,6 +57,9 @@ StereoMatcher::StereoMatcher(
          "is less or equal to 512 bits. Adapt the following check if this "
          "framework uses larger binary descriptors.";
   CHECK_GT(kImageHeight, 0u);
+  CHECK_GT(kEpipolarThreshold, 0.0) << "The epipolar constraint threshold "
+                                       "should be higher than 0 to enable "
+                                       "correspondance search for noisy input.";
   CHECK_EQ(iteration_processed_keypoints_frame1_.size(), kNumPointsFrame1);
   CHECK_EQ(is_keypoint_frame1_matched_.size(), kNumPointsFrame1);
 
@@ -149,7 +160,7 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
     const common::FeatureDescriptorConstRef& descriptor_frame1 =
         descriptors_frame1_wrapped_[it->channel_index];
 
-    if (!epipolarConstraint(descriptor_frame0, descriptor_frame1)) {
+    if (!epipolarConstraint(frame0_->getKeypointMeasurement(idx_frame0), it->measurement)) {
       continue;
     }
 
@@ -290,7 +301,7 @@ bool StereoMatcher::matchInferiorMatches(
           // in the next iteration.
           erase_inferior_match_keypoint_idx_frame0.insert(
               inferior_keypoint_idx_frame0);
-          // The keypoint of frame0 that was revoked. That means that it can be 
+          // The keypoint of frame0 that was revoked. That means that it can be
           // matched again in the next iteration.
           erase_inferior_match_keypoint_idx_frame0.erase(
               revoked_inferior_keypoint_idx_frame0);
@@ -343,9 +354,14 @@ bool StereoMatcher::matchInferiorMatches(
 }
 
 bool StereoMatcher::epipolarConstraint(
-    const common::FeatureDescriptorConstRef& descriptor_frame0,
-    const common::FeatureDescriptorConstRef& descriptor_frame1) const {
-  return true;
+    const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint_frame0,
+    const Eigen::Vector2d& keypoint_frame1) const {
+  // Convert ponits to homogenous coordinates.
+  Eigen::Vector3d point_hat_frame0 = keypoint_frame0 << Eigen::Matrix<double, 1, 1>(1.0);
+  Eigen::Vector3d point_hat_frame1 = keypoint_frame1 << Eigen::Matrix<double, 1, 1>(1.0);
+
+  return point_hat_frame1.transpose() * fundamental_matrix_ * point_hat_frame0 <
+         kEpipolarThreshold;
 }
 
 }  // namespace aslam

@@ -44,6 +44,7 @@ class StereoMatcher {
   StereoMatcher(
       const size_t first_camera_idx, const size_t second_camera_idx,
       const aslam::NCamera::ConstPtr camera_rig,
+      const Eigen::Matrix3d& fundamental_matrix,
       const aslam::VisualFrame::ConstPtr frame0,
       const aslam::VisualFrame::ConstPtr frame1,
       StereoMatchesWithScore* matches_frame0_frame1);
@@ -100,8 +101,8 @@ class StereoMatcher {
   void matchKeypoint(const int idx_k);
 
   bool epipolarConstraint(
-      const common::FeatureDescriptorConstRef& descriptor_frame0,
-      const common::FeatureDescriptorConstRef& descriptor_frame1) const;
+      const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint_frame0,
+      const Eigen::Vector2d& keypoint_frame1) const;
 
   /// \brief Try to match inferior matches without modifying initial matches.
   ///
@@ -130,6 +131,7 @@ class StereoMatcher {
   const size_t second_camera_idx_;
   const aslam::NCamera::ConstPtr camera_rig_;
   StereoMatchesWithScore* matches_frame0_frame1_;
+  const Eigen::Matrix3d fundamental_matrix_;
 
   const aslam::VisualFrame::ConstPtr frame0_;
   const aslam::VisualFrame::ConstPtr frame1_;
@@ -163,6 +165,7 @@ class StereoMatcher {
   const uint32_t kImageHeight;
   const int kNumPointsFrame0;
   const int kNumPointsFrame1;
+  const double kEpipolarThreshold;
   const size_t kDescriptorSizeBytes;
   // Two descriptors could match if the number of matching bits normalized
   // with the descriptor length in bits is higher than this threshold.
