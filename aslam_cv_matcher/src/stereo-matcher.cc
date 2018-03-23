@@ -357,8 +357,10 @@ bool StereoMatcher::epipolarConstraint(
     const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint_frame0,
     const Eigen::Vector2d& keypoint_frame1) const {
   // Convert ponits to homogenous coordinates.
-  Eigen::Vector3d point_hat_frame0 = keypoint_frame0 << Eigen::Matrix<double, 1, 1>(1.0);
-  Eigen::Vector3d point_hat_frame1 = keypoint_frame1 << Eigen::Matrix<double, 1, 1>(1.0);
+  Eigen::Vector3d point_hat_frame0;
+  point_hat_frame0 << keypoint_frame0, Eigen::Matrix<double, 1, 1>(1.0);
+  Eigen::Vector3d point_hat_frame1;
+  point_hat_frame1 << keypoint_frame1, Eigen::Matrix<double, 1, 1>(1.0);
 
   return point_hat_frame1.transpose() * fundamental_matrix_ * point_hat_frame0 <
          kEpipolarThreshold;
