@@ -46,14 +46,14 @@ TargetAprilGrid::TargetConfiguration::fromYaml(const std::string& yaml_file) {
 TargetAprilGrid::TargetAprilGrid(const TargetAprilGrid::TargetConfiguration& target_config)
     : TargetBase(2u * target_config.num_tag_rows,
                  2u * target_config.num_tag_cols, // 4 points per tag.
-                 createGridPoints(target_config)),
+                 createAprilGridPoints(target_config)),
                  target_config_(target_config) {
   CHECK_GT(target_config.tag_size_meter, 0.0);
   CHECK_GT(target_config.tag_inbetween_space_meter, 0.0);
 }
 
-Eigen::Matrix3Xd TargetAprilGrid::createGridPoints(
-    const TargetConfiguration& target_config) {
+Eigen::Matrix3Xd createAprilGridPoints(
+    const TargetAprilGrid::TargetConfiguration& target_config) {
   // Point ordering (e.g. 2x2 grid):
   //
   //          12-----13  14-----15
