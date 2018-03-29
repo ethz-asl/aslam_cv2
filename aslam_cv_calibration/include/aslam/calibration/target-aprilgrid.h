@@ -65,7 +65,6 @@ class TargetAprilGrid : public TargetBase {
   }
 
  private:
-
   const TargetConfiguration target_config_;
 };
 
