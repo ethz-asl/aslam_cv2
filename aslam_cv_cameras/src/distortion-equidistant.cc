@@ -7,7 +7,7 @@ std::ostream& operator<<(std::ostream& out, const EquidistantDistortion& distort
 }
 
 EquidistantDistortion::EquidistantDistortion(const Eigen::VectorXd& dist_coeffs, 
-    const unsigned& image_width, const unsigned& image_heigt)
+    const unsigned& image_width, const unsigned& image_height)
 : Base(dist_coeffs, Distortion::Type::kEquidistant, image_width, image_height) {
   CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }

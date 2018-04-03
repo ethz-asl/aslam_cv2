@@ -26,13 +26,16 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
       distortion.reset(new NullDistortion());
       break;
     case Distortion::Type::kEquidistant:
-      distortion.reset(new EquidistantDistortion(distortion_parameters));
+      distortion.reset(new EquidistantDistortion(
+            distortion_parameters, image_width, image_height));
       break;
     case Distortion::Type::kFisheye:
-      distortion.reset(new FisheyeDistortion(distortion_parameters));
+      distortion.reset(new FisheyeDistortion(
+            distortion_parameters, image_width, image_height));
       break;
     case Distortion::Type::kRadTan:
-      distortion.reset(new RadTanDistortion(distortion_parameters));
+      distortion.reset(new RadTanDistortion(
+            distortion_parameters, image_width, image_height));
       break;
     default:
       LOG(FATAL) << "Unknown distortion model: "

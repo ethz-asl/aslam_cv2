@@ -19,47 +19,9 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       return true;
     }
 
-    std::string camera_type;
     unsigned image_width;
     unsigned image_height;
-    Eigen::VectorXd intrinsics;
-    if(YAML::safeGet(node, "type", &camera_type) &&
-       YAML::safeGet(node, "image_width", &image_width) &&
-       YAML::safeGet(node, "image_height", &image_height) &&
-       YAML::safeGet(node, "intrinsics", &intrinsics)){
-      if(camera_type == "pinhole") {
-        if (aslam::PinholeCamera::areParametersValid(intrinsics)) {
-          camera.reset(new aslam::PinholeCamera(intrinsics, image_width, image_height,
-                                         distortion));
-        } else {
-          LOG(ERROR) << "Invalid intrinsics parameters for the Pinhole camera model: "
-              << intrinsics.transpose() << std::endl <<
-              "See aslam::PinholeCamera::areParametersValid(...) for conditions on what "
-              "valid Pinhole camera intrinsics look like.";
-          return true;
-        }
-      } else if(camera_type == "unified-projection") {
-        if (aslam::UnifiedProjectionCamera::areParametersValid(intrinsics)) {
-          camera.reset(new aslam::UnifiedProjectionCamera(intrinsics, image_width,
-                                                   image_height, distortion));
-        } else {
-          LOG(ERROR) << "Invalid intrinsics parameters for the UnifiedProjection camera model: "
-              << intrinsics.transpose() << std::endl <<
-              "See aslam::UnifiedProjectionCamera::areParametersValid(...) for conditions on what "
-              "valid UnifiedProjection camera intrinsics look like.";
-          return true;
-        }
-      } else {
-        LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
-            << "Valid values are {pinhole, unified-projection}.";
-        return true;
-      }
-    } else {
-      LOG(ERROR) << "Unable to get the required parameters from the camera. "
-          << "Required: string type, int image_height, int image_width, VectorXd intrinsics.";
-      return true;
-    }
-
+    
     // Determine the distortion type. Start with no distortion.
     aslam::Distortion::UniquePtr distortion;
     const YAML::Node distortion_config = node["distortion"];
@@ -69,7 +31,9 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       Eigen::VectorXd distortion_parameters;
 
       if(YAML::safeGet(distortion_config, "type", &distortion_type) &&
-         YAML::safeGet(distortion_config, "parameters", &distortion_parameters)) {
+         YAML::safeGet(distortion_config, "parameters", &distortion_parameters) &&
+         YAML::safeGet(node, "image_width", &image_width) &&
+         YAML::safeGet(node, "image_height", &image_height)) {
         if(distortion_type == "none") {
             distortion.reset(new aslam::NullDistortion());
         } else if(distortion_type == "equidistant") {
@@ -121,6 +85,46 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       }
     } else {
       distortion.reset(new aslam::NullDistortion());
+    }
+
+
+    std::string camera_type;
+    Eigen::VectorXd intrinsics;
+    if(YAML::safeGet(node, "type", &camera_type) &&
+       YAML::safeGet(node, "image_width", &image_width) &&
+       YAML::safeGet(node, "image_height", &image_height) &&
+       YAML::safeGet(node, "intrinsics", &intrinsics)){
+      if(camera_type == "pinhole") {
+        if (aslam::PinholeCamera::areParametersValid(intrinsics)) {
+          camera.reset(new aslam::PinholeCamera(intrinsics, image_width, image_height,
+                                         distortion));
+        } else {
+          LOG(ERROR) << "Invalid intrinsics parameters for the Pinhole camera model: "
+              << intrinsics.transpose() << std::endl <<
+              "See aslam::PinholeCamera::areParametersValid(...) for conditions on what "
+              "valid Pinhole camera intrinsics look like.";
+          return true;
+        }
+      } else if(camera_type == "unified-projection") {
+        if (aslam::UnifiedProjectionCamera::areParametersValid(intrinsics)) {
+          camera.reset(new aslam::UnifiedProjectionCamera(intrinsics, image_width,
+                                                   image_height, distortion));
+        } else {
+          LOG(ERROR) << "Invalid intrinsics parameters for the UnifiedProjection camera model: "
+              << intrinsics.transpose() << std::endl <<
+              "See aslam::UnifiedProjectionCamera::areParametersValid(...) for conditions on what "
+              "valid UnifiedProjection camera intrinsics look like.";
+          return true;
+        }
+      } else {
+        LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
+            << "Valid values are {pinhole, unified-projection}.";
+        return true;
+      }
+    } else {
+      LOG(ERROR) << "Unable to get the required parameters from the camera. "
+          << "Required: string type, int image_height, int image_width, VectorXd intrinsics.";
+      return true;
     }
 
     // ID
