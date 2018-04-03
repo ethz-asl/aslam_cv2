@@ -18,65 +18,6 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       LOG(ERROR) << "Unable to get parse the camera because the node is not a map.";
       return true;
     }
-    // Determine the distortion type. Start with no distortion.
-    aslam::Distortion::UniquePtr distortion;
-    const YAML::Node distortion_config = node["distortion"];
-
-    if(distortion_config) {
-      std::string distortion_type;
-      Eigen::VectorXd distortion_parameters;
-
-      if(YAML::safeGet(distortion_config, "type", &distortion_type) &&
-         YAML::safeGet(distortion_config, "parameters", &distortion_parameters)) {
-        if(distortion_type == "none") {
-            distortion.reset(new aslam::NullDistortion());
-        } else if(distortion_type == "equidistant") {
-          if (aslam::EquidistantDistortion::areParametersValid(distortion_parameters)) {
-            distortion.reset(new aslam::EquidistantDistortion(distortion_parameters));
-          } else {
-            LOG(ERROR) << "Invalid distortion parameters for the Equidistant distortion model: "
-                << distortion_parameters.transpose() << std::endl <<
-                "See aslam::EquidistantDistortion::areParametersValid(...) for conditions on what "
-                "valid Equidistant distortion parameters look like.";
-            return true;
-          }
-        } else if(distortion_type == "fisheye") {
-          if (aslam::FisheyeDistortion::areParametersValid(distortion_parameters)) {
-            distortion.reset(new aslam::FisheyeDistortion(distortion_parameters));
-          } else {
-            LOG(ERROR) << "Invalid distortion parameters for the Fisheye distortion model: "
-                << distortion_parameters.transpose() << std::endl <<
-                "See aslam::FisheyeDistortion::areParametersValid(...) for conditions on what "
-                "valid Fisheye distortion parameters look like.";
-            return true;
-          }
-        } else if(distortion_type == "radial-tangential") {
-          if (aslam::RadTanDistortion::areParametersValid(distortion_parameters)) {
-            distortion.reset(new aslam::RadTanDistortion(distortion_parameters));
-          } else {
-            LOG(ERROR) << "Invalid distortion parameters for the RadTan distortion model: "
-                << distortion_parameters.transpose() << std::endl <<
-                "See aslam::RadTanDistortion::areParametersValid(...) for conditions on what "
-                "valid RadTan distortion parameters look like.";
-            return true;
-          }
-        } else {
-            LOG(ERROR) << "Unknown distortion model: \"" << distortion_type << "\". "
-                << "Valid values are {none, equidistant, fisheye, radial-tangential}.";
-            return true;
-        }
-        if (!distortion->distortionParametersValid(distortion_parameters)) {
-          LOG(ERROR) << "Invalid distortion parameters: " << distortion_parameters.transpose();
-          return true;
-        }
-      } else {
-        LOG(ERROR) << "Unable to get the required parameters from the distortion. "
-            << "Required: string type, VectorXd parameters.";
-        return true;
-      }
-    } else {
-      distortion.reset(new aslam::NullDistortion());
-    }
 
     std::string camera_type;
     unsigned image_width;
@@ -118,6 +59,70 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
           << "Required: string type, int image_height, int image_width, VectorXd intrinsics.";
       return true;
     }
+
+    // Determine the distortion type. Start with no distortion.
+    aslam::Distortion::UniquePtr distortion;
+    const YAML::Node distortion_config = node["distortion"];
+
+    if(distortion_config) {
+      std::string distortion_type;
+      Eigen::VectorXd distortion_parameters;
+
+      if(YAML::safeGet(distortion_config, "type", &distortion_type) &&
+         YAML::safeGet(distortion_config, "parameters", &distortion_parameters)) {
+        if(distortion_type == "none") {
+            distortion.reset(new aslam::NullDistortion());
+        } else if(distortion_type == "equidistant") {
+          if (aslam::EquidistantDistortion::areParametersValid(distortion_parameters)) {
+            distortion.reset(new aslam::EquidistantDistortion(distortion_parameters,
+                  image_width, image_height));
+          } else {
+            LOG(ERROR) << "Invalid distortion parameters for the Equidistant distortion model: "
+                << distortion_parameters.transpose() << std::endl <<
+                "See aslam::EquidistantDistortion::areParametersValid(...) for conditions on what "
+                "valid Equidistant distortion parameters look like.";
+            return true;
+          }
+        } else if(distortion_type == "fisheye") {
+          if (aslam::FisheyeDistortion::areParametersValid(distortion_parameters)) {
+            distortion.reset(new aslam::FisheyeDistortion(distortion_parameters,
+                  image_width, image_height));
+          } else {
+            LOG(ERROR) << "Invalid distortion parameters for the Fisheye distortion model: "
+                << distortion_parameters.transpose() << std::endl <<
+                "See aslam::FisheyeDistortion::areParametersValid(...) for conditions on what "
+                "valid Fisheye distortion parameters look like.";
+            return true;
+          }
+        } else if(distortion_type == "radial-tangential") {
+          if (aslam::RadTanDistortion::areParametersValid(distortion_parameters)) {
+            distortion.reset(new aslam::RadTanDistortion(distortion_parameters,
+                  image_width, image_height));
+          } else {
+            LOG(ERROR) << "Invalid distortion parameters for the RadTan distortion model: "
+                << distortion_parameters.transpose() << std::endl <<
+                "See aslam::RadTanDistortion::areParametersValid(...) for conditions on what "
+                "valid RadTan distortion parameters look like.";
+            return true;
+          }
+        } else {
+            LOG(ERROR) << "Unknown distortion model: \"" << distortion_type << "\". "
+                << "Valid values are {none, equidistant, fisheye, radial-tangential}.";
+            return true;
+        }
+        if (!distortion->distortionParametersValid(distortion_parameters)) {
+          LOG(ERROR) << "Invalid distortion parameters: " << distortion_parameters.transpose();
+          return true;
+        }
+      } else {
+        LOG(ERROR) << "Unable to get the required parameters from the distortion. "
+            << "Required: string type, VectorXd parameters.";
+        return true;
+      }
+    } else {
+      distortion.reset(new aslam::NullDistortion());
+    }
+
     // ID
     aslam::CameraId id;
     if(node["id"]) {

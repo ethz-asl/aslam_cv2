@@ -6,8 +6,9 @@ std::ostream& operator<<(std::ostream& out, const FisheyeDistortion& distortion)
   return out;
 }
 
-FisheyeDistortion::FisheyeDistortion(const Eigen::VectorXd& dist_coeffs)
-: Base(dist_coeffs, Distortion::Type::kFisheye) {
+FisheyeDistortion::FisheyeDistortion(const Eigen::VectorXd& dist_coeffs, 
+    const unsigned& image_width, const unsigned& image_heigt)
+: Base(dist_coeffs, Distortion::Type::kFisheye, image_width, image_height) {
   CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 
