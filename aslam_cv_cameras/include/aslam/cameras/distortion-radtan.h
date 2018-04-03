@@ -30,7 +30,10 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
 
   /// \brief RadTanDistortion Ctor.
   /// @param[in] distortionParams Vector containing the distortion parameter. (dim=4: k1, k2, p1, p2)
-  explicit RadTanDistortion(const Eigen::VectorXd& distortionParams);
+  /// @param[in] image_width      Image width of the associated camera.
+  /// @param[in] image_height     Image height of the associated camera.
+  explicit RadTanDistortion(const Eigen::VectorXd& distortionParams, 
+      const unsigned& image_width, const unsigned& image_height);
 
   /// \brief Convenience function to print the state using streams.
   friend std::ostream& operator<<(std::ostream& out, const RadTanDistortion& distortion);
@@ -95,13 +98,13 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
   /// \brief Create a test distortion object for unit testing.
   static RadTanDistortion::UniquePtr createTestDistortion() {
     Eigen::VectorXd params(4); params << -0.28,  0.08, -0.00026, -0.00024;
-    return RadTanDistortion::UniquePtr(new RadTanDistortion(params));
+    return RadTanDistortion::UniquePtr(new RadTanDistortion(params, 752, 480));
   }
 
   /// \brief Create a test distortion object for unit testing with null distortion.
   static RadTanDistortion::UniquePtr createZeroTestDistortion() {
     Eigen::VectorXd params(4); params << 0.0, 0.0, 0.0, 0.0;
-    return RadTanDistortion::UniquePtr(new RadTanDistortion(params));
+    return RadTanDistortion::UniquePtr(new RadTanDistortion(params, 752, 480));
   }
 
   /// @}

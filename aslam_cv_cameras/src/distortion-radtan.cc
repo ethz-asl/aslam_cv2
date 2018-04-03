@@ -6,8 +6,9 @@ std::ostream& operator<<(std::ostream& out, const RadTanDistortion& distortion) 
   return out;
 }
 
-RadTanDistortion::RadTanDistortion(const Eigen::VectorXd& dist_coeffs)
-: Base(dist_coeffs, Distortion::Type::kRadTan) {
+RadTanDistortion::RadTanDistortion(const Eigen::VectorXd& dist_coeffs,
+    const unsigned& image_width, const unsigned& image_height)
+: Base(dist_coeffs, Distortion::Type::kRadTan, image_width, image_height) {
   CHECK(distortionParametersValid(dist_coeffs)) << dist_coeffs.transpose();
 }
 

@@ -2,6 +2,7 @@
 #define ASLAM_CAMERAS_DISTORTION_H_
 
 #include <aslam/common/macros.h>
+#include <aslam/cameras/distorion-map.h>
 #include <Eigen/Dense>
 #include <gflags/gflags.h>
 
@@ -38,8 +39,11 @@ class Distortion {
   /// @param[in] dist_coeffs     Vector containing the distortion parameters.
   /// @param[in] distortion_type DistortionType enum value with information which distortion
   ///                            model is used by the derived class.
+  /// @param[in] image_width     Number of columns in the associated camera image.
+  /// @param[in] image_height    Number of rows in the associated camera image.
   Distortion(const Eigen::VectorXd& dist_coeffs,
-             Type distortion_type);
+             Type distortion_type, const unsigned& image_width, 
+             const unsigned& image_height);
 
  public:
   virtual ~Distortion() { };
@@ -59,7 +63,9 @@ class Distortion {
  public:
   /// \brief Clones the camera instance and returns a pointer to the copy.
   virtual aslam::Distortion* clone() const = 0;
-
+  
+  /// \brief Calculates the distortion map for the whole image.
+  void calculateDistortionMap();
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -121,7 +127,7 @@ class Distortion {
   void undistort(Eigen::Vector2d* point) const;
 
   /// \brief Apply undistortion to recover a point in the normalized image plane.
-  /// @param[in]    point     External distortion coefficients to use.
+  /// @param[in]    point     The distorted point.
   /// @param[out]   out_point The undistorted point in normalized image plane.
   void undistort(const Eigen::Vector2d& point, Eigen::Vector2d* out_point) const;
 
@@ -134,6 +140,19 @@ class Distortion {
   ///                             normalized image plane.
   virtual void undistortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
                                                   Eigen::Vector2d* point) const = 0;
+  
+  /// \brief Calculate undistortion map if necessairy and apply undistortion to recover a point 
+  ///        in the normalized image plane using the distortion map as lookup table. 
+  /// @param[in,out] point The distorted point. After the function, this point is in
+  ///                      the normalized image plane.
+  void undistortUsingMap(Eigen::Vector2d* point) const;
+
+
+  /// \brief Calculate undistortion map if necessairy and apply undistortion to recover a point 
+  ///        in the normalized image plane using the distortion map as lookup table. 
+  /// @param[in]    point     The distorted point. 
+  /// @param[out]   out_point The undistorted point in normalized image plane.
+  void undistortUsingMap(const Eigen::Vector2d& point, Eigen::Vector2d* out_point) const;
 
   /// @}
 
@@ -179,6 +198,15 @@ class Distortion {
 
   /// \brief Enum field to store the type of distortion model.
   Type distortion_type_;
+
+  /// \brief Distortion map to store all undistort values (for stereo matching).
+  aslam::DistortionMap distortion_map_;
+
+  // \brief Number of columns in the image the distortion model associated to.
+  unsigned image_width_;
+  
+  // \brief Number of rows int image the distortion model is associated to.
+  unsigned image_height_;
 };
 }  // namespace aslam
 #include "distortion-inl.h"
