@@ -44,7 +44,7 @@ StereoMatcher::StereoMatcher(
   CHECK_EQ(
       frame0_->getTimestampNanoseconds(), frame1_->getTimestampNanoseconds())
       << "The two frames have different time stamps.";
-  CHECK_NOTNULL(matches_frame0_frame1_)->clear(); 
+  CHECK_NOTNULL(matches_frame0_frame1_)->clear();
   if (kNumPointsFrame0 == 0 || kNumPointsFrame1 == 0) {
     return;
   }
@@ -160,7 +160,8 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
     const common::FeatureDescriptorConstRef& descriptor_frame1 =
         descriptors_frame1_wrapped_[it->channel_index];
 
-    if (!epipolarConstraint(frame0_->getKeypointMeasurement(idx_frame0), it->measurement)) {
+    if (!epipolarConstraint(
+            frame0_->getKeypointMeasurement(idx_frame0), it->measurement)) {
       continue;
     }
 
@@ -358,8 +359,14 @@ bool StereoMatcher::epipolarConstraint(
     const Eigen::Vector2d& keypoint_frame1) const {
   // Convert ponits to homogenous coordinates.
   Eigen::Vector3d point_hat_frame0;
+  camera_rig_->getCameraShared(first_camera_idx_)
+      ->getDistortion()
+      .undistortUsingMap(keypoint_frame0);
   point_hat_frame0 << keypoint_frame0, Eigen::Matrix<double, 1, 1>(1.0);
   Eigen::Vector3d point_hat_frame1;
+  camera_rig_->getCameraShared(first_camera_idx_)
+      ->getDistortion()
+      .undistortUsingMap(keypoint_frame0);
   point_hat_frame1 << keypoint_frame1, Eigen::Matrix<double, 1, 1>(1.0);
 
   return point_hat_frame1.transpose() * fundamental_matrix_ * point_hat_frame0 <
