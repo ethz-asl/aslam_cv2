@@ -12,7 +12,7 @@ TEST(StatisticsCollector, Multithread_Adds) {
   constexpr size_t kNumThreads = 100u;
   constexpr size_t kNumValues = 10000u;
 
-  auto AddStatisticValues = [&]() {
+  auto add_statistics_values_function = [&]() {
     for (size_t i = 0u; i < kNumValues; ++i) {
       statistics::StatsCollectorImpl collector(kStatisticsName);
       collector.IncrementOne();
@@ -21,7 +21,7 @@ TEST(StatisticsCollector, Multithread_Adds) {
 
   std::vector<std::thread> threads;
   for (size_t thread_idx = 0u; thread_idx < kNumThreads; ++thread_idx) {
-    threads.push_back(std::thread(AddStatisticValues));
+    threads.emplace_back(std::thread(add_statistics_values_function));
   }
   for (std::thread& thread : threads) {
     thread.join();
