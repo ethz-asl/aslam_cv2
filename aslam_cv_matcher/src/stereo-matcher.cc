@@ -12,21 +12,20 @@ DEFINE_double(
 namespace aslam {
 
 StereoMatcher::StereoMatcher(
-    const size_t first_camera_idx, const size_t second_camera_idx,
+    const dense_reconstruction::StereoPairdentifier& identifier,
     const aslam::NCamera::ConstPtr camera_rig,
     const Eigen::Matrix3d& fundamental_matrix,
     const aslam::VisualFrame::ConstPtr frame0,
     const aslam::VisualFrame::ConstPtr frame1,
     StereoMatchesWithScore* matches_frame0_frame1)
-    : first_camera_idx_(first_camera_idx),
-      second_camera_idx_(second_camera_idx),
+    : stereo_identifier_(identifier),
       camera_rig_(camera_rig),
       fundamental_matrix_(fundamental_matrix_),
       frame0_(frame0),
       frame1_(frame1),
       matches_frame0_frame1_(matches_frame0_frame1),
       kImageHeight(
-          camera_rig->getCameraShared(first_camera_idx)->imageHeight()),
+          camera_rig->getCameraShared(identifier.first_camera_id)->imageHeight()),
       kEpipolarThreshold(FLAGS_stereo_matcher_epipolar_threshold),
       kNumPointsFrame0(frame0->getKeypointMeasurements().cols()),
       kNumPointsFrame1(frame1->getKeypointMeasurements().cols()),
@@ -360,13 +359,13 @@ bool StereoMatcher::epipolarConstraint(
   // Convert ponits to homogenous coordinates.
   Eigen::Vector2d keypoint_frame0_undistorted;
   Eigen::Vector3d keypoint_hat_frame0;
-  camera_rig_->getCameraShared(first_camera_idx_)
+  camera_rig_->getCameraShared(stereo_identifier_.first_camera_id)
       ->getDistortion()
       .undistortUsingMap(keypoint_frame0, &keypoint_frame0_undistorted);
   keypoint_hat_frame0 << keypoint_frame0_undistorted, Eigen::Matrix<double, 1, 1>(1.0);
   Eigen::Vector2d keypoint_frame1_undistorted;
   Eigen::Vector3d keypoint_hat_frame1;
-  camera_rig_->getCameraShared(second_camera_idx_)
+  camera_rig_->getCameraShared(stereo_identifier_.second_camera_id)
       ->getDistortion()
       .undistortUsingMap(keypoint_frame1, &keypoint_frame1_undistorted);
   keypoint_hat_frame1 << keypoint_frame1_undistorted, Eigen::Matrix<double, 1, 1>(1.0);
