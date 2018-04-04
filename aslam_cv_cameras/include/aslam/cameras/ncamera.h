@@ -106,12 +106,15 @@ public:
 
   /// Get the geometry object for camera i.
   const Camera& getCamera(size_t camera_index) const;
+  const Camera& getCamera(const CameraId& id) const;
 
   /// Get the geometry object for camera i.
   Camera& getCameraMutable(size_t camera_index);
+  Camera& getCameraMutable(const CameraId& id);
 
   /// Get the geometry object for camera i.
   std::shared_ptr<Camera> getCameraShared(size_t camera_index);
+  std::shared_ptr<Camera> getCameraShared(const CameraId& id);
 
   /// Get the geometry object for camera i.
   std::shared_ptr<const Camera> getCameraShared(size_t camera_index) const;
