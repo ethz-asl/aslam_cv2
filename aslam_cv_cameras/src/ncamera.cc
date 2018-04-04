@@ -133,7 +133,7 @@ const Camera& NCamera::getCamera(size_t camera_index) const {
   return *cameras_[camera_index];
 }
 
-const Camera& NCamera::getCamera(const CameraId& id) const {
+const Camera& NCamera::getCamera(const CameraId& camera_id) const {
   CHECK(camera_id.isValid());
   int camera_index = getCameraIndex(camera_id);
   CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
@@ -147,7 +147,7 @@ Camera& NCamera::getCameraMutable(size_t camera_index) {
   return *cameras_[camera_index];
 }
 
-Camera& NCamera::getCameraMutable(const CameraId& id) {
+Camera& NCamera::getCameraMutable(const CameraId& camera_id) {
   CHECK(camera_id.isValid());
   int camera_index = getCameraIndex(camera_id);
   CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
@@ -160,7 +160,7 @@ Camera::Ptr NCamera::getCameraShared(size_t camera_index) {
   return cameras_[camera_index];
 }
 
-Camera::Ptr NCamera::getCameraShared(const CameraId& id) {
+Camera::Ptr NCamera::getCameraShared(const CameraId& camear_id) {
   CHECK(camera_id.isValid());
   int camera_index = getCameraIndex(camera_id);
   CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
@@ -173,7 +173,7 @@ Camera::ConstPtr NCamera::getCameraShared(size_t camera_index) const {
   return cameras_[camera_index];
 }
 
-Camera::ConstPtr NCamera::getCameraShared(const CameraId& id) const {
+Camera::ConstPtr NCamera::getCameraShared(const CameraId& camera_id) const {
   CHECK(camera_id.isValid());
   int camera_index = getCameraIndex(camera_id);
   CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id

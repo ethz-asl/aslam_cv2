@@ -106,20 +106,33 @@ public:
 
   /// Get the geometry object for camera i.
   const Camera& getCamera(size_t camera_index) const;
-  const Camera& getCamera(const CameraId& id) const;
+
+  /// Get the geometry object for camera i.
+  /// The method will assert that the camera is not in the rig!
+  const Camera& getCamera(const CameraId& camera_id) const;
 
   /// Get the geometry object for camera i.
   Camera& getCameraMutable(size_t camera_index);
-  Camera& getCameraMutable(const CameraId& id);
+
+  /// Get the geometry object for camera i.
+  /// The method will assert that the camera is not in the rig!
+  Camera& getCameraMutable(const CameraId& camera_id);
 
   /// Get the geometry object for camera i.
   std::shared_ptr<Camera> getCameraShared(size_t camera_index);
-  std::shared_ptr<Camera> getCameraShared(const CameraId& id);
+
+  /// Get the geometry object for camera i.
+  /// The method will assert that the camera is not in the rig!
+  std::shared_ptr<Camera> getCameraShared(const CameraId& camera_id);
 
   /// Get the geometry object for camera i.
   std::shared_ptr<const Camera> getCameraShared(size_t camera_index) const;
 
   /// Get the geometry object for camera i.
+  /// The method will assert that the camera is not in the rig!
+  std::shared_ptr<const Camera> getCameraShared(const CameraId& camera_id);
+
+  /// Set the geometry object for camera i.
   void setCamera(size_t camera_index, std::shared_ptr<Camera> camera);
 
   /// How many cameras does this system have?
