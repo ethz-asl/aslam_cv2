@@ -42,7 +42,7 @@ class StereoMatcher {
   /// \brief Constructs the StereoMatcher.
   /// @param[in]  stereo_pairs  The stereo pairs found in the current setup.
   StereoMatcher(
-      const size_t first_camera_idx, const size_t second_camera_idx,,
+      const size_t first_camera_idx, const size_t second_camera_idx,
       const aslam::NCamera::ConstPtr camera_rig,
       const Eigen::Matrix3d& fundamental_matrix,
       const aslam::VisualFrame::ConstPtr frame0,

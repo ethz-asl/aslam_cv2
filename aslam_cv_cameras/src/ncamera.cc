@@ -135,10 +135,10 @@ const Camera& NCamera::getCamera(size_t camera_index) const {
 
 const Camera& NCamera::getCamera(const CameraId& camera_id) const {
   CHECK(camera_id.isValid());
-  int camera_index = getCameraIndex(camera_id);
+  int camera_idx = getCameraIndex(camera_id);
   CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
                           << " not in NCamera! container";
-  return getCamera(camera_index);
+  return getCamera(camera_idx);
 }
 
 Camera& NCamera::getCameraMutable(size_t camera_index) {
@@ -149,10 +149,10 @@ Camera& NCamera::getCameraMutable(size_t camera_index) {
 
 Camera& NCamera::getCameraMutable(const CameraId& camera_id) {
   CHECK(camera_id.isValid());
-  int camera_index = getCameraIndex(camera_id);
+  int camera_idx = getCameraIndex(camera_id);
   CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
                           << " not in NCamera! container";
-  return getCameraMutable(camera_index);
+  return getCameraMutable(camera_idx);
 }
 
 Camera::Ptr NCamera::getCameraShared(size_t camera_index) {
@@ -160,12 +160,12 @@ Camera::Ptr NCamera::getCameraShared(size_t camera_index) {
   return cameras_[camera_index];
 }
 
-Camera::Ptr NCamera::getCameraShared(const CameraId& camear_id) {
+Camera::Ptr NCamera::getCameraShared(const CameraId& camera_id) {
   CHECK(camera_id.isValid());
-  int camera_index = getCameraIndex(camera_id);
+  int camera_idx = getCameraIndex(camera_id);
   CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
                           << " not in NCamera! container";
-  return getCameraShared(camera_index);
+  return getCameraShared(camera_idx);
 }
 
 Camera::ConstPtr NCamera::getCameraShared(size_t camera_index) const {
@@ -175,10 +175,10 @@ Camera::ConstPtr NCamera::getCameraShared(size_t camera_index) const {
 
 Camera::ConstPtr NCamera::getCameraShared(const CameraId& camera_id) const {
   CHECK(camera_id.isValid());
-  int camera_index = getCameraIndex(camera_id);
+  int camera_idx = getCameraIndex(camera_id);
   CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
                           << " not in NCamera! container";
-  return getCameraShared(camera_index);
+  return getCameraShared(camera_idx);
 }
 
 void NCamera::setCamera(size_t camera_index, Camera::Ptr camera) {

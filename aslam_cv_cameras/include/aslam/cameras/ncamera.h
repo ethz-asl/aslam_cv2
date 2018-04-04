@@ -130,7 +130,7 @@ public:
 
   /// Get the geometry object for camera i.
   /// The method will assert that the camera is not in the rig!
-  std::shared_ptr<const Camera> getCameraShared(const CameraId& camera_id);
+  std::shared_ptr<const Camera> getCameraShared(const CameraId& camera_id) const;
 
   /// Set the geometry object for camera i.
   void setCamera(size_t camera_index, std::shared_ptr<Camera> camera);
