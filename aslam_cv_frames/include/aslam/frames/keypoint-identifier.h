@@ -55,6 +55,10 @@ class KeypointIdentifier {
     return nframe_->getFrame(frame_index_).getKeypointMeasurement(keypoint_index_);
   }
 
+  const Eigen::Vector2d getKeypointMeasurementVector() const {
+    return nframe_->getFrame(frame_index_).getKeypointMeasurementVector(keypoint_index_);
+  }
+
   const uint8_t* getDescriptor() const {
     return nframe_->getFrame(frame_index_).getDescriptor(keypoint_index_);
   }

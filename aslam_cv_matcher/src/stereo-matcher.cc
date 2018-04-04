@@ -161,7 +161,7 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
         descriptors_frame1_wrapped_[it->channel_index];
 
     if (!epipolarConstraint(
-            frame0_->getKeypointMeasurement(idx_frame0), it->measurement)) {
+            frame0_->getKeypointMeasurementVector(idx_frame0), it->measurement)) {
       continue;
     }
 
@@ -355,7 +355,7 @@ bool StereoMatcher::matchInferiorMatches(
 }
 
 bool StereoMatcher::epipolarConstraint(
-    const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint_frame0,
+    const Eigen::Vector2d& keypoint_frame0,
     const Eigen::Vector2d& keypoint_frame1) const {
   // Convert ponits to homogenous coordinates.
   Eigen::Vector3d point_hat_frame0;

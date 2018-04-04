@@ -168,6 +168,9 @@ class VisualFrame  {
   /// Return block expression of the keypoint measurement pointed to by index.
   const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(size_t index) const;
 
+  /// Return vector expression of the keypoint measurement pointed to by index.
+  const Eigen::Vector2d getKeypointMeasurementVector(size_t index) const; 
+
   /// Return the keypoint measurement uncertainty at index.
   double getKeypointMeasurementUncertainty(size_t index) const;
 

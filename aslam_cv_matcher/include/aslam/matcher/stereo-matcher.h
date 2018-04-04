@@ -101,7 +101,7 @@ class StereoMatcher {
   void matchKeypoint(const int idx_k);
 
   bool epipolarConstraint(
-      const Eigen::Block<Eigen::Matrix2Xd, 2, 1>& keypoint_frame0,
+      const Eigen::Vector2d& keypoint_frame0,
       const Eigen::Vector2d& keypoint_frame1) const;
 
   /// \brief Try to match inferior matches without modifying initial matches.
