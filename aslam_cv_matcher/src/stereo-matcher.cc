@@ -358,18 +358,20 @@ bool StereoMatcher::epipolarConstraint(
     const Eigen::Vector2d& keypoint_frame0,
     const Eigen::Vector2d& keypoint_frame1) const {
   // Convert ponits to homogenous coordinates.
-  Eigen::Vector3d point_hat_frame0;
+  Eigen::Vector2d keypoint_frame0_undistorted;
+  Eigen::Vector3d keypoint_hat_frame0;
   camera_rig_->getCameraShared(first_camera_idx_)
       ->getDistortion()
-      .undistortUsingMap(keypoint_frame0);
-  point_hat_frame0 << keypoint_frame0, Eigen::Matrix<double, 1, 1>(1.0);
-  Eigen::Vector3d point_hat_frame1;
-  camera_rig_->getCameraShared(first_camera_idx_)
+      .undistortUsingMap(keypoint_frame0, &keypoint_frame0_undistorted);
+  keypoint_hat_frame0 << keypoint_frame0_undistorted, Eigen::Matrix<double, 1, 1>(1.0);
+  Eigen::Vector2d keypoint_frame1_undistorted;
+  Eigen::Vector3d keypoint_hat_frame1;
+  camera_rig_->getCameraShared(second_camera_idx_)
       ->getDistortion()
-      .undistortUsingMap(keypoint_frame0);
-  point_hat_frame1 << keypoint_frame1, Eigen::Matrix<double, 1, 1>(1.0);
+      .undistortUsingMap(keypoint_frame1, &keypoint_frame1_undistorted);
+  keypoint_hat_frame1 << keypoint_frame1_undistorted, Eigen::Matrix<double, 1, 1>(1.0);
 
-  return point_hat_frame1.transpose() * fundamental_matrix_ * point_hat_frame0 <
+  return keypoint_hat_frame1.transpose() * fundamental_matrix_ * keypoint_hat_frame0 <
          kEpipolarThreshold;
 }
 
