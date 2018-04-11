@@ -212,18 +212,6 @@ const ProjectionResult UnifiedProjectionCamera::project3Functional(
   return evaluateProjectionResult(*out_keypoint, point_3d);
 }
 
-void UnifiedProectionCamera::normalizePoint(Eigen::Vector2d* point_2d) const {
-  CHECK_NOTNULL(point2d);
-
-  (*point_2d)[0] = ((*point_2d)[0] - cu()) / fu();
-  (*point_2d)[1] = ((*point_2d)[1] - cv()) / fv();
-}
-
-void UnifiedProjectionCamera::denormalizePoint(Eigen::Vector2d* point_2d) const {
-  (*point_2d)[0] = fu() * (*point_2d)[0] + cu();
-  (*point_2d)[1] = fv() * (*point_2d)[1] + cv();
-}
-
 inline const ProjectionResult UnifiedProjectionCamera::evaluateProjectionResult(
     const Eigen::Ref<const Eigen::Vector2d>& keypoint,
     const Eigen::Vector3d& point_3d) const {

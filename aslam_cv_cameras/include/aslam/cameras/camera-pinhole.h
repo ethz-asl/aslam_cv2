@@ -172,24 +172,6 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const;
 
   /// @}
-
-  //////////////////////////////////////////////////////////////
-  /// \name Methods to normalize and de-normalize points from pixels 
-  ///       to image coordinates and vice versa (only camera model, 
-  //        no distortion).
-  /// @{
-
-  // \brief Returns the normalized version of the 2D point.
-  /// @param[in,out] point_2d The image point in pixels. After the function, 
-  ///                         this point is in the normalized image plane.
-  virtual void normalizePoint(Eigen::Vector2d* point_2d) const;         
-
-  // \brief Returns the pixel version of the 2D point.
-  /// @param[in,out] point2d  The image point in normalized image coordinates. 
-  ///                         After the function, this point is in pixels.
-  virtual void denormalizePoint(Eigen::Vector2d* point2d) const;
-  
-  /// @}
   
   //////////////////////////////////////////////////////////////
   /// \name Methods to support unit testing.
