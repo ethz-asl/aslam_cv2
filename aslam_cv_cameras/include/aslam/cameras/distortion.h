@@ -65,7 +65,7 @@ class Distortion {
   virtual aslam::Distortion* clone() const = 0;
   
   /// \brief Calculates the distortion map for the whole image.
-  void calculateDistortionMap();
+  void calculateDistortionPixelMap(const aslam::Camera::ConstPtr camera);
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -143,16 +143,17 @@ class Distortion {
   
   /// \brief Calculate undistortion map if necessairy and apply undistortion to recover a point 
   ///        in the normalized image plane using the distortion map as lookup table. 
-  /// @param[in,out] point The distorted point. After the function, this point is in
-  ///                      the normalized image plane.
-  void undistortUsingMap(Eigen::Vector2d* point) const;
+  /// @param[in,out] point The distorted point (in pixel). After the function, this point is in
+  ///                      pixel coordinates.
+  void undistortUsingPixelMap(Eigen::Vector2d* point) const;
 
 
   /// \brief Calculate undistortion map if necessairy and apply undistortion to recover a point 
   ///        in the normalized image plane using the distortion map as lookup table. 
-  /// @param[in]    point     The distorted point. 
-  /// @param[out]   out_point The undistorted point in normalized image plane.
-  void undistortUsingMap(const Eigen::Vector2d& point, Eigen::Vector2d* out_point) const;
+  /// @param[in]    point     The distorted point (in pixel). 
+  /// @param[out]   out_point The undistorted point in pixel coordinates.
+  void undistortUsingPixelMap(const Eigen::Vector2d& point, 
+                              Eigen::Vector2d* out_point) const;
 
   /// @}
 

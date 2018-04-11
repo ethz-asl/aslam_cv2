@@ -174,6 +174,20 @@ bool Camera::backProject4(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
   return success;
 }
 
+bool normalizePoint(const Eigen::Vector2d& point_2d, 
+      Eigen::Vector2d* point_2d_normalized) const {
+    CHECK_NOTNULL(point_2d_normalized);
+    *point_2d_normalized = point_2d;
+    return normalizePoint(point_2d_normalized);
+}
+
+bool denormalizePoint(const Eigen::Vector2d& point_2d_normalized, 
+      Eigen::Vector2d* point_2d) const {
+    CHECK_NOTNULL(point_2d);
+    *point2d = point_2d_normalized;
+    return denormalizePoint(point_2d);
+}
+
 bool Camera::isProjectable3(const Eigen::Ref<const Eigen::Vector3d>& p) const {
   Eigen::Vector2d k;
   const ProjectionResult& ret = project3(p, &k);
