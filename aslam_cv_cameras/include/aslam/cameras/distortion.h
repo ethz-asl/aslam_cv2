@@ -2,6 +2,7 @@
 #define ASLAM_CAMERAS_DISTORTION_H_
 
 #include <aslam/common/macros.h>
+#include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion-map.h>
 #include <Eigen/Dense>
 #include <gflags/gflags.h>
