@@ -13,10 +13,10 @@
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-null.h>
 #include <aslam/cameras/distortion-radtan.h>
+#include <aslam/cameras/undistorter-mapped.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
 #include <aslam/pipeline/test/convert-maps-legacy.h>
-#include <aslam/pipeline/undistorter-mapped.h>
 
 ///////////////////////////////////////////////
 // Types to test

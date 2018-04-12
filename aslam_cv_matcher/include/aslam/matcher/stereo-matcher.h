@@ -7,10 +7,10 @@
 #include <Eigen/Core>
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncamera.h>
+#include <aslam/cameras/undistorter-mapped.h>
 #include <aslam/common/feature-descriptor-ref.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/frames/visual-frame.h>
-#include <aslam/pipeline/undistorter-mapped.h>
 #include <glog/logging.h>
 
 #include "aslam/matcher/match.h"

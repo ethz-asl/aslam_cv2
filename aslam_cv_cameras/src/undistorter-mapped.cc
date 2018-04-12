@@ -1,4 +1,4 @@
-#include "aslam/pipeline/undistorter-mapped.h"
+#include "aslam/cameras/undistorter-mapped.h"
 
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/common/undistort-helpers.h>

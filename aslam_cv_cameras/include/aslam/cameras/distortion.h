@@ -3,7 +3,7 @@
 
 #include <aslam/common/macros.h>
 #include <aslam/cameras/camera.h>
-#include <aslam/pipeline/undistorter-mapped.h>
+#include <aslam/cameras/undistorter-mapped.h>
 #include <Eigen/Dense>
 #include <gflags/gflags.h>
 

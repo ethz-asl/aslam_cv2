@@ -1,5 +1,5 @@
-#ifndef ASLAM_PIPELINE_MAPPED_UNDISTORTER_H_
-#define ASLAM_PIPELINE_MAPPED_UNDISTORTER_H_
+#ifndef ASLAM_CAMERAS_MAPPED_UNDISTORTER_H_
+#define ASLAM_CAMERAS_MAPPED_UNDISTORTER_H_
 
 #include <opencv2/core/core.hpp>
 
@@ -7,7 +7,7 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
-#include <aslam/pipeline/undistorter.h>
+#include <aslam/cameras/undistorter.h>
 
 namespace aslam {
 
@@ -102,6 +102,6 @@ private:
 
 }  // namespace aslam
 
-#include "aslam/pipeline/undistorter-mapped-inl.h"
+#include "aslam/cameras/undistorter-mapped-inl.h"
 
-#endif // ASLAM_PIPELINE_MAPPED_UNDISTORTER_H_
+#endif // ASLAM_CAMERAS_MAPPED_UNDISTORTER_H_
