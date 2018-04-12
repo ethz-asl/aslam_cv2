@@ -69,13 +69,20 @@ public:
   /// \param[in] interpolation Interpolation method used for undistortion.
   ///                          (\ref InterpolationMethod)
   MappedUndistorter(aslam::Camera::Ptr input_camera, aslam::Camera::Ptr output_camera,
-                    const cv::Mat& map_u, const cv::Mat& map_v, InterpolationMethod interpolation);
+                    const cv::Mat& map_u, const cv::Mat& map_v, 
+                    const std::function& query_map, InterpolationMethod interpolation);
 
   virtual ~MappedUndistorter() = default;
 
   /// \brief Produce an undistorted image from an input image.
   virtual void processImage(const cv::Mat& input_image, cv::Mat* output_image) const;
 
+  /// \brief Undisort a point using the map.
+  void processPoint(const Eigen::Vector2d& input_point, Eigen::Vector2d* output_point) const;
+  
+  /// \brief Undistort a point using the map.
+  void processPoint(Eigen::Vector2d* point) const;
+  
   /// Get the undistorter map for the u-coordinate.
   const cv::Mat& getUndistortMapU() const { return map_u_; };
 
@@ -87,6 +94,8 @@ private:
   const cv::Mat map_u_;
   /// \brief LUT for v coordinates.
   const cv::Mat map_v_;
+  /// \brief Convertion map from distorted to undistorted points.
+  const std::function query_map_;
   /// \brief Interpolation strategy
   InterpolationMethod interpolation_method_;
 };

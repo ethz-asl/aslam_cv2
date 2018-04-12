@@ -10,6 +10,7 @@
 #include <aslam/common/feature-descriptor-ref.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/frames/visual-frame.h>
+#include <aslam/pipeline/undistorter-mapped.h>
 #include <glog/logging.h>
 
 #include "aslam/matcher/match.h"
@@ -45,6 +46,7 @@ class StereoMatcher {
       const size_t first_camera_idx, const size_t second_camera_idx,
       const aslam::NCamera::ConstPtr camera_rig,
       const Eigen::Matrix3d& fundamental_matrix,
+      const std::unique_ptr<MappedUndistorter> mapped_undistorter,
       const aslam::VisualFrame::ConstPtr frame0,
       const aslam::VisualFrame::ConstPtr frame1,
       StereoMatchesWithScore* matches_frame0_frame1);
@@ -132,6 +134,7 @@ class StereoMatcher {
   const aslam::NCamera::ConstPtr camera_rig_;
   StereoMatchesWithScore* matches_frame0_frame1_;
   const Eigen::Matrix3d fundamental_matrix_;
+  std::unique_ptr<MappedUndistorter> mapped_undistorter_;
 
   const aslam::VisualFrame::ConstPtr frame0_;
   const aslam::VisualFrame::ConstPtr frame1_;

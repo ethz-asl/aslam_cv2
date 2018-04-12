@@ -15,6 +15,7 @@ StereoMatcher::StereoMatcher(
     const size_t first_camera_idx, const size_t second_camera_idx,
     const aslam::NCamera::ConstPtr camera_rig,
     const Eigen::Matrix3d& fundamental_matrix,
+    const std::unique_ptr<MappedUndistorter> mapped_undistorter,
     const aslam::VisualFrame::ConstPtr frame0,
     const aslam::VisualFrame::ConstPtr frame1,
     StereoMatchesWithScore* matches_frame0_frame1)
@@ -22,6 +23,7 @@ StereoMatcher::StereoMatcher(
       second_camera_idx_(second_camera_idx),
       camera_rig_(camera_rig),
       fundamental_matrix_(fundamental_matrix_),
+      mapped_undistorter_(mapped_undistorter),
       frame0_(frame0),
       frame1_(frame1),
       matches_frame0_frame1_(matches_frame0_frame1),

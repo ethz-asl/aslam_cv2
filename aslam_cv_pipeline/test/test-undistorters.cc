@@ -74,20 +74,6 @@ TYPED_TEST(TestUndistorters, TestMappedUndistorter) {
   ASSERT_EQ(undistorter->getOutputCamera().getDistortion().getType(),
             aslam::Distortion::Type::kNoDistortion);
 
-  // Convert map to non-fixed point representation for easy lookup of values.
-  const cv::Mat& map_u = undistorter->getUndistortMapU();
-  const cv::Mat& map_v = undistorter->getUndistortMapV();
-  cv::Mat map_u_float = map_u.clone();
-  cv::Mat map_v_float = map_v.clone();
-  aslam::convertMapsLegacy(map_u, map_v, map_u_float, map_v_float, CV_32FC1);
-
-  // Distort using the maps.
-  auto query_map = [&map_u_float, &map_v_float](double u, float v) {
-    const double u_map = map_u_float.at<float>(v, u);
-    const double v_map = map_v_float.at<float>(v, u);
-    return Eigen::Vector2d(u_map, v_map);
-  };
-
   // Test the undistortion on some points.
   const double ru = undistorter->getOutputCamera().imageWidth();
   const double rv = undistorter->getOutputCamera().imageHeight();
@@ -105,8 +91,8 @@ TYPED_TEST(TestUndistorters, TestMappedUndistorter) {
       point_3d /= point_3d[2];
       this->camera_->project3(point_3d, &keypoint_distorted);
 
-      Eigen::Vector2d keypoint_distorted_maps = query_map(keypoint_undistorted[0],
-                                                          keypoint_undistorted[1]);
+      Eigen::Vector2d keypoint_distorted_maps;
+      undistorter->processPoint(keypoint_undistorted, &keypoint_distorted_maps);
       EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_distorted, keypoint_distorted_maps, 5e-2));
     }
   }
@@ -126,20 +112,6 @@ TEST(TestUndistortersNoPinhole, TestMappedUndistorterUpcToPinhole) {
   ASSERT_EQ(undistorter->getOutputCamera().getDistortion().getType(),
             aslam::Distortion::Type::kNoDistortion);
 
-  // Convert map to non-fixed point representation for easy lookup of values.
-  const cv::Mat& map_u = undistorter->getUndistortMapU();
-  const cv::Mat& map_v = undistorter->getUndistortMapV();
-  cv::Mat map_u_copy = map_u.clone();
-  cv::Mat map_v_copy = map_v.clone();
-  aslam::convertMapsLegacy(map_u, map_v, map_u_copy, map_v_copy, CV_32FC1);
-
-  // Distort using the maps.
-  auto query_map = [&map_u_copy, &map_v_copy](double u, float v) {
-    const double u_map = map_u_copy.at<float>(v, u);
-    const double v_map = map_v_copy.at<float>(v, u);
-    return Eigen::Vector2d(u_map, v_map);
-  };
-
   // Test the undistortion on some random points.
   const double ru = undistorter->getOutputCamera().imageWidth();
   const double rv = undistorter->getOutputCamera().imageHeight();
@@ -158,8 +130,8 @@ TEST(TestUndistortersNoPinhole, TestMappedUndistorterUpcToPinhole) {
       point_3d /= point_3d[2];
       camera->project3(point_3d, &keypoint_distorted);
 
-      Eigen::Vector2d keypoint_distorted_maps = query_map(keypoint_undistorted[0],
-                                                          keypoint_undistorted[1]);
+      Eigen::Vector2d keypoint_distorted_maps;
+      undistorter->processPoint(keypoint_undistorted, &keypoint_distorted_maps);
       EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint_distorted, keypoint_distorted_maps, 5e-2));
     }
   }

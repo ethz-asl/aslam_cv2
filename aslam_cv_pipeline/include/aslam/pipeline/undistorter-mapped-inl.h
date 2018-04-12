@@ -88,8 +88,21 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
   common::buildUndistortMap(
       *input_camera, *output_camera, CV_16SC2, map_u, map_v);
 
+  // Convert map to non-fixed point representation for easy lookup of values.
+  cv::Mat map_u_float = map_u.clone();
+  cv::Mat map_v_float = map_v.clone();
+  aslam::convertMapsLegacy(map_u, map_v, map_u_float, map_v_float, CV_32FC1);
+
+  // Create query map.
+  auto query_map = [&map_u_float, &map_v_float](double u, float v) {
+    const double u_map = map_u_float.at<float>(v, u);
+    const double v_map = map_v_float.at<float>(v, u);
+    return Eigen::Vector2d(u_map, v_map);
+  };
+  
   return std::unique_ptr<MappedUndistorter>(new MappedUndistorter(
-      input_camera, output_camera, map_u, map_v, interpolation_type));
+      input_camera, output_camera, map_u, map_v, query_map,
+      interpolation_type));
 }
 
 }  // namespace aslam

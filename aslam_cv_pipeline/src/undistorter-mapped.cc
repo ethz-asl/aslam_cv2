@@ -38,8 +38,21 @@ std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
   cv::Mat map_u, map_v;
   common::buildUndistortMap(*input_camera, *output_camera, CV_16SC2, map_u, map_v);
 
+  // Convert map to non-fixed point representation for easy lookup of values.
+  cv::Mat map_u_float = map_u.clone();
+  cv::Mat map_v_float = map_v.clone();
+  aslam::convertMapsLegacy(map_u, map_v, map_u_float, map_v_float, CV_32FC1);
+
+  // Create query map.
+  auto query_map = [&map_u_float, &map_v_float](double u, float v) {
+    const double u_map = map_u_float.at<float>(v, u);
+    const double v_map = map_v_float.at<float>(v, u);
+    return Eigen::Vector2d(u_map, v_map);
+  };
+
   return std::unique_ptr<MappedUndistorter>(
-      new MappedUndistorter(input_camera, output_camera, map_u, map_v, interpolation_type));
+      new MappedUndistorter(input_camera, output_camera, map_u, map_v, 
+        query_map, interpolation_type));
 }
 
 MappedUndistorter::MappedUndistorter()
@@ -47,9 +60,10 @@ MappedUndistorter::MappedUndistorter()
 
 MappedUndistorter::MappedUndistorter(Camera::Ptr input_camera, Camera::Ptr output_camera,
                                      const cv::Mat& map_u, const cv::Mat& map_v,
+                                     const std::function& query_map, 
                                      aslam::InterpolationMethod interpolation)
-: Undistorter(input_camera, output_camera), map_u_(map_u), map_v_(map_v),
-  interpolation_method_(interpolation) {
+: Undistorter(input_camera, output_camera), map_u_(map_u), map_v_(map_v), 
+  query_map_(query_map), interpolation_method_(interpolation) {
   CHECK_EQ(static_cast<size_t>(map_u_.rows), output_camera->imageHeight());
   CHECK_EQ(static_cast<size_t>(map_u_.cols), output_camera->imageWidth());
   CHECK_EQ(static_cast<size_t>(map_v_.rows), output_camera->imageHeight());
@@ -61,6 +75,16 @@ void MappedUndistorter::processImage(const cv::Mat& input_image, cv::Mat* output
   CHECK_EQ(input_camera_->imageHeight(), static_cast<size_t>(input_image.rows));
   CHECK_NOTNULL(output_image);
   cv::remap(input_image, *output_image, map_u_, map_v_, static_cast<int>(interpolation_method_));
+}
+
+void MappedUndistorter::processPoint(const Eigen::Vector2d& input_point, Eigen::Vector2d* output_point) const {
+  CHECK_NOTNULL(output_point);
+  *output_point = input_point;
+  processPoint(output_point);
+}
+
+void MappedUndistorter::processPoint(Eigen::Vector2d* point) const {
+    *point = query_map_((*point)[0], (*point)[1]);
 }
 
 }  // namespace aslam
