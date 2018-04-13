@@ -1,4 +1,4 @@
-#include <aslam/pipeline/test/convert-maps-legacy.h>
+#include <aslam/cameras/convert-maps-legacy.h>
 
 void aslam::convertMapsLegacy(cv::InputArray _map1, cv::InputArray _map2,
                        cv::OutputArray _dstmap1, cv::OutputArray _dstmap2,

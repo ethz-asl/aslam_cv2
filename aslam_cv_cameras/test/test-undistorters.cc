@@ -16,7 +16,6 @@
 #include <aslam/cameras/undistorter-mapped.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
-#include <aslam/pipeline/test/convert-maps-legacy.h>
 
 ///////////////////////////////////////////////
 // Types to test

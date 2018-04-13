@@ -3,6 +3,7 @@
 
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera.h>
+#include <aslam/cameras/convert-maps-legacy.h>
 #include <aslam/common/undistort-helpers.h>
 
 namespace aslam {
