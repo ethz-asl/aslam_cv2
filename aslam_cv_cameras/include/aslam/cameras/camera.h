@@ -352,9 +352,9 @@ class Camera {
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const = 0;
 
-  /// @} 
-   
- ublic:
+  /// @}
+
+ public:
   //////////////////////////////////////////////////////////////
   /// \name Methods to support rolling shutter cameras
   /// @{
