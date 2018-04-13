@@ -42,11 +42,13 @@ class StereoMatcher {
 
   /// \brief Constructs the StereoMatcher.
   /// @param[in]  stereo_pairs  The stereo pairs found in the current setup.
+  // TODO(floriantschopp): update this!
   StereoMatcher(
       const size_t first_camera_idx, const size_t second_camera_idx,
       const aslam::NCamera::ConstPtr camera_rig,
       const Eigen::Matrix3d& fundamental_matrix,
-      const std::unique_ptr<MappedUndistorter> mapped_undistorter,
+      const std::shared_ptr<aslam::MappedUndistorter> first_mapped_undistorter,
+      const std::shared_ptr<aslam::MappedUndistorter> second_mapped_undistorter,
       const aslam::VisualFrame::ConstPtr frame0,
       const aslam::VisualFrame::ConstPtr frame1,
       StereoMatchesWithScore* matches_frame0_frame1);
@@ -134,7 +136,8 @@ class StereoMatcher {
   const aslam::NCamera::ConstPtr camera_rig_;
   StereoMatchesWithScore* matches_frame0_frame1_;
   const Eigen::Matrix3d fundamental_matrix_;
-  std::unique_ptr<MappedUndistorter> mapped_undistorter_;
+  std::shared_ptr<MappedUndistorter> first_mapped_undistorter_;
+  std::shared_ptr<MappedUndistorter> second_mapped_undistorter_;
 
   const aslam::VisualFrame::ConstPtr frame0_;
   const aslam::VisualFrame::ConstPtr frame1_;

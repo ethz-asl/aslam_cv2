@@ -24,7 +24,7 @@ namespace aslam {
 /// @param[in] interpolation_type Check \ref InterpolationMethod to see the available types.
 /// @return Pointer to the created mapped undistorter.
 template <typename CameraType>
-std::unique_ptr<MappedUndistorter> createMappedUndistorter(
+std::shared_ptr<MappedUndistorter> createMappedUndistorter(
     const CameraType& camera, float alpha, float scale,
     aslam::InterpolationMethod interpolation_type);
 
@@ -39,7 +39,7 @@ std::unique_ptr<MappedUndistorter> createMappedUndistorter(
 /// @param[in] scale Output image size scaling parameter wrt. to input image size.
 /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
 /// @return Pointer to the created mapped undistorter.
-std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
+std::shared_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
     const aslam::UnifiedProjectionCamera& unified_proj_camera,
     float alpha, float scale, aslam::InterpolationMethod interpolation_type);
 

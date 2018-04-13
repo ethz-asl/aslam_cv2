@@ -15,7 +15,8 @@ StereoMatcher::StereoMatcher(
     const size_t first_camera_idx, const size_t second_camera_idx,
     const aslam::NCamera::ConstPtr camera_rig,
     const Eigen::Matrix3d& fundamental_matrix,
-    const std::unique_ptr<MappedUndistorter> mapped_undistorter,
+    const std::shared_ptr<MappedUndistorter> first_mapped_undistorter,
+    const std::shared_ptr<MappedUndistorter> second_mapped_undistorter,
     const aslam::VisualFrame::ConstPtr frame0,
     const aslam::VisualFrame::ConstPtr frame1,
     StereoMatchesWithScore* matches_frame0_frame1)
@@ -23,7 +24,8 @@ StereoMatcher::StereoMatcher(
       second_camera_idx_(second_camera_idx),
       camera_rig_(camera_rig),
       fundamental_matrix_(fundamental_matrix_),
-      mapped_undistorter_(mapped_undistorter),
+      first_mapped_undistorter_(first_mapped_undistorter),
+      second_mapped_undistorter_(second_mapped_undistorter),
       frame0_(frame0),
       frame1_(frame1),
       matches_frame0_frame1_(matches_frame0_frame1),
@@ -163,7 +165,8 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
         descriptors_frame1_wrapped_[it->channel_index];
 
     if (!epipolarConstraint(
-            frame0_->getKeypointMeasurementVector(idx_frame0), it->measurement)) {
+            frame0_->getKeypointMeasurementVector(idx_frame0),
+            it->measurement)) {
       continue;
     }
 
@@ -362,18 +365,19 @@ bool StereoMatcher::epipolarConstraint(
   // Convert ponits to homogenous coordinates.
   Eigen::Vector2d keypoint_frame0_undistorted;
   Eigen::Vector3d keypoint_hat_frame0;
-  camera_rig_->getCameraShared(first_camera_idx_)
-      ->getDistortion()
-      .undistortUsingMap(keypoint_frame0, &keypoint_frame0_undistorted);
-  keypoint_hat_frame0 << keypoint_frame0_undistorted, Eigen::Matrix<double, 1, 1>(1.0);
+  first_mapped_undistorter_->processPoint(
+      keypoint_frame0, &keypoint_frame0_undistorted);
+  keypoint_hat_frame0 << keypoint_frame0_undistorted,
+      Eigen::Matrix<double, 1, 1>(1.0);
   Eigen::Vector2d keypoint_frame1_undistorted;
   Eigen::Vector3d keypoint_hat_frame1;
-  camera_rig_->getCameraShared(second_camera_idx_)
-      ->getDistortion()
-      .undistortUsingMap(keypoint_frame1, &keypoint_frame1_undistorted);
-  keypoint_hat_frame1 << keypoint_frame1_undistorted, Eigen::Matrix<double, 1, 1>(1.0);
+  second_mapped_undistorter_->processPoint(
+      keypoint_frame1, &keypoint_frame1_undistorted);
+  keypoint_hat_frame1 << keypoint_frame1_undistorted,
+      Eigen::Matrix<double, 1, 1>(1.0);
 
-  return keypoint_hat_frame1.transpose() * fundamental_matrix_ * keypoint_hat_frame0 <
+  return keypoint_hat_frame1.transpose() * fundamental_matrix_ *
+             keypoint_hat_frame0 <
          kEpipolarThreshold;
 }
 

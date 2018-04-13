@@ -8,7 +8,6 @@ catkin_simple(ALL_DEPS_REQUIRED)
 # LIBRARIES #
 #############
 set(HEADERS
-  include/aslam/pipeline/test/convert-maps-legacy.h
   include/aslam/pipeline/visual-npipeline.h
   include/aslam/pipeline/visual-pipeline.h
   include/aslam/pipeline/visual-pipeline-brisk.h
@@ -16,8 +15,7 @@ set(HEADERS
   include/aslam/pipeline/visual-pipeline-null.h
 )
 
-set(SOURCES
-  src/test/convert-maps-legacy.cc
+set(SOURCES 
   src/visual-npipeline.cc
   src/visual-pipeline-brisk.cc
   src/visual-pipeline-freak.cc

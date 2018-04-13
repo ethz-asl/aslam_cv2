@@ -9,7 +9,7 @@
 namespace aslam {
 
 template <>
-inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
+inline std::shared_ptr<MappedUndistorter> createMappedUndistorter(
     const aslam::Camera& camera, float alpha, float scale,
     aslam::InterpolationMethod interpolation_type) {
   switch (camera.getType()) {
@@ -35,7 +35,7 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
 }
 
 template <typename CameraType>
-inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
+inline std::shared_ptr<MappedUndistorter> createMappedUndistorter(
     const CameraType& camera, float alpha, float scale,
     aslam::InterpolationMethod interpolation_type) {
   CHECK_GE(alpha, 0.0);
@@ -101,7 +101,7 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
     return Eigen::Vector2d(u_map, v_map);
   };
   
-  return std::unique_ptr<MappedUndistorter>(new MappedUndistorter(
+  return std::shared_ptr<MappedUndistorter>(new MappedUndistorter(
       input_camera, output_camera, map_u, map_v, query_map,
       interpolation_type));
 }

@@ -7,18 +7,13 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-#set(HEADERS
-# include/aslam/cameras/undistorter.h
-# include/aslam/cameras/undistorter-mapped.h
-# include/aslam/cameras/undistorter-mapped-inl.h
-#)
-
 set(SOURCES
   src/camera.cc
   src/camera-factory.cc
   src/camera-pinhole.cc
   src/camera-unified-projection.cc
   src/camera-yaml-serialization.cc
+  src/convert-maps-legacy.cc
   src/distortion.cc
   src/distortion-equidistant.cc
   src/distortion-fisheye.cc
@@ -29,7 +24,7 @@ set(SOURCES
   src/undistorter-mapped.cc 
 )
 
-cs_add_library(${PROJECT_NAME} ${SOURCES})# ${HEADERS})
+cs_add_library(${PROJECT_NAME} ${SOURCES})
 
 add_doxygen(NOT_AUTOMATIC)
 
