@@ -172,7 +172,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const;
 
   /// @}
-  
+ 
   //////////////////////////////////////////////////////////////
   /// \name Methods to support unit testing.
   /// @{

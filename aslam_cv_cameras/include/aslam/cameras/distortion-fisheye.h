@@ -26,10 +26,7 @@ class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion>
 
   /// \brief FisheyeDistortion Ctor.
   /// @param[in] distortionParams Vector containing the distortion parameter. (dim=1: w)
-  /// @param[in] image_width      Image width of the associated camera.
-  /// @param[in] image_height     Image height of the associated camera.
-  explicit FisheyeDistortion(const Eigen::VectorXd& distortionParams, 
-      const unsigned& image_width, const unsigned& image_height);
+  explicit FisheyeDistortion(const Eigen::VectorXd& distortionParams);
 
   /// \brief Convenience function to print the state using streams.
   friend std::ostream& operator<<(std::ostream& out, const FisheyeDistortion& distortion);
@@ -104,7 +101,7 @@ class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion>
   /// \brief Create a test distortion object for unit testing.
   static FisheyeDistortion::UniquePtr createTestDistortion() {
     Eigen::VectorXd params(1); params << 1.1;
-    return FisheyeDistortion::UniquePtr(new FisheyeDistortion(params, 752, 480));
+    return FisheyeDistortion::UniquePtr(new FisheyeDistortion(params));
   }
 
   /// @}

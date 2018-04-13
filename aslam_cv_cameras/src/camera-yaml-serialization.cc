@@ -18,10 +18,6 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       LOG(ERROR) << "Unable to get parse the camera because the node is not a map.";
       return true;
     }
-
-    unsigned image_width;
-    unsigned image_height;
-    
     // Determine the distortion type. Start with no distortion.
     aslam::Distortion::UniquePtr distortion;
     const YAML::Node distortion_config = node["distortion"];
@@ -31,15 +27,12 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       Eigen::VectorXd distortion_parameters;
 
       if(YAML::safeGet(distortion_config, "type", &distortion_type) &&
-         YAML::safeGet(distortion_config, "parameters", &distortion_parameters) &&
-         YAML::safeGet(node, "image_width", &image_width) &&
-         YAML::safeGet(node, "image_height", &image_height)) {
+         YAML::safeGet(distortion_config, "parameters", &distortion_parameters) {
         if(distortion_type == "none") {
             distortion.reset(new aslam::NullDistortion());
         } else if(distortion_type == "equidistant") {
           if (aslam::EquidistantDistortion::areParametersValid(distortion_parameters)) {
-            distortion.reset(new aslam::EquidistantDistortion(distortion_parameters,
-                  image_width, image_height));
+            distortion.reset(new aslam::EquidistantDistortion(distortion_parameters));
           } else {
             LOG(ERROR) << "Invalid distortion parameters for the Equidistant distortion model: "
                 << distortion_parameters.transpose() << std::endl <<
@@ -49,8 +42,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
           }
         } else if(distortion_type == "fisheye") {
           if (aslam::FisheyeDistortion::areParametersValid(distortion_parameters)) {
-            distortion.reset(new aslam::FisheyeDistortion(distortion_parameters,
-                  image_width, image_height));
+            distortion.reset(new aslam::FisheyeDistortion(distortion_parameters));
           } else {
             LOG(ERROR) << "Invalid distortion parameters for the Fisheye distortion model: "
                 << distortion_parameters.transpose() << std::endl <<
@@ -60,8 +52,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
           }
         } else if(distortion_type == "radial-tangential") {
           if (aslam::RadTanDistortion::areParametersValid(distortion_parameters)) {
-            distortion.reset(new aslam::RadTanDistortion(distortion_parameters,
-                  image_width, image_height));
+            distortion.reset(new aslam::RadTanDistortion(distortion_parameters));
           } else {
             LOG(ERROR) << "Invalid distortion parameters for the RadTan distortion model: "
                 << distortion_parameters.transpose() << std::endl <<
@@ -87,8 +78,9 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       distortion.reset(new aslam::NullDistortion());
     }
 
-
     std::string camera_type;
+    unsigned image_width;
+    unsigned image_height;
     Eigen::VectorXd intrinsics;
     if(YAML::safeGet(node, "type", &camera_type) &&
        YAML::safeGet(node, "image_width", &image_width) &&
@@ -126,7 +118,6 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
           << "Required: string type, int image_height, int image_width, VectorXd intrinsics.";
       return true;
     }
-
     // ID
     aslam::CameraId id;
     if(node["id"]) {

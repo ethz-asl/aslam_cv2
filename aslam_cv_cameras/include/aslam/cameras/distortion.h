@@ -40,11 +40,7 @@ class Distortion {
   /// @param[in] dist_coeffs     Vector containing the distortion parameters.
   /// @param[in] distortion_type DistortionType enum value with information which distortion
   ///                            model is used by the derived class.
-  /// @param[in] image_width     Number of columns in the associated camera image.
-  /// @param[in] image_height    Number of rows in the associated camera image.
-  Distortion(const Eigen::VectorXd& dist_coeffs,
-             Type distortion_type, const unsigned& image_width, 
-             const unsigned& image_height);
+  Distortion(const Eigen::VectorXd& dist_coeffs, Type distortion_type);
 
  public:
   virtual ~Distortion() { };
@@ -63,10 +59,7 @@ class Distortion {
 
  public:
   /// \brief Clones the camera instance and returns a pointer to the copy.
-  virtual aslam::Distortion* clone() const = 0;
-  
-  /// \brief Calculates the distortion map for the whole image.
-  void calculateDistortionPixelMap(const aslam::Camera::ConstPtr camera);
+  virtual aslam::Distortion* clone() const = 0; 
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -142,20 +135,6 @@ class Distortion {
   virtual void undistortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
                                                   Eigen::Vector2d* point) const = 0;
   
-  /// \brief Calculate undistortion map if necessairy and apply undistortion to recover a point 
-  ///        in the normalized image plane using the distortion map as lookup table. 
-  /// @param[in,out] point The distorted point (in pixel). After the function, this point is in
-  ///                      pixel coordinates.
-  void undistortUsingPixelMap(Eigen::Vector2d* point) const;
-
-
-  /// \brief Calculate undistortion map if necessairy and apply undistortion to recover a point 
-  ///        in the normalized image plane using the distortion map as lookup table. 
-  /// @param[in]    point     The distorted point (in pixel). 
-  /// @param[out]   out_point The undistorted point in pixel coordinates.
-  void undistortUsingPixelMap(const Eigen::Vector2d& point, 
-                              Eigen::Vector2d* out_point) const;
-
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -201,14 +180,6 @@ class Distortion {
   /// \brief Enum field to store the type of distortion model.
   Type distortion_type_;
 
-  /// \brief Distortion map to store all undistort values (for stereo matching).
-  aslam::DistortionMap distortion_map_;
-
-  // \brief Number of columns in the image the distortion model associated to.
-  unsigned image_width_;
-  
-  // \brief Number of rows int image the distortion model is associated to.
-  unsigned image_height_;
 };
 }  // namespace aslam
 #include "distortion-inl.h"

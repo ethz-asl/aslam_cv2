@@ -7,11 +7,11 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-# set(HEADERS
-#  include/aslam/cameras/undistorter.h
-#  include/aslam/cameras/undistorter-mapped.h
-#  include/aslam/cameras/undistorter-mapped-inl.h
-# )
+set(HEADERS
+ include/aslam/cameras/undistorter.h
+ include/aslam/cameras/undistorter-mapped.h
+ include/aslam/cameras/undistorter-mapped-inl.h
+)
 
 set(SOURCES
   src/camera.cc
@@ -29,7 +29,7 @@ set(SOURCES
   src/undistorter-mapped.cc 
 )
 
-cs_add_library(${PROJECT_NAME} ${SOURCES})
+cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 

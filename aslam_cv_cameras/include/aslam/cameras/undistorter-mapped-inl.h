@@ -1,5 +1,5 @@
-#ifndef ASLAM_PIPELINE_MAPPED_UNDISTORTER_INL_H_
-#define ASLAM_PIPELINE_MAPPED_UNDISTORTER_INL_H_
+#ifndef ASLAM_CAMERAS_MAPPED_UNDISTORTER_INL_H_
+#define ASLAM_CAMERAS_MAPPED_UNDISTORTER_INL_H_
 
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera.h>
@@ -106,4 +106,4 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
 }
 
 }  // namespace aslam
-#endif  // ASLAM_PIPELINE_MAPPED_UNDISTORTER_INL_H_
+#endif  // ASLAM_CAMERAS_MAPPED_UNDISTORTER_INL_H_

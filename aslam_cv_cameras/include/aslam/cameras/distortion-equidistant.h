@@ -31,10 +31,7 @@ class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDis
 
   /// \brief EquidistantDistortion Ctor.
   /// @param[in] distortionParams Vector containing the distortion parameter. (dim=4: k1, k2, k3, k4)
-  /// @param[in] image_width      Image width of the associated camera.
-  /// @param[in] image_height     Image height of the associated camera.
-  explicit EquidistantDistortion(const Eigen::VectorXd& distortionParams, 
-      const unsigned& image_width, const unsigned& image_height);
+  explicit EquidistantDistortion(const Eigen::VectorXd& distortionParams);
 
   /// \brief Convenience function to print the state using streams.
   friend std::ostream& operator<<(std::ostream& out, const EquidistantDistortion& distortion);
@@ -110,13 +107,13 @@ class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDis
   /// \brief Create a test distortion object for unit testing.
   static EquidistantDistortion::UniquePtr createTestDistortion() {
     Eigen::VectorXd params(4); params << 0.2, 0.01, 0.3, 0.05;
-    return EquidistantDistortion::UniquePtr(new EquidistantDistortion(params, 752, 480));
+    return EquidistantDistortion::UniquePtr(new EquidistantDistortion(params));
   }
 
   /// \brief Create a test distortion object for unit testing with null distortion.
   static EquidistantDistortion::UniquePtr createZeroTestDistortion() {
     Eigen::VectorXd params(4); params << 0.0, 0.0, 0.0, 0.0;
-    return EquidistantDistortion::UniquePtr(new EquidistantDistortion(params, 752, 480));
+    return EquidistantDistortion::UniquePtr(new EquidistantDistortion(params));
   }
 
   /// @}
