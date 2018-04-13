@@ -27,7 +27,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       Eigen::VectorXd distortion_parameters;
 
       if(YAML::safeGet(distortion_config, "type", &distortion_type) &&
-         YAML::safeGet(distortion_config, "parameters", &distortion_parameters) {
+         YAML::safeGet(distortion_config, "parameters", &distortion_parameters)) {
         if(distortion_type == "none") {
             distortion.reset(new aslam::NullDistortion());
         } else if(distortion_type == "equidistant") {

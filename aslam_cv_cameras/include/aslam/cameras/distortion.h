@@ -59,7 +59,8 @@ class Distortion {
 
  public:
   /// \brief Clones the camera instance and returns a pointer to the copy.
-  virtual aslam::Distortion* clone() const = 0; 
+  virtual aslam::Distortion* clone() const = 0;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -134,7 +135,7 @@ class Distortion {
   ///                             normalized image plane.
   virtual void undistortUsingExternalCoefficients(const Eigen::VectorXd& dist_coeffs,
                                                   Eigen::Vector2d* point) const = 0;
-  
+
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -179,7 +180,6 @@ class Distortion {
 
   /// \brief Enum field to store the type of distortion model.
   Type distortion_type_;
-
 };
 }  // namespace aslam
 #include "distortion-inl.h"

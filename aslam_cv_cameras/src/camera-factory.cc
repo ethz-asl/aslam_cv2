@@ -2,9 +2,9 @@
 
 #include <glog/logging.h>
 
+#include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
-#include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-null.h>
