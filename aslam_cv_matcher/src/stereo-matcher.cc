@@ -362,7 +362,7 @@ bool StereoMatcher::matchInferiorMatches(
 bool StereoMatcher::epipolarConstraint(
     const Eigen::Vector2d& keypoint_frame0,
     const Eigen::Vector2d& keypoint_frame1) const {
-  // Convert ponits to homogenous coordinates.
+  // Convert points to homogenous coordinates.
   Eigen::Vector2d keypoint_frame0_undistorted;
   Eigen::Vector3d keypoint_hat_frame0;
   first_mapped_undistorter_->processPoint(

@@ -41,7 +41,7 @@ inline std::shared_ptr<MappedUndistorter> createMappedUndistorter(
   CHECK_GE(alpha, 0.0);
   CHECK_LE(alpha, 1.0);
   CHECK_GT(scale, 0.0);
-
+  VLOG(1) << "Building undistorter map";
   // Create a copy of the input camera.
   aslam::Camera::Ptr input_camera(camera.clone());
   CHECK(input_camera);
@@ -71,7 +71,6 @@ inline std::shared_ptr<MappedUndistorter> createMappedUndistorter(
               input_camera);
       CHECK(unified_proj_cam_ptr != nullptr)
           << "Cast to unified projection camera failed.";
-      intrinsics << unified_proj_cam_ptr->xi(), output_camera_matrix(0, 0),
           output_camera_matrix(1, 1), output_camera_matrix(0, 2),
           output_camera_matrix(1, 2);
       output_camera.reset(
@@ -100,7 +99,7 @@ inline std::shared_ptr<MappedUndistorter> createMappedUndistorter(
     const double v_map = map_v_float.at<float>(v, u);
     return Eigen::Vector2d(u_map, v_map);
   };
-  
+
   return std::shared_ptr<MappedUndistorter>(new MappedUndistorter(
       input_camera, output_camera, map_u, map_v, query_map,
       interpolation_type));

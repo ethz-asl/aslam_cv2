@@ -37,6 +37,7 @@ std::shared_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
   CHECK(output_camera);
 
   cv::Mat map_u, map_v;
+  VLOG(1) << "Building undistorter map";
   common::buildUndistortMap(
       *input_camera, *output_camera, CV_16SC2, map_u, map_v);
 
@@ -46,8 +47,8 @@ std::shared_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
   aslam::convertMapsLegacy(map_u, map_v, map_u_float, map_v_float, CV_32FC1);
 
   // Create query map.
-  std::function<Eigen::Vector2d(double, float)> query_map =
-      [&map_u_float, &map_v_float](double u, float v) {
+  std::function<Eigen::Vector2d(double, double)> query_map =
+      [&map_u_float, &map_v_float](float u, float v) {
         const double u_map = map_u_float.at<float>(v, u);
         const double v_map = map_v_float.at<float>(v, u);
         return Eigen::Vector2d(u_map, v_map);
@@ -65,13 +66,16 @@ MappedUndistorter::MappedUndistorter()
 MappedUndistorter::MappedUndistorter(
     Camera::Ptr input_camera, Camera::Ptr output_camera, const cv::Mat& map_u,
     const cv::Mat& map_v,
-    const std::function<Eigen::Vector2d(double, float)>& query_map,
+    const std::function<Eigen::Vector2d(double, double)> query_map,
     aslam::InterpolationMethod interpolation)
     : Undistorter(input_camera, output_camera),
       map_u_(map_u),
       map_v_(map_v),
       query_map_(query_map),
       interpolation_method_(interpolation) {
+        Eigen::Vector2d point;
+        point = query_map_(1, 1);
+        VLOG(1) << point[0] << "/" << point[1];
   CHECK_EQ(static_cast<size_t>(map_u_.rows), output_camera->imageHeight());
   CHECK_EQ(static_cast<size_t>(map_u_.cols), output_camera->imageWidth());
   CHECK_EQ(static_cast<size_t>(map_v_.rows), output_camera->imageHeight());
@@ -91,12 +95,22 @@ void MappedUndistorter::processImage(
 void MappedUndistorter::processPoint(
     const Eigen::Vector2d& input_point, Eigen::Vector2d* output_point) const {
   CHECK_NOTNULL(output_point);
+  VLOG(1) << input_point[0] << "/" << input_point[1];
   *output_point = input_point;
+  VLOG(1) << (*output_point)[0] << "/" << (*output_point)[1];
   processPoint(output_point);
 }
 
 void MappedUndistorter::processPoint(Eigen::Vector2d* point) const {
-  *point = query_map_((*point)[0], (*point)[1]);
+  VLOG(1) << (*point)[0] << "/" << (*point)[1];
+  VLOG(1) << map_u_.cols << "/" << map_u_.rows;
+  VLOG(1) << map_v_.cols << "/" << map_v_.rows;
+  // CHECK_LE((*point)[0], map_u_.cols);
+  // CHECK_LE((*point)[1], map_v_.rows);
+  Eigen::Vector2d point2;
+  point2 = query_map_(1,1);
+  //point2 = query_map_((*point)[0], (*point)[1]);
+   VLOG(1) << point2[0] << "/" << point2[1];
 }
 
 }  // namespace aslam
