@@ -70,7 +70,7 @@ public:
   ///                          (\ref InterpolationMethod)
   MappedUndistorter(aslam::Camera::Ptr input_camera, aslam::Camera::Ptr output_camera,
                    const cv::Mat& map_u, const cv::Mat& map_v, 
-                   const std::function<Eigen::Vector2d(double, double)> query_map, 
+                   const cv::Mat& map_u_float, const cv::Mat& map_v_float, 
                    InterpolationMethod interpolation);
 
   virtual ~MappedUndistorter() = default;
@@ -95,8 +95,10 @@ private:
   const cv::Mat map_u_;
   /// \brief LUT for v coordinates.
   const cv::Mat map_v_;
-  /// \brief Convertion map from distorted to undistorted points.
-  const std::function<Eigen::Vector2d(double, double)> query_map_;
+  /// \brief Non-fixed point LUT for u coordinates.
+  const cv::Mat map_u_float_;
+  /// \brief Non-fixed point LUT for v coordinates.
+  const cv::Mat map_v_float_;
   /// \brief Interpolation strategy
   InterpolationMethod interpolation_method_;
 };
