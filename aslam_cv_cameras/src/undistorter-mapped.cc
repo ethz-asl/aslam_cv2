@@ -90,23 +90,19 @@ void MappedUndistorter::processImage(
 void MappedUndistorter::processPoint(
     const Eigen::Vector2d& input_point, Eigen::Vector2d* output_point) const {
   CHECK_NOTNULL(output_point);
-  VLOG(1) << input_point[0] << "/" << input_point[1];
   *output_point = input_point;
-  VLOG(1) << (*output_point)[0] << "/" << (*output_point)[1];
   processPoint(output_point);
 }
 
 void MappedUndistorter::processPoint(Eigen::Vector2d* point) const {
-  VLOG(1) << (*point)[0] << "/" << (*point)[1];
-  VLOG(1) << map_u_.cols << "/" << map_u_.rows;
-  VLOG(1) << map_v_.cols << "/" << map_v_.rows;
+  VLOG(10) << "Distorted point: " << (*point)[0] << "/" << (*point)[1];
   CHECK_LE((*point)[0], map_u_.cols);
   CHECK_LE((*point)[1], map_v_.rows);
   *point = Eigen::Vector2d(
-      map_u_float_.at<float>((*point)[0], (*point)[1]),
-      map_v_float_.at<float>((*point)[0], (*point)[1]));
+      map_u_float_.at<float>((*point)[1], (*point)[0]),
+      map_v_float_.at<float>((*point)[1], (*point)[0]));
 
-  VLOG(1) << (*point)[0] << "/" << (*point)[1];
+  VLOG(10) << "Undistorted point: " << (*point)[0] << "/" << (*point)[1];
 }
 
 }  // namespace aslam

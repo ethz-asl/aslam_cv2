@@ -4,7 +4,7 @@
 #include <glog/logging.h>
 
 DEFINE_double(
-    stereo_matcher_epipolar_threshold, 20,
+    stereo_matcher_epipolar_threshold, 0.01,
     "Threshold whether a point is considered as fulfilling the epipolar "
     "constraint. The higher this value, the more points are considered for the "
     "correspondance search.");
@@ -23,7 +23,7 @@ StereoMatcher::StereoMatcher(
     : first_camera_idx_(first_camera_idx),
       second_camera_idx_(second_camera_idx),
       camera_rig_(camera_rig),
-      fundamental_matrix_(fundamental_matrix_),
+      fundamental_matrix_(fundamental_matrix),
       first_mapped_undistorter_(first_mapped_undistorter),
       second_mapped_undistorter_(second_mapped_undistorter),
       frame0_(frame0),
@@ -190,7 +190,6 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
         computeMatchingScore(current_score, kDescriptorSizeBits);
     current_match_data.addCandidate(it, current_matching_score);
   }
-
   if (found) {
     passed_ratio_test =
         ratioTest(kDescriptorSizeBits, distance_best, distance_second_best);
@@ -375,10 +374,12 @@ bool StereoMatcher::epipolarConstraint(
       keypoint_frame1, &keypoint_frame1_undistorted);
   keypoint_hat_frame1 << keypoint_frame1_undistorted,
       Eigen::Matrix<double, 1, 1>(1.0);
-
-  return keypoint_hat_frame1.transpose() * fundamental_matrix_ *
-             keypoint_hat_frame0 <
-         kEpipolarThreshold;
+  VLOG(10) << "KP0: " << keypoint_hat_frame0 << ", KP1: " << keypoint_hat_frame1
+           << ", e = " << std::abs(keypoint_hat_frame1.transpose() *
+                              fundamental_matrix_ * keypoint_hat_frame0);
+  return std::abs(
+             keypoint_hat_frame1.transpose() * fundamental_matrix_ *
+             keypoint_hat_frame0) < kEpipolarThreshold;
 }
 
 }  // namespace aslam

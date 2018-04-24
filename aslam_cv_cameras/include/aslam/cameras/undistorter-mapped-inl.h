@@ -41,7 +41,6 @@ inline std::shared_ptr<MappedUndistorter> createMappedUndistorter(
   CHECK_GE(alpha, 0.0);
   CHECK_LE(alpha, 1.0);
   CHECK_GT(scale, 0.0);
-  VLOG(1) << "Building undistorter map";
   // Create a copy of the input camera.
   aslam::Camera::Ptr input_camera(camera.clone());
   CHECK(input_camera);
