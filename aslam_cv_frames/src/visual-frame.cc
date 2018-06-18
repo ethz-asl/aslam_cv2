@@ -71,6 +71,9 @@ bool VisualFrame::hasTrackIds() const {
 bool VisualFrame::hasRawImage() const {
   return aslam::channels::has_RAW_IMAGE_Channel(channels_);
 }
+bool VisualFrame::hasDepthMeasurements() const{
+  return aslam::channels::has_DEPTH_MEASUREMENTS_Channel(channels_);
+}
 
 const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
   return aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
@@ -95,6 +98,9 @@ const Eigen::VectorXi& VisualFrame::getTrackIds() const {
 }
 const cv::Mat& VisualFrame::getRawImage() const {
   return aslam::channels::get_RAW_IMAGE_Data(channels_);
+}
+const Eigen::VectorXd& VisualFrame::getDepthMeasurements() const {
+  return aslam::channels::get_DEPTH_MEASUREMENTS_Data(channels_);
 }
 
 void VisualFrame::releaseRawImage() {
@@ -140,6 +146,11 @@ cv::Mat* VisualFrame::getRawImageMutable() {
   cv::Mat& image =
       aslam::channels::get_RAW_IMAGE_Data(channels_);
   return &image;
+}
+Eigen::VectorXd* VisualFrame::getDepthMeasurementsMutable() {
+  Eigen::VectorXd& depths =
+      aslam::channels::get_DEPTH_MEASUREMENTS_Data(channels_);
+    return &depths;
 }
 
 const Eigen::Block<Eigen::Matrix2Xd, 2, 1>
@@ -190,6 +201,12 @@ int VisualFrame::getTrackId(size_t index) const {
       aslam::channels::get_TRACK_IDS_Data(channels_);
   CHECK_LT(static_cast<int>(index), track_ids.rows());
   return track_ids.coeff(index, 0);
+}
+double VisualFrame::getDepthMeasurement(size_t index) const {
+  Eigen::VectorXd& data =
+      aslam::channels::get_DEPTH_MEASUREMENTS_Data(channels_);
+  CHECK_LT(static_cast<int>(index), data.rows());
+  return data.coeff(index, 0);
 }
 
 void VisualFrame::setKeypointMeasurements(
@@ -263,7 +280,6 @@ void VisualFrame::setTrackIds(const Eigen::VectorXi& track_ids_new) {
       aslam::channels::get_TRACK_IDS_Data(channels_);
   data = track_ids_new;
 }
-
 void VisualFrame::setRawImage(const cv::Mat& image_new) {
   if (!aslam::channels::has_RAW_IMAGE_Channel(channels_)) {
     aslam::channels::add_RAW_IMAGE_Channel(&channels_);
@@ -271,6 +287,15 @@ void VisualFrame::setRawImage(const cv::Mat& image_new) {
   cv::Mat& image =
       aslam::channels::get_RAW_IMAGE_Data(channels_);
   image = image_new;
+}
+void VisualFrame::setDepthMeasurements(
+    const Eigen::VectorXd& depths_new) {
+  if (!aslam::channels::has_DEPTH_MEASUREMENTS_Channel(channels_)) {
+    aslam::channels::add_DEPTH_MEASUREMENTS_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_DEPTH_MEASUREMENTS_Data(channels_);
+  data = depths_new;
 }
 
 void VisualFrame::swapKeypointMeasurements(Eigen::Matrix2Xd* keypoints_new) {
@@ -321,13 +346,19 @@ void VisualFrame::swapDescriptors(DescriptorsT* descriptors_new) {
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   descriptors.swap(*descriptors_new);
 }
-
 void VisualFrame::swapTrackIds(Eigen::VectorXi* track_ids_new) {
   if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
     aslam::channels::add_TRACK_IDS_Channel(&channels_);
   }
   Eigen::VectorXi& track_ids = aslam::channels::get_TRACK_IDS_Data(channels_);
   track_ids.swap(*track_ids_new);
+}
+void VisualFrame::swapDepthMeasurments(Eigen::VectorXd* depths_new) {
+  if (!aslam::channels::has_DEPTH_MEASUREMENTS_Channel(channels_)) {
+    aslam::channels::add_DEPTH_MEASUREMENTS_Channel(&channels_);
+  }
+  Eigen::VectorXd& data = aslam::channels::get_DEPTH_MEASUREMENTS_Data(channels_);
+  data.swap(*depths_new);
 }
 
 void VisualFrame::clearKeypointChannels() {
@@ -343,6 +374,7 @@ void VisualFrame::clearKeypointChannels() {
   setKeypointScores(zero_vector_double);
   setKeypointScales(zero_vector_double);
   setDescriptors(aslam::VisualFrame::DescriptorsT());
+  setDepthMeasurements(zero_vector_double);
 }
 
 const Camera::ConstPtr VisualFrame::getCameraGeometry() const {
@@ -454,6 +486,8 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   frame->swapKeypointMeasurementUncertainties(&keypoint_uncertainties);
   aslam::VisualFrame::DescriptorsT descriptors = aslam::VisualFrame::DescriptorsT::Zero(48, 0);
   frame->swapDescriptors(&descriptors);
+  Eigen::VectorXd depth_measurements = Eigen::VectorXd::Zero(0);
+  frame->swapDepthMeasurments(&depth_measurements);
   aslam::FrameId id;
   id.randomize();
   frame->setId(id);
@@ -502,6 +536,10 @@ void VisualFrame::discardUntrackedObservations(
     common::stl_helpers::kColumns> adapter(getDescriptorsMutable());
     common::stl_helpers::eraseIndicesFromContainer(
         *discarded_indices, original_count, &adapter);
+  }
+  if (hasDepthMeasurements()) {
+    common::stl_helpers::eraseIndicesFromContainer(
+        *discarded_indices, original_count, getDepthMeasurementsMutable());
   }
   common::stl_helpers::eraseIndicesFromContainer(
       *discarded_indices, original_count, getTrackIdsMutable());

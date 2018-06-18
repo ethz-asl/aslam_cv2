@@ -34,6 +34,9 @@ DECLARE_CHANNEL(TRACK_IDS, Eigen::VectorXi)
 
 /// The raw image.
 DECLARE_CHANNEL(RAW_IMAGE, cv::Mat)
+  
+/// Depth measurements of the keypoint. Output of the stereo matcher.
+DECLARE_CHANNEL(DEPTH_MEASUREMENTS, Eigen::VectorXd)
 
 DECLARE_CHANNEL(CV_MAT, cv::Mat)
 

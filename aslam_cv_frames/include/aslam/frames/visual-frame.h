@@ -87,6 +87,9 @@ class VisualFrame  {
   /// Is there a raw image stored in this frame?
   bool hasRawImage() const;
 
+  // Are there depth measurements stored in this frame?
+  bool hasDepthMeasurements() const;
+
   /// Is a certain channel stored in this frame?
   bool hasChannel(const std::string& channel) const {
     return aslam::channels::hasChannel(channel, channels_);
@@ -125,6 +128,9 @@ class VisualFrame  {
   /// The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
 
+  /// The depth measurements stored in a frame.
+  const Eigen::VectorXd& getDepthMeasurements() const;
+
   /// Release the raw image. Only if the cv::Mat reference count is 1 the memory will be freed.
   void releaseRawImage();
 
@@ -156,6 +162,9 @@ class VisualFrame  {
 
   /// A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
+
+  /// A pointer to the depth measurements, can be used to swap in new data.
+  Eigen::VectorXd* getDepthMeasurementsMutable();
 
   template<typename CHANNEL_DATA_TYPE>
   CHANNEL_DATA_TYPE* getChannelDataMutable(const std::string& channel) const {
@@ -189,6 +198,9 @@ class VisualFrame  {
   /// Return the track id at index. (-1: not tracked)
   int getTrackId(size_t index) const;
 
+  /// Return the depth measurement at index.
+  double getDepthMeasurement(size_t index) const;
+
   /// Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
 
@@ -218,6 +230,9 @@ class VisualFrame  {
   ///        This is a shallow copy by default. Please clone the image if it
   ///        should be owned by the VisualFrame.
   void setRawImage(const cv::Mat& image);
+
+  /// Replace (copy) the internal depth measurements by the passed ones.
+  void setDepthMeasurements(const Eigen::VectorXd& depths);
 
   template<typename CHANNEL_DATA_TYPE>
   void setChannelData(const std::string& channel,
@@ -252,6 +267,9 @@ class VisualFrame  {
 
   /// Replace (swap) the internal track ids by the passed ones.
   void swapTrackIds(Eigen::VectorXi* track_ids);
+
+  /// Replace (swap) the internal depth measurements by the passed ones.
+  void swapDepthMeasurments(Eigen::VectorXd* depths);
 
   /// Swap channel data with the data passed in. This will only work
   /// if the channel data type has a swap() method.

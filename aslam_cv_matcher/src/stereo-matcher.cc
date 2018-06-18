@@ -17,8 +17,8 @@ StereoMatcher::StereoMatcher(
     const Eigen::Matrix3d& fundamental_matrix,
     const std::shared_ptr<MappedUndistorter> first_mapped_undistorter,
     const std::shared_ptr<MappedUndistorter> second_mapped_undistorter,
-    const aslam::VisualFrame::ConstPtr frame0,
-    const aslam::VisualFrame::ConstPtr frame1,
+    const aslam::VisualFrame::Ptr frame0,
+    const aslam::VisualFrame::Ptr frame1,
     StereoMatchesWithScore* matches_frame0_frame1)
     : first_camera_idx_(first_camera_idx),
       second_camera_idx_(second_camera_idx),

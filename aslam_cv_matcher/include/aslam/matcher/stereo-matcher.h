@@ -49,8 +49,8 @@ class StereoMatcher {
       const Eigen::Matrix3d& fundamental_matrix,
       const std::shared_ptr<aslam::MappedUndistorter> first_mapped_undistorter,
       const std::shared_ptr<aslam::MappedUndistorter> second_mapped_undistorter,
-      const aslam::VisualFrame::ConstPtr frame0,
-      const aslam::VisualFrame::ConstPtr frame1,
+      const aslam::VisualFrame::Ptr frame0,
+      const aslam::VisualFrame::Ptr frame1,
       StereoMatchesWithScore* matches_frame0_frame1);
   virtual ~StereoMatcher(){};
 
