@@ -474,7 +474,7 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
   const double depth1 = sqrt(
       X_cam1(0) * X_cam1(0) + X_cam1(1) * X_cam1(1) + X_cam1(2) * X_cam1(2));
   match->setDepthFrame0(depth0);
-  // match->setDepthFrame1(depth1);
+  match->setDepthFrame1(depth1);
   return (depth0 > 0.0 && depth1 > 0.0);
 }
 

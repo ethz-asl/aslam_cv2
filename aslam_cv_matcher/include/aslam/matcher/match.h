@@ -145,7 +145,7 @@ struct MatchWithScore {
     void setAdditionalDataAppleAlias(const double data) {                      \
       aslam::MatchWithScore::setAdditionalDataApple(data);                     \
     }                                                                          \
-    void getAdditionalDataBananaAlias(const double data) {                     \
+    void setAdditionalDataBananaAlias(const double data) {                     \
       aslam::MatchWithScore::setAdditionalDataBanana(data);                    \
     }                                                                          \
   };                                                                           \
