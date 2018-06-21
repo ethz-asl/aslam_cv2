@@ -39,11 +39,11 @@ struct MatchWithScore {
   template<typename MatchingProblem> friend class MatchingEngineGreedy;
 
   /// \brief Initialize to an invalid match.
-  MatchWithScore() : correspondence {-1, -1}, score(0.0) {}
+  MatchWithScore() : correspondence {-1, -1}, score(0.0), additional_data {0.0, 0.0} {}
 
   /// \brief Initialize with correspondences and a score.
   MatchWithScore(int index_apple, int index_banana, double _score)
-      : correspondence {index_apple, index_banana}, score(_score) {}
+      : correspondence {index_apple, index_banana}, score(_score), additional_data {0.0, 0.0} {}
 
   void setIndexApple(int index_apple) {
     correspondence[0] = index_apple;
@@ -51,6 +51,14 @@ struct MatchWithScore {
 
   void setIndexBanana(int index_banana) {
       correspondence[1] = index_banana;
+  }
+  
+  void setAdditionalDataApple(const double data) {
+    additional_data[0] = data;
+  }
+
+  void setAdditionalDataBanana(const double data) {
+    additional_data[1] = data;
   }
 
   void setScore(double _score) {
@@ -72,7 +80,10 @@ struct MatchWithScore {
   bool operator==(const MatchWithScore& other) const {
     return (this->correspondence[0] == other.correspondence[0]) &&
            (this->correspondence[1] == other.correspondence[1]) &&
-           (this->score == other.score);
+           (this->score == other.score) &&
+           (this->additional_data[0] == other.additional_data[0]) &&
+           (this->additional_data[1] == other.additional_data[1]);
+    
   }
 
  protected:
@@ -85,10 +96,19 @@ struct MatchWithScore {
   int getIndexBanana() const {
     return correspondence[1];
   }
+  /// \brief Get additional data related to object in list A.
+  int getAdditionalDataApple() const {
+    return additional_data[0];
+  }
 
+  /// \brief Get additional data related to object in list B.
+  int getAdditionalDataBanana() const {
+    return additional_data[1];
+  }
  private:
   int correspondence[2];
   double score;
+  double additional_data[2];
 };
 }  // namespace aslam
 
@@ -98,7 +118,8 @@ struct MatchWithScore {
 // bananas are associated within the context of the given matching problem.
 
 #define ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(                                                    \
-    MatchType, getAppleIndexAlias, getBananaIndexAlias)                                           \
+    MatchType, getAppleIndexAlias, getBananaIndexAlias, getAdditionalDataAppleAlias,              \
+    getAdditionalDataBananaAlias, setAdditionalDataAppleAlias, setAdditionalDataBananaAlias)      \
   struct MatchType ## MatchWithScore : public aslam::MatchWithScore {                             \
   MatchType ## MatchWithScore(int index_apple, int index_banana, double score)                    \
         : aslam::MatchWithScore(index_apple, index_banana, score) {}                              \
@@ -109,9 +130,21 @@ struct MatchWithScore {
     int getBananaIndexAlias() const {                                                             \
       return aslam::MatchWithScore::getIndexBanana();                                             \
     }                                                                                             \
+    double getAdditionalDataAppleAlias() const {                                                  \
+      return aslam::MatchWithScore::getAdditionalDataApple();                                     \
+    }                                                                                             \
+    double getAdditionalDataBananaAlias() const {                                                 \
+      return aslam::MatchWithScore::getAdditionalDataBanana();                                    \
+    }                                                                                             \
+    void setAdditionalDataAppleAlias(const double data) {                                         \
+      aslam::MatchWithScore::setAdditionalDataApple(data);                                        \
+    }                                                                                             \
+    void getAdditionalDataBananaAlias(const double data) {                                        \
+      aslam::MatchWithScore::setAdditionalDataBanana(data);                                       \
+    }                                                                                             \
   };                                                                                              \
-  typedef Aligned<std::vector, MatchType ## MatchWithScore> MatchType ## MatchesWithScore;  \
-  typedef Aligned<std::vector, MatchType ## MatchesWithScore>                               \
+  typedef Aligned<std::vector, MatchType ## MatchWithScore> MatchType ## MatchesWithScore;        \
+  typedef Aligned<std::vector, MatchType ## MatchesWithScore>                                     \
     MatchType ## MatchesWithScoreList;                                                            \
   struct MatchType ## Match : public aslam::Match {                                               \
       MatchType ## Match() = default;                                                             \
@@ -120,8 +153,8 @@ struct MatchWithScore {
     size_t getAppleIndexAlias() const { return first; }                                           \
     size_t getBananaIndexAlias() const { return second; }                                         \
   };                                                                                              \
-  typedef Aligned<std::vector, MatchType ## Match> MatchType ## Matches;                    \
-  typedef Aligned<std::vector, MatchType ## Matches> MatchType ## MatchesList;              \
+  typedef Aligned<std::vector, MatchType ## Match> MatchType ## Matches;                          \
+  typedef Aligned<std::vector, MatchType ## Matches> MatchType ## MatchesList;                    \
 
 #define ASLAM_ADD_MATCH_TYPEDEFS(MatchType)                                                       \
   typedef MatchType ## MatchWithScore MatchWithScore;                                             \
@@ -133,11 +166,13 @@ struct MatchWithScore {
 
 namespace aslam {
 ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
-    FrameToFrame, getKeypointIndexAppleFrame, getKeypointIndexBananaFrame);
+    FrameToFrame, getKeypointIndexAppleFrame, getKeypointIndexBananaFrame, 
+    asdf0, asdf1, asdf2, asdf3);
 ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
-    Stereo, getKeypointIndexFrame0, getKeypointIndexFrame1);
+    Stereo, getKeypointIndexFrame0, getKeypointIndexFrame1, getDepthFrame0, 
+    getDepthFrame1, setDepthFrame0, setDepthFrame1);
 ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
-    LandmarksToFrame, getKeypointIndex, getLandmarkIndex);
+    LandmarksToFrame, getKeypointIndex, getLandmarkIndex, asdf0, asdf1, asdf2, asdf3);
 }  // namespace aslam
 
 #endif // ASLAM_MATCH_H_

@@ -15,15 +15,22 @@ StereoMatcher::StereoMatcher(
     const size_t first_camera_idx, const size_t second_camera_idx,
     const aslam::NCamera::ConstPtr camera_rig,
     const Eigen::Matrix3d& fundamental_matrix,
+    const Eigen::Matrix3d& rotation_C1_C0,
+    const Eigen::Vector3d& translation_C1_C0,
     const std::shared_ptr<MappedUndistorter> first_mapped_undistorter,
     const std::shared_ptr<MappedUndistorter> second_mapped_undistorter,
-    const aslam::VisualFrame::Ptr frame0,
-    const aslam::VisualFrame::Ptr frame1,
+
+    const aslam::VisualFrame::Ptr frame0, const aslam::VisualFrame::Ptr frame1,
+
     StereoMatchesWithScore* matches_frame0_frame1)
     : first_camera_idx_(first_camera_idx),
       second_camera_idx_(second_camera_idx),
       camera_rig_(camera_rig),
       fundamental_matrix_(fundamental_matrix),
+
+      rotation_C1_C0_(rotation_C1_C0),
+      translation_C1_C0_(translation_C1_C0),
+
       first_mapped_undistorter_(first_mapped_undistorter),
       second_mapped_undistorter_(second_mapped_undistorter),
       frame0_(frame0),
@@ -92,6 +99,16 @@ StereoMatcher::StereoMatcher(
         &(descriptors_frame1.coeffRef(0, descriptor_frame1_idx)),
         kDescriptorSizeBytes);
   }
+
+  const aslam::PinholeCamera::ConstPtr camera0 =
+      std::dynamic_pointer_cast<const aslam::PinholeCamera>(
+          camera_rig_->getCameraShared(first_camera_idx_));
+  const aslam::PinholeCamera::ConstPtr camera1 =
+      std::dynamic_pointer_cast<const aslam::PinholeCamera>(
+          camera_rig_->getCameraShared(second_camera_idx_));
+  // Get inverse of camera matrices.
+  camera_matrix_C0_inv_ = camera0->getCameraMatrix().inverse();
+  camera_matrix_C1_inv_ = camera1->getCameraMatrix().inverse();
 }
 
 void StereoMatcher::match() {
@@ -133,6 +150,10 @@ void StereoMatcher::match() {
     if (!matchInferiorMatches(&is_inferior_keypoint_frame1_matched)) {
       return;
     }
+  }
+  // Triangulate depth for each matched keypoint and add to frame.
+  for (aslam::StereoMatchWithScore& match : *matches_frame0_frame1_) {
+    calculateDepth(&match);
   }
 }
 
@@ -243,11 +264,11 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
     }
 
     statistics::StatsCollector stats_distance_match(
-        "StereoTracker: number of matching bits");
+        "StereoMatcher: number of matching bits");
     stats_distance_match.AddSample(best_score);
   }
   statistics::StatsCollector stats_count_processed(
-      "StereoTracker: number of computed distances per keypoint");
+      "StereoMatcher: number of computed distances per keypoint");
   stats_count_processed.AddSample(n_processed_corners);
 }
 
@@ -375,11 +396,86 @@ bool StereoMatcher::epipolarConstraint(
   keypoint_hat_frame1 << keypoint_frame1_undistorted,
       Eigen::Matrix<double, 1, 1>(1.0);
   VLOG(10) << "KP0: " << keypoint_hat_frame0 << ", KP1: " << keypoint_hat_frame1
-           << ", e = " << std::abs(keypoint_hat_frame1.transpose() *
+
+           << ", e = " << std::abs(
+                              keypoint_hat_frame1.transpose() *
+
                               fundamental_matrix_ * keypoint_hat_frame0);
   return std::abs(
              keypoint_hat_frame1.transpose() * fundamental_matrix_ *
              keypoint_hat_frame0) < kEpipolarThreshold;
+}
+
+bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
+  /* Triangulate point using method from Trucco E., Verri A. 1998. Introductory
+   * Techniques for 3-D Computer Vision. See
+   * https://pdfs.semanticscholar.org/675a/75494f55b0ac6092f6beef6ac413c296faf4.pdf
+   * for a summary.
+   *
+   *  Solve vector triangle:
+   *      a * K0.inv() * u0 + b * (K0.inv() x R * K1.inv() * u1) + c * R
+   *          K1.inv() * u1 = T
+   *   => a * p0 + b * d + c * p1 = T
+   *
+   *      a = (d2 p11 t0 - d1 p12 t0 - d2 p10 t1 + d0 p12 t1 + d1 p10 t2 -
+   *            d0 p11 t2)/(d2 p01 p10 - d1 p02 p10 - d2 p00 p11 + d0 p02 p11
+   *            + d1 p00 p12 - d0 p01 p12)
+   *   => b = -((p02 p11 t0 - p01 p12 t0 - p02 p10 t1 + p00 p12 t1 + p01 p10 t2
+   *            - p00 p11 t2)/(-d2 p01 p10 + d1 p02 p10 + d2 p00 p11 -
+   *            d0 p02 p11 - d1 p00 p12 + d0 p01 p12))
+   *      c = -((d2 p01 t0 - d1 p02 t0 - d2 p00 t1 + d0 p02 t1 + d1 p00 t2 -
+   *            d0 p01 t2)/(-d2 p01 p10 + d1 p02 p10 + d2 p00 p11 - d0 p02 p11
+   *            - d1 p00 p12 + d0 p01 p12))
+   *
+   *  Final 3d point can then be found as X = a * p0 + b/2 * d.
+   *  The depth is calculated as D = sqrt(X(0)^2 + X(1)^2 + X(2)^2)
+   */
+
+  Eigen::Vector2d keypoint_frame0 =
+      frame0_->getKeypointMeasurement(match->getKeypointIndexFrame0());
+  Eigen::Vector2d keypoint_frame0_undistorted;
+  Eigen::Vector3d u0;
+  first_mapped_undistorter_->processPoint(
+      keypoint_frame0, &keypoint_frame0_undistorted);
+  u0 << keypoint_frame0_undistorted, Eigen::Matrix<double, 1, 1>(1.0);
+
+  Eigen::Vector2d keypoint_frame1 =
+      frame1_->getKeypointMeasurement(match->getKeypointIndexFrame1());
+  Eigen::Vector2d keypoint_frame1_undistorted;
+  Eigen::Vector3d u1;
+  first_mapped_undistorter_->processPoint(
+      keypoint_frame1, &keypoint_frame1_undistorted);
+  u1 << keypoint_frame1_undistorted, Eigen::Matrix<double, 1, 1>(1.0);
+
+  Eigen::Vector3d p0 = camera_matrix_C0_inv_ * u0;
+  Eigen::Vector3d p1 = rotation_C1_C0_.transpose() * camera_matrix_C1_inv_ * u1;
+  Eigen::Vector3d d = p0.cross(p1);
+  Eigen::Vector3d t = -translation_C1_C0_;
+  double a =
+      -((d(2) * p1(1) * t(0) - d(1) * p1(2) * t(0) - d(2) * p1(0) * t(1) +
+         d(0) * p1(2) * t(1) + d(1) * p1(0) * t(2) - d(0) * p1(1) * t(2)) /
+        (d(2) * p0(1) * p1(0) - d(1) * p0(2) * p1(0) - d(2) * p0(0) * p1(1) +
+         d(0) * p0(2) * p1(1) + d(1) * p0(0) * p1(2) - d(0) * p0(1) * p1(2)));
+  double b =
+      -((p0(2) * p1(1) * t(0) - p0(1) * p1(2) * t(0) - p0(2) * p1(0) * t(1) +
+         p0(0) * p1(2) * t(1) + p0(1) * p1(0) * t(2) - p0(0) * p1(1) * t(2)) /
+        (-d(2) * p0(1) * p1(0) + d(1) * p0(2) * p1(0) + d(2) * p0(0) * p1(1) -
+         d(0) * p0(2) * p1(1) - d(1) * p0(0) * p1(2) + d(0) * p0(1) * p1(2)));
+  double c =
+      -((d(2) * p0(1) * t(0) - d(1) * p0(2) * t(0) - d(2) * p0(0) * t(1) +
+         d(0) * p0(2) * t(1) + d(1) * p0(0) * t(2) - d(0) * p0(1) * t(2)) /
+        (-d(2) * p0(1) * p1(0) + d(1) * p0(2) * p1(0) + d(2) * p0(0) * p1(1) -
+         d(0) * p0(2) * p1(1) - d(1) * p0(0) * p1(2) + d(0) * p0(1) * p1(2)));
+
+  Eigen::Vector3d X_cam0 = a * p0 + b / 2.0 * d;
+  const double depth0 = sqrt(
+      X_cam0(0) * X_cam0(0) + X_cam0(1) * X_cam0(1) + X_cam0(2) * X_cam0(2));
+  Eigen::Vector3d X_cam1 = rotation_C1_C0_ * (X_cam0 - translation_C1_C0_);
+  const double depth1 = sqrt(
+      X_cam1(0) * X_cam1(0) + X_cam1(1) * X_cam1(1) + X_cam1(2) * X_cam1(2));
+  match->setDepthFrame0(depth0);
+  // match->setDepthFrame1(depth1);
+  return (depth0 > 0.0 && depth1 > 0.0);
 }
 
 }  // namespace aslam

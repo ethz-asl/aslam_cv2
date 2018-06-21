@@ -47,6 +47,8 @@ class StereoMatcher {
       const size_t first_camera_idx, const size_t second_camera_idx,
       const aslam::NCamera::ConstPtr camera_rig,
       const Eigen::Matrix3d& fundamental_matrix,
+      const Eigen::Matrix3d& rotation_C1_C0,
+      const Eigen::Vector3d& translation_C1_C0,
       const std::shared_ptr<aslam::MappedUndistorter> first_mapped_undistorter,
       const std::shared_ptr<aslam::MappedUndistorter> second_mapped_undistorter,
       const aslam::VisualFrame::Ptr frame0,
@@ -131,11 +133,19 @@ class StereoMatcher {
       const unsigned int distance_shortest,
       const unsigned int distance_second_shortest) const;
 
+  // Triangulates found stereo pairs and calculates depth in each frame.
+  // Returns true if sanaty check (depth > 0) passed.
+  bool calculateDepth(aslam::StereoMatchWithScore* match); 
+
   const size_t first_camera_idx_;
   const size_t second_camera_idx_;
   const aslam::NCamera::ConstPtr camera_rig_;
   StereoMatchesWithScore* matches_frame0_frame1_;
   const Eigen::Matrix3d fundamental_matrix_;
+  const Eigen::Matrix3d rotation_C1_C0_;
+  const Eigen::Vector3d translation_C1_C0_;
+  Eigen::Matrix3d camera_matrix_C0_inv_;
+  Eigen::Matrix3d camera_matrix_C1_inv_;
   std::shared_ptr<MappedUndistorter> first_mapped_undistorter_;
   std::shared_ptr<MappedUndistorter> second_mapped_undistorter_;
 
