@@ -148,12 +148,13 @@ void StereoMatcher::match() {
       is_keypoint_frame1_matched_);
   for (size_t i = 0u; i < kMaxNumInferiorIterations; ++i) {
     if (!matchInferiorMatches(&is_inferior_keypoint_frame1_matched)) {
+      // No more inferior matches, now triangulate depth for each matched
+      // keypoint and add to frame.
+      for (aslam::StereoMatchWithScore& match : *matches_frame0_frame1_) {
+        calculateDepth(&match);
+      }
       return;
     }
-  }
-  // Triangulate depth for each matched keypoint and add to frame.
-  for (aslam::StereoMatchWithScore& match : *matches_frame0_frame1_) {
-    calculateDepth(&match);
   }
 }
 
@@ -430,7 +431,6 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
    *  Final 3d point can then be found as X = a * p0 + b/2 * d.
    *  The depth is calculated as D = sqrt(X(0)^2 + X(1)^2 + X(2)^2)
    */
-
   Eigen::Vector2d keypoint_frame0 =
       frame0_->getKeypointMeasurement(match->getKeypointIndexFrame0());
   Eigen::Vector2d keypoint_frame0_undistorted;
