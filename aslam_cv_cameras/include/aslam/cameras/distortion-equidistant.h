@@ -72,6 +72,12 @@ class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDis
       const Eigen::Matrix<ScalarType, 2, 1>& point,
       Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
 
+  template <typename ScalarType, typename MDistortion>
+  void distortUsingExternalCoefficients(
+      const Eigen::MatrixBase<MDistortion>& dist_coeffs,
+      const Eigen::Matrix<ScalarType, 2, 1>& point,
+      Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
   /// @param[in]  dist_coeffs  Vector containing the coefficients for the distortion model.
@@ -152,5 +158,7 @@ class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDis
 };
 
 } // namespace aslam
+
+#include "distortion-equidistant-inl.h"
 
 #endif /* ASLAM_EQUIDISTANT_DISTORTION_H_ */

@@ -1,32 +1,9 @@
 #ifndef FISHEYE_DISTORTION_INL_H_
 #define FISHEYE_DISTORTION_INL_H_
 
-#include <cmath>
+#include "aslam/cameras/jet-trigonometric.h"
 
 namespace aslam {
-namespace jet_trigonometric {
-
-inline double tan(double x) {
-  return std::tan(x);
-}
-
-inline double atan(double x) {
-  return std::atan(x);
-}
-
-template <template <typename, int> class JetType, typename T, int N>
-inline JetType<T, N> tan(const JetType<T, N>& f) {
-  const T tan_a = tan(f.a);
-  const T tmp = T(1.0) + tan_a * tan_a;
-  return JetType<T, N>(tan_a, tmp * f.v);
-}
-
-template <template <typename, int> class JetType, typename T, int N>
-inline JetType<T, N> atan(const JetType<T, N>& f) {
-  const T tmp = T(1.0) / (T(1.0) + f.a * f.a);
-  return JetType<T, N>(atan(f.a), tmp * f.v);
-}
-} // namespace jet_trigonometric
 
 template <typename ScalarType, typename MDistortion>
 void FisheyeDistortion::distortUsingExternalCoefficients(
