@@ -66,12 +66,6 @@ class EquidistantDistortion : public aslam::Cloneable<Distortion, EquidistantDis
   /// @param[in]  point       The point in the normalized image plane. After the function, this
   ///                         point is distorted.
   /// @param[out] out_point   The distorted point.
-  template<typename ScalarType>
-  void distortUsingExternalCoefficients(
-      const Eigen::Map<Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>>* dist_coeffs,
-      const Eigen::Matrix<ScalarType, 2, 1>& point,
-      Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
-
   template <typename ScalarType, typename MDistortion>
   void distortUsingExternalCoefficients(
       const Eigen::MatrixBase<MDistortion>& dist_coeffs,
