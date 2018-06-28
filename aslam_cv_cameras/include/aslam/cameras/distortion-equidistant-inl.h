@@ -1,6 +1,4 @@
-#include <cmath>
-
-#include "aslam/cameras/jet-trigonometric.h"
+#include "aslam/cameras/ceres-jet-math.h"
 
 namespace aslam {
 
@@ -24,9 +22,9 @@ void EquidistantDistortion::distortUsingExternalCoefficients(
 
   const ScalarType x2 = x * x;
   const ScalarType y2 = y * y;
-  const ScalarType r = jet_trigonometric::sqrt(x2 + y2);
+  const ScalarType r = jet_math::sqrt(x2 + y2);
 
-  const ScalarType theta = jet_trigonometric::atan(r);
+  const ScalarType theta = jet_math::atan(r);
   const ScalarType theta2 = theta * theta;
   const ScalarType theta4 = theta2 * theta2;
   const ScalarType theta6 = theta2 * theta4;

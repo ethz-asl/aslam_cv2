@@ -1,7 +1,7 @@
 #ifndef FISHEYE_DISTORTION_INL_H_
 #define FISHEYE_DISTORTION_INL_H_
 
-#include "aslam/cameras/jet-trigonometric.h"
+#include "aslam/cameras/ceres-jet-math.h"
 
 namespace aslam {
 
@@ -23,14 +23,14 @@ void FisheyeDistortion::distortUsingExternalCoefficients(
     // Limit w->0.
     r_rd = static_cast<ScalarType>(1);
   } else {
-    const ScalarType mul2tanwby2 = static_cast<ScalarType>(2.0 * jet_trigonometric::tan(w / 2.0));
+    const ScalarType mul2tanwby2 = static_cast<ScalarType>(2.0 * jet_math::tan(w / 2.0));
     const ScalarType mul2tanwby2byw = mul2tanwby2 / w;
 
     if (r_u * r_u < static_cast<ScalarType>(1e-5)) {
       // Limit r_u->0.
       r_rd = mul2tanwby2byw;
     } else {
-      r_rd = jet_trigonometric::atan(r_u * mul2tanwby2) /
+      r_rd = jet_math::atan(r_u * mul2tanwby2) /
           (r_u * w);
     }
   }
