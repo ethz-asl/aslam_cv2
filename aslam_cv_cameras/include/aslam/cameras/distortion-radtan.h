@@ -60,6 +60,15 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
                                                 Eigen::Vector2d* point,
                                                 Eigen::Matrix2d* out_jacobian) const;
 
+  /// \brief Template version of the distortExternalCoeffs function.
+  /// @param[in]  dist_coeffs Vector containing the coefficients for the distortion model.
+  /// @param[in]  point       The point in the normalized image plane. After the function, this
+  ///                         point is distorted.
+  /// @param[out] out_point   The distorted point.
+  template <typename ScalarType, typename MDistortion>
+  void distortUsingExternalCoefficients(const Eigen::MatrixBase<MDistortion>& dist_coeffs,
+                                        Eigen::Matrix<ScalarType, 2, 1>* point) const;
+
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
   /// @param[in]  dist_coeffs  Vector containing the coefficients for the distortion model.
@@ -139,5 +148,7 @@ class RadTanDistortion : public aslam::Cloneable<Distortion, RadTanDistortion> {
 
 };
 } // namespace aslam
+
+#include "distortion-radtan-inline.h"
 
 #endif /* ASLAM_RADTAN_DISTORTION_H_ */
