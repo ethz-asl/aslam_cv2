@@ -36,7 +36,7 @@ const ProjectionResult PinholeCamera::project3Functional(
   const DistortionType& distortion =
       static_cast<const DistortionType&>(*distortion_);
   distortion.distortUsingExternalCoefficients(
-      distortion_coefficients_external, keypoint, &keypoint);
+      distortion_coefficients_external, &keypoint);
 
   (*out_keypoint)[0] = fu * keypoint[0] + cu;
   (*out_keypoint)[1] = fv * keypoint[1] + cv;

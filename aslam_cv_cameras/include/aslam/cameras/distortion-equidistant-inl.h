@@ -5,15 +5,13 @@ namespace aslam {
 template <typename ScalarType, typename MDistortion>
 void EquidistantDistortion::distortUsingExternalCoefficients(
     const Eigen::MatrixBase<MDistortion>& dist_coeffs,
-    const Eigen::Matrix<ScalarType, 2, 1>& point,
-    Eigen::Matrix<ScalarType, 2, 1>* out_point) const {
+    Eigen::Matrix<ScalarType, 2, 1>* point) const {
   CHECK_EQ(dist_coeffs.size(), kNumOfParams) << "dist_coeffs: invalid size!";
-  CHECK_NOTNULL(out_point);
+  CHECK_NOTNULL(point);
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(MDistortion);
 
-  *out_point = point;
-  ScalarType& x = (*out_point)(0);
-  ScalarType& y = (*out_point)(1);
+  ScalarType& x = (*point)(0);
+  ScalarType& y = (*point)(1);
 
   const ScalarType& k1 = dist_coeffs(0);
   const ScalarType& k2 = dist_coeffs(1);
