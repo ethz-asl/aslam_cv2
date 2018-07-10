@@ -468,14 +468,28 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
          d(0) * p0(2) * p1(1) - d(1) * p0(0) * p1(2) + d(0) * p0(1) * p1(2)));
 
   Eigen::Vector3d X_cam0 = a * p0 + b / 2.0 * d;
-  const double depth0 = sqrt(
-      X_cam0(0) * X_cam0(0) + X_cam0(1) * X_cam0(1) + X_cam0(2) * X_cam0(2));
+  const double depth0 = calculateDepth(X_cam0);
   Eigen::Vector3d X_cam1 = rotation_C1_C0_ * (X_cam0 - translation_C1_C0_);
-  const double depth1 = sqrt(
-      X_cam1(0) * X_cam1(0) + X_cam1(1) * X_cam1(1) + X_cam1(2) * X_cam1(2));
+  const double depth1 = calculateDepth(X_cam1);
   match->setDepthFrame0(depth0);
   match->setDepthFrame1(depth1);
   return (depth0 > 0.0 && depth1 > 0.0);
 }
 
+double StereoMatcher::caculateDepth(
+    const Eigen::Vectord3d& landmark,
+    Eigen::Matrix<double, 1, 3>* out_jacobian_point) const {
+  double depth_squared = landmark(0) * landmark(0) + landmark(1) * landmark(1) +
+                         landmark(2) * landmark(2);
+  CHECK_GE(depth_sqared, 0.0);
+  double depth = sqrt(depth_squared);
+  if (out_jacobian_point) {
+    double outer_derivative = 1.0 / (2 * depth);
+    const double dd_dx = 2 * landmark(0) * outer_derivative;
+    const double dd_dy = 2 * landmark(1) * outer_derivative;
+    const double dd_dz = 2 * landmark(2) * outer_derivative;
+    (*out_jacobian_point) << dd_dx, dd_dy, dd_dz;
+  }
+  return depth;
+}
 }  // namespace aslam
