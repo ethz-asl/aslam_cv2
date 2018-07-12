@@ -26,47 +26,71 @@ class KeypointIdentifier {
   KeypointIdentifier() = delete;
 
   // Factory function.
-  static inline KeypointIdentifier create(const std::shared_ptr<const aslam::VisualNFrame>& nframe,
-                                          size_t frame_index, size_t keypoint_index) {
+  static inline KeypointIdentifier create(
+      const std::shared_ptr<const aslam::VisualNFrame>& nframe,
+      size_t frame_index, size_t keypoint_index) {
     return KeypointIdentifier(nframe, frame_index, keypoint_index);
   }
 
  protected:
-  KeypointIdentifier(const std::shared_ptr<const aslam::VisualNFrame>& nframe,
-                     size_t frame_index, size_t keypoint_index)
-  : frame_index_(frame_index), keypoint_index_(keypoint_index), nframe_(nframe) {
+  KeypointIdentifier(
+      const std::shared_ptr<const aslam::VisualNFrame>& nframe,
+      size_t frame_index, size_t keypoint_index)
+      : frame_index_(frame_index),
+        keypoint_index_(keypoint_index),
+        nframe_(nframe) {
     CHECK(nframe);
     CHECK_LT(frame_index, nframe->getNumFrames());
     CHECK(nframe->isFrameSet(frame_index));
-    CHECK_LT(keypoint_index, nframe->getFrame(frame_index).getNumKeypointMeasurements());
+    CHECK_LT(
+        keypoint_index,
+        nframe->getFrame(frame_index).getNumKeypointMeasurements());
   }
 
  public:
-  inline size_t getKeypointIndex() const { return keypoint_index_; }
-  inline size_t getFrameIndex() const { return frame_index_; }
-  inline const aslam::NFramesId& getNFrameId() const { return nframe_->getId(); }
+  inline size_t getKeypointIndex() const {
+    return keypoint_index_;
+  }
+  inline size_t getFrameIndex() const {
+    return frame_index_;
+  }
+  inline const aslam::NFramesId& getNFrameId() const {
+    return nframe_->getId();
+  }
   inline const aslam::FrameId& getFrameId() const {
     return nframe_->getFrame(frame_index_).getId();
   }
-  inline const aslam::VisualFrame& getFrame() const { return nframe_->getFrame(frame_index_); }
-  inline const aslam::VisualNFrame& getNFrame() const { return *nframe_; }
+  inline const aslam::VisualFrame& getFrame() const {
+    return nframe_->getFrame(frame_index_);
+  }
+  inline const aslam::VisualNFrame& getNFrame() const {
+    return *nframe_;
+  }
 
   const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement() const {
-    return nframe_->getFrame(frame_index_).getKeypointMeasurement(keypoint_index_);
+    return nframe_->getFrame(frame_index_)
+        .getKeypointMeasurement(keypoint_index_);
   }
 
   const Eigen::Vector2d getKeypointMeasurementVector() const {
-    return nframe_->getFrame(frame_index_).getKeypointMeasurementVector(keypoint_index_);
+    return nframe_->getFrame(frame_index_)
+        .getKeypointMeasurementVector(keypoint_index_);
   }
 
   const uint8_t* getDescriptor() const {
     return nframe_->getFrame(frame_index_).getDescriptor(keypoint_index_);
   }
- 
+
   double getDepthMeasurement() const {
     return nframe_->getFrame(frame_index_).getDepthMeasurement(keypoint_index_);
   }
-  
+
+  bool hasDepthMeasurement() const {
+    return (
+        nframe_->getFrame(frame_index_).hasDepthMeasurements() &&
+        getDepthMeasurement() != 0.0);
+  }
+
   std::shared_ptr<const aslam::Camera> getCamera() const {
     return nframe_->getNCamera().getCameraShared(frame_index_);
   }
