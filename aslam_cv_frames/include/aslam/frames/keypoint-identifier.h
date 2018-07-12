@@ -62,7 +62,11 @@ class KeypointIdentifier {
   const uint8_t* getDescriptor() const {
     return nframe_->getFrame(frame_index_).getDescriptor(keypoint_index_);
   }
-
+ 
+  double getDepthMeasurement() const {
+    return nframe_->getFrame(frame_index_).getDepthMeasurement(keypoint_index_);
+  }
+  
   std::shared_ptr<const aslam::Camera> getCamera() const {
     return nframe_->getNCamera().getCameraShared(frame_index_);
   }

@@ -8,7 +8,11 @@ DEFINE_double(
     "Threshold whether a point is considered as fulfilling the epipolar "
     "constraint. The higher this value, the more points are considered for the "
     "correspondance search.");
-
+DEFINE_bool(
+    use_stereo_matching, false,
+    "Decide whether you want to use the stereo matching for overlapping "
+    "cameras. So far, only cameras calibrated with the pinhole model are "
+    "supported.");
 namespace aslam {
 
 StereoMatcher::StereoMatcher(
@@ -468,28 +472,27 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
          d(0) * p0(2) * p1(1) - d(1) * p0(0) * p1(2) + d(0) * p0(1) * p1(2)));
 
   Eigen::Vector3d X_cam0 = a * p0 + b / 2.0 * d;
-  const double depth0 = calculateDepth(X_cam0);
+  const double depth0 = calculateDepth(X_cam0, nullptr);
   Eigen::Vector3d X_cam1 = rotation_C1_C0_ * (X_cam0 - translation_C1_C0_);
-  const double depth1 = calculateDepth(X_cam1);
-  match->setDepthFrame0(depth0);
-  match->setDepthFrame1(depth1);
+  const double depth1 = calculateDepth(X_cam1, nullptr);
+  if (depth0 > 0.0 && depth1 > 0.0) {
+    match->setDepthFrame0(depth0);
+    match->setDepthFrame1(depth1);
+  }
   return (depth0 > 0.0 && depth1 > 0.0);
 }
 
-double StereoMatcher::caculateDepth(
-    const Eigen::Vectord3d& landmark,
-    Eigen::Matrix<double, 1, 3>* out_jacobian_point) const {
-  double depth_squared = landmark(0) * landmark(0) + landmark(1) * landmark(1) +
-                         landmark(2) * landmark(2);
-  CHECK_GE(depth_sqared, 0.0);
-  double depth = sqrt(depth_squared);
+double StereoMatcher::calculateDepth(
+    const Eigen::Vector3d& landmark,
+    Eigen::Matrix<double, 1, 3>* out_jacobian_point) {
+
   if (out_jacobian_point) {
-    double outer_derivative = 1.0 / (2 * depth);
-    const double dd_dx = 2 * landmark(0) * outer_derivative;
-    const double dd_dy = 2 * landmark(1) * outer_derivative;
-    const double dd_dz = 2 * landmark(2) * outer_derivative;
+    const double dd_dx = 0;
+    const double dd_dy = 0;
+    const double dd_dz = 1;
     (*out_jacobian_point) << dd_dx, dd_dy, dd_dz;
   }
-  return depth;
+  
+  return landmark(2);
 }
 }  // namespace aslam
