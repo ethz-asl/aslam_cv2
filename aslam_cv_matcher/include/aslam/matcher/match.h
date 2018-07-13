@@ -100,12 +100,12 @@ struct MatchWithScore {
     return correspondence[1];
   }
   /// \brief Get additional data related to object in list A.
-  int getAdditionalDataApple() const {
+  double getAdditionalDataApple() const {
     return additional_data[0];
   }
 
   /// \brief Get additional data related to object in list B.
-  int getAdditionalDataBanana() const {
+  double getAdditionalDataBanana() const {
     return additional_data[1];
   }
 

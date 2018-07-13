@@ -1,6 +1,7 @@
 #include "aslam/matcher/stereo-matcher.h"
 
 #include <aslam/common/statistics/statistics.h>
+#include <aslam/common/timer.h>
 #include <glog/logging.h>
 
 DEFINE_double(
@@ -143,10 +144,12 @@ void StereoMatcher::match() {
   }
   CHECK_EQ(static_cast<int>(corner_row_LUT_.size()), kImageHeight);
 
+  timing::Timer match_timer("StereoMatcher: Matching");
   // Remember matched keypoints of frame1.
   for (int i = 0; i < kNumPointsFrame0; ++i) {
     matchKeypoint(i);
   }
+  match_timer.Stop();
 
   std::vector<bool> is_inferior_keypoint_frame1_matched(
       is_keypoint_frame1_matched_);
@@ -154,9 +157,11 @@ void StereoMatcher::match() {
     if (!matchInferiorMatches(&is_inferior_keypoint_frame1_matched)) {
       // No more inferior matches, now triangulate depth for each matched
       // keypoint and add to frame.
+      timing::Timer triangulation_timer("StereoMatcher: Triangulation");
       for (aslam::StereoMatchWithScore& match : *matches_frame0_frame1_) {
         calculateDepth(&match);
       }
+      triangulation_timer.Stop();
       return;
     }
   }
@@ -392,23 +397,34 @@ bool StereoMatcher::epipolarConstraint(
   Eigen::Vector3d keypoint_hat_frame0;
   first_mapped_undistorter_->processPoint(
       keypoint_frame0, &keypoint_frame0_undistorted);
-  keypoint_hat_frame0 << keypoint_frame0_undistorted,
-      Eigen::Matrix<double, 1, 1>(1.0);
   Eigen::Vector2d keypoint_frame1_undistorted;
   Eigen::Vector3d keypoint_hat_frame1;
   second_mapped_undistorter_->processPoint(
       keypoint_frame1, &keypoint_frame1_undistorted);
-  keypoint_hat_frame1 << keypoint_frame1_undistorted,
-      Eigen::Matrix<double, 1, 1>(1.0);
   VLOG(10) << "KP0: " << keypoint_hat_frame0 << ", KP1: " << keypoint_hat_frame1
-
            << ", e = " << std::abs(
                               keypoint_hat_frame1.transpose() *
-
                               fundamental_matrix_ * keypoint_hat_frame0);
-  return std::abs(
-             keypoint_hat_frame1.transpose() * fundamental_matrix_ *
-             keypoint_hat_frame0) < kEpipolarThreshold;
+
+  /* for higher performance rewritten 
+     bool result = std::abs(
+                    keypoint_hat_frame1.transpose() * fundamental_matrix_ *
+                    keypoint_hat_frame0) < kEpipolarThreshold;
+                      
+  into: */ 
+  bool epipole =
+      keypoint_frame0(0) *
+          (keypoint_frame1(0) * fundamental_matrix_.coeff(0, 0) +
+           keypoint_frame1(1) * fundamental_matrix_(1, 0) +
+           fundamental_matrix_(2, 0)) +
+      keypoint_frame0(1) * (keypoint_frame1(0) * fundamental_matrix_(0, 1) +
+                            keypoint_frame1(1) * fundamental_matrix_(1, 1) +
+                            fundamental_matrix_(2, 1)) +
+      keypoint_frame1(0) * fundamental_matrix_(0, 2) +
+      keypoint_frame1(1) * fundamental_matrix_(1, 2) +
+      fundamental_matrix_(2, 2);
+  bool result = (epipole > -kEpipolarThreshold && epipole < kEpipolarThreshold);
+  return result;
 }
 
 bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
@@ -485,14 +501,13 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
 double StereoMatcher::calculateDepth(
     const Eigen::Vector3d& landmark,
     Eigen::Matrix<double, 1, 3>* out_jacobian_point) {
-
   if (out_jacobian_point) {
     const double dd_dx = 0;
     const double dd_dy = 0;
     const double dd_dz = 1;
     (*out_jacobian_point) << dd_dx, dd_dy, dd_dz;
   }
-  
+
   return landmark(2);
 }
 }  // namespace aslam
