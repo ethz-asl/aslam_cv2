@@ -116,6 +116,9 @@ const ProjectionResult PinholeCamera::project3Functional(
   (*out_keypoint)[0] = x * rz;
   (*out_keypoint)[1] = y * rz;
 
+   double kp_0 = (*out_keypoint)[0];
+   double kp_1 = (*out_keypoint)[1];
+
   // Distort the point and get the Jacobian wrt. keypoint.
   Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
   if(out_jacobian_distortion) {
@@ -171,6 +174,10 @@ const ProjectionResult PinholeCamera::project3Functional(
                                   dvf_dfu, dvf_dfv, dvf_dcu, dvf_dcv;
   }
 
+  if (distortion_->getType() == Distortion::Type::kNoDistortion) {
+    CHECK_EQ(kp_0, (*out_keypoint)[0]);
+    CHECK_EQ(kp_1, (*out_keypoint)[1]);
+  }
   // Normalized image plane to camera plane.
   (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
   (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;

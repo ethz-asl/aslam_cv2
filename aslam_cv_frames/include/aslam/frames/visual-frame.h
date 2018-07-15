@@ -80,6 +80,7 @@ class VisualFrame  {
 
   /// Are there descriptors stored in this frame?
   bool hasDescriptors() const;
+  bool hasHQDescriptors() const {}
 
   /// Are there track ids stored in this frame?
   bool hasTrackIds() const;
@@ -118,6 +119,7 @@ class VisualFrame  {
 
   /// The descriptors stored in a frame.
   const DescriptorsT& getDescriptors() const;
+  const cv::Mat& getHQDescriptors() const;
 
   /// The track ids stored in this frame.
   const Eigen::VectorXi& getTrackIds() const;
@@ -150,6 +152,7 @@ class VisualFrame  {
 
   /// A pointer to the descriptors, can be used to swap in new data.
   DescriptorsT* getDescriptorsMutable();
+  cv::Mat* getHQDescriptorsMutable() {}
 
   /// A pointer to the track ids, can be used to swap in new data.
   Eigen::VectorXi* getTrackIdsMutable();
@@ -182,6 +185,7 @@ class VisualFrame  {
 
   /// Return pointer location of the descriptor pointed to by index.
   const unsigned char* getDescriptor(size_t index) const;
+  const cv::Mat getHQDescriptor(size_t index) const;
 
   /// Return the track id at index. (-1: not tracked)
   int getTrackId(size_t index) const;
@@ -204,6 +208,7 @@ class VisualFrame  {
 
   /// Replace (copy) the internal descriptors by the passed ones.
   void setDescriptors(const DescriptorsT& descriptors);
+  void setHQDescriptors(const cv::Mat& descriptors);
 
   /// Replace (copy) the internal descriptors by the passed ones.
   void setDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);

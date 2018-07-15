@@ -29,6 +29,10 @@ DECLARE_CHANNEL(VISUAL_KEYPOINT_SCORES, Eigen::VectorXd)
 DECLARE_CHANNEL(DESCRIPTORS,
                 Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>)
 
+/// The keypoint descriptors. (extractor output)
+/// (cols are descriptors)
+DECLARE_CHANNEL(HQDESCRIPTORS, cv::Mat)
+
 /// Track ID's for tracked features. (-1 if not tracked); (feature tracker output)
 DECLARE_CHANNEL(TRACK_IDS, Eigen::VectorXi)
 

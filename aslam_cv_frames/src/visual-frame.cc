@@ -90,6 +90,9 @@ const Eigen::VectorXd& VisualFrame::getKeypointScores() const {
 const VisualFrame::DescriptorsT& VisualFrame::getDescriptors() const {
   return aslam::channels::get_DESCRIPTORS_Data(channels_);
 }
+const cv::Mat& VisualFrame::getHQDescriptors() const {
+  return aslam::channels::get_HQDESCRIPTORS_Data(channels_);
+}
 const Eigen::VectorXi& VisualFrame::getTrackIds() const {
   return aslam::channels::get_TRACK_IDS_Data(channels_);
 }
@@ -179,6 +182,22 @@ const unsigned char* VisualFrame::getDescriptor(size_t index) const {
   CHECK_LT(static_cast<int>(index), descriptors.cols());
   return &descriptors.coeffRef(0, index);
 }
+const cv::Mat VisualFrame::getHQDescriptor(size_t index) const {
+  const cv::Mat descriptors =
+      aslam::channels::get_HQDESCRIPTORS_Data(channels_);
+//  std::cout << "descriptors = " << std::endl
+//            << descriptors << std::endl;
+  //CHECK_LT(static_cast<int>(index), descriptors.cols());
+  //return &descriptors.coeffRef(0, index);
+//  std::cout << "descriptors.size() = "
+//            << descriptors.size << ", "
+//            << descriptors.rows << ", "
+//            << descriptors.cols << std::endl;
+  CHECK_LT(static_cast<int>(index), descriptors.rows);
+//  std::cout << "descriptors.row(index) = "
+//            << descriptors.row(index) << std::endl;
+  return descriptors.row(index);
+}
 int VisualFrame::getTrackId(size_t index) const {
   Eigen::VectorXi& track_ids =
       aslam::channels::get_TRACK_IDS_Data(channels_);
@@ -238,6 +257,15 @@ void VisualFrame::setDescriptors(
   }
   VisualFrame::DescriptorsT& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
+  descriptors = descriptors_new;
+}
+void VisualFrame::setHQDescriptors(
+    const cv::Mat& descriptors_new) {
+  if (!aslam::channels::has_HQDESCRIPTORS_Channel(channels_)) {
+    aslam::channels::add_HQDESCRIPTORS_Channel(&channels_);
+  }
+  cv::Mat& descriptors =
+      aslam::channels::get_HQDESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
 void VisualFrame::setDescriptors(

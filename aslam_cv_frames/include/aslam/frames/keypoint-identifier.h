@@ -59,6 +59,10 @@ class KeypointIdentifier {
     return nframe_->getFrame(frame_index_).getDescriptor(keypoint_index_);
   }
 
+  const cv::Mat getHQDescriptor() const {
+    return nframe_->getFrame(frame_index_).getHQDescriptor(keypoint_index_);
+  }
+
   std::shared_ptr<const aslam::Camera> getCamera() const {
     return nframe_->getNCamera().getCameraShared(frame_index_);
   }
