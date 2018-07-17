@@ -394,11 +394,9 @@ bool StereoMatcher::epipolarConstraint(
     const Eigen::Vector2d& keypoint_frame1) const {
   // Convert points to homogenous coordinates.
   Eigen::Vector2d keypoint_frame0_undistorted;
-  Eigen::Vector3d keypoint_hat_frame0;
   first_mapped_undistorter_->processPoint(
       keypoint_frame0, &keypoint_frame0_undistorted);
   Eigen::Vector2d keypoint_frame1_undistorted;
-  Eigen::Vector3d keypoint_hat_frame1;
   second_mapped_undistorter_->processPoint(
       keypoint_frame1, &keypoint_frame1_undistorted);
   VLOG(10) << "KP0: " << keypoint_hat_frame0 << ", KP1: " << keypoint_hat_frame1
@@ -406,13 +404,14 @@ bool StereoMatcher::epipolarConstraint(
                               keypoint_hat_frame1.transpose() *
                               fundamental_matrix_ * keypoint_hat_frame0);
 
-  /* for higher performance rewritten 
+
+  /* for higher performance rewritten
      bool result = std::abs(
                     keypoint_hat_frame1.transpose() * fundamental_matrix_ *
                     keypoint_hat_frame0) < kEpipolarThreshold;
-                      
-  into: */ 
-  bool epipole =
+
+  into: */
+  double epipole =
       keypoint_frame0(0) *
           (keypoint_frame1(0) * fundamental_matrix_.coeff(0, 0) +
            keypoint_frame1(1) * fundamental_matrix_(1, 0) +
