@@ -399,11 +399,6 @@ bool StereoMatcher::epipolarConstraint(
   Eigen::Vector2d keypoint_frame1_undistorted;
   second_mapped_undistorter_->processPoint(
       keypoint_frame1, &keypoint_frame1_undistorted);
-  VLOG(10) << "KP0: " << keypoint_hat_frame0 << ", KP1: " << keypoint_hat_frame1
-           << ", e = " << std::abs(
-                              keypoint_hat_frame1.transpose() *
-                              fundamental_matrix_ * keypoint_hat_frame0);
-
 
   /* for higher performance rewritten
      bool result = std::abs(
@@ -413,15 +408,19 @@ bool StereoMatcher::epipolarConstraint(
   into: */
   double epipole =
       keypoint_frame0(0) *
-          (keypoint_frame1(0) * fundamental_matrix_.coeff(0, 0) +
-           keypoint_frame1(1) * fundamental_matrix_(1, 0) +
+          (keypoint_frame1_undistorted(0) * fundamental_matrix_(0, 0) +
+           keypoint_frame1_undistorted(1) * fundamental_matrix_(1, 0) +
            fundamental_matrix_(2, 0)) +
-      keypoint_frame0(1) * (keypoint_frame1(0) * fundamental_matrix_(0, 1) +
-                            keypoint_frame1(1) * fundamental_matrix_(1, 1) +
-                            fundamental_matrix_(2, 1)) +
-      keypoint_frame1(0) * fundamental_matrix_(0, 2) +
-      keypoint_frame1(1) * fundamental_matrix_(1, 2) +
+      keypoint_frame0_undistorted(1) *
+          (keypoint_frame1_undistorted(0) * fundamental_matrix_(0, 1) +
+           keypoint_frame1_undistorted(1) * fundamental_matrix_(1, 1) +
+           fundamental_matrix_(2, 1)) +
+      keypoint_frame1_undistorted(0) * fundamental_matrix_(0, 2) +
+      keypoint_frame1_undistorted(1) * fundamental_matrix_(1, 2) +
       fundamental_matrix_(2, 2);
+
+  VLOG(10) << "KP0: " << keypoint_frame0_undistorted
+           << ", KP1: " << keypoint_frame1_undistorted << ", e = " << epipole;
   bool result = (epipole > -kEpipolarThreshold && epipole < kEpipolarThreshold);
   return result;
 }
@@ -480,11 +479,13 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
          p0(0) * p1(2) * t(1) + p0(1) * p1(0) * t(2) - p0(0) * p1(1) * t(2)) /
         (-d(2) * p0(1) * p1(0) + d(1) * p0(2) * p1(0) + d(2) * p0(0) * p1(1) -
          d(0) * p0(2) * p1(1) - d(1) * p0(0) * p1(2) + d(0) * p0(1) * p1(2)));
+  /* Calculation of c is actually not needed.
   double c =
       -((d(2) * p0(1) * t(0) - d(1) * p0(2) * t(0) - d(2) * p0(0) * t(1) +
          d(0) * p0(2) * t(1) + d(1) * p0(0) * t(2) - d(0) * p0(1) * t(2)) /
         (-d(2) * p0(1) * p1(0) + d(1) * p0(2) * p1(0) + d(2) * p0(0) * p1(1) -
          d(0) * p0(2) * p1(1) - d(1) * p0(0) * p1(2) + d(0) * p0(1) * p1(2)));
+         */
 
   Eigen::Vector3d X_cam0 = a * p0 + b / 2.0 * d;
   const double depth0 = calculateDepth(X_cam0, nullptr);
