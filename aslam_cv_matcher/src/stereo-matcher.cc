@@ -419,7 +419,7 @@ bool StereoMatcher::epipolarConstraint(
       keypoint_frame1_undistorted(1) * fundamental_matrix_(1, 2) +
       fundamental_matrix_(2, 2);
 
-  VLOG(10) << "KP0: " << keypoint_frame0_undistorted
+  VLOG(250) << "KP0: " << keypoint_frame0_undistorted
            << ", KP1: " << keypoint_frame1_undistorted << ", e = " << epipole;
   bool result = (epipole > -kEpipolarThreshold && epipole < kEpipolarThreshold);
   return result;

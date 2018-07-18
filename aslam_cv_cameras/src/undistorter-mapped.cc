@@ -95,14 +95,14 @@ void MappedUndistorter::processPoint(
 }
 
 void MappedUndistorter::processPoint(Eigen::Vector2d* point) const {
-  VLOG(10) << "Distorted point: " << (*point)[0] << "/" << (*point)[1];
+  VLOG(250) << "Distorted point: " << (*point)[0] << "/" << (*point)[1];
   CHECK_LE((*point)[0], map_u_.cols);
   CHECK_LE((*point)[1], map_v_.rows);
   *point = Eigen::Vector2d(
       map_u_float_.at<float>((*point)[1], (*point)[0]),
       map_v_float_.at<float>((*point)[1], (*point)[0]));
 
-  VLOG(10) << "Undistorted point: " << (*point)[0] << "/" << (*point)[1];
+  VLOG(250) << "Undistorted point: " << (*point)[0] << "/" << (*point)[1];
 }
 
 }  // namespace aslam
