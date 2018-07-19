@@ -20,6 +20,50 @@ namespace aslam {
     return CHECK_NOTNULL(frame->getTrackIdsMutable());
   }
 
+  void TrackManager::applyStereoMatchesToFrames(
+      const StereoMatchesWithScore& stereo_matches, VisualFrame* frame0,
+      VisualFrame* frame1) {
+    CHECK_NOTNULL(apple_frame);
+    CHECK_NOTNULL(banana_frame);
+
+    // Get the track ID channels.
+    Eigen::VectorXi& frame0_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(frame0));
+    Eigen::VectorXi& frame1_track_ids = *CHECK_NOTNULL(createAndGetTrackIdChannel(frame1));
+
+    size_t num_frame0_track_ids = static_cast<size_t>(frame0_track_ids.rows());
+    size_t num_frame1_track_ids = static_cast<size_t>(frame1_track_ids.rows());
+
+    std::unordered_set<int> used_frame0_ids;
+    std::unordered_set<int> used_frame1_ids;
+
+    for (const StereoMatchWithScore& match : matches_A_B) {
+      int index_frame0 = match.getKeypointIndexFrame0();
+      CHECK_LT(index_frame0, static_cast<int>(num_frame0_track_ids));
+      CHECK_GE(index_frame0, 0);
+
+      int index_frame1 = match.getKeypointIndexFrame1();
+      CHECK_LT(index_frame1, static_cast<int>(num_frame1_track_ids));
+      CHECK_GE(index_frame1, 0);
+
+      addToSetsAndCheckExclusiveness(index_frame0,
+                                     index_frame1,
+                                     &used_frame0_ids,
+                                     &used_frame1_ids);
+
+      int track_id_frame0 = frame0_track_ids(index_frame0);
+      int track_id_frame1 = frame1_track_ids(index_frame0);
+      
+      // Fuse feature tracks if possible.
+      if (track_id_frame0 == track_id_frame1) {
+        // Tracks are already merged.
+        continue;
+      }
+      if ((track_id_frame0) < 0 || (track_id_frame1 < 0)) {
+        // One of the keypoints is not tracked, omitting the match.
+        continue;
+      } 
+    }
+  }
   void SimpleTrackManager::applyMatchesToFrames(
       const FrameToFrameMatchesWithScore& matches_A_B, VisualFrame* apple_frame,
       VisualFrame* banana_frame) {

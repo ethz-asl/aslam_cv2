@@ -7,6 +7,9 @@
 #include <aslam/matcher/match.h>
 #include <glog/logging.h>
 
+DEFINE_int(track_manager_fuse_tracks_threshold, 5, "Fuse tracks between
+    cameras after N successfull stereo matches");
+
 namespace aslam {
   struct MatchWithScore;
   class VisualNFrame;
@@ -56,6 +59,15 @@ namespace aslam {
     /// @param[in]  frame   Pointer to the visual frame.
     /// @return             Pointer to the track id channel.
     static Eigen::VectorXi* createAndGetTrackIdChannel(VisualFrame* frame);
+    
+    /// \brief Writes track ids for a list of stereo matches into two given frames.
+    ///
+    /// @param[in]  matches_A_B   List of matches between the Apple and Banana frame.
+    /// @param[in]  apple_frame   Pointer to the apple frame.
+    /// @param[in]  banana_frame  Pointer to the banana frame.
+    static void applyStereoMatchesToFrames(
+        const StereoMatchesWithScore& matches_A_B,
+        VisualFrame* apple_frame, VisualFrame* banana_frame);
 
     static void resetIdProvider() {
       track_id_provider_.reset();
