@@ -502,8 +502,8 @@ double StereoMatcher::calculateDepth(
     const Eigen::Vector3d& landmark,
     Eigen::Matrix<double, 1, 3>* out_jacobian_point) {
   if (out_jacobian_point) {
-    const double dd_dx = 0;
-    const double dd_dy = 0;
+    const double dd_dx = -landmark(0)/landmark(2);
+    const double dd_dy = -landmark(1)/landmark(2);
     const double dd_dz = 1;
     (*out_jacobian_point) << dd_dx, dd_dy, dd_dz;
   }
