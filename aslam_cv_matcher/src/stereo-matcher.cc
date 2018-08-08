@@ -429,7 +429,7 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
   /* Triangulate point using method from Trucco E., Verri A. 1998. Introductory
    * Techniques for 3-D Computer Vision. See
    * https://pdfs.semanticscholar.org/675a/75494f55b0ac6092f6beef6ac413c296faf4.pdf
-   * for a summary.
+   * page 20 for a summary.
    *
    *  Solve vector triangle:
    *      a * K0.inv() * u0 + b * (K0.inv() x R * K1.inv() * u1) + c * R
@@ -447,7 +447,7 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
    *            - d1 p00 p12 + d0 p01 p12))
    *
    *  Final 3d point can then be found as X = a * p0 + b/2 * d.
-   *  The depth is calculated as D = sqrt(X(0)^2 + X(1)^2 + X(2)^2)
+   *  The depth is calculated as D = X(2)
    */
   Eigen::Vector2d keypoint_frame0 =
       frame0_->getKeypointMeasurement(match->getKeypointIndexFrame0());
