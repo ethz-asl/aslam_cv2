@@ -35,5 +35,6 @@ target_link_libraries(test_target_observation ${PROJECT_NAME})
 ##########
 # EXPORT #
 ##########
+cs_install_scripts(python/create-target-pdf.py)
 cs_install()
 cs_export()
