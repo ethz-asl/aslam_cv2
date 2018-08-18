@@ -47,7 +47,6 @@ bool safeGet(const YAML::Node& node, const std::string& key, ValueType* value) {
 }
 
 inline bool hasKey(const YAML::Node& node, const std::string& key) {
-  bool success = false;
   if(!node.IsMap()) {
     LOG(ERROR) << "Unable to get Node[\"" << key << "\"] because the node is not a map";
     return false;
