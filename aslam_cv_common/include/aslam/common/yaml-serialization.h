@@ -46,6 +46,20 @@ bool safeGet(const YAML::Node& node, const std::string& key, ValueType* value) {
   return success;
 }
 
+template<typename ValueType>
+bool safeAs(const YAML::Node& node,  ValueType* value) {
+  CHECK_NOTNULL(value);
+  bool success = false;
+  try {
+    *value = node.as<ValueType>();
+    success = true;
+  } catch(const YAML::Exception& e) {
+    LOG(ERROR) << "Error converting node to type "
+        << typeid(ValueType).name() << ": " << e.what();
+  }
+  return success;
+}
+
 
 template <class ValueType>
 struct convert<std::queue<ValueType> > {

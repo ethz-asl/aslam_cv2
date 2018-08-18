@@ -39,7 +39,7 @@ class MatchingEngineExclusive : public MatchingEngine<MatchingProblem> {
   virtual ~MatchingEngineExclusive() {};
 
   virtual bool match(MatchingProblem* problem,
-                     typename MatchingProblem::MatchesWithScore* matches_A_B);
+                     typename MatchingProblem::MatchesWithScore* matches_A_B) override;
 
 private:
   /// \brief Recursively assigns the next best apple to the given banana.

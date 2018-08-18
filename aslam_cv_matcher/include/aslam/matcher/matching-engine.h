@@ -21,7 +21,8 @@ class MatchingEngine {
   virtual bool match(
       MatchingProblem* problem, typename MatchingProblem::MatchesWithScore* matches_A_B) = 0;
 
-  virtual bool match(MatchingProblem* problem, typename MatchingProblem::Matches* matches_A_B) {
+  virtual bool match(MatchingProblem* problem,
+                     typename MatchingProblem::Matches* matches_A_B) {
     CHECK_NOTNULL(problem);
     CHECK_NOTNULL(matches_A_B);
     typename MatchingProblem::MatchesWithScore matches_with_score_A_B;

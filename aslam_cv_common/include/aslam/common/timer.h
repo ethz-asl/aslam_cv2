@@ -134,6 +134,7 @@ class Timing {
   std::mutex mutex_;
 };
 
+#define ENABLE_TIMING 1
 #if ENABLE_TIMING
 typedef TimerImpl Timer;
 #else
