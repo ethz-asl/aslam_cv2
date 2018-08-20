@@ -46,6 +46,15 @@ bool safeGet(const YAML::Node& node, const std::string& key, ValueType* value) {
   return success;
 }
 
+inline bool hasKey(const YAML::Node& node, const std::string& key) {
+  if(!node.IsMap()) {
+    LOG(ERROR) << "Unable to get Node[\"" << key << "\"] because the node is not a map";
+    return false;
+  }
+  const YAML::Node sub_node = node[key];
+  return static_cast<bool>(sub_node);
+}
+
 template<typename ValueType>
 bool safeAs(const YAML::Node& node,  ValueType* value) {
   CHECK_NOTNULL(value);
@@ -59,7 +68,6 @@ bool safeAs(const YAML::Node& node,  ValueType* value) {
   }
   return success;
 }
-
 
 template <class ValueType>
 struct convert<std::queue<ValueType> > {
