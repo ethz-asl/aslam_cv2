@@ -158,8 +158,14 @@ void StereoMatcher::match() {
       // No more inferior matches, now triangulate depth for each matched
       // keypoint and add to frame.
       timing::Timer triangulation_timer("StereoMatcher: Triangulation");
-      for (aslam::StereoMatchWithScore& match : *matches_frame0_frame1_) {
-        calculateDepth(&match);
+      for (aslam::StereoMatchesWithScore::iterator it =
+               matches_frame0_frame1_->begin();
+           it != matches_frame0_frame1_->end(); ) {
+        if (!calculateDepth(&*it)) {
+          matches_frame0_frame1_->erase(it);
+        } else {
+          ++it;
+        }
       }
       triangulation_timer.Stop();
       return;
@@ -227,10 +233,9 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
   }
 
   if (passed_ratio_test) {
-    CHECK(
-        idx_frame0_to_attempted_match_data_map_
-            .insert(std::make_pair(idx_frame0, current_match_data))
-            .second);
+    CHECK(idx_frame0_to_attempted_match_data_map_
+              .insert(std::make_pair(idx_frame0, current_match_data))
+              .second);
     const int best_match_keypoint_idx_frame1 = it_best->channel_index;
     const double matching_score =
         computeMatchingScore(best_score, kDescriptorSizeBits);
@@ -265,12 +270,11 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
 
       CHECK(matches_frame0_frame1_->end() != matches_frame0_frame1_->begin())
           << "Match vector should not be empty.";
-      CHECK(
-          frame1_idx_to_matches_iterator_map_
-              .emplace(
-                  best_match_keypoint_idx_frame1,
-                  matches_frame0_frame1_->end() - 1)
-              .second);
+      CHECK(frame1_idx_to_matches_iterator_map_
+                .emplace(
+                    best_match_keypoint_idx_frame1,
+                    matches_frame0_frame1_->end() - 1)
+                .second);
     }
 
     statistics::StatsCollector stats_distance_match(
@@ -360,12 +364,11 @@ bool StereoMatcher::matchInferiorMatches(
 
         CHECK(matches_frame0_frame1_->end() != matches_frame0_frame1_->begin())
             << "Match vector should not be empty.";
-        CHECK(
-            frame1_idx_to_matches_iterator_map_
-                .emplace(
-                    best_match_keypoint_idx_frame1,
-                    matches_frame0_frame1_->end() - 1)
-                .second);
+        CHECK(frame1_idx_to_matches_iterator_map_
+                  .emplace(
+                      best_match_keypoint_idx_frame1,
+                      matches_frame0_frame1_->end() - 1)
+                  .second);
       }
     }
   }
@@ -420,7 +423,7 @@ bool StereoMatcher::epipolarConstraint(
       fundamental_matrix_(2, 2);
 
   VLOG(250) << "KP0: " << keypoint_frame0_undistorted
-           << ", KP1: " << keypoint_frame1_undistorted << ", e = " << epipole;
+            << ", KP1: " << keypoint_frame1_undistorted << ", e = " << epipole;
   bool result = (epipole > -kEpipolarThreshold && epipole < kEpipolarThreshold);
   return result;
 }
