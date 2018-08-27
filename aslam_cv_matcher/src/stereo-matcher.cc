@@ -14,6 +14,10 @@ DEFINE_bool(
     "Decide whether you want to use the stereo matching for overlapping "
     "cameras. So far, only cameras calibrated with the pinhole model are "
     "supported.");
+
+DEFINE_double(stereo_matcher_min_depth_for_match_m, 0.3, "bla");
+DEFINE_double(stereo_matcher_max_depth_for_match_m, 2, "bla");
+
 namespace aslam {
 
 StereoMatcher::StereoMatcher(
@@ -160,10 +164,18 @@ void StereoMatcher::match() {
       timing::Timer triangulation_timer("StereoMatcher: Triangulation");
       for (aslam::StereoMatchesWithScore::iterator it =
                matches_frame0_frame1_->begin();
-           it != matches_frame0_frame1_->end(); ) {
-        if (!calculateDepth(&*it)) {
+           it != matches_frame0_frame1_->end();) {
+        const std::pair<double, double> depths = calculateDepth(
+            frame0_->getKeypointMeasurement(it->getKeypointIndexFrame0()),
+            frame1_->getKeypointMeasurement(it->getKeypointIndexFrame1()));
+        if (depths.first < FLAGS_stereo_matcher_min_depth_for_match_m ||
+            depths.first > FLAGS_stereo_matcher_max_depth_for_match_m ||
+            depths.second < FLAGS_stereo_matcher_min_depth_for_match_m ||
+            depths.second > FLAGS_stereo_matcher_max_depth_for_match_m) {
           matches_frame0_frame1_->erase(it);
         } else {
+          it->setDepthFrame0(depths.first);
+          it->setDepthFrame1(depths.second);
           ++it;
         }
       }
@@ -210,6 +222,15 @@ void StereoMatcher::matchKeypoint(const int idx_frame0) {
     unsigned int distance =
         common::GetNumBitsDifferent(descriptor_frame0, descriptor_frame1);
     int current_score = kDescriptorSizeBits - distance;
+    const std::pair<double, double> depths = calculateDepth(
+        frame0_->getKeypointMeasurementVector(idx_frame0),
+        frame1_->getKeypointMeasurementVector(it->channel_index));
+    if (depths.first < FLAGS_stereo_matcher_min_depth_for_match_m ||
+        depths.first > FLAGS_stereo_matcher_max_depth_for_match_m ||
+        depths.second < FLAGS_stereo_matcher_min_depth_for_match_m ||
+        depths.second > FLAGS_stereo_matcher_max_depth_for_match_m) {
+      continue;
+    }
     if (current_score > best_score) {
       best_score = current_score;
       distance_second_best = distance_best;
@@ -428,9 +449,12 @@ bool StereoMatcher::epipolarConstraint(
   return result;
 }
 
-bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
-  /* Triangulate point using method from Trucco E., Verri A. 1998. Introductory
-   * Techniques for 3-D Computer Vision. See
+// bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
+std::pair<double, double> StereoMatcher::calculateDepth(
+    const Eigen::Vector2d& keypoint_frame0,
+    const Eigen::Vector2d& keypoint_frame1) {
+  /* Triangulate point using method from Trucco E., Verri A. 1998.
+   * Introductory Techniques for 3-D Computer Vision. See
    * https://pdfs.semanticscholar.org/675a/75494f55b0ac6092f6beef6ac413c296faf4.pdf
    * page 20 for a summary.
    *
@@ -442,7 +466,8 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
    *      a = (d2 p11 t0 - d1 p12 t0 - d2 p10 t1 + d0 p12 t1 + d1 p10 t2 -
    *            d0 p11 t2)/(d2 p01 p10 - d1 p02 p10 - d2 p00 p11 + d0 p02 p11
    *            + d1 p00 p12 - d0 p01 p12)
-   *   => b = -((p02 p11 t0 - p01 p12 t0 - p02 p10 t1 + p00 p12 t1 + p01 p10 t2
+   *   => b = -((p02 p11 t0 - p01 p12 t0 - p02 p10 t1 + p00 p12 t1 + p01 p10
+   * t2
    *            - p00 p11 t2)/(-d2 p01 p10 + d1 p02 p10 + d2 p00 p11 -
    *            d0 p02 p11 - d1 p00 p12 + d0 p01 p12))
    *      c = -((d2 p01 t0 - d1 p02 t0 - d2 p00 t1 + d0 p02 t1 + d1 p00 t2 -
@@ -452,16 +477,16 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
    *  Final 3d point can then be found as X = a * p0 + b/2 * d.
    *  The depth is calculated as D = X(2)
    */
-  Eigen::Vector2d keypoint_frame0 =
-      frame0_->getKeypointMeasurement(match->getKeypointIndexFrame0());
+  // Eigen::Vector2d keypoint_frame0 =
+  //     frame0_->getKeypointMeasurement(match->getKeypointIndexFrame0());
   Eigen::Vector2d keypoint_frame0_undistorted;
   Eigen::Vector3d u0;
   first_mapped_undistorter_->processPoint(
       keypoint_frame0, &keypoint_frame0_undistorted);
   u0 << keypoint_frame0_undistorted, Eigen::Matrix<double, 1, 1>(1.0);
 
-  Eigen::Vector2d keypoint_frame1 =
-      frame1_->getKeypointMeasurement(match->getKeypointIndexFrame1());
+  // Eigen::Vector2d keypoint_frame1 =
+  //     frame1_->getKeypointMeasurement(match->getKeypointIndexFrame1());
   Eigen::Vector2d keypoint_frame1_undistorted;
   Eigen::Vector3d u1;
   first_mapped_undistorter_->processPoint(
@@ -494,11 +519,7 @@ bool StereoMatcher::calculateDepth(aslam::StereoMatchWithScore* match) {
   const double depth0 = calculateDepth(X_cam0, nullptr);
   Eigen::Vector3d X_cam1 = rotation_C1_C0_ * (X_cam0 - translation_C1_C0_);
   const double depth1 = calculateDepth(X_cam1, nullptr);
-  if (depth0 > 0.0 && depth1 > 0.0) {
-    match->setDepthFrame0(depth0);
-    match->setDepthFrame1(depth1);
-  }
-  return (depth0 > 0.0 && depth1 > 0.0);
+  return std::make_pair(depth0, depth1);
 }
 
 double StereoMatcher::calculateDepth(

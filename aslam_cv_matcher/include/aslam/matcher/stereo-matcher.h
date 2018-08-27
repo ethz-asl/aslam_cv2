@@ -137,7 +137,10 @@ class StereoMatcher {
 
   // Triangulates found stereo pairs and calculates depth in each frame.
   // Returns true if sanaty check (depth > 0) passed.
-  bool calculateDepth(aslam::StereoMatchWithScore* match);
+  // bool calculateDepth(aslam::StereoMatchWithScore* match);
+  std::pair<double, double> calculateDepth(
+      const Eigen::Vector2d& keypoint_frame0,
+      const Eigen::Vector2d& keypoint_frame1);
 
  public:
   // Calculates depth of a landmark given in the camera frame. Asserts if depth
