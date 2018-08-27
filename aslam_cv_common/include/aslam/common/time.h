@@ -80,7 +80,7 @@ inline std::string formatTimeNanoseconds(const int64_t timestamp_nanoseconds) {
   }
 
   const std::string timestamp_with_dot =
-      timestamp_string.substr(0u, num_digits - 9u) + '.' +
+      timestamp_string.substr(0u, num_digits - 9u) + '\'' +
       timestamp_string.substr(num_digits - 9u);
   return timestamp_with_dot;
 }
