@@ -34,20 +34,6 @@ class PnpPoseEstimator {
       int max_ransac_iters, aslam::Camera::ConstPtr camera_ptr,
       aslam::Transformation* T_G_C, std::vector<int>* inliers, int* num_iters);
 
-  bool absoluteMultiPoseRansacPinholeCam(
-      const Eigen::Matrix2Xd& measurements,
-      const std::vector<int>& measurement_camera_indices,
-      const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
-      int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
-      aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters);
-  bool absoluteMultiPoseRansacPinholeCam(
-      const Eigen::Matrix2Xd& measurements,
-      const std::vector<int>& measurement_camera_indices,
-      const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
-      int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
-      aslam::Transformation* T_G_I, std::vector<int>* inliers,
-      std::vector<double>* inlier_distances_to_model, int* num_iters);
-
   bool absolutePoseRansac(const Eigen::Matrix2Xd& measurements,
                           const Eigen::Matrix3Xd& G_landmark_positions,
                           double pixel_sigma, int max_ransac_iters,
@@ -70,6 +56,19 @@ class PnpPoseEstimator {
       const Eigen::Matrix2Xd& measurements,
       const std::vector<int>& measurement_camera_indices,
       const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
+      int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
+      aslam::Transformation* T_G_I, std::vector<int>* inliers,
+      std::vector<double>* inlier_distances_to_model, int* num_iters);
+  bool absoluteMultiPoseRansacPinholeCam(
+      const Eigen::Matrix2Xd& measurements,
+      const std::vector<int>& measurement_camera_indices,
+      const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
+      int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
+      aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters);
+  bool absoluteMultiPoseRansacPinholeCam(
+      const Eigen::Matrix2Xd& measurements,
+      const std::vector<int>& measurement_camera_indices,
+      const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
       int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
       aslam::Transformation* T_G_I, std::vector<int>* inliers,
       std::vector<double>* inlier_distances_to_model, int* num_iters);
