@@ -1,6 +1,7 @@
 #ifndef ASLAM_COMMON_FEATURE_DESCRIPTOR_REF_H_
 #define ASLAM_COMMON_FEATURE_DESCRIPTOR_REF_H_
 #include <algorithm>
+#include <random>
 #include <cstdint>
 #include <glog/logging.h>
 #include <stdlib.h>
@@ -135,7 +136,9 @@ inline void FlipNRandomBits(size_t num_bits_to_flip, FeatureDescriptorRef* descr
   std::generate_n(
       std::back_inserter(bits_to_flip), descriptor_size_bits, [n]()mutable {return n++;});
   CHECK_LT(num_bits_to_flip, bits_to_flip.size()) << "Cannot flip more than everything.";
-  std::random_shuffle(bits_to_flip.begin(), bits_to_flip.end());
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(bits_to_flip.begin(), bits_to_flip.end(), g);
   for (size_t i = 0; i < num_bits_to_flip; ++i) {
     FlipBit(bits_to_flip[i], descriptor);
   }
