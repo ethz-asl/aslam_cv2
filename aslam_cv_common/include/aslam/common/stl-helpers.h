@@ -100,8 +100,7 @@ void drawNRandomElements(const size_t n, const std::vector<ElementType, Allocato
 
   std::unordered_set<size_t> random_indices;
   while (random_indices.size() < n) {
-    const size_t picked_index = distribution(generator);
-    random_indices.insert(picked_index);
+    random_indices.insert(distribution(generator));
   }
 
   // Copy to output.
