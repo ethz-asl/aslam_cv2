@@ -82,9 +82,13 @@ template<typename ElementType, typename Allocator>
 void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
                          std::vector<ElementType, Allocator>* output,
                          bool use_fixed_seed) {
+  CHECK_NE(&input, output);
   CHECK_NOTNULL(output)->clear();
   CHECK_GT(N, 0u);
   const size_t num_input_elements = input.size();
+  if (num_input_elements == 0u) {
+    return;
+  }
   if (num_input_elements <= N) {
     *output = input;
     return;
@@ -95,7 +99,7 @@ void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& in
       use_fixed_seed ? 0u : std::chrono::system_clock::now().time_since_epoch().count();
 
   std::default_random_engine generator(seed);
-  std::uniform_int_distribution<int> distribution(0, N);
+  std::uniform_int_distribution<int> distribution(0, num_input_elements - 1u);
 
   std::unordered_set<size_t> random_indices;
   while (random_indices.size() < N) {
