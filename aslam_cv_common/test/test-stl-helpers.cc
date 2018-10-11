@@ -45,11 +45,15 @@ TEST(StlHelpers, DrawRandom) {
   std::vector<int> output;
 
   constexpr size_t kNumToPick = 3u;
-  aslam::common::drawNRandomElements(kNumToPick, test_vector, &output, true);
+  constexpr bool kUseFixedSeedTrue = true;
+  aslam::common::drawNRandomElements(
+      kNumToPick, test_vector, &output, kUseFixedSeedTrue);
   EXPECT_EQ(output.size(), kNumToPick);
 
   output.clear();
-  aslam::common::drawNRandomElements(kNumToPick, test_vector, &output, false);
+  constexpr bool kUseFixedSeedFalse = false;
+  aslam::common::drawNRandomElements(
+      kNumToPick, test_vector, &output, kUseFixedSeedFalse);
   EXPECT_EQ(output.size(), kNumToPick);
 
   output.clear();
@@ -65,7 +69,8 @@ TEST(StlHelpers, DrawRandom) {
   std::unordered_set<int> indices_encountered;
   const size_t kNumTrials = 1000u;
   for (size_t i = 0u; i < kNumTrials; ++i) {
-    aslam::common::drawNRandomElements(kNumToPick, test_vector, &output, false);
+    aslam::common::drawNRandomElements(
+        kNumToPick, test_vector, &output, kUseFixedSeedFalse);
     EXPECT_EQ(output.size(), kNumToPick);
     indices_encountered.insert(output.begin(), output.end());
   }
