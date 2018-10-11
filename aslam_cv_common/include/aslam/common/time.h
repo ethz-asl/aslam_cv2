@@ -76,12 +76,12 @@ inline std::string formatTimeNanoseconds(const int64_t timestamp_nanoseconds) {
   const std::string timestamp_string = std::to_string(timestamp_nanoseconds);
   const size_t num_digits = timestamp_string.size();
   if (num_digits < 10u) {
-    return timestamp_string;
+    return timestamp_string + "ns";
   }
 
   const std::string timestamp_with_dot =
-      timestamp_string.substr(0u, num_digits - 9u) + '\'' +
-      timestamp_string.substr(num_digits - 9u);
+      timestamp_string.substr(0u, num_digits - 9u) + 's' +
+      timestamp_string.substr(num_digits - 9u) + "ns";
   return timestamp_with_dot;
 }
 
