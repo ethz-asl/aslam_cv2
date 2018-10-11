@@ -44,21 +44,21 @@ TEST(StlHelpers, DrawRandom) {
   std::vector<int> test_vector = {0, 1, 2, 3, 4, 5};
   std::vector<int> output;
 
-  constexpr size_t kNum = 3u;
-  aslam::common::drawNRandomElements(kNum, test_vector, &output, true);
-  EXPECT_EQ(output.size(), kNum);
+  constexpr size_t kNumToPick = 3u;
+  aslam::common::drawNRandomElements(kNumToPick, test_vector, &output, true);
+  EXPECT_EQ(output.size(), kNumToPick);
 
   output.clear();
-  aslam::common::drawNRandomElements(kNum, test_vector, &output, false);
-  EXPECT_EQ(output.size(), kNum);
+  aslam::common::drawNRandomElements(kNumToPick, test_vector, &output, false);
+  EXPECT_EQ(output.size(), kNumToPick);
 
   output.clear();
-  aslam::common::drawNRandomElements(kNum, test_vector, &output);
-  EXPECT_EQ(output.size(), kNum);
+  aslam::common::drawNRandomElements(kNumToPick, test_vector, &output);
+  EXPECT_EQ(output.size(), kNumToPick);
 
   // Fail when input and output are the same, because this is not allowed.
   EXPECT_DEATH(aslam::common::drawNRandomElements(
-      kNum, test_vector, &test_vector), "");
+      kNumToPick, test_vector, &test_vector), "");
 
   // Make sure that if we pick a single index 1000 times, every index
   // (i.e., 0 to 5) is at least picked once.
