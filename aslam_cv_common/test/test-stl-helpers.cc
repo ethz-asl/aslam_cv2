@@ -65,10 +65,9 @@ TEST(StlHelpers, DrawRandom) {
   std::unordered_set<int> indices_encountered;
   const size_t kNumTrials = 1000u;
   for (size_t i = 0u; i < kNumTrials; ++i) {
-    constexpr size_t kNumToPick = 1u;
     aslam::common::drawNRandomElements(kNumToPick, test_vector, &output, false);
-    ASSERT_EQ(output.size(), kNumToPick);
-    indices_encountered.emplace(output[0u]);
+    EXPECT_EQ(output.size(), kNumToPick);
+    indices_encountered.insert(output.begin(), output.end());
   }
   EXPECT_EQ(indices_encountered, std::unordered_set<int>({0, 1, 2, 3, 4, 5}));
 }
