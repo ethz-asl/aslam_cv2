@@ -79,9 +79,9 @@ double stddev(RandAccessIter begin, RandAccessIter end) {
 }
 
 template<typename ElementType, typename Allocator>
-void drawNRandomElements(size_t n, const std::vector<ElementType, Allocator>& input,
+void drawNRandomElements(const size_t n, const std::vector<ElementType, Allocator>& input,
                          std::vector<ElementType, Allocator>* output,
-                         bool use_fixed_seed) {
+                         const bool use_fixed_seed) {
   CHECK_NE(&input, output);
   CHECK_NOTNULL(output)->clear();
   CHECK_GT(n, 0u);
@@ -93,28 +93,29 @@ void drawNRandomElements(size_t n, const std::vector<ElementType, Allocator>& in
 
   // Draw random indices.
   const unsigned int seed =
-      use_fixed_seed ? 0u : std::chrono::system_clock::now().time_since_epoch().count();
+      use_fixed_seed ? 0u : std::random_device{}();
 
   std::default_random_engine generator(seed);
-  std::uniform_int_distribution<int> distribution(0, num_input_elements - 1u);
+  std::uniform_int_distribution<size_t> distribution(0u, num_input_elements - 1u);
 
   std::unordered_set<size_t> random_indices;
   while (random_indices.size() < n) {
-    random_indices.insert(distribution(generator));
+    const size_t picked_index = distribution(generator);
+    random_indices.insert(picked_index);
   }
 
   // Copy to output.
   output->reserve(n);
-  for (size_t idx : random_indices) {
+  for (const size_t idx : random_indices) {
     CHECK_LT(idx, num_input_elements);
     output->emplace_back(input[idx]);
   }
 }
 
 template<typename ElementType, typename Allocator>
-void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
+void drawNRandomElements(const size_t n, const std::vector<ElementType, Allocator>& input,
                          std::vector<ElementType, Allocator>* output) {
-  drawNRandomElements(N, input, output, false);
+  drawNRandomElements(n, input, output, false);
 }
 
 // Remove all elements except the N greatest elements. An optional action can be provided
