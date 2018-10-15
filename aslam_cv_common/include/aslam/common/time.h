@@ -72,6 +72,19 @@ inline bool isValidTime(int64_t time) {
   return time != getInvalidTime();
 }
 
+inline std::string timeNanosecondsToString(const int64_t timestamp_nanoseconds) {
+  const std::string timestamp_string = std::to_string(timestamp_nanoseconds);
+  const size_t num_digits = timestamp_string.size();
+  if (num_digits < 10u) {
+    return timestamp_string + "ns";
+  }
+
+  const std::string timestamp_with_units =
+      timestamp_string.substr(0u, num_digits - 9u) + "s " +
+      timestamp_string.substr(num_digits - 9u) + "ns";
+  return timestamp_with_units;
+}
+
 }  // namespace time
 }  // namespace aslam
 
