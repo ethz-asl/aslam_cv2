@@ -73,9 +73,10 @@ bool convert<std::shared_ptr<aslam::NCamera> >::decode(const Node& node,
         return true;
       }
       // This call will fail hard if the matrix is not a rotation matrix.
-      aslam::Quaternion q_B_C = aslam::Quaternion(
+      const aslam::Quaternion q_B_C =
+          aslam::Quaternion::fromApproximateRotationMatrix(
           static_cast<Eigen::Matrix3d>(T_B_C_raw.block<3,3>(0,0)));
-      aslam::Transformation T_B_C(q_B_C, T_B_C_raw.block<3,1>(0,3));
+      const aslam::Transformation T_B_C(q_B_C, T_B_C_raw.block<3,1>(0,3));
 
       // Fill in the data in the ncamera.
       cameras.push_back(camera);
