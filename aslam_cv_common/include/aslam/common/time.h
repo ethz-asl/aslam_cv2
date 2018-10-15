@@ -72,7 +72,7 @@ inline bool isValidTime(int64_t time) {
   return time != getInvalidTime();
 }
 
-inline std::string formatTimeNanoseconds(const int64_t timestamp_nanoseconds) {
+inline std::string timeNanosecondsToString(const int64_t timestamp_nanoseconds) {
   const std::string timestamp_string = std::to_string(timestamp_nanoseconds);
   const size_t num_digits = timestamp_string.size();
   if (num_digits < 10u) {

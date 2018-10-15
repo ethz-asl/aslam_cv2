@@ -53,9 +53,9 @@ TEST(TestTime, TestGetCurrentTime) {
 
 TEST(TestTime, TestFormatTimeNanoseconds) {
   constexpr int64_t time_ns_1 = 1234567890;
-  EXPECT_EQ(aslam::time::formatTimeNanoseconds(time_ns_1), "1s 234567890ns");
+  EXPECT_EQ(aslam::time::timeNanosecondsToString(time_ns_1), "1s 234567890ns");
   constexpr int64_t time_ns_2 = 123456789;
-  EXPECT_EQ(aslam::time::formatTimeNanoseconds(time_ns_2), "123456789ns");
+  EXPECT_EQ(aslam::time::timeNanosecondsToString(time_ns_2), "123456789ns");
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
