@@ -51,7 +51,7 @@ TEST(TestTime, TestGetCurrentTime) {
   EXPECT_TRUE(aslam::time::isValidTime(timestamp_now));
 }
 
-TEST(TestTime, TestFormatTimeNanoseconds) {
+TEST(TestTime, TestTimeNanosecondsToString) {
   constexpr int64_t time_ns_1 = 1234567890;
   EXPECT_EQ(aslam::time::timeNanosecondsToString(time_ns_1), "1s 234567890ns");
   constexpr int64_t time_ns_2 = 123456789;
