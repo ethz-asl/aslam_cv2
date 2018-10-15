@@ -55,20 +55,6 @@ inline bool hasKey(const YAML::Node& node, const std::string& key) {
   return static_cast<bool>(sub_node);
 }
 
-template<typename ValueType>
-bool safeAs(const YAML::Node& node,  ValueType* value) {
-  CHECK_NOTNULL(value);
-  bool success = false;
-  try {
-    *value = node.as<ValueType>();
-    success = true;
-  } catch(const YAML::Exception& e) {
-    LOG(ERROR) << "Error converting node to type "
-        << typeid(ValueType).name() << ": " << e.what();
-  }
-  return success;
-}
-
 template <class ValueType>
 struct convert<std::queue<ValueType> > {
   static Node encode(const std::queue<ValueType>& queue) {
