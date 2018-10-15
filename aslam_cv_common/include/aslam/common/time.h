@@ -79,10 +79,10 @@ inline std::string formatTimeNanoseconds(const int64_t timestamp_nanoseconds) {
     return timestamp_string + "ns";
   }
 
-  const std::string timestamp_with_dot =
-      timestamp_string.substr(0u, num_digits - 9u) + 's' +
+  const std::string timestamp_with_units =
+      timestamp_string.substr(0u, num_digits - 9u) + "s " +
       timestamp_string.substr(num_digits - 9u) + "ns";
-  return timestamp_with_dot;
+  return timestamp_with_units;
 }
 
 }  // namespace time
