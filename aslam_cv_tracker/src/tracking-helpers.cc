@@ -187,7 +187,7 @@ void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoint
     uncertainties->conservativeResize(extended_size);
 
     // Insert new keypoints at the back.
-    keypoints->block(initial_size, num_new_keypoints, 2, num_new_keypoints) = new_keypoints;
+    keypoints->block(0, initial_size, 2, num_new_keypoints) = new_keypoints;
     track_ids->segment(initial_size, num_new_keypoints).setConstant(-1);
     uncertainties->segment(initial_size, num_new_keypoints).setConstant(
         fixed_keypoint_uncertainty_px);
