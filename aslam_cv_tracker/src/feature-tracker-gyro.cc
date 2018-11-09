@@ -278,7 +278,7 @@ void GyroTracker::lkTracking(
   CHECK(lk_descriptors_kp1.isContinuous());
 
   // Add keypoints and descriptors to frame (k+1).
-  insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
+  insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(
       lk_cv_keypoints_kp1, lk_descriptors_kp1,
       GyroTrackerSettings::kKeypointUncertaintyPx, frame_kp1);
 }
