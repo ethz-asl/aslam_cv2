@@ -14,11 +14,17 @@ namespace aslam {
 class VisualFrame;
 typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Verctor2dList;
 
+void getCvKeypointsFromFrame(const VisualFrame& frame, std::vector<cv::KeyPoint>* keypoints);
+
 void convertKeypointVectorToCvPointList(const Eigen::Matrix2Xd& keypoints,
                                         std::vector<cv::Point2f>* keypoints_cv);
 
 void convertCvPointListToKeypointVector(const std::vector<cv::Point2f>& keypoints,
                                         Eigen::Matrix2Xd* keypoints_eigen);
+
+void insertCvKeypointsIntoEmptyVisualFrame(
+    const std::vector<cv::KeyPoint>& cv_keypoints, const double fixed_keypoint_uncertainty_px,
+    aslam::VisualFrame* frame);
 
 /// Insert a list of OpenCV keypoints and descriptors into an empty VisualFrame.
 void insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(

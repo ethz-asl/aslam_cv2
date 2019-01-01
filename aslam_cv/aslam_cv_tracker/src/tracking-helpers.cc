@@ -9,6 +9,29 @@
 
 namespace aslam {
 
+void getCvKeypointsFromFrame(const VisualFrame& frame, std::vector<cv::KeyPoint>* keypoints) {
+  CHECK_NOTNULL(keypoints)->clear();
+
+  if (!frame.hasKeypointMeasurements() || frame.getNumKeypointMeasurements() == 0u) {
+    return;
+  }
+
+  const size_t num_keypoints = frame.getNumKeypointMeasurements();
+
+  keypoints->reserve(num_keypoints);
+
+  for (size_t idx = 0u; idx < num_keypoints; ++idx) {
+    cv::KeyPoint cv_keypoint;
+    cv_keypoint.pt.x = frame.getKeypointMeasurement(idx)(0);
+    cv_keypoint.pt.y = frame.getKeypointMeasurement(idx)(1);
+    cv_keypoint.response = frame.getKeypointScore(idx);
+    cv_keypoint.angle = frame.getKeypointOrientation(idx);
+    cv_keypoint.size = frame.getKeypointScale(idx);
+
+    keypoints->emplace_back(cv_keypoint);
+  }
+}
+
 void convertKeypointVectorToCvPointList(const Eigen::Matrix2Xd& keypoints,
                                         std::vector<cv::Point2f>* keypoints_cv) {
   CHECK_NOTNULL(keypoints_cv);
@@ -207,6 +230,44 @@ void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoint
     uncertainties.setConstant(fixed_keypoint_uncertainty_px);
     frame->swapKeypointMeasurementUncertainties(&uncertainties);
   }
+}
+
+void insertCvKeypointsIntoEmptyVisualFrame(
+    const std::vector<cv::KeyPoint>& cv_keypoints, const double fixed_keypoint_uncertainty_px,
+    aslam::VisualFrame* frame) {
+  CHECK_NOTNULL(frame);
+  CHECK(!frame->hasKeypointMeasurements() || frame->getNumKeypointMeasurements() == 0u);
+
+  const size_t num_keypoints = cv_keypoints.size();
+
+  Eigen::Matrix2Xd keypoints = Eigen::Matrix2Xd::Zero(2, num_keypoints);
+  Eigen::VectorXd scales = Eigen::VectorXd::Zero(num_keypoints);
+  Eigen::VectorXd scores = Eigen::VectorXd::Zero(num_keypoints);
+  Eigen::VectorXd angles = Eigen::VectorXd::Zero(num_keypoints);
+
+  for (size_t idx = 0u; idx < num_keypoints; ++idx) {
+    const cv::KeyPoint& cv_keypoint = cv_keypoints[idx];
+    keypoints(0, idx) = cv_keypoint.pt.x;
+    keypoints(1, idx) = cv_keypoint.pt.y;
+    scales(idx)  = cv_keypoint.size;
+    scores(idx) = cv_keypoint.response;
+    angles(idx) = cv_keypoint.angle;
+  }
+
+  // Just set/swap the keypoints, invalid track ids and constant measurement uncertainties.
+  frame->setKeypointMeasurements(keypoints);
+
+  Eigen::VectorXi track_ids(num_keypoints);
+  track_ids.setConstant(-1);
+  frame->swapTrackIds(&track_ids);
+
+  Eigen::VectorXd uncertainties(num_keypoints);
+  uncertainties.setConstant(fixed_keypoint_uncertainty_px);
+  frame->swapKeypointMeasurementUncertainties(&uncertainties);
+
+  frame->swapKeypointOrientations(&angles);
+  frame->swapKeypointScales(&scales);
+  frame->swapKeypointScores(&scores);
 }
 
 void insertAdditionalKeypointsToVisualFrame(const Verctor2dList& keypoints,

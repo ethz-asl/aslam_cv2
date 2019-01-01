@@ -8,6 +8,7 @@ DECLARE_bool(matcher_store_all_tested_pairs);
 
 namespace aslam {
 
+/*
 MatchingProblemLandmarksToFrameKDTree::MatchingProblemLandmarksToFrameKDTree(
     const VisualFrame& frame,
     const LandmarkWithDescriptorList& landmarks,
@@ -23,9 +24,10 @@ MatchingProblemLandmarksToFrameKDTree::MatchingProblemLandmarksToFrameKDTree(
   CHECK_GT(image_height_, 0u) << "The visual frame has zero image rows.";
   CHECK_GT(descriptor_size_bytes_, 0);
   CHECK_GT(descriptor_size_bits_, 0);
-}
+}*/
 
-bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
+template <>
+bool MatchingProblemLandmarksToFrameKDTree<unsigned char>::doSetup() {
   aslam::timing::Timer method_timer("MatchingProblemLandmarksToFrameKDTree::doSetup()");
 
   setupValidVectorsAndDescriptors();
@@ -120,6 +122,103 @@ bool MatchingProblemLandmarksToFrameKDTree::doSetup() {
   return true;
 }
 
+
+template <>
+bool MatchingProblemLandmarksToFrameKDTree<float>::doSetup() {
+  aslam::timing::Timer method_timer("MatchingProblemLandmarksToFrameKDTree::doSetup()");
+
+  setupValidVectorsAndDescriptors();
+
+  const size_t num_keypoints = numApples();
+  const size_t num_landmarks = numBananas();
+
+  all_tested_pairs_.resize(num_landmarks);
+
+  const Eigen::Matrix2Xd& keypoints = frame_.getKeypointMeasurements();
+  CHECK_EQ(static_cast<int>(num_keypoints), keypoints.cols())
+    << "The number of keypoints in the visual frame does not match the number "
+    << "of columns in the keypoint matrix.";
+
+  Camera::ConstPtr camera = frame_.getCameraGeometry();
+  CHECK(camera);
+
+  VLOG(3) << "Adding " << num_keypoints << " keypoints to the KD-tree.";
+  valid_keypoints_ = Eigen::MatrixXd::Zero(2, num_keypoints);
+
+  const double image_height = static_cast<double>(camera->imageHeight());
+  CHECK_GT(image_height, 0.0);
+  const double image_width = static_cast<double>(camera->imageWidth());
+  CHECK_GT(image_width, 0.0);
+
+  CHECK_GT(squared_image_space_distance_threshold_px_sq_, 0.0);
+  const double image_space_distance_threshold_pixels =
+      std::sqrt(squared_image_space_distance_threshold_px_sq_);
+
+  const size_t num_bins_x =
+      static_cast<size_t>(std::floor(image_width / image_space_distance_threshold_pixels));
+  const size_t num_bins_y =
+      static_cast<size_t>(std::floor(image_height / image_space_distance_threshold_pixels));
+
+  const double kImageRangeBeginX = 0.0;
+  const double kImageRangeBeginY= 0.0;
+  image_space_counting_grid_.reset(new NeighborCellCountingGrid(
+      kImageRangeBeginX, image_width, kImageRangeBeginY, image_height, num_bins_x, num_bins_y));
+
+  valid_keypoint_index_to_keypoint_index_.reserve(num_keypoints);
+  size_t valid_keypoint_index = 0u;
+  for (size_t keypoint_idx = 0u; keypoint_idx < num_keypoints; ++keypoint_idx) {
+    // Check if the keypoint is valid.
+    const Eigen::Vector2d& keypoint = keypoints.col(keypoint_idx);
+    if (camera->isMasked(keypoint)) {
+      // This keypoint is masked out and hence not valid.
+      is_frame_keypoint_valid_[keypoint_idx] = false;
+    } else {
+      valid_keypoints_.col(valid_keypoint_index) = keypoint;
+      valid_keypoint_index_to_keypoint_index_.emplace_back(keypoint_idx);
+      is_frame_keypoint_valid_[keypoint_idx] = true;
+      image_space_counting_grid_->addElementToGrid(keypoint);
+      ++valid_keypoint_index;
+    }
+  }
+  CHECK_EQ(valid_keypoint_index, valid_keypoint_index_to_keypoint_index_.size());
+  valid_keypoints_.conservativeResize(2, valid_keypoint_index);
+  VLOG(3) << "Num valid keypoints: " << valid_keypoint_index;
+
+  valid_projected_landmarks_ = Eigen::MatrixXd(2, num_landmarks);
+
+  // Then, project all landmarks into the visual frame.
+  size_t valid_landmark_index = 0u;
+  VLOG(3) << "Projecting " << num_landmarks << " into the visual frame.";
+  valid_landmark_index_to_landmark_index_.reserve(num_landmarks);
+  for (size_t landmark_idx = 0u; landmark_idx < num_landmarks; ++landmark_idx) {
+    Eigen::Vector2d projected_landmark;
+    if (camera->project3(landmarks_[landmark_idx].get_p_C_landmark(), &projected_landmark)) {
+      valid_projected_landmarks_.col(valid_landmark_index) = projected_landmark;
+      valid_landmark_index_to_landmark_index_.emplace_back(landmark_idx);
+      is_landmark_valid_[landmark_idx] = true;
+      ++valid_landmark_index;
+    } else {
+      is_landmark_valid_[landmark_idx] = false;
+    }
+  }
+  CHECK_EQ(valid_landmark_index, valid_landmark_index_to_landmark_index_.size());
+  valid_projected_landmarks_.conservativeResize(2, valid_landmark_index);
+  VLOG(3) << "Computed all projections of landmarks into the visual frame. (valid/invalid) ("
+          << valid_landmark_index << "/" << (num_landmarks - valid_landmark_index) << ")";
+
+  // Only create the Nabo index if we have more than zero valid keypoints.
+  if (valid_keypoint_index > 0u) {
+    const int kDimVectors = 2;
+    // Switch touch statistics (NNSearch::TOUCH_STATISTICS) off for performance.
+    const int kCollectTouchStatistics = 0;
+    nn_index_.reset(Nabo::NNSearchD::createKDTreeLinearHeap(
+        valid_keypoints_, kDimVectors, kCollectTouchStatistics));
+  }
+
+  method_timer.Stop();
+  return true;
+}
+/*
 void MatchingProblemLandmarksToFrameKDTree::getCandidates(
     CandidatesList* candidates_for_landmarks) {
   aslam::timing::Timer method_timer("MatchingProblemLandmarksToFrameKDTree::getCandidates");
@@ -138,7 +237,7 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
   CHECK(image_space_counting_grid_);
   const int num_neighbors = image_space_counting_grid_->getMaxNeighborhoodCellCount();
   CHECK_GT(num_neighbors, 0);
-  LOG(INFO) << "Querying for " << num_neighbors << " num neighbors.";
+  VLOG(5) << "Querying for " << num_neighbors << " num neighbors.";
   Eigen::MatrixXi indices = Eigen::MatrixXi::Constant(num_neighbors, num_valid_landmarks, -1);
   Eigen::MatrixXd distances_squared = Eigen::MatrixXd::Constant(
       num_neighbors, num_valid_landmarks, std::numeric_limits<double>::infinity());
@@ -208,7 +307,7 @@ void MatchingProblemLandmarksToFrameKDTree::getCandidates(
   knn_post_processing_timer.Stop();
   VLOG(3) << "Got " << num_matches << " matches.";
   method_timer.Stop();
-}
+}*/
 
 NeighborCellCountingGrid::NeighborCellCountingGrid(
     double min_x, double max_x, double min_y, double max_y,

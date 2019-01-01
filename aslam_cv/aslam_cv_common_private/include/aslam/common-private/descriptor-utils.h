@@ -18,6 +18,9 @@ constexpr size_t kBitsPerByte = 8u;
 typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, 1> DescriptorType;
 typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>
     DescriptorsType;
+typedef Eigen::Matrix<float, Eigen::Dynamic, 1> FloatDescriptorType;
+typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>
+    FloatDescriptorsType;
 
 inline bool getBit(unsigned int bit, const DescriptorType& descriptor) {
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(DescriptorType);
@@ -107,6 +110,47 @@ inline void getIndexOfDescriptorClosestToMedian(
 
   Eigen::MatrixXi::Index eigen_median_descriptor_index;
   hamming_distance_matrix.colwise().sum().minCoeff(&eigen_median_descriptor_index);
+  CHECK_GE(static_cast<int>(eigen_median_descriptor_index), 0);
+  *median_descriptor_index = static_cast<size_t>(eigen_median_descriptor_index);
+  CHECK_LT(*median_descriptor_index, static_cast<size_t>(num_descriptors));
+}
+
+// Returns the col-index into raw_descriptors of the descriptor with
+// smallest accumulated descriptor distance wrt. all other descriptors in
+// raw_descriptors.
+inline void getIndexOfFloatDescriptorClosestToMedian(
+    const FloatDescriptorsType& raw_descriptors, size_t* median_descriptor_index) {
+  const int descriptor_num_elements= raw_descriptors.rows();
+  CHECK_GT(descriptor_num_elements, 0);
+  CHECK_NOTNULL(median_descriptor_index);
+
+  const int num_descriptors = raw_descriptors.cols();
+
+  Eigen::MatrixXd descriptor_distance_matrix =
+      Eigen::MatrixXd::Zero(num_descriptors, num_descriptors);
+
+  for (int descriptor_idx_row = 0; descriptor_idx_row < num_descriptors;
+       ++descriptor_idx_row) {
+    const FloatDescriptorType& descriptor_a =
+        raw_descriptors.col(descriptor_idx_row);
+
+    for (int descriptor_idx_col = descriptor_idx_row + 1;
+        descriptor_idx_col < num_descriptors; ++descriptor_idx_col) {
+
+      const FloatDescriptorType& descriptor_b =
+          raw_descriptors.col(descriptor_idx_col);
+
+      const double descriptor_squared_distance = (descriptor_a - descriptor_b).norm();
+
+      descriptor_distance_matrix(descriptor_idx_row, descriptor_idx_col) =
+          descriptor_squared_distance;
+      descriptor_distance_matrix(descriptor_idx_col, descriptor_idx_row) =
+          descriptor_squared_distance;
+    }
+  }
+
+  Eigen::MatrixXi::Index eigen_median_descriptor_index;
+  descriptor_distance_matrix.colwise().sum().minCoeff(&eigen_median_descriptor_index);
   CHECK_GE(static_cast<int>(eigen_median_descriptor_index), 0);
   *median_descriptor_index = static_cast<size_t>(eigen_median_descriptor_index);
   CHECK_LT(*median_descriptor_index, static_cast<size_t>(num_descriptors));

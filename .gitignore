@@ -32,3 +32,6 @@
 
 .vi_command_history
 mapapi-discovery.txt
+
+# Gedit backups
+*.orig

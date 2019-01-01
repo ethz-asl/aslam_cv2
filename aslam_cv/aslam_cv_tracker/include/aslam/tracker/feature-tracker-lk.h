@@ -25,7 +25,8 @@ struct LkTrackerSettings {
   enum class DetectorType {
     kBriskDetector,
     kOcvGfft,
-    kOcvBrisk
+    kOcvBrisk,
+    kOcvSurf
   };
 
   LkTrackerSettings();
@@ -39,6 +40,12 @@ struct LkTrackerSettings {
   int ocv_brisk_detector_octaves;
   float ocv_brisk_detector_patternScale;
   int ocv_brisk_detector_threshold;
+
+  int ocv_surf_detector_hessian_threshold;
+  int ocv_surf_detector_octaves;
+  int ocv_surf_detector_octave_layers;
+  bool ocv_surf_extended;
+  bool ocv_surf_upright;
 
   /// BRISK Harris detector settings.
   size_t brisk_detector_octaves;
@@ -70,8 +77,8 @@ class FeatureTrackerLk : public FeatureTracker {
   ASLAM_POINTER_TYPEDEFS(FeatureTrackerLk);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(FeatureTrackerLk);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
-  typedef aslam::common::WeightedKeypoint<double, double, int> WeightedKeypoint;
+  //typedef aslam::Aligned<std::vector, Eigen::Vector2d>::type Vector2dList;
+  typedef aslam::common::WeightedKeypoint<cv::KeyPoint, double, double, int> WeightedKeypoint;
   typedef aslam::common::WeightedOccupancyGrid<WeightedKeypoint> OccupancyGrid;
 
   //////////////////////////////////////////////////////////////
@@ -106,7 +113,7 @@ class FeatureTrackerLk : public FeatureTracker {
   /// channel of the VisualFrame.
   void trackKeypoints(const Quaternion& q_Ckp1_Ck, const VisualFrame& frame_k,
                       const cv::Mat& image_frame_kp1,
-                      Vector2dList* tracked_keypoints_kp1,
+                      std::vector<cv::Point2f>* tracked_keypoints_kp1,
                       std::vector<unsigned char>* tracking_success,
                       std::vector<float>* tracking_errors) const;
 
@@ -136,8 +143,7 @@ class FeatureTrackerLk : public FeatureTracker {
   void detectNewKeypoints(const cv::Mat& image_kp1,
                           size_t num_keypoints_to_detect,
                           const cv::Mat& detection_mask,
-                          Vector2dList* keypoints,
-                          std::vector<double>* keypoint_scores) const;
+                          std::vector<cv::KeyPoint>* cv_keypoints) const;
 
   /// Enforce a minimal distance of all keypoints to the image border.
   const size_t kMinDistanceToImageBorderPx = 30u;

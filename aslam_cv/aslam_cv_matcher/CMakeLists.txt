@@ -21,7 +21,7 @@ set(HEADERS
   include/aslam/matcher/matching-problem-frame-to-frame.h
   include/aslam/matcher/matching-problem-landmarks-to-frame.h
   include/aslam/matcher/matching-problem-landmarks-to-frame-kd-tree.h
-  include/aslam/matcher/matching-problem-landmarks-to-frame-multimap.h
+  #include/aslam/matcher/matching-problem-landmarks-to-frame-multimap.h
 )
 
 set(SOURCES
@@ -32,7 +32,7 @@ set(SOURCES
   src/matching-problem-frame-to-frame.cc
   src/matching-problem-landmarks-to-frame.cc
   src/matching-problem-landmarks-to-frame-kd-tree.cc
-  src/matching-problem-landmarks-to-frame-multimap.cc
+  #src/matching-problem-landmarks-to-frame-multimap.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})

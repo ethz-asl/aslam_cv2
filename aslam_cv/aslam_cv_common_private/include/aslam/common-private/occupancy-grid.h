@@ -7,11 +7,12 @@
 #include <Eigen/Dense>
 #include <glog/logging.h>
 #include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
 namespace aslam {
 namespace common {
 
-template<typename CoordinatesType = double, typename WeightType = double, typename PointId = int>
+template<typename PointType, typename CoordinatesType = double, typename WeightType = double, typename PointId = int>
 struct WeightedKeypoint {
   typedef CoordinatesType coordinate_type;
   typedef WeightType weight_type;
@@ -20,9 +21,10 @@ struct WeightedKeypoint {
   WeightedKeypoint() {
     LOG(FATAL) << "Only needed to downsize vectors using resize.";
   }
-  WeightedKeypoint(CoordinatesType u_rows, CoordinatesType v_cols, WeightType weight, PointId id)
-    : u_rows(u_rows), v_cols(v_cols), weight(weight), id(id) {}
+  WeightedKeypoint(const PointType& point_, CoordinatesType u_rows, CoordinatesType v_cols, WeightType weight, PointId id)
+    : point(point_), u_rows(u_rows), v_cols(v_cols), weight(weight), id(id) {}
 
+  PointType point;
   CoordinatesType u_rows, v_cols;
   WeightType weight;
   PointId id;
@@ -35,7 +37,7 @@ struct WeightedKeypoint {
   }
 };
 
-template<typename PointType = WeightedKeypoint<double, double, int>>
+template<typename PointType = WeightedKeypoint<cv::KeyPoint, double, double, int>>
 class WeightedOccupancyGrid {
  public:
   typedef typename PointType::coordinate_type CoordinatesType;
@@ -43,7 +45,7 @@ class WeightedOccupancyGrid {
   typedef typename PointType::id_type PointId;
 
   typedef PointType Point;
-  typedef std::vector<PointType> PointList;
+  typedef std::vector<Point> PointList;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   ASLAM_POINTER_TYPEDEFS(WeightedOccupancyGrid);

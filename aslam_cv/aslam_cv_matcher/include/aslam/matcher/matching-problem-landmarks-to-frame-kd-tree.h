@@ -62,7 +62,8 @@ class NeighborCellCountingGrid {
   int max_neighbor_count_;
 };
 
-typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, 1> Descriptor;
+template <class Scalar>
+using Descriptor = Eigen::Matrix<Scalar, Eigen::Dynamic, 1> ;
 
 /// \class MatchingProblem
 /// \brief Defines the specifics of a matching problem.
@@ -74,7 +75,8 @@ typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, 1> Descriptor;
 ///
 /// Coordinate Frames:
 ///   C: Camera frame of the given visual frame.
-class MatchingProblemLandmarksToFrameKDTree : public MatchingProblemLandmarksToFrame {
+template <class Scalar>
+class MatchingProblemLandmarksToFrameKDTree : public MatchingProblemLandmarksToFrame<Scalar> {
 public:
   ASLAM_POINTER_TYPEDEFS(MatchingProblemLandmarksToFrameKDTree);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingProblemLandmarksToFrameKDTree);
@@ -91,9 +93,25 @@ public:
   ///                                                         landmark to become match candidates.
   /// @param[in]  hamming_distance_threshold                  Max hamming distance for a keypoint
   ///                                                         and a landmark to become candidates.
+  /*
   MatchingProblemLandmarksToFrameKDTree(
-      const VisualFrame& frame, const LandmarkWithDescriptorList& landmarks,
-      double image_space_distance_threshold_pixels, int hamming_distance_threshold);
+      const VisualFrame& frame, const LandmarkWithDescriptorList<Scalar>& landmarks,
+      double image_space_distance_threshold_pixels, int hamming_distance_threshold);*/
+  MatchingProblemLandmarksToFrameKDTree(
+      const VisualFrame& frame,
+      const LandmarkWithDescriptorList<Scalar>& landmarks,
+      double image_space_distance_threshold_pixels,
+      double descriptor_distance_threshold)
+    : MatchingProblemLandmarksToFrame<Scalar>(
+        frame, landmarks, image_space_distance_threshold_pixels, descriptor_distance_threshold),
+        search_radius_px_(image_space_distance_threshold_pixels) {
+    CHECK_GT(descriptor_distance_threshold, 0.0) << "Descriptor distance needs to be positive.";
+    CHECK_GT(image_space_distance_threshold_pixels, 0.0)
+      << "Image space distance needs to be positive.";
+    CHECK(frame.getCameraGeometry()) << "The camera of the visual frame is NULL.";
+    CHECK_GT(MatchingProblemLandmarksToFrame<Scalar>::image_height_, 0u) << "The visual frame has zero image rows.";
+    CHECK_GT(MatchingProblemLandmarksToFrame<Scalar>::descriptor_num_elements_, 0);
+  }
 
   virtual ~MatchingProblemLandmarksToFrameKDTree() {};
 
@@ -102,7 +120,7 @@ public:
   /// \param[out] candidates_for_landmarks
   ///         Candidates from the frame keypoint list that could
   ///         potentially match for each of the landmarks.
-  virtual void getCandidates(CandidatesList* candidates_for_landmarks);
+  virtual void getCandidates(MatchingProblem::CandidatesList* candidates_for_landmarks);
 
 
   /// \brief Gets called at the beginning of the matching problem.
@@ -124,4 +142,6 @@ private:
   const double search_radius_px_;
 };
 }  // namespace aslam
+
+#include "matching-problem-landmarks-to-frame-kd-tree-inl.h"
 #endif  // ASLAM_CV_MATCHING_PROBLEM_LANDMARKS_TO_FRAME_KD_TREE_H_
