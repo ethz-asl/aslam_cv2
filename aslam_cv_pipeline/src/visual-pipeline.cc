@@ -1,8 +1,8 @@
 #include <aslam/pipeline/visual-pipeline.h>
 
 #include <aslam/cameras/camera.h>
+#include <aslam/cameras/undistorter.h>
 #include <aslam/frames/visual-frame.h>
-#include <aslam/pipeline/undistorter.h>
 
 #include <opencv2/core/core.hpp>
 

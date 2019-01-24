@@ -1,4 +1,4 @@
-#include <aslam/pipeline/undistorter.h>
+#include <aslam/cameras/undistorter.h>
 
 namespace aslam {
 

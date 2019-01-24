@@ -6,8 +6,8 @@
 #include <opencv2/core/core.hpp>
 
 #include <aslam/cameras/camera.h>
+#include <aslam/cameras/undistorter.h>
 #include <aslam/common/macros.h>
-#include <aslam/pipeline/undistorter.h>
 #include <aslam/frames/visual-frame.h>
 
 namespace aslam {
