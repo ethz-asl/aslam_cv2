@@ -1,6 +1,7 @@
 #ifndef ASLAM_MATCHER_MATCH_HELPERS_H_
 #define ASLAM_MATCHER_MATCH_HELPERS_H_
 
+#include <aslam/cameras/camera.h>
 #include <aslam/common/pose-types.h>
 
 #include "aslam/matcher/match.h"
@@ -34,17 +35,22 @@ void convertMatchesWithScoreToOpenCvMatches(
     const Aligned<std::vector, MatchWithScore>& matches_with_score_A_B,
     OpenCvMatches* matches_A_B);
 
+template<typename TypedMatches>
+void convertFrameToFrameMatchesToMatches(
+    const TypedMatches& matches_typed_A_B, Matches* raw_matches_A_B);
+
 /// Select and return N random matches for each camera in the rig.
 void pickNRandomRigMatches(
     size_t n_per_camera, const FrameToFrameMatchesList& rig_matches,
     FrameToFrameMatchesList* selected_rig_matches);
 
 /// Get the matches based on the track id channels for one VisualFrame.
+size_t extractMatchesFromTrackIdChannel(const Eigen::VectorXi& track_ids_kp1,
+                                        const Eigen::VectorXi& track_ids_k,
+                                        FrameToFrameMatches* matches_kp1_kp);
 size_t extractMatchesFromTrackIdChannel(const VisualFrame& frame_kp1,
                                         const VisualFrame& frame_k,
                                         FrameToFrameMatches* matches_kp1_kp);
-
-/// Get the matches based on the track id channels for one VisualNFrame.
 size_t extractMatchesFromTrackIdChannels(
     const VisualNFrame& nframe_kp1, const VisualNFrame& nframe_k,
     FrameToFrameMatchesList* rig_matches_kp1_kp);
@@ -72,6 +78,11 @@ void getBearingVectorsFromMatches(
 /// projection fails or the keypoint leaves the image region, the predicted keypoint will be left
 /// unchanged and the prediction_success will be set to false.
 void predictKeypointsByRotation(const VisualFrame& frame_k,
+                                const aslam::Quaternion& q_Ckp1_Ck,
+                                Eigen::Matrix2Xd* predicted_keypoints_kp1,
+                                std::vector<unsigned char>* prediction_success);
+void predictKeypointsByRotation(const aslam::Camera& camera,
+                                const Eigen::Matrix2Xd keypoints_k,
                                 const aslam::Quaternion& q_Ckp1_Ck,
                                 Eigen::Matrix2Xd* predicted_keypoints_kp1,
                                 std::vector<unsigned char>* prediction_success);
