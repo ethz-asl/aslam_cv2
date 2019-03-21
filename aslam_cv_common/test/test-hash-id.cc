@@ -5,6 +5,7 @@
 
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/hash-id.h>
+#include <aslam/common/unique-id.h>
 
 using namespace aslam;
 
