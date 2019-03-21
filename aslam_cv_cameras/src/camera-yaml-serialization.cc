@@ -129,7 +129,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       }
     } else {
       LOG(WARNING) << "Unable to get the id for the camera. Generating new random id.";
-      id.randomize();
+      generateId(&id);
     }
     camera->setId(id);
     if(node["line-delay-nanoseconds"]) {
@@ -211,4 +211,3 @@ Node convert<aslam::Camera>::encode(const aslam::Camera& camera) {
 }
 
 }  // namespace YAML
-

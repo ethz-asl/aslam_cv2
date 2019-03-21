@@ -18,7 +18,7 @@ TEST(HashIdTest, Validity) {
   EXPECT_FALSE(a.isValid());
   EXPECT_FALSE(b.isValid());
   EXPECT_EQ(a,b);
-  a.randomize();
+  generateId(&a);
   EXPECT_TRUE(a.isValid());
 }
 

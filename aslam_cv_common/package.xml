@@ -8,7 +8,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>
-  
+
   <depend>doxygen_catkin</depend>
   <depend>eigen_catkin</depend>
   <depend>eigen_checks</depend>
@@ -16,5 +16,6 @@
   <depend>glog_catkin</depend>
   <depend>minkindr</depend>
   <depend>opencv3_catkin</depend>
+  <depend>protobuf_catkin</depend>
   <depend>yaml_cpp_catkin</depend>
 </package>

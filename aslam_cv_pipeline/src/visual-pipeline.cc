@@ -36,7 +36,7 @@ std::shared_ptr<VisualFrame> VisualPipeline::processImage(const cv::Mat& raw_ima
   frame->setRawCameraGeometry(input_camera_);
   frame->setCameraGeometry(output_camera_);
   FrameId id;
-  id.randomize();
+  generateId(&id);
   frame->setId(id);
   if(copy_images_) {
     frame->setRawImage(raw_image.clone());

@@ -30,7 +30,7 @@ VisualNFrame::VisualNFrame(const aslam::NFramesId& id, std::shared_ptr<NCamera> 
 VisualNFrame::VisualNFrame(std::shared_ptr<NCamera> ncamera)
     : camera_rig_(ncamera) {
   CHECK_NOTNULL(camera_rig_.get());
-  id_.randomize();
+  generateId(&id_);
   frames_.resize(ncamera->getNumCameras());
 }
 
@@ -223,7 +223,7 @@ VisualNFrame::Ptr VisualNFrame::createEmptyTestVisualNFrame(const NCamera::Ptr& 
   CHECK(ncamera);
   const size_t kNumFrames = ncamera->getNumCameras();
   aslam::NFramesId id;
-  id.randomize();
+  generateId(&id);
   aslam::VisualNFrame::Ptr nframe = aligned_shared<aslam::VisualNFrame>(id, ncamera);
   for (size_t frame_idx = 0; frame_idx < kNumFrames; ++frame_idx) {
     aslam::VisualFrame::Ptr frame =

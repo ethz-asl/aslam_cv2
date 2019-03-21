@@ -30,7 +30,7 @@ typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
   typename CameraType::Ptr camera(
       new CameraType(intrinsics, image_width, image_height, distortion));
   aslam::CameraId id;
-  id.randomize();
+  generateId(&id);
   camera->setId(id);
   return camera;
 }
@@ -48,7 +48,7 @@ typename CameraType::Ptr createCamera(const Eigen::VectorXd& intrinsics,
                                       uint32_t image_width, uint32_t image_height) {
   typename CameraType::Ptr camera(new CameraType(intrinsics, image_width, image_height));
   aslam::CameraId id;
-  id.randomize();
+  generateId(&id);
   camera->setId(id);
   return camera;
 }

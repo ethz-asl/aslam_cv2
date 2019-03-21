@@ -195,7 +195,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
     aslam::UnifiedProjectionCamera::Ptr camera(
         new UnifiedProjectionCamera(0.9, 400, 300, 320, 240, 640, 480, distortion));
     aslam::CameraId id;
-    id.randomize();
+    generateId(&id);
     camera->setId(id);
     return camera;
   }
@@ -205,7 +205,7 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
     aslam::UnifiedProjectionCamera::Ptr camera(
         new UnifiedProjectionCamera(0.9, 400, 300, 320, 240, 640, 480));
     aslam::CameraId id;
-    id.randomize();
+    generateId(&id);
     camera->setId(id);
     return camera;
   }

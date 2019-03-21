@@ -200,7 +200,7 @@ NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
   }
 
   aslam::NCameraId rig_id;
-  rig_id.randomize();
+  generateId(&rig_id);
   std::string label("Test camera rig");
   return aslam::NCamera::Ptr(new aslam::NCamera(rig_id, T_C_B_vector, cameras, label));
 }
@@ -212,7 +212,7 @@ NCamera::Ptr NCamera::createSurroundViewTestNCamera() {
   cameras.push_back(aslam::PinholeCamera::createTestCamera());
   cameras.push_back(aslam::PinholeCamera::createTestCamera());
   aslam::NCameraId rig_id;
-  rig_id.randomize();
+  generateId(&rig_id);
   // This defines an artificial camera system similar to the one on the V-Charge or JanETH car.
   aslam::Position3D t_B_C0(2.0, 0.0, 0.0);
   Eigen::Matrix3d R_B_C0 = Eigen::Matrix3d::Zero();
@@ -253,9 +253,14 @@ aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
   // Remove distortion and assign new IDs to the rig and all cameras.
   for (Camera::Ptr& camera : rig_without_distortion->cameras_) {
     camera->removeDistortion();
-    camera->setId(aslam::CameraId::Random());
+    aslam::CameraId cam_id;
+    generateId(&cam_id);
+    camera->setId(cam_id);
   }
-  rig_without_distortion->setId(aslam::NCameraId::Random());
+
+  aslam::NCameraId ncam_id;
+  generateId(&ncam_id);
+  rig_without_distortion->setId(ncam_id);
   return rig_without_distortion;
 }
 

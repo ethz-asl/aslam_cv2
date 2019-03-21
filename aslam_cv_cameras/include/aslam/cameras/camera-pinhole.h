@@ -193,27 +193,27 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
     aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
     aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 300, 320, 240, 640, 480, distortion));
     aslam::CameraId id;
-    id.randomize();
+    generateId(&id);
     camera->setId(id);
     return camera;
   }
 
   /// \brief Create a test camera object for intrinsics unit testing. (with null distortion)
-    template<typename DistortionType>
-    static PinholeCamera::Ptr createIntrinsicsTestCamera() {
-      aslam::Distortion::UniquePtr zeros = DistortionType::createZeroTestDistortion();
-      aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 400, 319.5, 239.5, 640, 480, zeros));
-      aslam::CameraId id;
-      id.randomize();
-      camera->setId(id);
-      return camera;
-    }
+  template<typename DistortionType>
+  static PinholeCamera::Ptr createIntrinsicsTestCamera() {
+    aslam::Distortion::UniquePtr zeros = DistortionType::createZeroTestDistortion();
+    aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 400, 319.5, 239.5, 640, 480, zeros));
+    aslam::CameraId id;
+    generateId(&id);
+    camera->setId(id);
+    return camera;
+  }
 
   /// \brief Create a test camera object for unit testing. (without distortion)
   static PinholeCamera::Ptr createTestCamera() {
     aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 300, 320, 240, 640, 480));
     aslam::CameraId id;
-    id.randomize();
+    generateId(&id);
     camera->setId(id);
     return camera;
   }

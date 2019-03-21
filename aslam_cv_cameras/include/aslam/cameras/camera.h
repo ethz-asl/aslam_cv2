@@ -11,6 +11,7 @@
 #include <glog/logging.h>
 
 #include <aslam/common/macros.h>
+#include <aslam/common/sensor.h>
 #include <aslam/common/types.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/cameras/distortion.h>
@@ -93,7 +94,7 @@ struct ProjectionResult {
 ///        homogeneous points. The actual projection is implemented in the derived classes
 ///        for euclidean coordinates only; homogeneous coordinates are support by a conversion.
 ///        The intrinsic parameters are documented in the specialized camera classes.
-class Camera {
+class Camera : public Sensor {
  public:
   ASLAM_POINTER_TYPEDEFS(Camera);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -158,13 +159,13 @@ class Camera {
   Camera(const Camera& other) :
     line_delay_nanoseconds_(other.line_delay_nanoseconds_),
     label_(other.label_),
-    id_(other.id_),
     image_width_(other.image_width_),
     image_height_(other.image_height_),
     intrinsics_(other.intrinsics_),
     camera_type_(other.camera_type_) {
     CHECK(other.distortion_);
       distortion_.reset(other.distortion_->clone());
+    id_ = other.id_;
   };
 
   void operator=(const Camera&) = delete;
@@ -175,12 +176,6 @@ class Camera {
   /// \name Information about the camera
   /// @{
  public:
-  /// \brief Get the camera id.
-  const aslam::CameraId& getId() const { return id_; }
-
-  /// \brief Set the camera id.
-  void setId(const aslam::CameraId& id) { id_ = id; }
-
   /// \brief Get a label for the camera.
   const std::string& getLabel() const {return label_;}
 
@@ -530,8 +525,6 @@ class Camera {
   uint64_t line_delay_nanoseconds_;
   /// A label for this camera, a name.
   std::string label_;
-  /// The id of this camera.
-  aslam::CameraId id_;
   /// The width of the image.
   const uint32_t image_width_;
   /// The height of the image.

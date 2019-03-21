@@ -24,7 +24,7 @@ TEST(NFrame, MinTimestamp) {
   frame_3->setCameraGeometry(ncamera->getCameraShared(3));
   frame_3->setTimestampNanoseconds(5);
   aslam::NFramesId nframe_id;
-  nframe_id.randomize();
+  generateId(&nframe_id);
   aslam::VisualNFrame nframe(nframe_id, 4);
   nframe.setNCameras(ncamera);
   nframe.setFrame(0, frame_0);
@@ -49,7 +49,7 @@ TEST(NFrame, CopyConstructor) {
   cv::randu(image, cv::Scalar::all(0), cv::Scalar::all(255));
   frame_1->setRawImage(image);
   aslam::NFramesId nframe_id;
-  nframe_id.randomize();
+  generateId(&nframe_id);
   aslam::VisualNFrame nframe(nframe_id, 2);
   nframe.setNCameras(ncamera);
   nframe.setFrame(0, frame_0);

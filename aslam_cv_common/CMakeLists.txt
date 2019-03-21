@@ -6,6 +6,13 @@ catkin_simple(ALL_DEPS_REQUIRED)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/export_flags.cmake)
 
+############
+# PROTOBUF #
+############
+set(PROTO_DEFNS proto/aslam/common/id.proto)
+PROTOBUF_CATKIN_GENERATE_CPP2("proto" PROTO_SRCS PROTO_HDRS ${PROTO_DEFNS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 #############
 # LIBRARIES #
 #############
@@ -18,6 +25,9 @@ set(SOURCES
   src/statistics.cc
   src/thread-pool.cc
   src/timer.cc
+  src/internal/unique-id.cc
+  ${PROTO_SRCS}
+  ${PROTO_HDRS}
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES})
