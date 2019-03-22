@@ -1,8 +1,12 @@
 #ifndef ASLAM_COMMON_UNIQUE_ID_H_
 #define ASLAM_COMMON_UNIQUE_ID_H_
 
+#include <sstream>
+#include <string>
 #include <unordered_set>
 #include <vector>
+
+#include <glog/logging.h>
 
 #include <aslam/common/hash-id.h>
 #include <aslam/common/internal/unique-id.h>
@@ -217,6 +221,8 @@ class UniqueId : private Id {
 UNIQUE_ID_DEFINE_ID(FrameId);
 UNIQUE_ID_DEFINE_ID(NFramesId);
 UNIQUE_ID_DEFINE_ID(SensorId);
+
+// Maintain compatibility with old naming scheme.
 ALIAS_UNIQUE_ID(SensorId, CameraId);
 ALIAS_UNIQUE_ID(SensorId, NCameraId);
 
