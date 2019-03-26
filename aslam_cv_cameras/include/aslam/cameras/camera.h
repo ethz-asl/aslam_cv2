@@ -157,6 +157,7 @@ class Camera : public Sensor {
  protected:
   /// Copy constructor for clone operation.
   Camera(const Camera& other) :
+    Sensor(other.id_, other.sensor_type_, other.topic_),
     line_delay_nanoseconds_(other.line_delay_nanoseconds_),
     label_(other.label_),
     image_width_(other.image_width_),
@@ -165,7 +166,6 @@ class Camera : public Sensor {
     camera_type_(other.camera_type_) {
     CHECK(other.distortion_);
       distortion_.reset(other.distortion_->clone());
-    id_ = other.id_;
   };
 
   void operator=(const Camera&) = delete;
