@@ -16,8 +16,8 @@ namespace geometric_vision {
 bool rejectOutlierFeatureMatchesTranslationRotationSAC(
     const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
     const aslam::Quaternion& q_Ckp1_Ck,
-    const aslam::FrameToFrameMatchesWithScore& matches_kp1_k, bool fix_random_seed,
-    double ransac_threshold, size_t ransac_max_iterations,
+    const aslam::FrameToFrameMatchesWithScore& matches_kp1_k,
+    bool fix_random_seed, double ransac_threshold, size_t ransac_max_iterations,
     aslam::FrameToFrameMatchesWithScore* inlier_matches_kp1_k,
     aslam::FrameToFrameMatchesWithScore* outlier_matches_kp1_k) {
   CHECK_GT(ransac_threshold, 0.0);
@@ -28,8 +28,9 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
   // Handle the case with too few matches to distinguish between out-/inliers.
   static constexpr size_t kMinKeypointCorrespondences = 6u;
   if (matches_kp1_k.size() < kMinKeypointCorrespondences) {
-    VLOG(1) << "Too few matches to run RANSAC.";
-    *outlier_matches_kp1_k =  matches_kp1_k;
+    VLOG(1) << "Too few matches to run RANSAC; Got only "
+            << matches_kp1_k.size() << " matches.";
+    *outlier_matches_kp1_k = matches_kp1_k;
     return false;
   }
 
@@ -39,8 +40,9 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
   aslam::FrameToFrameMatches matches_without_score_kp1_k;
   aslam::convertMatchesWithScoreToMatches<aslam::FrameToFrameMatchWithScore,
                                           aslam::FrameToFrameMatch>(
-                                              matches_kp1_k, &matches_without_score_kp1_k);
-  aslam::getBearingVectorsFromMatches(frame_kp1, frame_k, matches_without_score_kp1_k,
+      matches_kp1_k, &matches_without_score_kp1_k);
+  aslam::getBearingVectorsFromMatches(frame_kp1, frame_k,
+                                      matches_without_score_kp1_k,
                                       &bearing_vectors_kp1, &bearing_vectors_k);
   using opengv::relative_pose::CentralRelativeAdapter;
   CentralRelativeAdapter adapter(bearing_vectors_kp1, bearing_vectors_k,
@@ -60,8 +62,7 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
   typedef opengv::sac_problems::relative_pose::TranslationOnlySacProblem
       TranslationOnlySacProblem;
   std::shared_ptr<TranslationOnlySacProblem> translation_sac_problem(
-      new TranslationOnlySacProblem(
-          adapter, !fix_random_seed));
+      new TranslationOnlySacProblem(adapter, !fix_random_seed));
   opengv::sac::Ransac<TranslationOnlySacProblem> translation_ransac;
   translation_ransac.sac_model_ = translation_sac_problem;
   translation_ransac.threshold_ = ransac_threshold;
@@ -74,13 +75,14 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
   // closer to the boundary of the image. On the contrary, rotation only
   // ransac erroneously discards many matches close to the border of the image
   // but it correctly classifies matches in the center of the image.
-  std::unordered_set<int> inlier_indices(
-      rotation_ransac.inliers_.begin(), rotation_ransac.inliers_.end());
-  inlier_indices.insert(translation_ransac.inliers_.begin(), translation_ransac.inliers_.end());
+  std::unordered_set<int> inlier_indices(rotation_ransac.inliers_.begin(),
+                                         rotation_ransac.inliers_.end());
+  inlier_indices.insert(translation_ransac.inliers_.begin(),
+                        translation_ransac.inliers_.end());
 
   if (inlier_indices.size() < kMinKeypointCorrespondences) {
     VLOG(1) << "Too few inliers to reliably classify outlier matches.";
-    *outlier_matches_kp1_k =  matches_kp1_k;
+    *outlier_matches_kp1_k = matches_kp1_k;
     return false;
   }
 
@@ -94,9 +96,10 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
     }
     ++match_index;
   }
-  CHECK_EQ(inlier_matches_kp1_k->size() + outlier_matches_kp1_k->size(), matches_kp1_k.size());
+  CHECK_EQ(inlier_matches_kp1_k->size() + outlier_matches_kp1_k->size(),
+           matches_kp1_k.size());
   return true;
 }
 
-}  // namespace gv
+}  // namespace geometric_vision
 }  // namespace aslam
