@@ -45,17 +45,17 @@ void insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(
   CHECK_EQ(new_cv_descriptors.type(), CV_8UC1);
   CHECK(new_cv_descriptors.isContinuous());
 
-  const size_t kNumNewKeypoints = new_cv_keypoints.size();
+  const size_t num_new_keypoints = new_cv_keypoints.size();
 
   Eigen::Matrix2Xd new_keypoints_measurements;
   Eigen::VectorXd new_keypoint_scores;
   Eigen::VectorXd new_keypoint_scales;
   Eigen::VectorXd new_keypoint_orientations;
-  new_keypoints_measurements.resize(Eigen::NoChange, kNumNewKeypoints);
-  new_keypoint_scores.resize(kNumNewKeypoints);
-  new_keypoint_scales.resize(kNumNewKeypoints);
-  new_keypoint_orientations.resize(kNumNewKeypoints);
-  for (size_t idx = 0u; idx < kNumNewKeypoints; ++idx) {
+  new_keypoints_measurements.resize(Eigen::NoChange, num_new_keypoints);
+  new_keypoint_scores.resize(num_new_keypoints);
+  new_keypoint_scales.resize(num_new_keypoints);
+  new_keypoint_orientations.resize(num_new_keypoints);
+  for (size_t idx = 0u; idx < num_new_keypoints; ++idx) {
     const cv::KeyPoint& cv_keypoint = new_cv_keypoints[idx];
     new_keypoints_measurements.col(idx)(0) = static_cast<double>(cv_keypoint.pt.x);
     new_keypoints_measurements.col(idx)(1) = static_cast<double>(cv_keypoint.pt.y);
@@ -69,12 +69,12 @@ void insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(
   frame->swapKeypointScales(&new_keypoint_scales);
   frame->swapKeypointOrientations(&new_keypoint_orientations);
 
-  Eigen::VectorXd uncertainties(kNumNewKeypoints);
+  Eigen::VectorXd uncertainties(num_new_keypoints);
   uncertainties.setConstant(fixed_keypoint_uncertainty_px);
   frame->swapKeypointMeasurementUncertainties(&uncertainties);
 
   // Set invalid track ids.
-  Eigen::VectorXi track_ids(kNumNewKeypoints);
+  Eigen::VectorXi track_ids(num_new_keypoints);
   track_ids.setConstant(-1);
   frame->swapTrackIds(&track_ids);
 
