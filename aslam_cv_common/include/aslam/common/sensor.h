@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <aslam/common/macros.h>
 #include <aslam/common/unique-id.h>
 
 namespace aslam {
@@ -19,7 +20,11 @@ class Sensor {
   virtual ~Sensor() = default;
 
   // Set the sensor id.
-  void setId(const aslam::SensorId& id) { id_ = id; };
+  void setId(const aslam::SensorId& id) {
+    id_ = id;
+    CHECK(id_.isValid());
+  };
+
   void setSensorType(int sensor_type) { sensor_type_ = sensor_type; };
   void setTopic(const std::string& topic) { topic_ = topic; }
 
@@ -27,6 +32,23 @@ class Sensor {
   const aslam::SensorId& getId() const { return id_; }
   int getSensorType() const { return sensor_type_; }
   const std::string& getTopic() const {return topic_; }
+
+  bool isValid() const {
+    if (!id_.isValid()) {
+      LOG(ERROR) << "Invalid sensor id.";
+      return false;
+    }
+    return isValidImpl();
+  }
+
+ private:
+  void setRandom() {
+    generateId(&id_);
+    setRandomImpl();
+  }
+
+  virtual bool isValidImpl() const = 0;
+  virtual void setRandomImpl() = 0;
 
  protected:
   // The id of this sensor.

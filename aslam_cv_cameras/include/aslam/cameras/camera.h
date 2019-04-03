@@ -521,6 +521,11 @@ class Camera : public Sensor {
   /// @}
 
  private:
+  bool isValidImpl() const override {
+    return true;
+  };
+  void setRandomImpl() override {};
+
   /// The delay per scanline for a rolling shutter camera in nanoseconds.
   uint64_t line_delay_nanoseconds_;
   /// A label for this camera, a name.
