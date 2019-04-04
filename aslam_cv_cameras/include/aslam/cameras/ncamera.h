@@ -26,7 +26,7 @@ namespace aslam {
 ///
 /// Coordinate frames involved:
 /// - B  : The body frame of the camera rig
-/// - Ci : A coordinate frame attached to camera i. 
+/// - Ci : A coordinate frame attached to camera i.
 ///
 class NCamera {
  public:
@@ -55,7 +55,7 @@ public:
 
   /// Initialize from a property tree.
   NCamera(const sm::PropertyTree& propertyTree);
-  ~NCamera() {}
+  virtual ~NCamera() = default;
 
   /// Copy constructor for clone.
   NCamera(const NCamera&);
