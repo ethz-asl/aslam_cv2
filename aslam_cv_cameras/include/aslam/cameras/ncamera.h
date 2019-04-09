@@ -8,6 +8,7 @@
 
 #include <aslam/common/macros.h>
 #include <aslam/common/pose-types.h>
+#include <aslam/common/sensor.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/common/yaml-serialization.h>
 #include <gtest/gtest_prod.h>
@@ -28,7 +29,7 @@ namespace aslam {
 /// - B  : The body frame of the camera rig
 /// - Ci : A coordinate frame attached to camera i.
 ///
-class NCamera {
+class NCamera : public Sensor {
  public:
   ASLAM_POINTER_TYPEDEFS(NCamera);
   enum {CLASS_SERIALIZATION_VERSION = 1};
@@ -160,11 +161,17 @@ public:
 
   std::string getComparisonString(const NCamera& other) const;
 private:
+  bool isValidImpl() const override { return true; };
+  void setRandomImpl() override {};
+
+  // TODO(smauq): Fix
+  virtual bool loadFromYamlNodeImpl(const YAML::Node&) {
+    return true;
+  }
+  virtual void saveToYamlNodeImpl(YAML::Node*) const {}
+
   /// Internal consistency checks and initialization.
   void initInternal();
-
-  /// A unique id for this camera system.
-  NCameraId id_;
 
   /// The mounting transformations.
   TransformationVector T_C_B_;

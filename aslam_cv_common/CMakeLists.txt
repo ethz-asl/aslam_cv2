@@ -22,6 +22,7 @@ set(SOURCES
   src/hash-id.cc
   src/reader-first-reader-writer-lock.cc
   src/reader-writer-lock.cc
+  src/sensor.cc
   src/statistics.cc
   src/thread-pool.cc
   src/timer.cc

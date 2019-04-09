@@ -16,7 +16,7 @@ namespace aslam {
 
 NCamera::NCamera(const NCameraId& id, const TransformationVector& T_C_B,
                  const std::vector<Camera::Ptr>& cameras, const std::string& label)
-    : id_(id),
+    : Sensor(id_),
       T_C_B_(T_C_B),
       cameras_(cameras),
       label_(label) {
@@ -30,7 +30,7 @@ NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
 }
 
 NCamera::NCamera(const NCamera& other) :
-    id_(other.id_),
+    Sensor(other),
     T_C_B_(other.T_C_B_),
     label_(other.label_) {
   // Clone all contained cameras.

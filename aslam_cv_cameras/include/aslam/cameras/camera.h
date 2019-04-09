@@ -135,7 +135,7 @@ class Camera : public Sensor {
          Type camera_type);
 
  public:
-  virtual ~Camera() {};
+  virtual ~Camera() = default;
 
   /// \brief Compare this camera to another camera object.
   virtual bool operator==(const Camera& other) const;
@@ -157,7 +157,7 @@ class Camera : public Sensor {
  protected:
   /// Copy constructor for clone operation.
   Camera(const Camera& other) :
-    Sensor(other.id_, other.sensor_type_, other.topic_),
+    Sensor(other),
     line_delay_nanoseconds_(other.line_delay_nanoseconds_),
     label_(other.label_),
     image_width_(other.image_width_),
@@ -521,10 +521,14 @@ class Camera : public Sensor {
   /// @}
 
  private:
-  bool isValidImpl() const override {
+  bool isValidImpl() const override { return true; }
+  void setRandomImpl() override {}
+
+  // TODO(smauq): Fix
+  virtual bool loadFromYamlNodeImpl(const YAML::Node&) {
     return true;
-  };
-  void setRandomImpl() override {};
+  }
+  virtual void saveToYamlNodeImpl(YAML::Node*) const {}
 
   /// The delay per scanline for a rolling shutter camera in nanoseconds.
   uint64_t line_delay_nanoseconds_;
