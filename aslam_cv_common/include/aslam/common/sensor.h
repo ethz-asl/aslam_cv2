@@ -18,8 +18,8 @@ class Sensor {
   ASLAM_POINTER_TYPEDEFS(Sensor);
 
   Sensor() {};
-  Sensor(int sensor_type);
-  Sensor(const SensorId& id);
+  explicit Sensor(int sensor_type);
+  explicit Sensor(const SensorId& id);
   Sensor(const SensorId& id, int sensor_type);
   Sensor(const SensorId& id, int sensor_type, const std::string& topic);
 
