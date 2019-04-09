@@ -18,14 +18,11 @@ class Sensor {
   ASLAM_POINTER_TYPEDEFS(Sensor);
 
   Sensor() {};
-  explicit Sensor(int sensor_type)
-      : sensor_type_(sensor_type) {};
-  explicit Sensor(const aslam::SensorId& id)
-      : id_(id) {};
-  Sensor(const aslam::SensorId& id, int sensor_type)
-      : id_(id), sensor_type_(sensor_type) {};
-  Sensor(const aslam::SensorId& id, int sensor_type, const std::string& topic)
-      : id_(id), sensor_type_(sensor_type), topic_(topic) {};
+  Sensor(int sensor_type);
+  Sensor(const SensorId& id);
+  Sensor(const SensorId& id, int sensor_type);
+  Sensor(const SensorId& id, int sensor_type, const std::string& topic);
+
   virtual ~Sensor() = default;
 
   Sensor(const Sensor& other)
@@ -35,16 +32,12 @@ class Sensor {
   void operator=(const Sensor& other) = delete;
 
   // Set the sensor id.
-  void setId(const aslam::SensorId& id) {
-    id_ = id;
-    CHECK(id_.isValid());
-  };
-
+  void setId(const SensorId& id);
   void setSensorType(int sensor_type) { sensor_type_ = sensor_type; };
   void setTopic(const std::string& topic) { topic_ = topic; }
 
   // Get the sensor id.
-  const aslam::SensorId& getId() const { return id_; }
+  const SensorId& getId() const { return id_; }
   int getSensorType() const { return sensor_type_; }
   const std::string& getTopic() const {return topic_; }
 
@@ -63,7 +56,7 @@ class Sensor {
 
  protected:
   // The id of this sensor.
-  aslam::SensorId id_;
+  SensorId id_;
   int sensor_type_;
   std::string topic_;
 

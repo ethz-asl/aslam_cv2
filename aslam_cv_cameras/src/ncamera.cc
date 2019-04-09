@@ -16,7 +16,7 @@ namespace aslam {
 
 NCamera::NCamera(const NCameraId& id, const TransformationVector& T_C_B,
                  const std::vector<Camera::Ptr>& cameras, const std::string& label)
-    : Sensor(id_),
+    : Sensor(id),
       T_C_B_(T_C_B),
       cameras_(cameras),
       label_(label) {

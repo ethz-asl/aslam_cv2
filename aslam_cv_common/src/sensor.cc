@@ -1,6 +1,29 @@
 #include <aslam/common/sensor.h>
 
 namespace aslam {
+Sensor::Sensor(int sensor_type)
+    : sensor_type_(sensor_type) {}
+
+Sensor::Sensor(const SensorId& id)
+    : id_(id) {
+  CHECK(id_.isValid());
+};
+
+Sensor::Sensor(const SensorId& id, int sensor_type)
+    : id_(id), sensor_type_(sensor_type) {
+  CHECK(id_.isValid());
+};
+
+Sensor::Sensor(const SensorId& id, int sensor_type, const std::string& topic)
+    : id_(id), sensor_type_(sensor_type), topic_(topic) {
+  CHECK(id_.isValid());
+};
+
+void Sensor::setId(const SensorId& id) {
+  id_ = id;
+  CHECK(id_.isValid());
+};
+
 bool Sensor::isValid() const {
   if (!id_.isValid()) {
     LOG(ERROR) << "Invalid sensor id.";

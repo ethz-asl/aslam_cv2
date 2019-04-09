@@ -136,12 +136,6 @@ public:
   /// @returns -1 if the rig doesn't have a camera with this id.
   int getCameraIndex(const CameraId& id) const;
 
-  /// Get the camera id.
-  inline const aslam::NCameraId& getId() const {return id_;}
-
-  /// Set the camera id.
-  inline void setId(const aslam::NCameraId& id) {id_ = id;}
-
   /// Get a label for the camera.
   inline const std::string& getLabel() const {return label_;}
 
