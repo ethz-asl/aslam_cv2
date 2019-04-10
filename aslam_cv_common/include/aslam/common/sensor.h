@@ -8,6 +8,11 @@
 #include <aslam/common/yaml-serialization.h>
 
 namespace aslam {
+enum SensorType : int {
+  kNCamera,
+  kCamera
+};
+
 constexpr char kYamlFieldNameId[] = "id";
 // TODO(smauq): Fix
 //constexpr char kYamlFieldNameSensorType[] = "sensor_type";
