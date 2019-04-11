@@ -7,12 +7,15 @@
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/ncamera.h>
-#include <aslam/cameras/yaml/ncamera-yaml-serialization.h>
+#include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/predicates.h>
 #include <aslam/common/unique-id.h>
 
 namespace aslam {
+
+NCamera::NCamera()
+    : Sensor(aslam::SensorType::kNCamera) {}
 
 NCamera::NCamera(const NCameraId& id, const TransformationVector& T_C_B,
                  const std::vector<Camera::Ptr>& cameras, const std::string& label)
@@ -40,42 +43,90 @@ NCamera::NCamera(const NCamera& other) :
   initInternal();
 }
 
-NCamera::Ptr NCamera::loadFromYaml(const std::string& yaml_file) {
-  try {
-    YAML::Node doc = YAML::LoadFile(yaml_file.c_str());
-    return deserializeFromYaml(doc);
-  } catch (const std::exception& ex) {
-    LOG(ERROR) << "Failed to load NCamera from file " << yaml_file << " with the error: \n"
-               << ex.what();
-  }
-  // Return nullptr in the failure case.
-  return NCamera::Ptr();
-}
-
-NCamera::Ptr NCamera::deserializeFromYaml(const YAML::Node& yaml_node) {
-  try {
-    return yaml_node.as<aslam::NCamera::Ptr>();
-  } catch (const std::exception& ex) {
-    LOG(ERROR) << "Failed to load NCamera from YAML node with the error: \n"
-               << ex.what();
-  }
-  // Return nullptr in the failure case.
-  return NCamera::Ptr();
-}
-
-bool NCamera::saveToYaml(const std::string& yaml_file) const {
-  try {
-    YAML::Save(*this, yaml_file);
-  } catch (const std::exception& ex) {
-    LOG(ERROR) << "Failed to save NCamera to file " << yaml_file << " with the error: \n"
-               << ex.what();
+bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
+  if (!yaml_node.IsMap()) {
+    LOG(ERROR) << "Unable to parse the ncamera because the node is not a map.";
     return false;
   }
+
+  // Parse the label.
+  if (!YAML::safeGet(yaml_node, "label", &label_)) {
+    LOG(ERROR) << "Unable to get the label for the ncamera.";
+    return false;
+  }
+
+  // Parse the cameras.
+  const YAML::Node& cameras_node = yaml_node["cameras"];
+  if (!cameras_node.IsSequence()) {
+    LOG(ERROR)
+        << "Unable to parse the cameras because"
+        << "the camera node is not a sequence.";
+    return false;
+  }
+
+  size_t num_cameras = cameras_node.size();
+  if (num_cameras == 0) {
+    LOG(ERROR) << "Number of cameras is 0.";
+    return false;
+  }
+
+  for (size_t camera_index = 0; camera_index < num_cameras; ++camera_index) {
+    // Decode the camera
+    const YAML::Node& camera_node = cameras_node[camera_index];
+    if (!camera_node) {
+      LOG(ERROR) << "Unable to get camera node for camera " << camera_index;
+      return false;
+    }
+
+    if (!camera_node.IsMap()) {
+      LOG(ERROR)
+          << "Camera node for camera " << camera_index << " is not a map.";
+      return false;
+    }
+
+    aslam::Camera::Ptr camera;
+    if (!YAML::safeGet(camera_node, "camera", &camera)) {
+      LOG(ERROR) << "Unable to retrieve camera " << camera_index;
+      return false;
+    }
+
+    // Get the transformation matrix T_B_C (takes points from the frame C to frame B).
+    Eigen::Matrix4d T_B_C_raw;
+    if (!YAML::safeGet(camera_node, "T_B_C", &T_B_C_raw)) {
+      LOG(ERROR)
+          << "Unable to get extrinsic transformation T_B_C for camera "
+          << camera_index;
+      return false;
+    }
+    // This call will fail hard if the matrix is not a rotation matrix.
+    aslam::Quaternion q_B_C = aslam::Quaternion(
+        static_cast<Eigen::Matrix3d>(T_B_C_raw.block<3,3>(0,0)));
+    aslam::Transformation T_B_C(q_B_C, T_B_C_raw.block<3,1>(0,3));
+
+    // Fill in the data in the ncamera.
+    cameras_.push_back(camera);
+    T_C_B_.push_back(T_B_C.inverse());
+  }
+
   return true;
 }
 
-void NCamera::serializeToYaml(YAML::Node* yaml_node) const {
-  *CHECK_NOTNULL(yaml_node) = *this;
+void NCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
+  CHECK_NOTNULL(yaml_node);
+  YAML::Node& node = *yaml_node;
+  node["label"] = label_;
+
+  YAML::Node cameras_node;
+  size_t num_cameras = numCameras();
+  for (size_t camera_index = 0; camera_index < num_cameras; ++camera_index) {
+    YAML::Node camera_node;
+    camera_node["camera"] = getCamera(camera_index);
+    camera_node["T_B_C"] =
+        get_T_C_B(camera_index).inverse().getTransformationMatrix();
+    cameras_node.push_back(camera_node);
+  }
+
+  node["cameras"] = cameras_node;
 }
 
 void NCamera::initInternal() {
@@ -264,6 +315,7 @@ aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
   return rig_without_distortion;
 }
 
+// TODO(smauq): Fix this with respect to base class
 bool NCamera::operator==(const NCamera& other) const {
   bool same = true;
   same &= getNumCameras() == other.getNumCameras();

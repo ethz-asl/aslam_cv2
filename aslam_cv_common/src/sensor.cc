@@ -41,8 +41,8 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
   CHECK(!sensor_node.IsNull());
   std::string id_as_string;
   if (YAML::safeGet(
-          sensor_node, static_cast<std::string>(kYamlFieldNameId),
-          &id_as_string)) {
+        sensor_node, static_cast<std::string>(kYamlFieldNameId),
+        &id_as_string)) {
     CHECK(!id_as_string.empty());
     CHECK(id_.fromHexString(id_as_string));
   } else {
@@ -52,24 +52,29 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
   CHECK(id_.isValid());
 
   // TODO(smauq): Fix
-  /*std::string sensor_type_as_string;
-  if (!YAML::safeGet(
+  std::string sensor_type_as_string;
+  if (YAML::safeGet(
           sensor_node, static_cast<std::string>(kYamlFieldNameSensorType),
           &sensor_type_as_string)) {
-    LOG(ERROR) << "Unable to retrieve the sensor type from the given "
-               << "YAML node.";
-    return false;
+    try {
+      sensor_type_ = std::stoi(sensor_type_as_string);
+    } catch(const std::exception& e) {
+      LOG(ERROR)
+          << "Exception " << e.what() << ", sensor type "
+          << sensor_type_as_string << " must be an integer.";
+      return false;
+    }
+  } else {
+    LOG(WARNING)
+        << "Unable to retrieve the sensor type, setting to unknown.";
+    sensor_type_ = SensorType::kUnknown;
   }
-  sensor_type_ = stringToSensorType(sensor_type_as_string);*/
 
-  if (!YAML::safeGet(
-          sensor_node, static_cast<std::string>(kYamlFieldNameHardwareId),
-          &topic_)) {
-    LOG(ERROR) << "Unable to retrieve the sensor topic from the given "
-               << "YAML node.";
-    return false;
+  if (sensor_type_ != aslam::SensorType::kNCamera && !YAML::safeGet(
+        sensor_node, static_cast<std::string>(kYamlFieldNameTopic), &topic_)) {
+    LOG(WARNING)
+        << "Unable to retrieve the sensor topic.";
   }
-  CHECK(!topic_.empty()) << "A sensor needs a non-empty topic.";
 
   return loadFromYamlNodeImpl(sensor_node);
 }
@@ -79,12 +84,12 @@ void Sensor::serialize(YAML::Node* sensor_node_ptr) const {
 
   CHECK(id_.isValid());
   sensor_node[static_cast<std::string>(kYamlFieldNameId)] = id_.hexString();
-  // TODO(smauq): Fix
-  /*sensor_node[static_cast<std::string>(kYamlFieldNameSensorType)] =
-      sensorTypeToString(sensor_type_);*/
-  CHECK(!topic_.empty());
-  sensor_node[static_cast<std::string>(kYamlFieldNameHardwareId)] = topic_;
+  sensor_node[static_cast<std::string>(kYamlFieldNameSensorType)] =
+      std::to_string(sensor_type_);
+  if (sensor_type_ != aslam::SensorType::kNCamera) {
+    sensor_node[static_cast<std::string>(kYamlFieldNameTopic)] = topic_;
+  }
 
   saveToYamlNodeImpl(&sensor_node);
 }
-}
+}  // namespace aslam

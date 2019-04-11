@@ -6,19 +6,20 @@
 #include <aslam/common/macros.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/common/yaml-serialization.h>
+#include <aslam/common/yaml-file-serialization.h>
 
 namespace aslam {
 enum SensorType : int {
+  kUnknown,
   kNCamera,
   kCamera
 };
 
 constexpr char kYamlFieldNameId[] = "id";
-// TODO(smauq): Fix
-//constexpr char kYamlFieldNameSensorType[] = "sensor_type";
-constexpr char kYamlFieldNameHardwareId[] = "topic";
+constexpr char kYamlFieldNameSensorType[] = "sensor_type";
+constexpr char kYamlFieldNameTopic[] = "topic";
 
-class Sensor {
+class Sensor : public YamlFileSerializable {
  public:
   ASLAM_POINTER_TYPEDEFS(Sensor);
 
@@ -48,8 +49,8 @@ class Sensor {
 
   bool isValid() const;
 
-  bool deserialize(const YAML::Node& sensor_node);
-  void serialize(YAML::Node* sensor_node_ptr) const;
+  bool deserialize(const YAML::Node& sensor_node) override;
+  void serialize(YAML::Node* sensor_node_ptr) const override;
 
  private:
   void setRandom();

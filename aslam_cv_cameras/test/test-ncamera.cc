@@ -5,25 +5,25 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncamera.h>
-#include <aslam/cameras/yaml/ncamera-yaml-serialization.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/yaml-serialization.h>
 
 TEST(TestNCameraYamlSerialization, testEmptyYaml) {
   YAML::Node node = YAML::Load("{}");
-  aslam::NCamera::Ptr ncamera;
-  ncamera = node.as<aslam::NCamera::Ptr>();
-  EXPECT_EQ(ncamera, nullptr);
+  aslam::NCamera::Ptr ncamera(new aslam::NCamera());
+  bool success = ncamera->deserialize(node);
+  EXPECT_EQ(success, false);
 }
 
 TEST(TestNCameraYamlSerialization, testSerialization) {
   aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(4u);
   ASSERT_TRUE(ncamera.get() != nullptr);
 
-  std::string filename = "test_ncamera.yaml";
-  ncamera->saveToYaml(filename);
+  std::string filename = "/home/andrei/test_ncamera.yaml";
+  ncamera->serializeToFile(filename);
 
-  aslam::NCamera::Ptr ncamera_loaded = aslam::NCamera::loadFromYaml(filename);
+  aslam::NCamera::Ptr ncamera_loaded(new aslam::NCamera());
+  ncamera_loaded->deserializeFromFile(filename);
   ASSERT_TRUE(ncamera_loaded.get() != nullptr);
 
   EXPECT_EQ(ncamera_loaded->getLabel(), ncamera->getLabel());

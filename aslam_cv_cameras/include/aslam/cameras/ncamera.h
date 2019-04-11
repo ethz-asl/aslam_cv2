@@ -35,11 +35,11 @@ class NCamera : public Sensor {
   enum {CLASS_SERIALIZATION_VERSION = 1};
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-protected:
+//protected:
   /// Default constructor builds an empty camera rig.
-  NCamera() = default;
+  NCamera();
 
-public:
+//public:
   /// \brief initialize from a list of transformations and a list of cameras
   ///
   /// The two lists must be parallel arrays (same size). The transformation
@@ -74,13 +74,9 @@ public:
   }
 
   /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
-  static NCamera::Ptr loadFromYaml(const std::string& yaml_file);
-  static NCamera::Ptr deserializeFromYaml(
-      const YAML::Node& yaml_node);
-
-  /// Save this ncamera to a yaml file.
-  bool saveToYaml(const std::string& yaml_file) const;
-  void serializeToYaml(YAML::Node* yaml_node) const;
+  //static NCamera::Ptr loadFromYaml(const std::string& yaml_file);
+  //static NCamera::Ptr deserializeFromYaml(
+  //    const YAML::Node& yaml_node);
 
   /// Get the number of cameras.
   size_t getNumCameras() const;
@@ -158,11 +154,8 @@ private:
   bool isValidImpl() const override { return true; };
   void setRandomImpl() override {};
 
-  // TODO(smauq): Fix
-  virtual bool loadFromYamlNodeImpl(const YAML::Node&) {
-    return true;
-  }
-  virtual void saveToYamlNodeImpl(YAML::Node*) const {}
+  virtual bool loadFromYamlNodeImpl(const YAML::Node&);
+  virtual void saveToYamlNodeImpl(YAML::Node*) const;
 
   /// Internal consistency checks and initialization.
   void initInternal();
