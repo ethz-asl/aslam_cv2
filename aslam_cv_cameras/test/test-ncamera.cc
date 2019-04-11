@@ -19,7 +19,7 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
   aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(4u);
   ASSERT_TRUE(ncamera.get() != nullptr);
 
-  std::string filename = "/home/andrei/test_ncamera.yaml";
+  std::string filename = "test_ncamera.yaml";
   ncamera->serializeToFile(filename);
 
   aslam::NCamera::Ptr ncamera_loaded(new aslam::NCamera());

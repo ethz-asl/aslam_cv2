@@ -44,10 +44,7 @@ NCamera::NCamera(const NCamera& other) :
 }
 
 bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
-  if (!yaml_node.IsMap()) {
-    LOG(ERROR) << "Unable to parse the ncamera because the node is not a map.";
-    return false;
-  }
+  CHECK(yaml_node.IsMap());
 
   // Parse the label.
   if (!YAML::safeGet(yaml_node, "label", &label_)) {
@@ -107,6 +104,8 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     cameras_.push_back(camera);
     T_C_B_.push_back(T_B_C.inverse());
   }
+
+  initInternal();
 
   return true;
 }
