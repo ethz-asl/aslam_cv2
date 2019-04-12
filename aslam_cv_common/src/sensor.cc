@@ -51,11 +51,10 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
   }
   CHECK(id_.isValid());
 
-  // TODO(smauq): Fix
   std::string sensor_type_as_string;
   if (YAML::safeGet(
-          sensor_node, static_cast<std::string>(kYamlFieldNameSensorType),
-          &sensor_type_as_string)) {
+        sensor_node, static_cast<std::string>(kYamlFieldNameSensorType),
+        &sensor_type_as_string)) {
     try {
       sensor_type_ = std::stoi(sensor_type_as_string);
     } catch(const std::exception& e) {
