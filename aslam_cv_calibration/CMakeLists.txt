@@ -18,6 +18,7 @@ set(SOURCES
   src/target-algorithms.cc
   src/target-aprilgrid.cc
   src/target-base.cc
+  src/target-checkerboard.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
