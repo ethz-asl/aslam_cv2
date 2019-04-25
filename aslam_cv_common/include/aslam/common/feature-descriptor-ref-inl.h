@@ -7,15 +7,14 @@
 namespace aslam {
 namespace common {
 template <typename PointerType>
-inline FeatureDescriptorRefBase<
-    PointerType, ReadOnlyAccessors>::FeatureDescriptorRefBase(PointerType* data,
-                                                              uint32_t size)
+inline FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>::
+    FeatureDescriptorRefBase(PointerType* data, uint32_t size)
     : data_(data), size_bytes_(size) {}
 
 template <typename PointerType>
 inline FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>&
-FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>::
-operator=(const FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>& lhs) {
+FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>::operator=(
+    const FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>& lhs) {
   if (this == &lhs) {
     return *this;
   }
@@ -40,17 +39,16 @@ inline FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>::
 }
 
 template <typename PointerType>
-inline const unsigned char&
-FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>::
-operator[](size_t index) const {
+inline const unsigned char& FeatureDescriptorRefBase<
+    PointerType, ReadOnlyAccessors>::operator[](size_t index) const {
   CHECK_LT(index, size_bytes_);
   return data_[index];
 }
 
 template <typename PointerType>
 inline bool FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>::
-operator==(const FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>& lhs)
-    const {
+operator==(
+    const FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>& lhs) const {
   bool same = true;
   same &= static_cast<bool>(data_) == static_cast<bool>(lhs.data_);
   same &= size_bytes_ == lhs.size_bytes_;
@@ -98,8 +96,8 @@ inline void FeatureDescriptorRefBase<unsigned char, WriteAccessors>::Allocate(
 }
 
 inline FeatureDescriptorRefBase<unsigned char, WriteAccessors>&
-FeatureDescriptorRefBase<unsigned char, WriteAccessors>::
-operator=(const FeatureDescriptorRefBase<unsigned char, WriteAccessors>& lhs) {
+FeatureDescriptorRefBase<unsigned char, WriteAccessors>::operator=(
+    const FeatureDescriptorRefBase<unsigned char, WriteAccessors>& lhs) {
   if (this == &lhs) {
     return *this;
   }
@@ -181,9 +179,8 @@ operator[](size_t index) {
   CHECK_LT(index, size_bytes_);
   return data_[index];
 }
-inline const unsigned char&
-FeatureDescriptorRefBase<unsigned char, WriteAccessors>::
-operator[](size_t index) const {
+inline const unsigned char& FeatureDescriptorRefBase<
+    unsigned char, WriteAccessors>::operator[](size_t index) const {
   CHECK_LT(index, size_bytes_);
   return data_[index];
 }

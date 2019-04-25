@@ -1,5 +1,5 @@
-#ifndef ASLAM_COMMON_READER_WRITER_MUTEX_FIXTURE_INL_H_
-#define ASLAM_COMMON_READER_WRITER_MUTEX_FIXTURE_INL_H_
+#ifndef ASLAM_CV2_ASLAM_CV_COMMON_TEST_READER_WRITER_MUTEX_FIXTURE_INL_H_
+#define ASLAM_CV2_ASLAM_CV_COMMON_TEST_READER_WRITER_MUTEX_FIXTURE_INL_H_
 
 #include <gtest/gtest.h>
 
@@ -32,7 +32,7 @@ void ReaderWriterMutexFixture::delayedReader() {
   for (int i = 0; i < kNumCycles; ++i) {
     value_mutex_.acquireReadLock();
     usleep(5);
-    EXPECT_EQ(value_, (num_writes_) * kMagicNumber);
+    EXPECT_EQ(value_, (num_writes_)*kMagicNumber);
     value_mutex_.releaseReadLock();
   }
 }
@@ -55,4 +55,4 @@ void ReaderWriterMutexFixture::readerUpgrade() {
 
 }  // namespace aslam
 
-#endif  // ASLAM_COMMON_READER_WRITER_MUTEX_FIXTURE_INL_H_
+#endif  // ASLAM_CV2_ASLAM_CV_COMMON_TEST_READER_WRITER_MUTEX_FIXTURE_INL_H_

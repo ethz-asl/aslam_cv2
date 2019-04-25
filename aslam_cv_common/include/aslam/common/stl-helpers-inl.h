@@ -2,6 +2,7 @@
 #define ASLAM_COMMON_STL_HELPERS_INL_H_
 
 #include <algorithm>
+#include <vector>
 
 namespace aslam {
 namespace common {
@@ -43,8 +44,7 @@ template <typename ScalarType>
 void copyMiddle(
     const int source_start, const int destination_start, const int size,
     OneDimensionAdapter<ScalarType, kRows>* source,
-    OneDimensionAdapter<ScalarType, kRows>*
-    destination) {
+    OneDimensionAdapter<ScalarType, kRows>* destination) {
   CHECK_NOTNULL(source);
   CHECK_NOTNULL(destination);
   destination->matrix->middleRows(destination_start, size) =
@@ -79,13 +79,11 @@ void resizeDynamicDimensionLike(
 }
 template <typename ScalarType>
 void resizeDynamicDimensionLike(
-    const int new_size,
-    const OneDimensionAdapter<ScalarType, kRows>& reference,
+    const int new_size, const OneDimensionAdapter<ScalarType, kRows>& reference,
     OneDimensionAdapter<ScalarType, kRows>* matrix) {
   CHECK_NOTNULL(matrix);
   matrix->matrix->resize(new_size, reference.matrix->cols());
 }
-
 
 template <typename ScalarType, int Rows>
 size_t dynamicSize(
@@ -98,13 +96,11 @@ size_t dynamicSize(
   return matrix.rows();
 }
 template <typename ScalarType>
-size_t dynamicSize(
-    const OneDimensionAdapter<ScalarType, kColumns>& matrix) {
+size_t dynamicSize(const OneDimensionAdapter<ScalarType, kColumns>& matrix) {
   return matrix.matrix->cols();
 }
 template <typename ScalarType>
-size_t dynamicSize(
-    const OneDimensionAdapter<ScalarType, kRows>& matrix) {
+size_t dynamicSize(const OneDimensionAdapter<ScalarType, kRows>& matrix) {
   return matrix.matrix->rows();
 }
 
@@ -113,8 +109,7 @@ size_t dynamicSize(
 template <typename ContainerType>
 void eraseIndicesFromContainer(
     const std::vector<size_t>& ordered_indices_to_erase,
-    const size_t expected_initial_count,
-    ContainerType* container) {
+    const size_t expected_initial_count, ContainerType* container) {
   CHECK_NOTNULL(container);
   CHECK_EQ(internal::dynamicSize(*container), expected_initial_count);
   CHECK_LT(ordered_indices_to_erase.back(), expected_initial_count);
@@ -127,7 +122,7 @@ void eraseIndicesFromContainer(
   CHECK_LE(erase_count, expected_initial_count);
 
   LOG_IF(WARNING, erase_count == expected_initial_count)
-  << "All items will be removed!";
+      << "All items will be removed!";
 
   const size_t remaining_count = expected_initial_count - erase_count;
   ContainerType result;
@@ -139,20 +134,22 @@ void eraseIndicesFromContainer(
     CHECK_GE(ordered_indices_to_erase[i], container_block_start);
     const int block_size = ordered_indices_to_erase[i] - container_block_start;
 
-    internal::copyMiddle(container_block_start, result_fill_index, block_size,
-                         container, &result);
+    internal::copyMiddle(
+        container_block_start, result_fill_index, block_size, container,
+        &result);
 
     result_fill_index += block_size;
     container_block_start = ordered_indices_to_erase[i] + 1;
   }
   const int last_block_size = expected_initial_count - container_block_start;
-  internal::copyMiddle(container_block_start, result_fill_index,
-                       last_block_size, container, &result);
+  internal::copyMiddle(
+      container_block_start, result_fill_index, last_block_size, container,
+      &result);
 
   container->swap(result);
 }
 
-template<typename ElementType, typename Allocator>
+template <typename ElementType, typename Allocator>
 void eraseIndicesFromContainer(
     const std::vector<size_t>& ordered_indices_to_erase,
     const size_t expected_initial_count,

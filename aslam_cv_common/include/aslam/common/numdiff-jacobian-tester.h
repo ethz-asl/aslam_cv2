@@ -1,5 +1,5 @@
-#ifndef ASLAM_CV_NUMDIFF_JACOBIAN_TESTER_H_
-#define ASLAM_CV_NUMDIFF_JACOBIAN_TESTER_H_
+#ifndef ASLAM_COMMON_NUMDIFF_JACOBIAN_TESTER_H_
+#define ASLAM_COMMON_NUMDIFF_JACOBIAN_TESTER_H_
 
 #include <Eigen/Dense>
 #include <eigen-checks/gtest.h>
@@ -12,15 +12,22 @@ namespace common {
 #define NUMDIFF_DEBUG_OUTPUT false
 
 /// \def TEST_JACOBIAN_FINITE_DIFFERENCE(FUNCTOR_TYPE, X, STEP, TOLERANCE, ...)
-///  Test macro and numerical differentiator to unit test Jacobian implementations.
-///  @param[in] FUNCTOR_TYPE Functor that wraps the value and symbolic Jacobian generating function
+///  Test macro and numerical differentiator to unit test Jacobian
+///  implementations.
+///  @param[in] FUNCTOR_TYPE Functor that wraps the value and symbolic Jacobian
+///  generating function
 ///                          to the required form. See example below.
-///  @param[in] X Evaluation point. (struct Functor : public aslam::common::NumDiffFunctor<Nf, Nx>)
-///               Nf: output dimension, Nx: number of parameters --> dim(J)=(Nf x Nx)
-///  @param[in] STEP Step size used for the numerical differentiation. (Eigen::VectorXd)
-///  @param[in] TOLERANCE Tolerance used for comparing the numerical and symbolic Jacobian
+///  @param[in] X Evaluation point. (struct Functor : public
+///  aslam::common::NumDiffFunctor<Nf, Nx>)
+///               Nf: output dimension, Nx: number of parameters --> dim(J)=(Nf
+///               x Nx)
+///  @param[in] STEP Step size used for the numerical differentiation.
+///  (Eigen::VectorXd)
+///  @param[in] TOLERANCE Tolerance used for comparing the numerical and
+///  symbolic Jacobian
 ///                       evaluations. (double)
-///  @param[in] ... Argument list forwarded to Functor constructor. (__VA_ARGS__)
+///  @param[in] ... Argument list forwarded to Functor constructor.
+///  (__VA_ARGS__)
 ///
 /// Example:
 /// @code
@@ -41,67 +48,62 @@ namespace common {
 ///  double stepsize = 1e-3;
 ///  double test_tolerance = 1e-2;
 ///  Eigen::Vector2d x0(0.0, 1.0); // Evaluation point
-///  TEST_JACOBIAN_FINITE_DIFFERENCE(Functor, x0, stepsize, tolerance, my_class_);
+///  TEST_JACOBIAN_FINITE_DIFFERENCE(Functor, x0, stepsize, tolerance,
+///  my_class_);
 ///
 /// @endcode
 #define TEST_JACOBIAN_FINITE_DIFFERENCE(FUNCTOR_TYPE, X, STEP, TOLERANCE, ...) \
-    do {\
-      FUNCTOR_TYPE functor(__VA_ARGS__);                                 \
-      typename aslam::common::NumericalDiffTraits<FUNCTOR_TYPE>::type numDiff(functor, STEP); \
-      typename FUNCTOR_TYPE::JacobianType Jnumeric;                      \
-      bool success = numDiff.getJacobianNumerical(X, Jnumeric);          \
-      EXPECT_TRUE(success) << "Num. differentiation failed!";            \
-      typename FUNCTOR_TYPE::JacobianType Jsymbolic;                     \
-      success = functor.getJacobian(X, &Jsymbolic);                      \
-      EXPECT_TRUE(success) << "Getting analytical Jacobian failed!";     \
-      EXPECT_TRUE(EIGEN_MATRIX_NEAR(Jnumeric, Jsymbolic, TOLERANCE));    \
-      VLOG(3) << "Jnumeric: " << Jnumeric << "\n";                       \
-      VLOG(3) << "Jsymbolic: " << Jsymbolic << "\n";                     \
-    } while (0)
+  do {                                                                         \
+    FUNCTOR_TYPE functor(__VA_ARGS__);                                         \
+    typename aslam::common::NumericalDiffTraits<FUNCTOR_TYPE>::type numDiff(   \
+        functor, STEP);                                                        \
+    typename FUNCTOR_TYPE::JacobianType Jnumeric;                              \
+    bool success = numDiff.getJacobianNumerical(X, Jnumeric);                  \
+    EXPECT_TRUE(success) << "Num. differentiation failed!";                    \
+    typename FUNCTOR_TYPE::JacobianType Jsymbolic;                             \
+    success = functor.getJacobian(X, &Jsymbolic);                              \
+    EXPECT_TRUE(success) << "Getting analytical Jacobian failed!";             \
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(Jnumeric, Jsymbolic, TOLERANCE));            \
+    VLOG(3) << "Jnumeric: " << Jnumeric << "\n";                               \
+    VLOG(3) << "Jsymbolic: " << Jsymbolic << "\n";                             \
+  } while (0)
 
 // Functor base for numerical differentiation.
-template<int NY, int NX, typename _Scalar = double>
+template <int NY, int NX, typename _Scalar = double>
 struct NumDiffFunctor {
   // Type definitions.
-  enum {
-    InputsAtCompileTime = NX,
-    ValuesAtCompileTime = NY
-  };
+  enum { InputsAtCompileTime = NX, ValuesAtCompileTime = NY };
 
   typedef _Scalar Scalar;
   typedef Eigen::Matrix<Scalar, InputsAtCompileTime, 1> InputType;
   typedef Eigen::Matrix<Scalar, ValuesAtCompileTime, 1> ValueType;
-  typedef Eigen::Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime> JacobianType;
+  typedef Eigen::Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime>
+      JacobianType;
 
-  NumDiffFunctor() {};
-  virtual ~NumDiffFunctor() {};
+  NumDiffFunctor() {}
+  virtual ~NumDiffFunctor() {}
 
-  virtual bool functional(const typename NumDiffFunctor::InputType& x,
-                          typename NumDiffFunctor::ValueType& fvec,
-                          typename NumDiffFunctor::JacobianType* Jout) const = 0;
+  virtual bool functional(
+      const typename NumDiffFunctor::InputType& x,
+      typename NumDiffFunctor::ValueType& fvec,  // NOLINT
+      typename NumDiffFunctor::JacobianType* Jout) const = 0;
 
-  bool operator()(const InputType& x, ValueType& fvec) const {
+  bool operator()(const InputType& x, ValueType& fvec) const {  // NOLINT
     return functional(x, fvec, nullptr);
-  };
+  }
 
-  bool getJacobian(const InputType& x,
-                   JacobianType* out_jacobian) const {
+  bool getJacobian(const InputType& x, JacobianType* out_jacobian) const {
     ValueType fvec;
     return functional(x, fvec, out_jacobian);
-  };
+  }
 };
 
 /// Differentiation schemes for class NumericalDiff.
-enum NumericalDiffMode {
-  Forward,
-  Central,
-  CentralSecond
-};
-
+enum NumericalDiffMode { Forward, Central, CentralSecond };
 
 // The NumericalDiff class won't compile if ValuesAtCompileTime is zero.
 // This class can be chosen by template magic in this case.
-template<typename _Functor, NumericalDiffMode mode = CentralSecond>
+template <typename _Functor, NumericalDiffMode mode = CentralSecond>
 class ZeroNumericalDiff {
  public:
   typedef _Functor Functor;
@@ -114,16 +116,18 @@ class ZeroNumericalDiff {
     ValuesAtCompileTime = _Functor::ValuesAtCompileTime
   };
 
-  ZeroNumericalDiff(const Functor& /* f */, Scalar /* _epsfcn */) {};
-  virtual ~ZeroNumericalDiff() {};
-  bool getJacobianNumerical(const InputType& /* _x */, JacobianType &/* jac */) const {
+  ZeroNumericalDiff(const Functor& /* f */, Scalar /* _epsfcn */) {}
+  virtual ~ZeroNumericalDiff() {}
+  bool getJacobianNumerical(
+      const InputType& /* _x */, JacobianType& /* jac */) const {
     return true;
   }
 };
 
 /// \class NumericalDiff
-/// \brief Modified numerical differentiation code from unsupported/Eigen library
-template<typename _Functor, NumericalDiffMode mode = CentralSecond>
+/// \brief Modified numerical differentiation code from unsupported/Eigen
+/// library
+template <typename _Functor, NumericalDiffMode mode = CentralSecond>
 class NumericalDiff : public _Functor {
  public:
   typedef _Functor Functor;
@@ -132,7 +136,7 @@ class NumericalDiff : public _Functor {
   typedef typename Functor::ValueType ValueType;
   typedef typename Functor::JacobianType JacobianType;
 
-  NumericalDiff(const Functor& f, Scalar _epsfcn = 0.)
+  NumericalDiff(const Functor& f, Scalar _epsfcn = 0.)  // NOLINT
       : Functor(f),
         epsfcn(_epsfcn) {}
 
@@ -141,15 +145,18 @@ class NumericalDiff : public _Functor {
     ValuesAtCompileTime = Functor::ValuesAtCompileTime
   };
 
-  bool getJacobianNumerical(const InputType& _x, JacobianType &jac) const {
-    static_assert(InputsAtCompileTime > 0,
-                  "Numerical Differentiation does not work for zero-sized Jacobians.");
-    using std::sqrt;
+  bool getJacobianNumerical(
+      const InputType& _x, JacobianType& jac) const {  // NOLINT
+    static_assert(
+        InputsAtCompileTime > 0,
+        "Numerical Differentiation does not work for zero-sized Jacobians.");
     using std::abs;
+    using std::sqrt;
     /* Local variables */
     Scalar h;
     const typename InputType::Index n = _x.size();
-    const Scalar eps = sqrt(((std::max)(epsfcn, Eigen::NumTraits<Scalar>::epsilon())));
+    const Scalar eps =
+        sqrt(((std::max)(epsfcn, Eigen::NumTraits<Scalar>::epsilon())));
 
     // Build jacobian.
     InputType x = _x;
@@ -191,31 +198,33 @@ class NumericalDiff : public _Functor {
           break;
         default:
           eigen_assert(false);
-      };
+      }
     }
     return success;
   }
+
  private:
   Scalar epsfcn;
   NumericalDiff& operator=(const NumericalDiff&);
 };
 
-template<typename _Functor, NumericalDiffMode mode, int ValuesAtCompileTime>
+template <typename _Functor, NumericalDiffMode mode, int ValuesAtCompileTime>
 struct NumericalDiffTraitsSelector {
   typedef NumericalDiff<_Functor, mode> type;
 };
 
-template<typename _Functor, NumericalDiffMode mode>
+template <typename _Functor, NumericalDiffMode mode>
 struct NumericalDiffTraitsSelector<_Functor, mode, 0> {
   typedef ZeroNumericalDiff<_Functor, mode> type;
 };
 
-template<typename _Functor, NumericalDiffMode mode = CentralSecond>
+template <typename _Functor, NumericalDiffMode mode = CentralSecond>
 struct NumericalDiffTraits {
-  typedef typename NumericalDiffTraitsSelector<_Functor, mode, _Functor::InputsAtCompileTime>::type type;
+  typedef typename NumericalDiffTraitsSelector<
+      _Functor, mode, _Functor::InputsAtCompileTime>::type type;
 };
 
 }  // namespace common
 }  // namespace aslam
 
-#endif  // ASLAM_CV_NUMDIFF_JACOBIAN_TESTER_H_
+#endif  // ASLAM_COMMON_NUMDIFF_JACOBIAN_TESTER_H_

@@ -30,7 +30,8 @@ class MatcherTest : public testing::Test {
   aslam::VisualFrame::Ptr apple_frame_;
   aslam::VisualFrame::Ptr banana_frame_;
 
-  aslam::MatchingEngineNonExclusive<aslam::MatchingProblemFrameToFrame> matching_engine_;
+  aslam::MatchingEngineNonExclusive<aslam::MatchingProblemFrameToFrame>
+      matching_engine_;
 
   aslam::PinholeCamera::Ptr camera_;
 };
@@ -88,8 +89,8 @@ TEST_F(MatcherTest, MatchRotation) {
   size_t image_width = camera_->imageWidth();
 
   Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
-  apple_keypoints(0,0) =  static_cast<double>(image_width) / 2.0;
-  apple_keypoints(1,0) =  static_cast<double>(image_height) / 2.0;
+  apple_keypoints(0, 0) = static_cast<double>(image_width) / 2.0;
+  apple_keypoints(1, 0) = static_cast<double>(image_height) / 2.0;
   Eigen::Vector3d apple_ray;
   camera_->backProject3(apple_keypoints.col(0), &apple_ray);
 
@@ -219,13 +220,13 @@ TEST_F(MatcherTest, TestComplex) {
   Eigen::Matrix3d C_apple_banana = q_apple_banana.getRotationMatrix();
   Eigen::Matrix3d C_banana_apple = C_apple_banana.transpose();
 
-
   // Transform points into banana frame.
   Eigen::Matrix3Xd rays_apple = Eigen::Matrix3Xd::Zero(3, 5);
 
   for (size_t apple_idx = 0; apple_idx < num_apples; ++apple_idx) {
     Eigen::Vector3d apple_ray;
-    ASSERT_TRUE(camera_->backProject3(apple_keypoints.col(apple_idx), &apple_ray));
+    ASSERT_TRUE(
+        camera_->backProject3(apple_keypoints.col(apple_idx), &apple_ray));
     rays_apple.col(apple_idx) = apple_ray;
   }
 
@@ -236,7 +237,8 @@ TEST_F(MatcherTest, TestComplex) {
     Eigen::Vector2d banana_keypoint;
     aslam::ProjectionResult result =
         camera_->project3(banana_rays_apple.col(apple_idx), &banana_keypoint);
-    if (result.isKeypointVisible()) banana_keypoints.col(banana_idx++) = banana_keypoint;
+    if (result.isKeypointVisible())
+      banana_keypoints.col(banana_idx++) = banana_keypoint;
   }
   CHECK_EQ(banana_idx, 5u);
 
@@ -263,10 +265,11 @@ TEST_F(MatcherTest, TestComplex) {
 
   aslam::MatchingProblemFrameToFrame::MatchesWithScore ground_truth_matches;
   // The ground truth matches: keypoint 0 and 1 are within image_space distance!
-  // The non-exclusive matcher matches banana 0 to apple 0 because they both have zero bits
-  // different, whereas banana 0 and apple 1 have 1 bit different.
-  // However, banana 1 is also matched to apple 0 because again banana 1 and apple 0 have zero
-  // bits different whereas banana 1 and apple 1 have 1 bit different.
+  // The non-exclusive matcher matches banana 0 to apple 0 because they both
+  // have zero bits different, whereas banana 0 and apple 1 have 1 bit
+  // different. However, banana 1 is also matched to apple 0 because again
+  // banana 1 and apple 0 have zero bits different whereas banana 1 and apple 1
+  // have 1 bit different.
   ground_truth_matches.emplace_back(0, 0, 1.0);
   ground_truth_matches.emplace_back(0, 1, 1.0);
   ground_truth_matches.emplace_back(2, 2, 1.0);

@@ -14,10 +14,8 @@ Statistics& Statistics::Instance() {
 
 Statistics::Statistics() : max_tag_length_(0) {}
 
-Statistics::~Statistics() {}
-
 // Static functions to query the stats collectors:
-size_t Statistics::GetHandle(std::string const& tag) {
+size_t Statistics::getHandle(const std::string& tag) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
   // Search for an existing tag.
   map_t::iterator i = Instance().tag_map_.find(tag);
@@ -25,7 +23,7 @@ size_t Statistics::GetHandle(std::string const& tag) {
     // If it is not there, create a tag.
     size_t handle = Instance().stats_collectors_.size();
     Instance().tag_map_[tag] = handle;
-    Instance().stats_collectors_.push_back(StatisticsMapValue());
+    Instance().stats_collectors_.emplace_back(StatisticsMapValue<double>());
     // Track the maximum tag length to help printing a table of values later.
     Instance().max_tag_length_ =
         std::max(Instance().max_tag_length_, tag.size());
@@ -38,13 +36,13 @@ size_t Statistics::GetHandle(std::string const& tag) {
 // Return true if a handle has been initialized for a specific tag.
 // In contrast to GetHandle(), this allows testing for existence without
 // modifying the tag/handle map.
-bool Statistics::HasHandle(std::string const& tag) {
+bool Statistics::hasHandle(const std::string& tag) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
   bool tag_found = Instance().tag_map_.count(tag);
   return tag_found;
 }
 
-std::string Statistics::GetTag(size_t handle) {
+std::string Statistics::getTag(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
   std::string tag;
   // Perform a linear search for the tag.
@@ -56,145 +54,147 @@ std::string Statistics::GetTag(size_t handle) {
   return tag;
 }
 
-StatsCollectorImpl::StatsCollectorImpl(size_t handle) : handle_(handle) {}
+StatsCollectorImpl::StatsCollectorImpl(const size_t handle) : handle_(handle) {}
 
-StatsCollectorImpl::StatsCollectorImpl(std::string const& tag)
-    : handle_(Statistics::GetHandle(tag)) {}
+StatsCollectorImpl::StatsCollectorImpl(const std::string& tag)
+    : handle_(Statistics::getHandle(tag)) {}
 
-size_t StatsCollectorImpl::GetHandle() const {
+size_t StatsCollectorImpl::getHandle() const {
   return handle_;
 }
-void StatsCollectorImpl::AddSample(double sample) const {
-  Statistics::Instance().AddSample(handle_, sample);
+void StatsCollectorImpl::addSample(double sample) const {
+  Statistics::Instance().addSample(handle_, sample);
 }
-void StatsCollectorImpl::IncrementOne() const {
-  Statistics::Instance().AddSample(handle_, 1.0);
+void StatsCollectorImpl::incrementOne() const {
+  Statistics::Instance().addSample(handle_, 1.0);
 }
-void Statistics::AddSample(size_t handle, double seconds) {
+
+void Statistics::addSample(const size_t handle, const double sample) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  stats_collectors_[handle].AddValue(seconds);
+  stats_collectors_[handle].addValue(sample);
 }
-double Statistics::GetLastValue(size_t handle) {
+
+double Statistics::getLastValue(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].GetLastValue();
+  return Instance().stats_collectors_[handle].getLastValue();
 }
-double Statistics::GetLastValue(std::string const& tag) {
-  return GetLastValue(GetHandle(tag));
+
+double Statistics::getLastValue(const std::string& tag) {
+  return getLastValue(getHandle(tag));
 }
-double Statistics::GetTotal(size_t handle) {
+
+double Statistics::getSum(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].Sum();
+  return Instance().stats_collectors_[handle].getSum();
 }
-double Statistics::GetTotal(std::string const& tag) {
-  return GetTotal(GetHandle(tag));
+
+double Statistics::getSum(const std::string& tag) {
+  return getSum(getHandle(tag));
 }
-double Statistics::GetMean(size_t handle) {
+
+double Statistics::getMean(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].Mean();
+  return Instance().stats_collectors_[handle].getMean();
 }
-double Statistics::GetMean(std::string const& tag) {
-  return GetMean(GetHandle(tag));
+
+double Statistics::getMean(const std::string& tag) {
+  return getMean(getHandle(tag));
 }
-size_t Statistics::GetNumSamples(size_t handle) {
+
+size_t Statistics::getNumSamples(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].TotalSamples();
+  return Instance().stats_collectors_[handle].getTotalNumSamples();
 }
-size_t Statistics::GetNumSamples(std::string const& tag) {
-  return GetNumSamples(GetHandle(tag));
+
+size_t Statistics::getNumSamples(const std::string& tag) {
+  return getNumSamples(getHandle(tag));
 }
-double Statistics::GetVariance(size_t handle) {
+
+double Statistics::getVariance(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].LazyVariance();
+  return Instance().stats_collectors_[handle].getLazyVariance();
 }
-double Statistics::GetVariance(std::string const& tag) {
-  return GetVariance(GetHandle(tag));
+
+double Statistics::getVariance(const std::string& tag) {
+  return getVariance(getHandle(tag));
 }
-double Statistics::GetMin(size_t handle) {
+
+double Statistics::getMin(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].Min();
+  return Instance().stats_collectors_[handle].getMin();
 }
-double Statistics::GetMin(std::string const& tag) {
-  return GetMin(GetHandle(tag));
+
+double Statistics::getMin(const std::string& tag) {
+  return getMin(getHandle(tag));
 }
-double Statistics::GetMax(size_t handle) {
+
+double Statistics::getMax(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].Max();
+  return Instance().stats_collectors_[handle].getMax();
 }
-double Statistics::GetMax(std::string const& tag) {
-  return GetMax(GetHandle(tag));
+
+double Statistics::getMax(const std::string& tag) {
+  return getMax(getHandle(tag));
 }
-double Statistics::GetHz(size_t handle) {
+
+double Statistics::getHz(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].MeanCallsPerSec();
+  return Instance().stats_collectors_[handle].getMeanNumCallsPerSecond();
 }
-double Statistics::GetHz(std::string const& tag) {
-  return GetHz(GetHandle(tag));
+
+double Statistics::getHz(const std::string& tag) {
+  return getHz(getHandle(tag));
 }
 
 // Delta time statistics.
-double Statistics::GetMeanDeltaTime(std::string const& tag) {
-  return GetMeanDeltaTime(GetHandle(tag));
-}
-double Statistics::GetMeanDeltaTime(size_t handle) {
-  std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].MeanDeltaTime();
-}
-double Statistics::GetMaxDeltaTime(std::string const& tag) {
-  return GetMaxDeltaTime(GetHandle(tag));
-}
-double Statistics::GetMaxDeltaTime(size_t handle) {
-  std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].MaxDeltaTime();
-}
-double Statistics::GetMinDeltaTime(std::string const& tag) {
-  return GetMinDeltaTime(GetHandle(tag));
-}
-double Statistics::GetMinDeltaTime(size_t handle) {
-  std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].MinDeltaTime();
-}
-double Statistics::GetLastDeltaTime(std::string const& tag) {
-  return GetLastDeltaTime(GetHandle(tag));
-}
-double Statistics::GetLastDeltaTime(size_t handle) {
-  std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].GetLastDeltaTime();
-}
-double Statistics::GetVarianceDeltaTime(std::string const& tag) {
-  return GetVarianceDeltaTime(GetHandle(tag));
-}
-double Statistics::GetVarianceDeltaTime(size_t handle) {
-  std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().stats_collectors_[handle].LazyVarianceDeltaTime();
+double Statistics::getMeanDeltaTimeNanoseconds(const std::string& tag) {
+  return getMeanDeltaTimeNanoseconds(getHandle(tag));
 }
 
-std::string Statistics::SecondsToTimeString(double seconds) {
-  double secs = fmod(seconds, 60);
-  int minutes = (seconds / 60);
-  int hours = (seconds / 3600);
-  minutes = minutes - (hours * 60);
-
-  char buffer[256];
-  snprintf(
-      buffer, sizeof(buffer),
-#ifdef SM_TIMING_SHOW_HOURS
-      "%02d:"
-#endif
-#ifdef SM_TIMING_SHOW_MINUTES
-      "%02d:"
-#endif
-      "%09.6f",
-#ifdef SM_TIMING_SHOW_HOURS
-      hours,
-#endif
-#ifdef SM_TIMING_SHOW_MINUTES
-      minutes,
-#endif
-      secs);
-  return buffer;
+double Statistics::getMeanDeltaTimeNanoseconds(const size_t handle) {
+  std::lock_guard<std::mutex> lock(Instance().mutex_);
+  return Instance().stats_collectors_[handle].getMeanDeltaTimeNanoseconds();
 }
 
-void Statistics::Print(std::ostream& out) {  // NOLINT
+int64_t Statistics::getMaxDeltaTimeNanoseconds(const std::string& tag) {
+  return getMaxDeltaTimeNanoseconds(getHandle(tag));
+}
+
+int64_t Statistics::getMaxDeltaTimeNanoseconds(const size_t handle) {
+  std::lock_guard<std::mutex> lock(Instance().mutex_);
+  return Instance().stats_collectors_[handle].getMaxDeltaTimeNanoseconds();
+}
+
+int64_t Statistics::getMinDeltaTimeNanoseconds(const std::string& tag) {
+  return getMinDeltaTimeNanoseconds(getHandle(tag));
+}
+
+int64_t Statistics::getMinDeltaTimeNanoseconds(const size_t handle) {
+  std::lock_guard<std::mutex> lock(Instance().mutex_);
+  return Instance().stats_collectors_[handle].getMinDeltaTimeNanoseconds();
+}
+
+int64_t Statistics::getLastDeltaTimeNanoseconds(const std::string& tag) {
+  return getLastDeltaTimeNanoseconds(getHandle(tag));
+}
+
+int64_t Statistics::getLastDeltaTimeNanoseconds(const size_t handle) {
+  std::lock_guard<std::mutex> lock(Instance().mutex_);
+  return Instance().stats_collectors_[handle].getLastDeltaTimeNanoseconds();
+}
+
+double Statistics::getVarianceDeltaTimeNanoseconds(const std::string& tag) {
+  return getVarianceDeltaTimeNanoseconds(getHandle(tag));
+}
+
+double Statistics::getVarianceDeltaTimeNanoseconds(const size_t handle) {
+  std::lock_guard<std::mutex> lock(Instance().mutex_);
+  return Instance()
+      .stats_collectors_[handle]
+      .getLazyVarianceDeltaTimeNanoseconds();
+}
+
+void Statistics::print(std::ostream& out) {  // NOLINT
   const map_t& tag_map = Instance().tag_map_;
 
   if (tag_map.empty()) {
@@ -221,16 +221,16 @@ void Statistics::Print(std::ostream& out) {  // NOLINT
     out.width(7);
 
     out.setf(std::ios::right, std::ios::adjustfield);
-    out << GetNumSamples(i) << "\t";
-    if (GetNumSamples(i) > 0) {
-      out << GetHz(i) << "\t";
-      double mean = GetMean(i);
-      double stddev = sqrt(GetVariance(i));
+    out << getNumSamples(i) << "\t";
+    if (getNumSamples(i) > 0) {
+      out << getHz(i) << "\t";
+      double mean = getMean(i);
+      double stddev = sqrt(getVariance(i));
       out << "(" << mean << " +- ";
       out << stddev << ")\t";
 
-      double min_value = GetMin(i);
-      double max_value = GetMax(i);
+      double min_value = getMin(i);
+      double max_value = getMax(i);
 
       out << "[" << min_value << "," << max_value << "]";
     }
@@ -238,7 +238,7 @@ void Statistics::Print(std::ostream& out) {  // NOLINT
   }
 }
 
-void Statistics::WriteToYamlFile(const std::string& path) {
+void Statistics::writeToYamlFile(const std::string& path) {
   const map_t& tag_map = Instance().tag_map_;
 
   if (tag_map.empty()) {
@@ -256,7 +256,7 @@ void Statistics::WriteToYamlFile(const std::string& path) {
   for (const map_t::value_type& tag : tag_map) {
     const size_t index = tag.second;
 
-    if (GetNumSamples(index) > 0) {
+    if (getNumSamples(index) > 0) {
       std::string label = tag.first;
 
       // We do not want colons or hashes in a label, as they might interfere
@@ -264,24 +264,25 @@ void Statistics::WriteToYamlFile(const std::string& path) {
       std::replace(label.begin(), label.end(), ':', '_');
       std::replace(label.begin(), label.end(), '#', '_');
 
-      output_file << label << ":" << "\n";
-      output_file << "  samples: " << GetNumSamples(index) << "\n";
-      output_file << "  mean: " << GetMean(index) << "\n";
-      output_file << "  stddev: " << sqrt(GetVariance(index)) << "\n";
-      output_file << "  min: " << GetMin(index) << "\n";
-      output_file << "  max: " << GetMax(index) << "\n";
+      output_file << label << ":"
+                  << "\n";
+      output_file << "  samples: " << getNumSamples(index) << "\n";
+      output_file << "  mean: " << getMean(index) << "\n";
+      output_file << "  stddev: " << sqrt(getVariance(index)) << "\n";
+      output_file << "  min: " << getMin(index) << "\n";
+      output_file << "  max: " << getMax(index) << "\n";
     }
     output_file << "\n";
   }
 }
 
-std::string Statistics::Print() {
+std::string Statistics::print() {
   std::stringstream ss;
-  Print(ss);
+  print(ss);
   return ss.str();
 }
 
-void Statistics::Reset() {
+void Statistics::reset() {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
   Instance().tag_map_.clear();
 }

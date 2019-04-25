@@ -1,13 +1,14 @@
-#ifndef ASLAM_HASH_ID_H_
-#define ASLAM_HASH_ID_H_
+#ifndef ASLAM_COMMON_HASH_ID_H_
+#define ASLAM_COMMON_HASH_ID_H_
 
 #include <chrono>
 #include <cstring>
 #include <functional>
 #include <iomanip>
 #include <iostream>
-#include <random>
 #include <mutex>
+#include <random>
+#include <string>
 
 namespace aslam {
 
@@ -28,21 +29,23 @@ class HashId {
   inline HashId() {
     setInvalid();
   }
-  inline HashId(const HashId& other){
+  inline HashId(const HashId& other) {
     *this = other;
   }
-  inline HashId(const uint64_t source[2]) {
+  inline HashId(const uint64_t source[2]) {  // NOLINT
     fromUint64(source);
   }
 
   inline void fromUint64(const uint64_t source[2]) {
-    memcpy(reinterpret_cast<void*>(&val_.u64),
-           reinterpret_cast<const void*>(source), sizeof(val_.u64));
+    memcpy(
+        reinterpret_cast<void*>(&val_.u64),
+        reinterpret_cast<const void*>(source), sizeof(val_.u64));
   }
 
   inline void toUint64(uint64_t destination[2]) const {
-    memcpy(reinterpret_cast<void*>(destination),
-           reinterpret_cast<const void*>(&val_.u64), sizeof(val_.u64));
+    memcpy(
+        reinterpret_cast<void*>(destination),
+        reinterpret_cast<const void*>(&val_.u64), sizeof(val_.u64));
   }
 
   /**
@@ -59,9 +62,9 @@ class HashId {
    * Returns hexadecimal string for debugging or serialization
    */
   inline const std::string hexString() const {
-    char buffer[2*sizeof(val_) + 1]; // 1 for the \0 character
-    buffer[2*sizeof(val_)] = '\0';
-    for (size_t i = 0; i < sizeof(val_); ++i){
+    char buffer[2 * sizeof(val_) + 1];  // 1 for the \0 character
+    buffer[2 * sizeof(val_)] = '\0';
+    for (size_t i = 0; i < sizeof(val_); ++i) {
       buffer[2 * i + 1] = kHexConversion[val_.c[i] & 0xf];
       buffer[2 * i] = kHexConversion[val_.c[i] >> 4];
     }
@@ -81,12 +84,12 @@ class HashId {
    */
   inline bool fromHexString(const std::string& hexString) {
     // hexadecimal string takes 2 characters per byte
-    if (hexString.size() != 2*sizeof(val_)){
+    if (hexString.size() != 2 * sizeof(val_)) {
       return false;
     }
-    for (size_t i = 0; i < sizeof(val_); ++i){
+    for (size_t i = 0; i < sizeof(val_); ++i) {
       val_.c[i] = static_cast<unsigned char>(
-          stoul(std::string(hexString, 2*i, 2), 0, 16));
+          stoul(std::string(hexString, 2 * i, 2), 0, 16));
     }
     return true;
   }
@@ -124,7 +127,7 @@ class HashId {
    * Randomizes to ID seeded from the nanosecond time of the first
    * call of this function
    */
-  inline void randomize(){
+  inline void randomize() {
     static std::mt19937_64 rng(time64());
     static std::mutex m_rng;
     {
@@ -134,26 +137,26 @@ class HashId {
     }
   }
 
-  inline void operator =(const HashId& other) {
+  inline void operator=(const HashId& other) {
     memcpy(&val_, &other.val_, sizeof(val_));
   }
 
-  inline bool operator <(const HashId& other) const {
-    if (val_.u64[0] == other.val_.u64[0]){
+  inline bool operator<(const HashId& other) const {
+    if (val_.u64[0] == other.val_.u64[0]) {
       return val_.u64[1] < other.val_.u64[1];
     }
     return val_.u64[0] < other.val_.u64[0];
   }
-  inline bool operator >(const HashId& other) const {
-    if (val_.u64[0] == other.val_.u64[0]){
+  inline bool operator>(const HashId& other) const {
+    if (val_.u64[0] == other.val_.u64[0]) {
       return val_.u64[1] > other.val_.u64[1];
     }
     return val_.u64[0] > other.val_.u64[0];
   }
-  inline bool operator ==(const HashId& other) const {
+  inline bool operator==(const HashId& other) const {
     return val_.u64[0] == other.val_.u64[0] && val_.u64[1] == other.val_.u64[1];
   }
-  inline bool operator !=(const HashId& other) const{
+  inline bool operator!=(const HashId& other) const {
     return !(*this == other);
   }
 
@@ -193,7 +196,7 @@ class HashId {
   static const char kHexConversion[];
 };
 
-} // namespace aslam
+}  // namespace aslam
 
 namespace std {
 
@@ -202,8 +205,8 @@ inline ostream& operator<<(ostream& out, const aslam::HashId& hash) {
   return out;
 }
 
-template<>
-struct hash<aslam::HashId>{
+template <>
+struct hash<aslam::HashId> {
   typedef aslam::HashId argument_type;
   typedef std::size_t value_type;
 
@@ -211,21 +214,20 @@ struct hash<aslam::HashId>{
     return hash_id.hashToSizeT();
   }
 };
-} // namespace std
-
+}  // namespace std
 
 /// \brief Define the hash function for types derived from HashId
-#define ASLAM_DEFINE_HASHID_HASH(FullyQualifiedIdTypeName)              \
-  namespace std {                                                       \
-  template<>                                                            \
-  struct hash<FullyQualifiedIdTypeName>{                                \
-      typedef FullyQualifiedIdTypeName argument_type;                     \
-      typedef std::size_t value_type;                                     \
-      value_type operator()(const argument_type& hash_id) const {         \
-        return hash_id.hashToSizeT();                                     \
-      }                                                                   \
-    };                                                                    \
-}  /* namespace std */                                                \
-    extern void DefineIDHash ## __FILE__ ## __LINE__(void)
+#define ASLAM_DEFINE_HASHID_HASH(FullyQualifiedIdTypeName)      \
+  namespace std {                                               \
+  template <>                                                   \
+  struct hash<FullyQualifiedIdTypeName> {                       \
+    typedef FullyQualifiedIdTypeName argument_type;             \
+    typedef std::size_t value_type;                             \
+    value_type operator()(const argument_type& hash_id) const { \
+      return hash_id.hashToSizeT();                             \
+    }                                                           \
+  };                                                            \
+  } /* namespace std */                                         \
+  extern void DefineIDHash##__FILE__##__LINE__(void)
 
-#endif // ASLAM_HASH_ID_H_
+#endif  // ASLAM_COMMON_HASH_ID_H_

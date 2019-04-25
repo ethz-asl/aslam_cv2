@@ -7,17 +7,17 @@
 #include <aslam/common/hash-id.h>
 
 namespace aslam {
-#define ASLAM_UNIQUE_ID(IdType)                   \
-  class IdType : public HashId {                  \
-   public:                                        \
-    inline static IdType Random() {               \
-      IdType generated;                           \
-      generated.randomize();                      \
-      return generated;                           \
-    }                                             \
-    IdType() = default;                           \
-  };                                              \
-  typedef std::vector<IdType> IdType##List;       \
+#define ASLAM_UNIQUE_ID(IdType)             \
+  class IdType : public HashId {            \
+   public:                                  \
+    inline static IdType Random() {         \
+      IdType generated;                     \
+      generated.randomize();                \
+      return generated;                     \
+    }                                       \
+    IdType() = default;                     \
+  };                                        \
+  typedef std::vector<IdType> IdType##List; \
   typedef std::unordered_set<IdType> IdType##Set
 
 ASLAM_UNIQUE_ID(FrameId);

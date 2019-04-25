@@ -22,8 +22,8 @@ class ReaderWriterMutex {
   // Attempt upgrade. If upgrade fails, relinquish read lock.
   virtual bool upgradeToWriteLock();
 
-  // Returns true if there are any active readers, writers, or threads that are waiting for read or
-  // write access.
+  // Returns true if there are any active readers, writers, or threads that are
+  // waiting for read or write access.
   bool isInUse();
 
  protected:

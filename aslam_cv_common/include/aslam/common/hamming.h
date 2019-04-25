@@ -52,41 +52,41 @@ namespace aslam {
 namespace common {
 // Faster Hamming distance functor - uses SSE
 // bit count of A exclusive XOR'ed with B.
-class  Hamming {
+class Hamming {
  public:
-  Hamming() { }
+  Hamming() {}
 
 #ifdef __ARM_NEON
-  static __inline__ uint32_t NEONPopcntofXORed(const uint8x16_t* signature1,
-                                               const uint8x16_t* signature2,
-                                               const int numberOf128BitWords);
-  static __inline__ uint32_t PopcntofXORed(const unsigned char* signature1,
-                                           const unsigned char* signature2,
-                                           const int numberOf128BitWords) {
-    return NEONPopcntofXORed(reinterpret_cast<const uint8x16_t*>(signature1),
-                             reinterpret_cast<const uint8x16_t*>(signature2),
-                             numberOf128BitWords);
+  static __inline__ uint32_t NEONPopcntofXORed(
+      const uint8x16_t* signature1, const uint8x16_t* signature2,
+      const int numberOf128BitWords);
+  static __inline__ uint32_t PopcntofXORed(
+      const unsigned char* signature1, const unsigned char* signature2,
+      const int numberOf128BitWords) {
+    return NEONPopcntofXORed(
+        reinterpret_cast<const uint8x16_t*>(signature1),
+        reinterpret_cast<const uint8x16_t*>(signature2), numberOf128BitWords);
   }
-  static __inline__ uint32_t PopcntofXORed(const uint8x16_t* signature1,
-                                           const uint8x16_t* signature2,
-                                           const int numberOf128BitWords) {
+  static __inline__ uint32_t PopcntofXORed(
+      const uint8x16_t* signature1, const uint8x16_t* signature2,
+      const int numberOf128BitWords) {
     return NEONPopcntofXORed(signature1, signature2, numberOf128BitWords);
   }
 #else
-  static __inline__ uint32_t SSSE3PopcntofXORed(const __m128i* signature1,
-                                                const __m128i* signature2,
-                                                const int numberOf128BitWords);
-  static __inline__ uint32_t PopcntofXORed(const __m128i* signature1,
-                                           const __m128i* signature2,
-                                           const int numberOf128BitWords) {
+  static __inline__ uint32_t SSSE3PopcntofXORed(
+      const __m128i* signature1, const __m128i* signature2,
+      const int numberOf128BitWords);
+  static __inline__ uint32_t PopcntofXORed(
+      const __m128i* signature1, const __m128i* signature2,
+      const int numberOf128BitWords) {
     return SSSE3PopcntofXORed(signature1, signature2, numberOf128BitWords);
   }
-  static __inline__ uint32_t PopcntofXORed(const unsigned char* signature1,
-                                           const unsigned char* signature2,
-                                           const int numberOf128BitWords) {
-    return SSSE3PopcntofXORed(reinterpret_cast<const __m128i*>(signature1),
-                              reinterpret_cast<const __m128i*>(signature2),
-                              numberOf128BitWords);
+  static __inline__ uint32_t PopcntofXORed(
+      const unsigned char* signature1, const unsigned char* signature2,
+      const int numberOf128BitWords) {
+    return SSSE3PopcntofXORed(
+        reinterpret_cast<const __m128i*>(signature1),
+        reinterpret_cast<const __m128i*>(signature2), numberOf128BitWords);
   }
 #endif  // __ARM_NEON
 
@@ -96,24 +96,22 @@ class  Hamming {
   // not.
   typedef int ResultType;
 
-  static ResultType evaluate(const unsigned char* a,
-                             const unsigned char* b,
-                             const int size) {
+  static ResultType evaluate(
+      const unsigned char* a, const unsigned char* b, const int size) {
 #ifdef __ARM_NEON
-    return NEONPopcntofXORed(reinterpret_cast<const uint8x16_t*>(a),
-                             reinterpret_cast<const uint8x16_t*>(b),
-                             size / 16);
+    return NEONPopcntofXORed(
+        reinterpret_cast<const uint8x16_t*>(a),
+        reinterpret_cast<const uint8x16_t*>(b), size / 16);
 #else
-    return SSSE3PopcntofXORed(reinterpret_cast<const __m128i*>(a),
-                              reinterpret_cast<const __m128i*>(b),
-                              size / 16);
+    return SSSE3PopcntofXORed(
+        reinterpret_cast<const __m128i*>(a),
+        reinterpret_cast<const __m128i*>(b), size / 16);
 #endif  // __ARM_NEON
   }
 
   // This will count the bits in a ^ b.
-  inline ResultType operator()(const unsigned char* a,
-                               const unsigned char* b,
-                               const int size) const {
+  inline ResultType operator()(
+      const unsigned char* a, const unsigned char* b, const int size) const {
     return evaluate(a, b, size);
   }
 };
@@ -123,4 +121,3 @@ class  Hamming {
 #include "./hamming-inl.h"
 
 #endif  // ASLAM_COMMON_HAMMING_H_
-

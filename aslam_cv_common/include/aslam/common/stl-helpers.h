@@ -1,14 +1,15 @@
-#ifndef ASLAM_STL_HELPERS_H_
-#define ASLAM_STL_HELPERS_H_
+#ifndef ASLAM_COMMON_STL_HELPERS_H_
+#define ASLAM_COMMON_STL_HELPERS_H_
 
 #include <algorithm>
 #include <chrono>
 #include <random>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
-#include <aslam/common/memory.h>
 #include <Eigen/Core>
+#include <aslam/common/memory.h>
 #include <glog/logging.h>
 
 namespace aslam {
@@ -16,9 +17,10 @@ namespace common {
 
 // Returns the total number of elements in a nested list, that is,
 // num_outer_list_elements * num_inner_list_elements.
-template<class ElementType, class Allocator, class NestedAllocator>
+template <class ElementType, class Allocator, class NestedAllocator>
 size_t countNumberOfElementsInNestedList(
-    const std::vector<std::vector<ElementType, Allocator>, NestedAllocator>& nested_list) {
+    const std::vector<std::vector<ElementType, Allocator>, NestedAllocator>&
+        nested_list) {
   size_t num_elements = 0u;
   for (const std::vector<ElementType, Allocator>& list : nested_list) {
     num_elements += list.size();
@@ -26,7 +28,7 @@ size_t countNumberOfElementsInNestedList(
   return num_elements;
 }
 
-template<typename RandAccessIter>
+template <typename RandAccessIter>
 double median(RandAccessIter begin, RandAccessIter end) {
   CHECK(begin != end) << "No data provided to calculate the median.";
   size_t size = end - begin;
@@ -45,8 +47,7 @@ double median(RandAccessIter begin, RandAccessIter end) {
   return (target_high_value + *target_low) / 2.0;
 }
 
-
-template<typename RandAccessIter>
+template <typename RandAccessIter>
 double mean(RandAccessIter begin, RandAccessIter end) {
   CHECK(begin != end) << "No data provided to calculate the mean.";
   const size_t n = end - begin;
@@ -59,10 +60,10 @@ double mean(RandAccessIter begin, RandAccessIter end) {
   return mu / n;
 }
 
-
-template<typename RandAccessIter>
+template <typename RandAccessIter>
 double stddev(RandAccessIter begin, RandAccessIter end) {
-  CHECK(begin != end) << "No data provided to calculate the standard deviation.";
+  CHECK(begin != end)
+      << "No data provided to calculate the standard deviation.";
   const size_t n = end - begin;
   RandAccessIter element_i = begin;
   double mu = aslam::common::mean(begin, end);
@@ -78,56 +79,63 @@ double stddev(RandAccessIter begin, RandAccessIter end) {
   return sqrt(sum / n);
 }
 
-template<typename ElementType, typename Allocator>
-void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
-                         std::vector<ElementType, Allocator>* output,
-                         bool use_fixed_seed) {
+template <typename ElementType, typename Allocator>
+void drawNRandomElements(
+    const size_t n, const std::vector<ElementType, Allocator>& input,
+    std::vector<ElementType, Allocator>* output, const bool use_fixed_seed) {
+  CHECK_NE(&input, output);
   CHECK_NOTNULL(output)->clear();
-  CHECK_GT(N, 0u);
+  CHECK_GT(n, 0u);
   const size_t num_input_elements = input.size();
-  if (num_input_elements <= N) {
+  if (num_input_elements <= n) {
     *output = input;
     return;
   }
 
   // Draw random indices.
-  const unsigned int seed =
-      use_fixed_seed ? 0u : std::chrono::system_clock::now().time_since_epoch().count();
+  const unsigned int seed = use_fixed_seed ? 0u : std::random_device()();
 
   std::default_random_engine generator(seed);
-  std::uniform_int_distribution<int> distribution(0, N);
+  std::uniform_int_distribution<size_t> distribution(
+      0u, num_input_elements - 1u);
 
   std::unordered_set<size_t> random_indices;
-  while (random_indices.size() < N) {
+  while (random_indices.size() < n) {
     random_indices.insert(distribution(generator));
   }
 
   // Copy to output.
-  output->reserve(N);
-  for (size_t idx : random_indices) {
+  output->reserve(n);
+  for (const size_t idx : random_indices) {
     CHECK_LT(idx, num_input_elements);
     output->emplace_back(input[idx]);
   }
 }
 
-template<typename ElementType, typename Allocator>
-void drawNRandomElements(size_t N, const std::vector<ElementType, Allocator>& input,
-                         std::vector<ElementType, Allocator>* output) {
-  drawNRandomElements(N, input, output, false);
+template <typename ElementType, typename Allocator>
+void drawNRandomElements(
+    const size_t n, const std::vector<ElementType, Allocator>& input,
+    std::vector<ElementType, Allocator>* output) {
+  drawNRandomElements(n, input, output, false);
 }
 
-// Remove all elements except the N greatest elements. An optional action can be provided
-// that is executed on all removed elements.
-template<typename ElementType> struct NullAction { void operator()(const ElementType&) const {} };
-template<typename ElementType, typename Allocator, typename CompareFunctor,
-         typename RemoveActionFunctor = NullAction<ElementType>>
-size_t keepOnlyNSortedElements(size_t max_elements_to_keep,
-    const CompareFunctor& sort_compare_functor,
+// Remove all elements except the N greatest elements. An optional action can be
+// provided that is executed on all removed elements.
+template <typename ElementType>
+struct NullAction {
+  void operator()(const ElementType&) const {}
+};
+template <typename ElementType, typename Allocator, typename CompareFunctor,
+          typename RemoveActionFunctor = NullAction<ElementType>>
+size_t keepOnlyNSortedElements(
+    size_t max_elements_to_keep, const CompareFunctor& sort_compare_functor,
     std::vector<ElementType, Allocator>* container,
-    const RemoveActionFunctor& action_on_removed_elements = NullAction<ElementType>()) {
+    const RemoveActionFunctor& action_on_removed_elements =
+        NullAction<ElementType>()) {
   CHECK_NOTNULL(container);
 
-  // Special case for max_elements_to_keep == 0u: only run the action on all elements.
+  // Special case for max_elements_to_keep == 0u: only run the action on all
+  // elements.
   if (max_elements_to_keep == 0u) {
     for (const ElementType& element : *container) {
       action_on_removed_elements(element);
@@ -143,14 +151,15 @@ size_t keepOnlyNSortedElements(size_t max_elements_to_keep,
   }
 
   // Sort up to N greatest elements.
-  std::partial_sort(container->begin(), container->begin() + max_elements_to_keep,
-                    container->end(), sort_compare_functor);
+  std::partial_sort(
+      container->begin(), container->begin() + max_elements_to_keep,
+      container->end(), sort_compare_functor);
   CHECK_GE(container->size(), max_elements_to_keep);
 
   // Run the optional action on removed elements.
   typename std::vector<ElementType, Allocator>::const_iterator it =
       container->begin() + max_elements_to_keep;
-  for(; it != container->end(); ++it) {
+  for (; it != container->end(); ++it) {
     action_on_removed_elements(*it);
   }
 
@@ -162,7 +171,8 @@ size_t keepOnlyNSortedElements(size_t max_elements_to_keep,
 
 template <int VectorDim>
 inline void convertEigenToStlVector(
-    const Eigen::template Matrix<double, VectorDim, Eigen::Dynamic>& input,
+    const Eigen::template Matrix<double, VectorDim, Eigen::Dynamic>&
+        input,  // NOLINT
     Aligned<std::vector, Eigen::template Matrix<double, VectorDim, 1>>*
         output) {
   CHECK_NOTNULL(output);
@@ -178,7 +188,7 @@ inline void convertEigenToStlVector(
 
 // Solution from:
 // http://stackoverflow.com/questions/7571937/how-to-delete-items-from-a-stdvector-given-a-list-of-indices
-template<typename ElementType, typename Allocator>
+template <typename ElementType, typename Allocator>
 inline std::vector<ElementType, Allocator> eraseIndicesFromVector(
     const std::vector<ElementType, Allocator>& data,
     const std::vector<size_t>& indices_to_delete) {
@@ -194,13 +204,17 @@ inline std::vector<ElementType, Allocator> eraseIndicesFromVector(
   reduced_vector.reserve(data.size() - mutable_indices_to_delete.size());
 
   // Copy blocks from the input vector to the output vector.
-  typename std::vector<ElementType, Allocator>::const_iterator it_block_begin = data.begin();
+  typename std::vector<ElementType, Allocator>::const_iterator it_block_begin =
+      data.begin();
 
-  for (typename std::vector<size_t>::const_iterator it = mutable_indices_to_delete.begin();
-      it != mutable_indices_to_delete.end(); ++it) {
-    typename std::vector<ElementType, Allocator>::const_iterator it_block_end = data.begin() + *it;
+  for (typename std::vector<size_t>::const_iterator it =
+           mutable_indices_to_delete.begin();
+       it != mutable_indices_to_delete.end(); ++it) {
+    typename std::vector<ElementType, Allocator>::const_iterator it_block_end =
+        data.begin() + *it;
     if (it_block_begin != it_block_end) {
-      std::copy(it_block_begin, it_block_end, std::back_inserter(reduced_vector));
+      std::copy(
+          it_block_begin, it_block_end, std::back_inserter(reduced_vector));
     }
     it_block_begin = it_block_end + 1;
   }
@@ -222,12 +236,13 @@ constexpr int kRows = 1;
 template <typename ScalarType, int StaticDimension>
 struct OneDimensionAdapter {
   typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic>
-  DynamicMatrix;
+      DynamicMatrix;
   DynamicMatrix* matrix;
   const bool allocated_self;
 
-  OneDimensionAdapter(DynamicMatrix* _matrix)
-  : matrix(CHECK_NOTNULL(_matrix)), allocated_self(false) {}
+  OneDimensionAdapter(DynamicMatrix* _matrix)  // NOLINT
+      : matrix(CHECK_NOTNULL(_matrix)),
+        allocated_self(false) {}
   OneDimensionAdapter() : matrix(new DynamicMatrix), allocated_self(true) {}
   ~OneDimensionAdapter() {
     if (allocated_self) {
@@ -252,4 +267,4 @@ void eraseIndicesFromContainer(
 
 #include "./stl-helpers-inl.h"
 
-#endif  // ASLAM_STL_HELPERS_H_
+#endif  // ASLAM_COMMON_STL_HELPERS_H_

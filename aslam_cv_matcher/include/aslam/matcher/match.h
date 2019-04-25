@@ -136,6 +136,10 @@ ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
     FrameToFrame, getKeypointIndexAppleFrame, getKeypointIndexBananaFrame);
 ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
     LandmarksToFrame, getKeypointIndex, getLandmarkIndex);
+ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
+    LinesToFrame, getLine2dIndex, getLine3dIndex);
+ASLAM_CREATE_MATCH_TYPES_WITH_ALIASES(
+    InfiniteLinesToFrame, getLine2dIndex, getLine3dIndex);
 }  // namespace aslam
 
 #endif // ASLAM_MATCH_H_

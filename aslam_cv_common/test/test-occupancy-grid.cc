@@ -1,6 +1,6 @@
+#include <Eigen/Core>
 #include <aslam/common/entrypoint.h>
 #include <eigen-checks/gtest.h>
-#include <Eigen/Core>
 #include <gtest/gtest.h>
 #include <opencv2/highgui/highgui.hpp>
 
@@ -14,15 +14,20 @@ TEST(OccupancyGrid, addPointOrReplaceWeakestIfCellFull) {
 
   static constexpr size_t kMaxNumPointsPerCell = 2u;
   EXPECT_TRUE(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(0.5, 0.0, 0.9, 0), kMaxNumPointsPerCell));
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(0.5, 0.0, 0.9, 0), kMaxNumPointsPerCell));
   EXPECT_TRUE(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(0.5, 0.0, 1.0, 1), kMaxNumPointsPerCell));
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(0.5, 0.0, 1.0, 1), kMaxNumPointsPerCell));
   EXPECT_FALSE(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(0.5, 0.0, 0.8, 2), kMaxNumPointsPerCell));
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(0.5, 0.0, 0.8, 2), kMaxNumPointsPerCell));
   // Higher weight replaces point.
   EXPECT_TRUE(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(0.5, 0.0, 1.1, 3), kMaxNumPointsPerCell));
-  // The cell should now contain the second and last added points with a weight of 1.1 and 1.0.
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(0.5, 0.0, 1.1, 3), kMaxNumPointsPerCell));
+  // The cell should now contain the second and last added points with a weight
+  // of 1.1 and 1.0.
   const WeightedOccupancyGrid::PointList& cell = grid.getGridCell(0.5, 0.0);
   ASSERT_EQ(cell.size(), 2u);
   EXPECT_EQ(cell[0].weight, 1.1);
@@ -36,11 +41,14 @@ TEST(OccupancyGrid, addPointOrReplaceWeakestIfCellFull) {
 
   // Test on second cell.
   EXPECT_TRUE(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(0.5, 1.0, 1.0, 4), kMaxNumPointsPerCell));
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(0.5, 1.0, 1.0, 4), kMaxNumPointsPerCell));
   EXPECT_TRUE(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(0.5, 1.5, 1.0, 5), kMaxNumPointsPerCell));
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(0.5, 1.5, 1.0, 5), kMaxNumPointsPerCell));
   EXPECT_FALSE(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(0.5, 1.5, 1.0, 6), kMaxNumPointsPerCell));
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(0.5, 1.5, 1.0, 6), kMaxNumPointsPerCell));
 }
 
 TEST(OccupancyGrid, removeWeightedPointsFromOverfullCells) {
@@ -84,14 +92,14 @@ TEST(OccupancyGrid, CellIndexing) {
 
   // Test corner cases.
   grid.reset();
-  grid.addPointUnconditional(Point(0.5, 0.5, 1.0, 0)); // Cell 0,0
+  grid.addPointUnconditional(Point(0.5, 0.5, 1.0, 0));  // Cell 0,0
 
-  grid.addPointUnconditional(Point(0.5, 1.0, 1.0, 1)); // Cell 0,1
-  grid.addPointUnconditional(Point(0.5, 1.0, 1.0, 1)); // Cell 0,1
+  grid.addPointUnconditional(Point(0.5, 1.0, 1.0, 1));  // Cell 0,1
+  grid.addPointUnconditional(Point(0.5, 1.0, 1.0, 1));  // Cell 0,1
 
-  grid.addPointUnconditional(Point(1.0, 1.0, 1.0, 2)); // Cell 1,1
-  grid.addPointUnconditional(Point(1.0, 1.0, 1.0, 2)); // Cell 1,1
-  grid.addPointUnconditional(Point(1.0, 1.0, 1.0, 2)); // Cell 1,1
+  grid.addPointUnconditional(Point(1.0, 1.0, 1.0, 2));  // Cell 1,1
+  grid.addPointUnconditional(Point(1.0, 1.0, 1.0, 2));  // Cell 1,1
+  grid.addPointUnconditional(Point(1.0, 1.0, 1.0, 2));  // Cell 1,1
 
   EXPECT_EQ(grid.getGridCell(0.5, 0.5).size(), 1u);
   EXPECT_EQ(grid.getGridCell(1.5, 0.5).size(), 0u);
@@ -108,62 +116,78 @@ TEST(OccupancyGrid, AddInvalidPointCoordinates) {
   EXPECT_DEATH(grid.addPointUnconditional(Point(0.1, -0.1, 1.0, 2)), "^");
   EXPECT_DEATH(grid.addPointUnconditional(Point(0.1, kGridSize, 1.0, 3)), "^");
   EXPECT_DEATH(grid.addPointUnconditional(Point(kGridSize, 0.1, 1.0, 4)), "^");
-  EXPECT_DEATH(grid.addPointUnconditional(Point(kGridSize, kGridSize, 1.0, 5)), "^");
+  EXPECT_DEATH(
+      grid.addPointUnconditional(Point(kGridSize, kGridSize, 1.0, 5)), "^");
 
   static constexpr size_t kMaxNumPointsPerCell = 2u;
   EXPECT_DEATH(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(-0.1, 0.1, 1.0, 0),
-                                              kMaxNumPointsPerCell), "^");
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(-0.1, 0.1, 1.0, 0), kMaxNumPointsPerCell),
+      "^");
   EXPECT_DEATH(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(-0.1, -0.1, 1.0, 1),
-                                              kMaxNumPointsPerCell), "^");
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(-0.1, -0.1, 1.0, 1), kMaxNumPointsPerCell),
+      "^");
   EXPECT_DEATH(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(0.1, -0.1, 1.0, 2),
-                                              kMaxNumPointsPerCell), "^");
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(0.1, -0.1, 1.0, 2), kMaxNumPointsPerCell),
+      "^");
   EXPECT_DEATH(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(0.1, kGridSize, 1.0, 3),
-                                              kMaxNumPointsPerCell), "^");
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(0.1, kGridSize, 1.0, 3), kMaxNumPointsPerCell),
+      "^");
   EXPECT_DEATH(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(kGridSize, 0.1, 1.0, 4),
-                                              kMaxNumPointsPerCell), "^");
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(kGridSize, 0.1, 1.0, 4), kMaxNumPointsPerCell),
+      "^");
   EXPECT_DEATH(
-      grid.addPointOrReplaceWeakestIfCellFull(Point(kGridSize, kGridSize, 1.0, 5),
-                                              kMaxNumPointsPerCell), "^");
+      grid.addPointOrReplaceWeakestIfCellFull(
+          Point(kGridSize, kGridSize, 1.0, 5), kMaxNumPointsPerCell),
+      "^");
 }
 
 TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPoints) {
   const double kGridSize = 50.0;
   const double kGridCellSize = 10.0;
   const double kMinDistanceBetweenPoints = 5.0;
-  WeightedOccupancyGrid grid(kGridSize, kGridSize, kGridCellSize, kGridCellSize);
+  WeightedOccupancyGrid grid(
+      kGridSize, kGridSize, kGridCellSize, kGridCellSize);
 
   // Test rejection of the same point that violates the min. distance.
-  grid.addPointOrReplaceWeakestNearestPoints(Point(0.1, 0.1, 1.0, 0), kMinDistanceBetweenPoints);
-  grid.addPointOrReplaceWeakestNearestPoints(Point(0.1, 0.1, 3.0, 1), kMinDistanceBetweenPoints);
-  grid.addPointOrReplaceWeakestNearestPoints(Point(0.1, 0.1, 2.0, 2), kMinDistanceBetweenPoints);
+  grid.addPointOrReplaceWeakestNearestPoints(
+      Point(0.1, 0.1, 1.0, 0), kMinDistanceBetweenPoints);
+  grid.addPointOrReplaceWeakestNearestPoints(
+      Point(0.1, 0.1, 3.0, 1), kMinDistanceBetweenPoints);
+  grid.addPointOrReplaceWeakestNearestPoints(
+      Point(0.1, 0.1, 2.0, 2), kMinDistanceBetweenPoints);
   ASSERT_EQ(grid.getNumPoints(), 1u);
   ASSERT_EQ(grid.getGridCell(0.1, 0.1).size(), 1u);
-  EXPECT_EQ(grid.getGridCell(0.1, 0.1)[0].id, 1u);  // Point with id 1 has highest score of 3.0
+  EXPECT_EQ(
+      grid.getGridCell(0.1, 0.1)[0].id,
+      1u);  // Point with id 1 has highest score of 3.0
 
-  // Point2 should be selected over point1 as it is closer than the min. distance and has
-  // higher score.
+  // Point2 should be selected over point1 as it is closer than the min.
+  // distance and has higher score.
   grid.reset();
   Point point1(7.5, 7.5, 1.0, 1);
-  Point point2(7.5 + 0.95 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 2.0, 2);
+  Point point2(
+      7.5 + 0.95 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 2.0, 2);
 
   grid.addPointOrReplaceWeakestNearestPoints(point1, kMinDistanceBetweenPoints);
   grid.addPointOrReplaceWeakestNearestPoints(point2, kMinDistanceBetweenPoints);
   ASSERT_EQ(grid.getNumPoints(), 1u);
   ASSERT_EQ(grid.getGridCell(5.0, 7.5).size(), 0u);
   ASSERT_EQ(grid.getGridCell(15.0, 7.5).size(), 1u);
-  // The id of the first point in the grid cell has to be 2u only point 2 should remain in this
-  // cell.
+  // The id of the first point in the grid cell has to be 2u only point 2 should
+  // remain in this cell.
   EXPECT_EQ(grid.getGridCell(15.0, 7.5)[0].id, 2u);
 
-  // Point4 should be rejected as it is too close to point3 and point3 has a higher score.
+  // Point4 should be rejected as it is too close to point3 and point3 has a
+  // higher score.
   grid.reset();
   Point point3(7.5, 7.5, 2.0, 3);
-  Point point4(7.5 + 0.95 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 1.0, 4);
+  Point point4(
+      7.5 + 0.95 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 1.0, 4);
 
   grid.addPointOrReplaceWeakestNearestPoints(point3, kMinDistanceBetweenPoints);
   grid.addPointOrReplaceWeakestNearestPoints(point4, kMinDistanceBetweenPoints);
@@ -172,10 +196,12 @@ TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPoints) {
   ASSERT_EQ(grid.getGridCell(5.0, 7.5).size(), 1u);
   EXPECT_EQ(grid.getGridCell(5.0, 7.5)[0].id, 3u);
 
-  // No point should be rejected as the distance is equal to the allowed min. distance.
+  // No point should be rejected as the distance is equal to the allowed min.
+  // distance.
   grid.reset();
   Point point5(7.5, 7.5, 2.0, 5);
-  Point point6(7.5 + static_cast<double>(kMinDistanceBetweenPoints), 7.5, 1.0, 6);
+  Point point6(
+      7.5 + static_cast<double>(kMinDistanceBetweenPoints), 7.5, 1.0, 6);
   grid.addPointOrReplaceWeakestNearestPoints(point5, kMinDistanceBetweenPoints);
   grid.addPointOrReplaceWeakestNearestPoints(point6, kMinDistanceBetweenPoints);
   ASSERT_EQ(grid.getNumPoints(), 2u);
@@ -184,9 +210,10 @@ TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPoints) {
   ASSERT_EQ(grid.getGridCell(15.0, 7.5).size(), 1u);
   EXPECT_EQ(grid.getGridCell(15.0, 7.5)[0].id, 6u);
 
-  // Now we add a point in the middle that should reject point point5 and point6 as it has a higher
-  // score.
-  Point point7(7.5 + 0.5 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 5.0, 7);
+  // Now we add a point in the middle that should reject point point5 and point6
+  // as it has a higher score.
+  Point point7(
+      7.5 + 0.5 * static_cast<double>(kMinDistanceBetweenPoints), 7.5, 5.0, 7);
   grid.addPointOrReplaceWeakestNearestPoints(point7, kMinDistanceBetweenPoints);
   ASSERT_EQ(grid.getNumPoints(), 1u);
   ASSERT_EQ(grid.getGridCell(5.0, 7.5).size(), 0u);
@@ -198,8 +225,8 @@ TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPointsRandom) {
   const double kMinDistanceBetweenPoints = 5.0;
   const double kWidth = 752.0;
   const double kHeight = 480.0;
-  WeightedOccupancyGrid grid(kHeight, kWidth, kMinDistanceBetweenPoints,
-                             kMinDistanceBetweenPoints);
+  WeightedOccupancyGrid grid(
+      kHeight, kWidth, kMinDistanceBetweenPoints, kMinDistanceBetweenPoints);
 
   // Generate some random points.
   const size_t kNumRandomPoints = 1e3;
@@ -212,8 +239,9 @@ TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPointsRandom) {
   const double kCrazyHugeScore = 10.0;
   for (int idx = 0; idx < kNumRandomPoints; ++idx) {
     grid.addPointOrReplaceWeakestNearestPoints(
-        Point(random_points(0,idx), random_points(1, idx),
-              kCrazyHugeScore, idx), kMinDistanceBetweenPoints);
+        Point(
+            random_points(0, idx), random_points(1, idx), kCrazyHugeScore, idx),
+        kMinDistanceBetweenPoints);
   }
   const size_t initial_num_points = grid.getNumPoints();
 
@@ -224,8 +252,10 @@ TEST(OccupancyGrid, AddPointOrReplaceWeakestNearestPointsRandom) {
   const int kIndexSecondAddition = 1e6;
   for (int idx = 0; idx < kNumRandomPoints; ++idx) {
     grid.addPointOrReplaceWeakestNearestPoints(
-        Point(random_points(0,idx), random_points(1,idx),
-              random_score(idx), kIndexSecondAddition), kMinDistanceBetweenPoints);
+        Point(
+            random_points(0, idx), random_points(1, idx), random_score(idx),
+            kIndexSecondAddition),
+        kMinDistanceBetweenPoints);
   }
 
   // Make sure no points got removed.
@@ -248,13 +278,18 @@ TEST(OccupancyGrid, GetOccupancyMask) {
   // Get the mask.
   const WeightedOccupancyGrid::CoordinatesType kMaskRadiusAroundPointsPx = 10.0;
   const size_t kMaxPointsPerCell = 2u;
-  cv::Mat mask = grid.getOccupancyMask(kMaskRadiusAroundPointsPx, kMaxPointsPerCell);
+  cv::Mat mask =
+      grid.getOccupancyMask(kMaskRadiusAroundPointsPx, kMaxPointsPerCell);
 
-  // Cell 0,0 should be masked completly as it is full. Check that the cell is completely masked.
-  cv::Mat cell_00(mask, cv::Rect(25, 25, kMaskRadiusAroundPointsPx, kMaskRadiusAroundPointsPx));
+  // Cell 0,0 should be masked completly as it is full. Check that the cell is
+  // completely masked.
+  cv::Mat cell_00(
+      mask,
+      cv::Rect(25, 25, kMaskRadiusAroundPointsPx, kMaskRadiusAroundPointsPx));
   EXPECT_EQ(cv::countNonZero(cell_00), 0);
 
-  cv::Mat cell_00_oversize(mask, cv::Rect(24, 24, kCellSize + 2, kCellSize + 2));
+  cv::Mat cell_00_oversize(
+      mask, cv::Rect(24, 24, kCellSize + 2, kCellSize + 2));
   EXPECT_EQ(cv::countNonZero(cell_00_oversize), 4 * 25 + 4);
 
   // Border cases for cell mask.
@@ -276,10 +311,14 @@ TEST(OccupancyGrid, GetOccupancyMask) {
   EXPECT_EQ(mask.at<unsigned char>(75, 75 - kMaskRadiusAroundPointsPx), 0);
 
   // Further away from the point the image shouldn't be masked.
-  EXPECT_EQ(mask.at<unsigned char>(75 + kMaskRadiusAroundPointsPx + 1, 75), 255);
-  EXPECT_EQ(mask.at<unsigned char>(75 - kMaskRadiusAroundPointsPx - 1, 75), 255);
-  EXPECT_EQ(mask.at<unsigned char>(75, 75 + kMaskRadiusAroundPointsPx + 1), 255);
-  EXPECT_EQ(mask.at<unsigned char>(75, 75 - kMaskRadiusAroundPointsPx - 1), 255);
+  EXPECT_EQ(
+      mask.at<unsigned char>(75 + kMaskRadiusAroundPointsPx + 1, 75), 255);
+  EXPECT_EQ(
+      mask.at<unsigned char>(75 - kMaskRadiusAroundPointsPx - 1, 75), 255);
+  EXPECT_EQ(
+      mask.at<unsigned char>(75, 75 + kMaskRadiusAroundPointsPx + 1), 255);
+  EXPECT_EQ(
+      mask.at<unsigned char>(75, 75 - kMaskRadiusAroundPointsPx - 1), 255);
 }
 
 TEST(OccupancyGrid, InvalidGridParameters) {

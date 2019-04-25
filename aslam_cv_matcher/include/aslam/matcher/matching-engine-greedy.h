@@ -1,6 +1,7 @@
-#ifndef ASLAM_CV_MATCHING_ENGINE_GREEDY_H_
-#define ASLAM_CV_MATCHING_ENGINE_GREEDY_H_
+#ifndef ASLAM_MATCHER_MATCHING_ENGINE_GREEDY_H_
+#define ASLAM_MATCHER_MATCHING_ENGINE_GREEDY_H_
 
+#include <algorithm>
 #include <vector>
 
 #include <aslam/common/macros.h>
@@ -15,21 +16,23 @@
 
 namespace aslam {
 
-template<typename MatchingProblem>
+template <typename MatchingProblem>
 class MatchingEngineGreedy : public MatchingEngine<MatchingProblem> {
  public:
   ASLAM_POINTER_TYPEDEFS(MatchingEngineGreedy);
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(MatchingEngineGreedy);
 
-  MatchingEngineGreedy() {};
-  virtual ~MatchingEngineGreedy() {};
-  virtual bool match(MatchingProblem* problem,
-                     typename MatchingProblem::MatchesWithScore* matches_A_B);
+  MatchingEngineGreedy() {}
+  virtual ~MatchingEngineGreedy() {}
+  virtual bool match(
+      MatchingProblem* problem,
+      typename MatchingProblem::MatchesWithScore* matches_A_B);
 };
 
-template<typename MatchingProblem>
+template <typename MatchingProblem>
 bool MatchingEngineGreedy<MatchingProblem>::match(
-    MatchingProblem* problem, typename MatchingProblem::MatchesWithScore* matches_A_B) {
+    MatchingProblem* problem,
+    typename MatchingProblem::MatchesWithScore* matches_A_B) {
   CHECK_NOTNULL(problem);
   CHECK_NOTNULL(matches_A_B);
   matches_A_B->clear();
@@ -39,13 +42,17 @@ bool MatchingEngineGreedy<MatchingProblem>::match(
 
     typename MatchingProblem::CandidatesList candidates;
     problem->getCandidates(&candidates);
-    CHECK_EQ(candidates.size(), num_bananas) << "The size of the candidates list does not "
-        << "match the number of bananas of the problem. getCandidates(...) of the given matching "
-        << "problem is supposed to return a vector of candidates for each banana and hence the "
+    CHECK_EQ(candidates.size(), num_bananas)
+        << "The size of the candidates list does not "
+        << "match the number of bananas of the problem. getCandidates(...) of "
+           "the given matching "
+        << "problem is supposed to return a vector of candidates for each "
+           "banana and hence the "
         << "size of the returned vector must match the number of bananas.";
 
     size_t total_num_candidates = 0u;
-    for (const typename MatchingProblem::Candidates& candidates_for_banana : candidates) {
+    for (const typename MatchingProblem::Candidates& candidates_for_banana :
+         candidates) {
       total_num_candidates += candidates_for_banana.size();
     }
 
@@ -53,9 +60,10 @@ bool MatchingEngineGreedy<MatchingProblem>::match(
     for (size_t banana_idx = 0u; banana_idx < num_bananas; ++banana_idx) {
       // compute the score for each candidate and put in queue
       for (const typename MatchingProblem::Candidate& candidate_for_banana :
-          candidates[banana_idx]) {
+           candidates[banana_idx]) {
         matches_A_B->emplace_back(
-            candidate_for_banana.index_apple, banana_idx, candidate_for_banana.score);
+            candidate_for_banana.index_apple, banana_idx,
+            candidate_for_banana.score);
       }
     }
     // Reverse sort with reverse iterators.
@@ -87,4 +95,4 @@ bool MatchingEngineGreedy<MatchingProblem>::match(
 
 }  // namespace aslam
 
-#endif // ASLAM_CV_MATCHING_MATCHING_ENGINE_GREEDY_H_
+#endif  // ASLAM_MATCHER_MATCHING_ENGINE_GREEDY_H_

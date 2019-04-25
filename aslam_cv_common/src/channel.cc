@@ -7,7 +7,7 @@
 namespace aslam {
 namespace channels {
 
-template<>
+template <>
 bool Channel<cv::Mat>::operator==(const Channel<cv::Mat>& other) {
   return cv::countNonZero(value_ != other.value_) == 0;
 }
@@ -17,13 +17,14 @@ ChannelGroup cloneChannelGroup(const ChannelGroup& channels) {
   ChannelGroup cloned_group;
   for (const ChannelMap::value_type& channel : channels.channels_) {
     CHECK(channel.second);
-    cloned_group.channels_.emplace(channel.first,
-                                   std::shared_ptr<ChannelBase>(channel.second->clone()));
+    cloned_group.channels_.emplace(
+        channel.first, std::shared_ptr<ChannelBase>(channel.second->clone()));
   }
   return cloned_group;
 }
 
-bool isChannelGroupEqual(const ChannelGroup& left_channels, const ChannelGroup& right_channels) {
+bool isChannelGroupEqual(
+    const ChannelGroup& left_channels, const ChannelGroup& right_channels) {
   // Early exit if both groups are the same.
   if (&left_channels == &right_channels) {
     return true;
@@ -34,12 +35,15 @@ bool isChannelGroupEqual(const ChannelGroup& left_channels, const ChannelGroup& 
   if (left_channels.channels_.size() != right_channels.channels_.size()) {
     return false;
   }
-  for (const ChannelMap::value_type& left_channel_pair : left_channels.channels_) {
-    ChannelMap::const_iterator it_right = right_channels.channels_.find(left_channel_pair.first);
+  for (const ChannelMap::value_type& left_channel_pair :
+       left_channels.channels_) {
+    ChannelMap::const_iterator it_right =
+        right_channels.channels_.find(left_channel_pair.first);
     if (it_right == right_channels.channels_.end()) {
       return false;
     }
-    if (!CHECK_NOTNULL(it_right->second.get())->compare(*left_channel_pair.second)) {
+    if (!CHECK_NOTNULL(it_right->second.get())
+             ->compare(*left_channel_pair.second)) {
       return false;
     }
   }

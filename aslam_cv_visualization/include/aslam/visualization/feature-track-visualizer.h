@@ -1,12 +1,14 @@
-#ifndef VISUALIZATION_FEATURE_TRACK_VISUALIZER_H_
-#define VISUALIZATION_FEATURE_TRACK_VISUALIZER_H_
+#ifndef ASLAM_VISUALIZATION_FEATURE_TRACK_VISUALIZER_H_
+#define ASLAM_VISUALIZATION_FEATURE_TRACK_VISUALIZER_H_
 
+#include <vector>
+
+#include <Eigen/Dense>
 #include <aslam/common/memory.h>
 #include <aslam/frames/feature-track.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/frames/visual-nframe.h>
 #include <opencv2/core/core.hpp>
-#include <Eigen/Dense>
 
 namespace aslam_cv_visualization {
 
@@ -17,8 +19,7 @@ class VisualFrameFeatureTrackVisualizer {
 
   void drawContinuousFeatureTracks(
       const aslam::VisualFrame::ConstPtr& frame,
-      const aslam::FeatureTracks& terminated_feature_tracks,
-      cv::Mat* image);
+      const aslam::FeatureTracks& terminated_feature_tracks, cv::Mat* image);
 
  private:
   typedef AlignedUnorderedMap<int, size_t> TrackIdToIndexMap;
@@ -54,4 +55,4 @@ class VisualNFrameFeatureTrackVisualizer {
   std::vector<VisualFrameFeatureTrackVisualizer> feature_track_visualizers_;
 };
 }  // namespace aslam_cv_visualization
-#endif  // VISUALIZATION_FEATURE_TRACK_VISUALIZER_H_
+#endif  // ASLAM_VISUALIZATION_FEATURE_TRACK_VISUALIZER_H_

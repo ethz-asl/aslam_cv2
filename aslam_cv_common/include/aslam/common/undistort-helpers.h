@@ -1,57 +1,65 @@
-#ifndef ASLAM_UNDISTORT_HELPERS_H_
-#define ASLAM_UNDISTORT_HELPERS_H_
+#ifndef ASLAM_COMMON_UNDISTORT_HELPERS_H_
+#define ASLAM_COMMON_UNDISTORT_HELPERS_H_
 
 #include <algorithm>
 
 #include <Eigen/Dense>
 #include <glog/logging.h>
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/core/core.hpp>
 #include <opencv2/core/eigen.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
-// This file contains modified opencv routines which use aslam's distort and project functionality.
-// Original functions can be found here:
-//  getUndistortRectangles: https://github.com/Itseez/opencv/blob/5f590ebed084a5002c9013e11c519dcb139d47e9/modules/calib3d/src/calibration.cpp#L2094
-//  getOptimalNewCameraMatrix: https://github.com/Itseez/opencv/blob/0ffc53bafea9052d1fac17e6fc6f0a07ddf9f789/modules/imgproc/src/undistort.cpp#L62
-//  buildUndistortMap: https://github.com/Itseez/opencv/blob/5f590ebed084a5002c9013e11c519dcb139d47e9/modules/calib3d/src/calibration.cpp#L3389
+// This file contains modified opencv routines which use aslam's distort and
+// project functionality. Original functions can be found here:
+//  getUndistortRectangles:
+//  https://github.com/Itseez/opencv/blob/5f590ebed084a5002c9013e11c519dcb139d47e9/modules/calib3d/src/calibration.cpp#L2094
+//  getOptimalNewCameraMatrix:
+//  https://github.com/Itseez/opencv/blob/0ffc53bafea9052d1fac17e6fc6f0a07ddf9f789/modules/imgproc/src/undistort.cpp#L62
+//  buildUndistortMap:
+//  https://github.com/Itseez/opencv/blob/5f590ebed084a5002c9013e11c519dcb139d47e9/modules/calib3d/src/calibration.cpp#L3389
 namespace aslam {
 namespace common {
 
-/// \brief: calculates the inner(min)/outer(max) rectangle on the undistorted image
+/// \brief: calculates the inner(min)/outer(max) rectangle on the undistorted
+/// image
 ///  @param[in] input_camera Input camera geometry
 ///  @param[in] undistort_to_pinhole Undistort image to a pinhole projection
 ///                                  (remove distortion and projection effects)
 ///  @param[out] inner Inscribed image rectangle (all pixels valid)
 ///  @param[out] outer Circumscribed image rectangle (no pixels lost)
-template<typename DerivedCameraType>
-static void getUndistortRectangles(const DerivedCameraType& input_camera, bool undistort_to_pinhole,
-                                   cv::Rect_<float>& inner, cv::Rect_<float>& outer) {
+template <typename DerivedCameraType>
+static void getUndistortRectangles(
+    const DerivedCameraType& input_camera, bool undistort_to_pinhole,
+    cv::Rect_<float>& inner, cv::Rect_<float>& outer) {  // NOLINT
   const int N = 9;
   int x, y, k;
   cv::Ptr<CvMat> _pts(cvCreateMat(1, N * N, CV_32FC2));
-  CvPoint2D32f* pts = (CvPoint2D32f*) (_pts->data.ptr);
+  CvPoint2D32f* pts = (CvPoint2D32f*)(_pts->data.ptr);  // NOLINT
 
   for (y = k = 0; y < N; y++) {
     for (x = 0; x < N; x++) {
-      Eigen::Vector2d keypoint(x * input_camera.imageWidth()/ (N - 1),
-                               y * input_camera.imageHeight() / (N - 1));
+      Eigen::Vector2d keypoint(
+          x * input_camera.imageWidth() / (N - 1),
+          y * input_camera.imageHeight() / (N - 1));
 
-      // Transform keypoint from image to normalized image plane. (incl. projection effects)
+      // Transform keypoint from image to normalized image plane. (incl.
+      // projection effects)
       Eigen::Vector2d keypoint_normalized;
 
       Eigen::Matrix3d camera_matrix;
-      switch(input_camera.getType()) {
+      switch (input_camera.getType()) {
         case Camera::Type::kPinhole: {
-          const aslam::PinholeCamera *const cam =
+          const aslam::PinholeCamera* const cam =
               dynamic_cast<const aslam::PinholeCamera*>(&input_camera);
           CHECK(cam != nullptr);
           camera_matrix = cam->getCameraMatrix();
           break;
         }
         case Camera::Type::kUnifiedProjection: {
-          const aslam::UnifiedProjectionCamera *const cam =
-              dynamic_cast<const aslam::UnifiedProjectionCamera*>(&input_camera);
+          const aslam::UnifiedProjectionCamera* const cam =
+              dynamic_cast<const aslam::UnifiedProjectionCamera*>(
+                  &input_camera);
           CHECK(cam != nullptr);
           camera_matrix = cam->getCameraMatrix();
           break;
@@ -59,12 +67,13 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
         default: {
           LOG(FATAL) << "Unknown camera model: "
                      << static_cast<std::underlying_type<Camera::Type>::type>(
-                          input_camera.getType());
+                            input_camera.getType());
         }
       }
 
       if (undistort_to_pinhole) {
-        // Transform keypoint from image to normalized image plane. (incl. projection effects)
+        // Transform keypoint from image to normalized image plane. (incl.
+        // projection effects)
         Eigen::Vector3d point_3d;
         input_camera.backProject3(keypoint, &point_3d);
         point_3d /= point_3d[2];
@@ -73,13 +82,17 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
       } else {
         // Transform keypoint from image to normalized image plane.
 
-        keypoint_normalized[0] = 1.0 / camera_matrix(0,0) * (keypoint[0] - camera_matrix(0,2));
-        keypoint_normalized[1] = 1.0 / camera_matrix(1,1) * (keypoint[1] - camera_matrix(1,2));
+        keypoint_normalized[0] =
+            1.0 / camera_matrix(0, 0) * (keypoint[0] - camera_matrix(0, 2));
+        keypoint_normalized[1] =
+            1.0 / camera_matrix(1, 1) * (keypoint[1] - camera_matrix(1, 2));
 
         input_camera.getDistortion().undistort(&keypoint_normalized);
       }
 
-      pts[k++] = cvPoint2D32f((float) keypoint_normalized[0], (float) keypoint_normalized[1]);
+      pts[k++] = cvPoint2D32f(
+          (float)keypoint_normalized[0],   // NOLINT
+          (float)keypoint_normalized[1]);  // NOLINT
     }
   }
 
@@ -87,8 +100,7 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
   float oX0 = FLT_MAX, oX1 = -FLT_MAX, oY0 = FLT_MAX, oY1 = -FLT_MAX;
   // find the inscribed rectangle.
   // the code will likely not work with extreme rotation matrices (R) (>45%)
-  for (y = k = 0; y < N; y++)
-  {
+  for (y = k = 0; y < N; y++) {
     for (x = 0; x < N; x++) {
       CvPoint2D32f p = pts[k++];
       oX0 = MIN(oX0, p.x);
@@ -96,10 +108,14 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
       oY0 = MIN(oY0, p.y);
       oY1 = MAX(oY1, p.y);
 
-      if (x == 0)     iX0 = std::max(iX0, p.x);
-      if (x == N - 1) iX1 = std::min(iX1, p.x);
-      if (y == 0)     iY0 = std::max(iY0, p.y);
-      if (y == N - 1) iY1 = std::min(iY1, p.y);
+      if (x == 0)
+        iX0 = std::max(iX0, p.x);
+      if (x == N - 1)
+        iX1 = std::min(iX1, p.x);
+      if (y == 0)
+        iY0 = std::max(iY0, p.y);
+      if (y == N - 1)
+        iY1 = std::min(iY1, p.y);
     }
   }
   inner = cv::Rect_<float>(iX0, iY0, iX1 - iX0, iY1 - iY0);
@@ -108,24 +124,28 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
 
 /// \brief Returns the new camera matrix based on the free scaling parameter.
 /// INPUT:
-/// @param[in] input_camera Aslam camera geometry (distortion and intrinsics used)
-/// @param[in] scale Output image size scaling parameter wrt. to input image size.
-/// @param[in] alpha Free scaling parameter between 0 (when all the pixels in the undistorted image
-///                  will be valid) and 1 (when all the source image pixels will be retained in the
-///                  undistorted image)
+/// @param[in] input_camera Aslam camera geometry (distortion and intrinsics
+/// used)
+/// @param[in] scale Output image size scaling parameter wrt. to input image
+/// size.
+/// @param[in] alpha Free scaling parameter between 0 (when all the pixels in
+/// the undistorted image
+///                  will be valid) and 1 (when all the source image pixels will
+///                  be retained in the undistorted image)
 ///  @param[in] undistort_to_pinhole Undistort image to a pinhole projection
 ///                                  (remove distortion and projection effects)
 /// @return The output camera matrix.
-template<typename DerivedCameraType>
-Eigen::Matrix3d getOptimalNewCameraMatrix(const DerivedCameraType& input_camera,
-                                          double alpha, double scale,
-                                          bool undistort_to_pinhole) {
-
-  CHECK_GE(alpha, 0.0); CHECK_LE(alpha, 1.0);
+template <typename DerivedCameraType>
+Eigen::Matrix3d getOptimalNewCameraMatrix(
+    const DerivedCameraType& input_camera, double alpha, double scale,
+    bool undistort_to_pinhole) {
+  CHECK_GE(alpha, 0.0);
+  CHECK_LE(alpha, 1.0);
   CHECK_GT(scale, 0.0);
 
-  cv::Size output_size(static_cast<int>(scale * input_camera.imageWidth()),
-                       static_cast<int>(scale * input_camera.imageHeight()));
+  cv::Size output_size(
+      static_cast<int>(scale * input_camera.imageWidth()),
+      static_cast<int>(scale * input_camera.imageHeight()));
 
   // Get inscribed and circumscribed rectangles in normalized
   cv::Rect_<float> inner, outer;
@@ -156,16 +176,23 @@ Eigen::Matrix3d getOptimalNewCameraMatrix(const DerivedCameraType& input_camera,
 
 /// \brief Calculates the undistortion maps for the given camera geometries.
 /// @param[in] input_camera Input camera geometry
-/// @param[in] output_camera_matrix Desired output camera matrix (see \ref getOptimalNewCameraMatrix)
-/// @param[in] scale Output image size scaling parameter wrt. to input image size.
-/// @param[in] map_type Type of the output maps. (cv::CV_32FC1, cv::CV_32FC2 or cv::CV_16SC2)
-///                     Use cv::CV_16SC2 if you don't know what to choose. (fastest fixed-point)
-/// @param[out] map_u Map that transforms u-coordinates from distorted to undistorted image plane.
-/// @param[out] map_v Map that transforms v-coordinates from distorted to undistorted image plane.
-template<typename InputDerivedCameraType, typename OutputDerivedCameraType>
-void buildUndistortMap(const InputDerivedCameraType& input_camera,
-                       const OutputDerivedCameraType& output_camera, int map_type,
-                       cv::OutputArray map_u, cv::OutputArray map_v) {
+/// @param[in] output_camera_matrix Desired output camera matrix (see \ref
+/// getOptimalNewCameraMatrix)
+/// @param[in] scale Output image size scaling parameter wrt. to input image
+/// size.
+/// @param[in] map_type Type of the output maps. (cv::CV_32FC1, cv::CV_32FC2 or
+/// cv::CV_16SC2)
+///                     Use cv::CV_16SC2 if you don't know what to choose.
+///                     (fastest fixed-point)
+/// @param[out] map_u Map that transforms u-coordinates from distorted to
+/// undistorted image plane.
+/// @param[out] map_v Map that transforms v-coordinates from distorted to
+/// undistorted image plane.
+template <typename InputDerivedCameraType, typename OutputDerivedCameraType>
+void buildUndistortMap(
+    const InputDerivedCameraType& input_camera,
+    const OutputDerivedCameraType& output_camera, int map_type,
+    cv::OutputArray map_u, cv::OutputArray map_v) {
   // Output image size
   cv::Size output_size(output_camera.imageWidth(), output_camera.imageHeight());
 
@@ -176,18 +203,20 @@ void buildUndistortMap(const InputDerivedCameraType& input_camera,
   if (map_type != CV_32FC2) {
     map_v.create(output_size, map_type == CV_16SC2 ? CV_16UC1 : CV_32FC1);
     map2 = map_v.getMat();
-  } else
+  } else {
     map_v.release();
+  }
 
   // Build the maps.
   for (int i = 0; i < output_size.height; i++) {
-    float* m1f = (float*) (map1.data + map1.step * i);
-    float* m2f = (float*) (map2.data + map2.step * i);
-    short* m1 = (short*) m1f;
-    ushort* m2 = (ushort*) m2f;
+    float* m1f = (float*)(map1.data + map1.step * i);  // NOLINT
+    float* m2f = (float*)(map2.data + map2.step * i);  // NOLINT
+    short* m1 = (short*)m1f;                           // NOLINT
+    ushort* m2 = (ushort*)m2f;                         // NOLINT
 
     for (int j = 0; j < output_size.width; j++) {
-      // Convert point on normalized image plane to keypoints. (projection and distortion)
+      // Convert point on normalized image plane to keypoints. (projection and
+      // distortion)
       const Eigen::Vector2d keypoint(j, i);
       Eigen::Vector2d keypoint_dist;
       Eigen::Vector3d point_3d;
@@ -202,22 +231,23 @@ void buildUndistortMap(const InputDerivedCameraType& input_camera,
       if (map_type == CV_16SC2) {
         int iu = cv::saturate_cast<int>(u * cv::INTER_TAB_SIZE);
         int iv = cv::saturate_cast<int>(v * cv::INTER_TAB_SIZE);
-        m1[j * 2] = (short) (iu >> cv::INTER_BITS);
-        m1[j * 2 + 1] = (short) (iv >> cv::INTER_BITS);
-        m2[j] = (ushort) ((iv & (cv::INTER_TAB_SIZE - 1)) * cv::INTER_TAB_SIZE
-            + (iu & (cv::INTER_TAB_SIZE - 1)));
+        m1[j * 2] = (short)(iu >> cv::INTER_BITS);      // NOLINT
+        m1[j * 2 + 1] = (short)(iv >> cv::INTER_BITS);  // NOLINT
+        m2[j] = (ushort)(                               // NOLINT
+            (iv & (cv::INTER_TAB_SIZE - 1)) * cv::INTER_TAB_SIZE +
+            (iu & (cv::INTER_TAB_SIZE - 1)));
       } else if (map_type == CV_32FC1) {
-        m1f[j] = (float) u;
-        m2f[j] = (float) v;
+        m1f[j] = (float)u;  // NOLINT
+        m2f[j] = (float)v;  // NOLINT
       } else {
-        m1f[j * 2] = (float) u;
-        m1f[j * 2 + 1] = (float) v;
+        m1f[j * 2] = (float)u;      // NOLINT
+        m1f[j * 2 + 1] = (float)v;  // NOLINT
       }
     }
   }
 }
 
-} //namespace common
-} //namespace aslam
+}  // namespace common
+}  // namespace aslam
 
-#endif // ASLAM_UNDISTORT_HELPERS_H_
+#endif  // ASLAM_COMMON_UNDISTORT_HELPERS_H_

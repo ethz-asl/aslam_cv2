@@ -41,11 +41,12 @@ using AlignedUnorderedSet =
 ///
 /// To be used like:
 ///   std::shared_ptr my_ptr = aligned_shared<aslam::RadTanDistortion>(params);
-template<typename Type, typename ... Arguments>
+template <typename Type, typename... Arguments>
 inline std::shared_ptr<Type> aligned_shared(Arguments&&... arguments) {
   typedef typename std::remove_const<Type>::type TypeNonConst;
-  return std::allocate_shared<Type>(Eigen::aligned_allocator<TypeNonConst>(),
-                                    std::forward<Arguments>(arguments)...);
+  return std::allocate_shared<Type>(
+      Eigen::aligned_allocator<TypeNonConst>(),
+      std::forward<Arguments>(arguments)...);
 }
 
 namespace internal {

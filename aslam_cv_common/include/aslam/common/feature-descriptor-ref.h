@@ -39,15 +39,24 @@ struct FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors> {
 
   inline ~FeatureDescriptorRefBase() {}
 
-  inline void set_data(PointerType* data) { data_ = data; }
-  inline void set_size_bytes(uint32_t size_bytes) { size_bytes_ = size_bytes; }
-  inline const unsigned char* data() const { return data_; }
-  inline uint32_t size() const { return size_bytes_; }
+  inline void set_data(PointerType* data) {
+    data_ = data;
+  }
+  inline void set_size_bytes(uint32_t size_bytes) {
+    size_bytes_ = size_bytes;
+  }
+  inline const unsigned char* data() const {
+    return data_;
+  }
+  inline uint32_t size() const {
+    return size_bytes_;
+  }
 
   inline const unsigned char& operator[](size_t index) const;
 
-  inline bool operator==(const FeatureDescriptorRefBase<
-      PointerType, ReadOnlyAccessors>& lhs) const;
+  inline bool operator==(
+      const FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors>& lhs)
+      const;
 
  protected:
   PointerType* data_;
@@ -56,16 +65,15 @@ struct FeatureDescriptorRefBase<PointerType, ReadOnlyAccessors> {
 
 // This is a wrapper into a binary feature store, non const version.
 template <>
-struct FeatureDescriptorRefBase<
-    unsigned char,
-    WriteAccessors> : FeatureDescriptorRefBase<unsigned char,
-                                               ReadOnlyAccessors> {
+struct FeatureDescriptorRefBase<unsigned char, WriteAccessors>
+    : FeatureDescriptorRefBase<unsigned char, ReadOnlyAccessors> {
   typedef unsigned char value_type;
   typedef FeatureDescriptorRefBase<unsigned char, ReadOnlyAccessors> Base;
   friend class BinaryFeatureStore;
 
   inline FeatureDescriptorRefBase();
-  inline FeatureDescriptorRefBase(unsigned char* data, size_t size_bytes, bool owned);
+  inline FeatureDescriptorRefBase(
+      unsigned char* data, size_t size_bytes, bool owned);
 
   // Heap allocate a descriptor, this should not be used unless explicitly
   // required. Set FeatureDescriptor to a block allocated memory position
@@ -80,7 +88,7 @@ struct FeatureDescriptorRefBase<
   inline FeatureDescriptorRefBase<unsigned char, WriteAccessors>& operator=(
       const FeatureDescriptorRefBase<unsigned char, WriteAccessors>& lhs);
   inline FeatureDescriptorRefBase<const unsigned char, ReadOnlyAccessors>
-      ToConstRef() const;
+  ToConstRef() const;
 
   inline ~FeatureDescriptorRefBase();
   inline void SetZero();
@@ -125,7 +133,8 @@ inline void FlipBit(size_t bit_position, FeatureDescriptorRef* descriptor) {
   (*descriptor)[byte] ^= static_cast<uint8_t>(1 << bit_within_byte);
 }
 
-inline void FlipNRandomBits(size_t num_bits_to_flip, FeatureDescriptorRef* descriptor) {
+inline void FlipNRandomBits(
+    size_t num_bits_to_flip, FeatureDescriptorRef* descriptor) {
   CHECK_NOTNULL(descriptor);
   const uint32_t descriptor_size_bytes = descriptor->size();
   const uint32_t descriptor_size_bits = descriptor_size_bytes * 8;
@@ -133,8 +142,10 @@ inline void FlipNRandomBits(size_t num_bits_to_flip, FeatureDescriptorRef* descr
   bits_to_flip.reserve(descriptor_size_bits);
   int n(0);
   std::generate_n(
-      std::back_inserter(bits_to_flip), descriptor_size_bits, [n]()mutable {return n++;});
-  CHECK_LT(num_bits_to_flip, bits_to_flip.size()) << "Cannot flip more than everything.";
+      std::back_inserter(bits_to_flip), descriptor_size_bits,
+      [n]() mutable { return n++; });
+  CHECK_LT(num_bits_to_flip, bits_to_flip.size())
+      << "Cannot flip more than everything.";
   std::random_shuffle(bits_to_flip.begin(), bits_to_flip.end());
   for (size_t i = 0; i < num_bits_to_flip; ++i) {
     FlipBit(bits_to_flip[i], descriptor);
@@ -147,9 +158,11 @@ inline size_t GetNumBitsDifferent(
     const FeatureDescriptorRefBase<PointerType, AccessorLevel>& descriptor2) {
   const uint32_t descriptor_size = descriptor1.size();
   const uint32_t descriptor2_size = descriptor2.size();
-  CHECK_EQ(descriptor_size, descriptor2_size) << "Cannot compare descriptors of unequal size.";
+  CHECK_EQ(descriptor_size, descriptor2_size)
+      << "Cannot compare descriptors of unequal size.";
   Hamming hamming;
-  return static_cast<size_t>(hamming(descriptor1.data(), descriptor2.data(), descriptor_size));
+  return static_cast<size_t>(
+      hamming(descriptor1.data(), descriptor2.data(), descriptor_size));
 }
 
 template <typename TYPE, int ACCESSOR>

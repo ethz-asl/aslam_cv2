@@ -49,24 +49,25 @@ namespace aslam {
 namespace common {
 
 #ifdef __GNUC__
-static const char __attribute__((aligned(16))) MASK_4bit[16] =
-  {0xf, 0xf, 0xf,  0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
-   0xf};
-static const uint8_t __attribute__((aligned(16))) POPCOUNT_4bit[16] = {0, 1, 1,
-  2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4};
+static const char __attribute__((aligned(16)))
+MASK_4bit[16] = {0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
+                 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf};
+static const uint8_t __attribute__((aligned(16)))
+POPCOUNT_4bit[16] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4};
 #endif  // __GNUC__
 #ifdef _MSC_VER
-__declspec(align(16)) static const char MASK_4bit[16] = {0xf, 0xf, 0xf, 0xf,
-  0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf};
-__declspec(align(16)) static const uint8_t POPCOUNT_4bit[16] = {0, 1, 1, 2,
-  1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4};
+__declspec(align(16)) static const
+    char MASK_4bit[16] = {0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
+                          0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf};
+__declspec(align(16)) static const uint8_t POPCOUNT_4bit[16] = {
+    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4};
 static const __m128i shiftval = _mm_set_epi32(0, 0, 0, 4);
 #endif  // _MSC_VER
 
 #ifdef __ARM_NEON
-__inline__ uint32_t Hamming::NEONPopcntofXORed(const uint8x16_t* signature1,
-                                               const uint8x16_t* signature2,
-                                               const int numberOf128BitWords) {
+__inline__ uint32_t Hamming::NEONPopcntofXORed(
+    const uint8x16_t* signature1, const uint8x16_t* signature2,
+    const int numberOf128BitWords) {
   CHECK_NOTNULL(signature1);
   CHECK_NOTNULL(signature2);
   uint32_t result = 0;
@@ -85,9 +86,9 @@ __inline__ uint32_t Hamming::NEONPopcntofXORed(const uint8x16_t* signature1,
 #else
 // - SSSE3 - better alorithm, minimized psadbw usage -
 // adapted from http://wm.ite.pl/articles/sse-popcount.html
-__inline__ uint32_t Hamming::SSSE3PopcntofXORed(const __m128i* signature1,
-const __m128i*signature2,
-const int numberOf128BitWords) {
+__inline__ uint32_t Hamming::SSSE3PopcntofXORed(
+    const __m128i* signature1, const __m128i* signature2,
+    const int numberOf128BitWords) {
   CHECK_NOTNULL(signature1);
   CHECK_NOTNULL(signature2);
 
@@ -116,12 +117,12 @@ const int numberOf128BitWords) {
     xmm0 = _mm_and_si128(xmm0, xmm6);  // xmm0 := lower nibbles.
     xmm1 = _mm_and_si128(xmm1, xmm6);  // xmm1 := higher nibbles.
     xmm2 = xmm7;
-    xmm3 = xmm7;  // Get popcount.
+    xmm3 = xmm7;                          // Get popcount.
     xmm2 = _mm_shuffle_epi8(xmm2, xmm0);  // For all nibbles.
     xmm3 = _mm_shuffle_epi8(xmm3, xmm1);  // Using PSHUFB.
-    xmm4 = _mm_add_epi8(xmm4, xmm2);  // Update local.
-    xmm4 = _mm_add_epi8(xmm4, xmm3);  // Accumulator.
-  }while (signature1 < end);
+    xmm4 = _mm_add_epi8(xmm4, xmm2);      // Update local.
+    xmm4 = _mm_add_epi8(xmm4, xmm3);      // Accumulator.
+  } while (signature1 < end);
   // Update global accumulator(two 32-bits counters).
   xmm4 = _mm_sad_epu8(xmm4, xmm5);
   xmm5 = _mm_add_epi32(xmm5, xmm4);
@@ -129,8 +130,8 @@ const int numberOf128BitWords) {
   // __asm__ volatile(
   //  "movhlps  %%xmm5, %%xmm0 \n"
   // TODO(slynen): fix with appropriate intrinsic
-  xmm0 = _mm_cvtps_epi32(_mm_movehl_ps(_mm_cvtepi32_ps(xmm0),
-      _mm_cvtepi32_ps(xmm5)));
+  xmm0 = _mm_cvtps_epi32(
+      _mm_movehl_ps(_mm_cvtepi32_ps(xmm0), _mm_cvtepi32_ps(xmm5)));
   xmm0 = _mm_add_epi32(xmm0, xmm5);
   result = _mm_cvtsi128_si32(xmm0);
   return result;

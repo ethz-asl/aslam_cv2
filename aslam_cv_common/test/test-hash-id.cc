@@ -6,7 +6,7 @@
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/hash-id.h>
 
-using namespace aslam;
+using namespace aslam;  // NOLINT
 
 TEST(HashIdTest, Different) {
   HashId a(HashId::random()), b(HashId::random());
@@ -17,7 +17,7 @@ TEST(HashIdTest, Validity) {
   HashId a, b;
   EXPECT_FALSE(a.isValid());
   EXPECT_FALSE(b.isValid());
-  EXPECT_EQ(a,b);
+  EXPECT_EQ(a, b);
   a.randomize();
   EXPECT_TRUE(a.isValid());
 }

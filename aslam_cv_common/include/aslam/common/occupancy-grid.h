@@ -1,17 +1,18 @@
-#ifndef ASLAM_FEATURE_TRACKER_OCCUPANCY_GRID_H_
-#define ASLAM_FEATURE_TRACKER_OCCUPANCY_GRID_H_
+#ifndef ASLAM_COMMON_OCCUPANCY_GRID_H_
+#define ASLAM_COMMON_OCCUPANCY_GRID_H_
 
 #include <vector>
 
-#include <aslam/common/macros.h>
 #include <Eigen/Dense>
+#include <aslam/common/macros.h>
 #include <glog/logging.h>
 #include <opencv2/core/core.hpp>
 
 namespace aslam {
 namespace common {
 
-template<typename CoordinatesType = double, typename WeightType = double, typename PointId = int>
+template <typename CoordinatesType = double, typename WeightType = double,
+          typename PointId = int>
 struct WeightedKeypoint {
   typedef CoordinatesType coordinate_type;
   typedef WeightType weight_type;
@@ -20,8 +21,10 @@ struct WeightedKeypoint {
   WeightedKeypoint() {
     LOG(FATAL) << "Only needed to downsize vectors using resize.";
   }
-  WeightedKeypoint(CoordinatesType u_rows, CoordinatesType v_cols, WeightType weight, PointId id)
-    : u_rows(u_rows), v_cols(v_cols), weight(weight), id(id) {}
+  WeightedKeypoint(
+      CoordinatesType u_rows, CoordinatesType v_cols, WeightType weight,
+      PointId id)
+      : u_rows(u_rows), v_cols(v_cols), weight(weight), id(id) {}
 
   CoordinatesType u_rows, v_cols;
   WeightType weight;
@@ -35,7 +38,7 @@ struct WeightedKeypoint {
   }
 };
 
-template<typename PointType = WeightedKeypoint<double, double, int>>
+template <typename PointType = WeightedKeypoint<double, double, int>>
 class WeightedOccupancyGrid {
  public:
   typedef typename PointType::coordinate_type CoordinatesType;
@@ -47,6 +50,7 @@ class WeightedOccupancyGrid {
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   ASLAM_POINTER_TYPEDEFS(WeightedOccupancyGrid);
+  ASLAM_DISALLOW_EVIL_CONSTRUCTORS(WeightedOccupancyGrid);
 
  private:
   struct GridCoordinates {
@@ -58,10 +62,10 @@ class WeightedOccupancyGrid {
   /// \name Constructors/destructors and operators
   /// @{
  public:
-  WeightedOccupancyGrid(CoordinatesType max_input_coordinate_rows,
-                        CoordinatesType max_input_coordinate_cols,
-                        CoordinatesType cell_size_rows,
-                        CoordinatesType cell_size_cols);
+  WeightedOccupancyGrid(
+      CoordinatesType max_input_coordinate_rows,
+      CoordinatesType max_input_coordinate_cols, CoordinatesType cell_size_rows,
+      CoordinatesType cell_size_cols);
   void reset();
 
  private:
@@ -75,13 +79,17 @@ class WeightedOccupancyGrid {
   /// Unconditionally add a point to the grid.
   void addPointUnconditional(const PointType& point);
 
-  /// Add a point to the grid and replace other points in the same cell if the cell is full
+  /// Add a point to the grid and replace other points in the same cell if the
+  /// cell is full
   /// and this point has a higher score.
-  bool addPointOrReplaceWeakestIfCellFull(const PointType& point, size_t max_points_per_cell);
+  bool addPointOrReplaceWeakestIfCellFull(
+      const PointType& point, size_t max_points_per_cell);
 
-  /// Add point to the grid and replace other points if they are closer than the specified min.
+  /// Add point to the grid and replace other points if they are closer than the
+  /// specified min.
   /// distance and this point has a higher score.
-  void addPointOrReplaceWeakestNearestPoints(const PointType& point, CoordinatesType min_distance);
+  void addPointOrReplaceWeakestNearestPoints(
+      const PointType& point, CoordinatesType min_distance);
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -92,18 +100,20 @@ class WeightedOccupancyGrid {
   size_t getAllPointsInGrid(PointList* points) const;
 
   inline PointList& getGridCell(CoordinatesType u_rows, CoordinatesType v_cols);
-  inline const PointList& getGridCell(CoordinatesType u_rows, CoordinatesType v_cols) const;
+  inline const PointList& getGridCell(
+      CoordinatesType u_rows, CoordinatesType v_cols) const;
 
-  inline GridCoordinates getFullestGridCell() const;
-
-  /// Return a mask that covers a square of specified size around all points and masked cells
+  /// Return a mask that covers a square of specified size around all points and
+  /// masked cells
   /// if selected.
-  cv::Mat getOccupancyMask(CoordinatesType radius_mask_around_points,
-                           size_t max_points_per_cell) const;
+  cv::Mat getOccupancyMask(
+      CoordinatesType radius_mask_around_points,
+      size_t max_points_per_cell) const;
 
  private:
   inline PointList& getGridCell(const GridCoordinates& grid_coordinates);
-  inline const PointList& getGridCell(const GridCoordinates& grid_coordinates) const;
+  inline const PointList& getGridCell(
+      const GridCoordinates& grid_coordinates) const;
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -113,22 +123,19 @@ class WeightedOccupancyGrid {
   /// Methods to filter/modify the points in the grid.
   void setConstantWeightForAllPointsInGrid(WeightType weight);
 
-  /// Remove points from cells that contain more points than specified. Points with the lowest
+  /// Remove points from cells that contain more points than specified. Points
+  /// with the lowest
   /// score will be removed first.
   size_t removeWeightedPointsFromOverfullCells(size_t max_points_per_cell);
-
-  size_t removeWeightedPointsFromOverfullCell(
-      const GridCoordinates& grid_coords, size_t max_points_per_cell);
-
-  /// Remove the weakest point from the fullest cells until the total number of
-  /// points in the grid is met.
-  void removePointsFromFullestCellsUntilSize(size_t max_total_num_points);
   /// @}
 
  private:
-  GridCoordinates inputToGridCoordinates(CoordinatesType u_rows, CoordinatesType v_cols);
-  inline bool isValidInputCoordinate(CoordinatesType u_rows, CoordinatesType v_cols) const;
-  inline bool isValidGridCoordinates(const GridCoordinates& grid_coordinates) const;
+  GridCoordinates inputToGridCoordinates(
+      CoordinatesType u_rows, CoordinatesType v_cols);
+  inline bool isValidInputCoordinate(
+      CoordinatesType u_rows, CoordinatesType v_cols) const;
+  inline bool isValidGridCoordinates(
+      const GridCoordinates& grid_coordinates) const;
 
   /// Grid size definitions.
   const CoordinatesType max_input_coordinate_rows_;
@@ -140,11 +147,12 @@ class WeightedOccupancyGrid {
   size_t num_grid_cols_;
   size_t current_num_points_;
 
-  /// The grid is indexed by i_rows and j_cols where as the original coordinates are u and v.
+  /// The grid is indexed by i_rows and j_cols where as the original coordinates
+  /// are u and v.
   std::vector<std::vector<PointList>> grid_;
 };
 
 }  // namespace common
 }  // namespace aslam
 #include "./occupancy-grid-inl.h"
-#endif  // ASLAM_FEATURE_TRACKER_OCCUPANCY_GRID_H_
+#endif  // ASLAM_COMMON_OCCUPANCY_GRID_H_

@@ -1,3 +1,6 @@
+#ifndef KAZE_KAZECONFIG_H_
+#define KAZE_KAZECONFIG_H_
+
 /**
  * @file KAZEConfig.h
  * @brief KAZE configuration file
@@ -20,33 +23,35 @@
 /* ************************************************************************* */
 /// KAZE Descriptor Type
 enum DESCRIPTOR_TYPE {
-  SURF_UPRIGHT = 0,            ///< Not rotation invariant descriptor, SURF grid, length 64
-  SURF = 1,                    ///< Rotation invariant descriptor, SURF grid, length 64
-  SURF_EXTENDED_UPRIGHT = 2,   ///< Not rotation invariant descriptor, SURF grid, length 128
-  SURF_EXTENDED = 3,           ///< Rotation invariant descriptor, SURF grid, length 128
-  MSURF_UPRIGHT = 4,           ///< Not rotation invariant descriptor, M-SURF grid, length 64
-  MSURF = 5,                   ///< Rotation invariant descriptor, M-SURF grid, length 64
-  MSURF_EXTENDED_UPRIGHT = 6,  ///< Not rotation invariant descriptor, M-SURF grid, length 128
-  MSURF_EXTENDED = 7,          ///< Rotation invariant descriptor, M-SURF grid, length 128
-  GSURF_UPRIGHT = 8,           ///< Not rotation invariant descriptor, G-SURF grid, length 64
-  GSURF = 9,                   ///< Rotation invariant descriptor, G-SURF grid, length 64
-  GSURF_EXTENDED_UPRIGHT = 10, ///< Not rotation invariant descriptor, G-SURF grid, length 128
-  GSURF_EXTENDED = 11          ///< Rotation invariant descriptor, G-SURF grid, length 128
+  SURF_UPRIGHT =
+      0,     ///< Not rotation invariant descriptor, SURF grid, length 64
+  SURF = 1,  ///< Rotation invariant descriptor, SURF grid, length 64
+  SURF_EXTENDED_UPRIGHT =
+      2,  ///< Not rotation invariant descriptor, SURF grid, length 128
+  SURF_EXTENDED = 3,  ///< Rotation invariant descriptor, SURF grid, length 128
+  MSURF_UPRIGHT =
+      4,      ///< Not rotation invariant descriptor, M-SURF grid, length 64
+  MSURF = 5,  ///< Rotation invariant descriptor, M-SURF grid, length 64
+  MSURF_EXTENDED_UPRIGHT =
+      6,  ///< Not rotation invariant descriptor, M-SURF grid, length 128
+  MSURF_EXTENDED =
+      7,  ///< Rotation invariant descriptor, M-SURF grid, length 128
+  GSURF_UPRIGHT =
+      8,      ///< Not rotation invariant descriptor, G-SURF grid, length 64
+  GSURF = 9,  ///< Rotation invariant descriptor, G-SURF grid, length 64
+  GSURF_EXTENDED_UPRIGHT =
+      10,  ///< Not rotation invariant descriptor, G-SURF grid, length 128
+  GSURF_EXTENDED =
+      11  ///< Rotation invariant descriptor, G-SURF grid, length 128
 };
 
 /* ************************************************************************* */
 /// KAZE Diffusivities
-enum DIFFUSIVITY_TYPE {
-  PM_G1 = 0,
-  PM_G2 = 1,
-  WEICKERT = 2,
-  CHARBONNIER = 3
-};
+enum DIFFUSIVITY_TYPE { PM_G1 = 0, PM_G2 = 1, WEICKERT = 2, CHARBONNIER = 3 };
 
 /* ************************************************************************* */
 /// KAZE configuration options struct
 struct KAZEOptions {
-
   KAZEOptions() {
     soffset = 1.60;
     omax = 4;
@@ -71,13 +76,13 @@ struct KAZEOptions {
   int img_width;
   int img_height;
 
-  DIFFUSIVITY_TYPE diffusivity;   ///< Diffusivity type
-  float kcontrast;                ///< The contrast factor parameter
-  float kcontrast_percentile;     ///< Percentile level for the contrast factor
-  size_t kcontrast_nbins;         ///< Number of bins for the contrast factor histogram
+  DIFFUSIVITY_TYPE diffusivity;  ///< Diffusivity type
+  float kcontrast;               ///< The contrast factor parameter
+  float kcontrast_percentile;    ///< Percentile level for the contrast factor
+  size_t kcontrast_nbins;  ///< Number of bins for the contrast factor histogram
   float sderivatives;
-  float dthreshold;               ///< Detector response threshold to accept point
-  float min_dthreshold;           ///< Minimum detector threshold to accept a point
+  float dthreshold;      ///< Detector response threshold to accept point
+  float min_dthreshold;  ///< Minimum detector threshold to accept a point
 
   bool use_fed;
 
@@ -91,15 +96,17 @@ struct KAZEOptions {
 /* ************************************************************************* */
 /// KAZE nonlinear diffusion filtering evolution
 struct TEvolution {
-  cv::Mat Lx, Ly;           ///< First order spatial derivatives
-  cv::Mat Lxx, Lxy, Lyy;	///< Second order spatial derivatives
-  cv::Mat Lt;               ///< Evolution image
-  cv::Mat Lsmooth;          ///< Smoothed image
-  cv::Mat Ldet;             ///< Detector response
-  float etime;              ///< Evolution time
-  float esigma;             ///< Evolution sigma. For linear diffusion t = sigma^2 / 2
-  int octave;               ///< Image octave
-  int sublevel;             ///< Image sublevel in each octave
-  int sigma_size;           ///< Integer esigma. For computing the feature detector responses
+  cv::Mat Lx, Ly;         ///< First order spatial derivatives
+  cv::Mat Lxx, Lxy, Lyy;  ///< Second order spatial derivatives
+  cv::Mat Lt;             ///< Evolution image
+  cv::Mat Lsmooth;        ///< Smoothed image
+  cv::Mat Ldet;           ///< Detector response
+  float etime;            ///< Evolution time
+  float esigma;    ///< Evolution sigma. For linear diffusion t = sigma^2 / 2
+  int octave;      ///< Image octave
+  int sublevel;    ///< Image sublevel in each octave
+  int sigma_size;  ///< Integer esigma. For computing the feature detector
+                   ///< responses
 };
 
+#endif  // KAZE_KAZECONFIG_H_

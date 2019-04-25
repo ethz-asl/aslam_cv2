@@ -1,7 +1,7 @@
 #include <vector>
 
-#include <aslam/common/entrypoint.h>
 #include <Eigen/Core>
+#include <aslam/common/entrypoint.h>
 
 #include "aslam/common/descriptor-utils.h"
 
@@ -62,8 +62,7 @@ TEST(ViwlsGraph, DescriptorMedianAbsDeviationTest) {
   descriptors(0, 1) = 3;
   descriptors(0, 2) = 1;
 
-  EXPECT_EQ(descriptorMeanAbsoluteDeviation(descriptors),
-            2.0 / 3.0);
+  EXPECT_EQ(descriptorMeanAbsoluteDeviation(descriptors), 2.0 / 3.0);
 }
 
 TEST(ViwlsGraph, DescriptorMeanTestThreeDescriptors) {
@@ -95,21 +94,18 @@ TEST(ViwlsGraph, DescriptorMeanStdDeviationTest) {
   descriptors(0, 1) = 3;
   descriptors(0, 2) = 1;
 
-  EXPECT_DOUBLE_EQ(descriptorMeanStandardDeviation(descriptors),
-                   2.0 / 3.0);
+  EXPECT_DOUBLE_EQ(descriptorMeanStandardDeviation(descriptors), 2.0 / 3.0);
 }
 
 TEST(ViwlsGraph, DescriptorMeanStdDeviationTestZeroDescriptors) {
   DescriptorsType descriptors(48, 1);
-  EXPECT_DOUBLE_EQ(descriptorMeanStandardDeviation(descriptors),
-                   0.0);
+  EXPECT_DOUBLE_EQ(descriptorMeanStandardDeviation(descriptors), 0.0);
 }
 
 TEST(ViwlsGraph, DescriptorMeanStdDeviationTestOneDescriptor) {
   DescriptorsType descriptors(48, 1);
   descriptors.setRandom();
-  EXPECT_DOUBLE_EQ(descriptorMeanStandardDeviation(descriptors),
-                   0.0);
+  EXPECT_DOUBLE_EQ(descriptorMeanStandardDeviation(descriptors), 0.0);
 }
 
 TEST(ViwlsGraph, DescriptorMeanStdDeviationTestSameDescriptors) {
@@ -120,8 +116,7 @@ TEST(ViwlsGraph, DescriptorMeanStdDeviationTestSameDescriptors) {
   descriptors(0, 1) = 56;
   descriptors(0, 2) = 56;
 
-  EXPECT_DOUBLE_EQ(descriptorMeanStandardDeviation(descriptors),
-                   0.0);
+  EXPECT_DOUBLE_EQ(descriptorMeanStandardDeviation(descriptors), 0.0);
 }
 
 TEST(ViwlsGraph, DescriptorClosestToMedianTestZeroDescriptors) {
@@ -131,7 +126,8 @@ TEST(ViwlsGraph, DescriptorClosestToMedianTestZeroDescriptors) {
   size_t closest_to_median_descriptor_index = 0u;
   EXPECT_DEATH(
       getIndexOfDescriptorClosestToMedian(
-          descriptors, &closest_to_median_descriptor_index), "");
+          descriptors, &closest_to_median_descriptor_index),
+      "");
 }
 
 TEST(ViwlsGraph, DescriptorClosestToMedianTestOneDescriptors) {
@@ -146,7 +142,6 @@ TEST(ViwlsGraph, DescriptorClosestToMedianTestOneDescriptors) {
 
   EXPECT_EQ(0u, closest_to_median_descriptor_index);
 }
-
 
 TEST(ViwlsGraph, DescriptorClosestToMedianTestThreeDescriptors) {
   DescriptorsType descriptors(48, 3);

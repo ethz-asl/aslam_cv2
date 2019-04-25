@@ -8,31 +8,28 @@
 
 namespace aslam {
 
-void getCvKeyPointsFromVisualFrame(const VisualFrame& frame,
-                                   std::vector<cv::KeyPoint>* cv_key_points){
+void getCvKeyPointsFromVisualFrame(
+    const VisualFrame& frame, std::vector<cv::KeyPoint>* cv_key_points) {
   CHECK_NOTNULL(cv_key_points)->clear();
   cv_key_points->reserve(frame.getNumKeypointMeasurements());
-  for(unsigned int i = 0; i < frame.getNumKeypointMeasurements(); ++i){
+  for (unsigned int i = 0; i < frame.getNumKeypointMeasurements(); ++i) {
     Eigen::Matrix2Xd key_point = frame.getKeypointMeasurement(i);
     cv_key_points->emplace_back(
-        cv::KeyPoint(key_point(0,0),
-                     key_point(1,0),
-                     frame.getKeypointScale(i),
-                     frame.getKeypointOrientation(i),
-                     frame.getKeypointScore(i), 0, -1));
+        cv::KeyPoint(
+            key_point(0, 0), key_point(1, 0), frame.getKeypointScale(i),
+            frame.getKeypointOrientation(i), frame.getKeypointScore(i), 0, -1));
   }
 }
 
-void drawVisualFrameKeyPointsAndMatches(const VisualFrame& frame_A,
-                                        const VisualFrame& frame_B,
-                                        aslam::FeatureVisualizationType type,
-                                        const FrameToFrameMatches& matches_A_B,
-                                        cv::Mat* image_w_feature_matches) {
+void drawVisualFrameKeyPointsAndMatches(
+    const VisualFrame& frame_A, const VisualFrame& frame_B,
+    aslam::FeatureVisualizationType type,
+    const FrameToFrameMatches& matches_A_B, cv::Mat* image_w_feature_matches) {
   CHECK_NOTNULL(image_w_feature_matches);
 
   cv::Mat image_A = frame_A.getRawImage();
   cv::Mat image_B = frame_B.getRawImage();
-  if(image_A.empty() || image_B.empty()){
+  if (image_A.empty() || image_B.empty()) {
     LOG(FATAL) << "Cannot draw key points. No images found.";
   }
 
@@ -43,71 +40,74 @@ void drawVisualFrameKeyPointsAndMatches(const VisualFrame& frame_A,
 
   // Extract matches
   aslam::OpenCvMatches cv_matches_A_B;
-  if(!matches_A_B.empty()) {
+  if (!matches_A_B.empty()) {
     cv_matches_A_B.reserve(matches_A_B.size());
-    for(const FrameToFrameMatch& match: matches_A_B) {
-      cv_matches_A_B.emplace_back(cv::DMatch(
-          static_cast<int>(match.getKeypointIndexAppleFrame()),
-          static_cast<int>(match.getKeypointIndexBananaFrame()), 0.0));
+    for (const FrameToFrameMatch& match : matches_A_B) {
+      cv_matches_A_B.emplace_back(
+          cv::DMatch(
+              static_cast<int>(match.getKeypointIndexAppleFrame()),
+              static_cast<int>(match.getKeypointIndexBananaFrame()), 0.0));
     }
   }
 
-  drawKeyPointsAndMatches(image_A, cv_key_points_A, image_B, cv_key_points_B,
-                          cv_matches_A_B, type, image_w_feature_matches);
+  drawKeyPointsAndMatches(
+      image_A, cv_key_points_A, image_B, cv_key_points_B, cv_matches_A_B, type,
+      image_w_feature_matches);
 }
 
-void drawAslamKeyPointsAndMatches(const cv::Mat& image_A,
-                                  const Eigen::Matrix2Xd& key_points_A,
-                                  const cv::Mat& image_B,
-                                  const Eigen::Matrix2Xd& key_points_B,
-                                  FeatureVisualizationType type,
-                                  const FrameToFrameMatches& matches_A_B,
-                                  cv::Mat* image_w_feature_matches) {
+void drawAslamKeyPointsAndMatches(
+    const cv::Mat& image_A, const Eigen::Matrix2Xd& key_points_A,
+    const cv::Mat& image_B, const Eigen::Matrix2Xd& key_points_B,
+    FeatureVisualizationType type, const FrameToFrameMatches& matches_A_B,
+    cv::Mat* image_w_feature_matches) {
   CHECK_NOTNULL(image_w_feature_matches);
 
   // Extract cv::KeyPoints
   std::vector<cv::KeyPoint> cv_key_points_A;
   cv_key_points_A.reserve(key_points_A.size());
-  for(int i = 0; i < key_points_A.cols(); ++i) {
-    cv::KeyPoint key_point_A(key_points_A(0,i), key_points_A(1,i), 0.0f, -1.0, 0.0, 0, -1);
+  for (int i = 0; i < key_points_A.cols(); ++i) {
+    cv::KeyPoint key_point_A(
+        key_points_A(0, i), key_points_A(1, i), 0.0f, -1.0, 0.0, 0, -1);
     cv_key_points_A.emplace_back(key_point_A);
   }
   std::vector<cv::KeyPoint> cv_key_points_B;
   cv_key_points_B.reserve(key_points_B.size());
-  for(int i = 0; i < key_points_B.cols(); ++i) {
-    cv::KeyPoint key_point_B(key_points_B(0,i), key_points_B(1,i), 0.0f, -1.0, 0.0, 0, -1);
+  for (int i = 0; i < key_points_B.cols(); ++i) {
+    cv::KeyPoint key_point_B(
+        key_points_B(0, i), key_points_B(1, i), 0.0f, -1.0, 0.0, 0, -1);
     cv_key_points_B.emplace_back(key_point_B);
   }
 
   // Extract matches
   aslam::OpenCvMatches cv_matches_A_B;
-  if(!matches_A_B.empty()) {
+  if (!matches_A_B.empty()) {
     cv_matches_A_B.reserve(matches_A_B.size());
-    for(const FrameToFrameMatch& match: matches_A_B) {
-      cv_matches_A_B.emplace_back(cv::DMatch(
-          static_cast<int>(match.getKeypointIndexAppleFrame()),
-          static_cast<int>(match.getKeypointIndexBananaFrame()), 0.0));
+    for (const FrameToFrameMatch& match : matches_A_B) {
+      cv_matches_A_B.emplace_back(
+          cv::DMatch(
+              static_cast<int>(match.getKeypointIndexAppleFrame()),
+              static_cast<int>(match.getKeypointIndexBananaFrame()), 0.0));
     }
   }
 
-  drawKeyPointsAndMatches(image_A, cv_key_points_A, image_B, cv_key_points_B,
-                          cv_matches_A_B, type, image_w_feature_matches);
+  drawKeyPointsAndMatches(
+      image_A, cv_key_points_A, image_B, cv_key_points_B, cv_matches_A_B, type,
+      image_w_feature_matches);
 }
 
-void drawKeyPointsAndMatches(const cv::Mat& image_A,
-                             const std::vector<cv::KeyPoint>& key_points_A,
-                             const cv::Mat& image_B,
-                             const std::vector<cv::KeyPoint>& key_points_B,
-                             const aslam::OpenCvMatches& matches_A_B,
-                             FeatureVisualizationType type,
-                             cv::Mat* image_w_feature_matches) {
+void drawKeyPointsAndMatches(
+    const cv::Mat& image_A, const std::vector<cv::KeyPoint>& key_points_A,
+    const cv::Mat& image_B, const std::vector<cv::KeyPoint>& key_points_B,
+    const aslam::OpenCvMatches& matches_A_B, FeatureVisualizationType type,
+    cv::Mat* image_w_feature_matches) {
   CHECK_NOTNULL(image_w_feature_matches);
   CHECK(!image_A.empty());
   CHECK(!image_B.empty());
   CHECK_EQ(image_A.type(), CV_8UC1) << "Please provide grayscale images!";
   CHECK_EQ(image_B.type(), CV_8UC1) << "Please provide grayscale images!";
-  CHECK(!(type == FeatureVisualizationType::kInSitu) ||
-        image_A.size() == image_B.size())
+  CHECK(
+      !(type == FeatureVisualizationType::kInSitu) ||
+      image_A.size() == image_B.size())
       << "The in situ mode is only available for images of the same size!";
 
   const cv::Scalar kGreen = cv::Scalar(0, 255, 0);
@@ -146,10 +146,12 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
   cvtColor(image_B, sub_image_B, CV_GRAY2BGR);
 
   // Draw keypoints.
-  cv::drawKeypoints(sub_image_A, key_points_A, sub_image_A, kRed,
-                    cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-  cv::drawKeypoints(sub_image_B, key_points_B, sub_image_B, kRed,
-                    cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+  cv::drawKeypoints(
+      sub_image_A, key_points_A, sub_image_A, kRed,
+      cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+  cv::drawKeypoints(
+      sub_image_B, key_points_B, sub_image_B, kRed,
+      cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
   // Draw matches.
   std::vector<cv::KeyPoint> matched_keypoint_A, matched_keypoint_B;
@@ -184,9 +186,11 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
                    << static_cast<int>(type);
     }
   }
-  cv::drawKeypoints(sub_image_A, matched_keypoint_A, sub_image_A, kGreen,
-                    cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-  cv::drawKeypoints(sub_image_B, matched_keypoint_B, sub_image_B, kGreen,
-                    cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+  cv::drawKeypoints(
+      sub_image_A, matched_keypoint_A, sub_image_A, kGreen,
+      cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+  cv::drawKeypoints(
+      sub_image_B, matched_keypoint_B, sub_image_B, kGreen,
+      cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 }
 }  // namespace aslam

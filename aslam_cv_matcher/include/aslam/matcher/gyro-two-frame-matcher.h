@@ -1,13 +1,14 @@
-#ifndef MATCHER_GYRO_TWO_FRAME_MATCHER_H_
-#define MATCHER_GYRO_TWO_FRAME_MATCHER_H_
+#ifndef ASLAM_MATCHER_GYRO_TWO_FRAME_MATCHER_H_
+#define ASLAM_MATCHER_GYRO_TWO_FRAME_MATCHER_H_
 
 #include <algorithm>
+#include <unordered_map>
 #include <vector>
 
-#include <aslam/common/pose-types.h>
-#include <aslam/common/feature-descriptor-ref.h>
-#include <aslam/frames/visual-frame.h>
 #include <Eigen/Core>
+#include <aslam/common/feature-descriptor-ref.h>
+#include <aslam/common/pose-types.h>
+#include <aslam/frames/visual-frame.h>
 #include <glog/logging.h>
 
 #include "aslam/matcher/match.h"
@@ -18,16 +19,16 @@ namespace aslam {
 /// \brief Frame to frame matcher using an interframe rotation matrix
 ///  to predict the feature positions to constrain the search window.
 ///
-/// The initial matcher attempts to match every keypoint of frame k to a keypoint
-/// in frame (k+1). This is done by predicting the keypoint location by
+/// The initial matcher attempts to match every keypoint of frame k to a
+/// keypoint in frame (k+1). This is done by predicting the keypoint location by
 /// using an interframe rotation matrix. Then a rectangular search window around
 /// that location is searched for the best match greater than a threshold.
-/// If the initial search was not successful, the search window is increased once.
-/// The initial matcher is allowed to discard a previous match if the new one
-/// has a higher score. The discarded matches are called inferior matches and
-/// a second matcher tries to match them. The second matcher only tries
-/// to match a keypoint of frame k with the queried keypoints of frame (k+1)
-/// of the initial matcher. Therefore, it does not compute distances between
+/// If the initial search was not successful, the search window is increased
+/// once. The initial matcher is allowed to discard a previous match if the new
+/// one has a higher score. The discarded matches are called inferior matches
+/// and a second matcher tries to match them. The second matcher only tries to
+/// match a keypoint of frame k with the queried keypoints of frame (k+1) of the
+/// initial matcher. Therefore, it does not compute distances between
 /// descriptors anymore because the initial matcher has already done that.
 /// The second matcher is executed several times because it is also allowed
 /// to discard inferior matches of the current iteration.
@@ -38,26 +39,33 @@ class GyroTwoFrameMatcher {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /// \brief Constructs the GyroTwoFrameMatcher.
-  /// @param[in]  q_Ckp1_Ck     Rotation matrix that describes the camera rotation between the
+  /// @param[in]  q_Ckp1_Ck     Rotation matrix that describes the camera
+  /// rotation between the
   ///                           two frames that are matched.
-  /// @param[in]  frame_kp1     The current VisualFrame that needs to contain the keypoints and
-  ///                           descriptor channels. Usually this is an output of the VisualPipeline.
-  /// @param[in]  frame_k       The previous VisualFrame that needs to contain the keypoints and
-  ///                           descriptor channels. Usually this is an output of the VisualPipeline.
+  /// @param[in]  frame_kp1     The current VisualFrame that needs to contain
+  /// the keypoints and
+  ///                           descriptor channels. Usually this is an output
+  ///                           of the VisualPipeline.
+  /// @param[in]  frame_k       The previous VisualFrame that needs to contain
+  /// the keypoints and
+  ///                           descriptor channels. Usually this is an output
+  ///                           of the VisualPipeline.
   /// @param[in]  image_height  The image height of the given camera.
-  /// @param[in]  predicted_keypoint_positions_kp1  Predicted positions of keypoints in next frame.
+  /// @param[in]  predicted_keypoint_positions_kp1  Predicted positions of
+  /// keypoints in next frame.
   /// @param[in]  prediction_success  Was the prediction successful?
-  /// @param[out] matches_kp1_k  Vector of structs containing the found matches. Indices
-  ///                            correspond to the ordering of the keypoint/descriptor vector in the
-  ///                            respective frame channels.
-  GyroTwoFrameMatcher(const Quaternion& q_Ckp1_Ck,
-                      const VisualFrame& frame_kp1,
-                      const VisualFrame& frame_k,
-                      const uint32_t image_height,
-                      const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
-                      const std::vector<unsigned char>& prediction_success,
-                      FrameToFrameMatchesWithScore* matches_kp1_k);
-  virtual ~GyroTwoFrameMatcher() {};
+  /// @param[out] matches_kp1_k  Vector of structs containing the found matches.
+  /// Indices
+  ///                            correspond to the ordering of the
+  ///                            keypoint/descriptor vector in the respective
+  ///                            frame channels.
+  GyroTwoFrameMatcher(
+      const Quaternion& q_Ckp1_Ck, const VisualFrame& frame_kp1,
+      const VisualFrame& frame_k, const uint32_t image_height,
+      const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
+      const std::vector<unsigned char>& prediction_success,
+      FrameToFrameMatchesWithScore* matches_kp1_k);
+  virtual ~GyroTwoFrameMatcher() {}
 
   void match();
 
@@ -65,19 +73,21 @@ class GyroTwoFrameMatcher {
   struct KeypointData {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     KeypointData(const Eigen::Vector2d& measurement, const int index)
-      : measurement(measurement), channel_index(index) {}
+        : measurement(measurement), channel_index(index) {}
     Eigen::Vector2d measurement;
     int channel_index;
   };
 
-  typedef typename Aligned<std::vector, KeypointData>::const_iterator KeyPointIterator;
+  typedef typename Aligned<std::vector, KeypointData>::const_iterator
+      KeyPointIterator;
   typedef typename FrameToFrameMatchesWithScore::iterator MatchesIterator;
 
   struct MatchData {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     MatchData() = default;
     void addCandidate(
-        const KeyPointIterator keypoint_iterator_kp1, const double matching_score) {
+        const KeyPointIterator keypoint_iterator_kp1,
+        const double matching_score) {
       CHECK_GT(matching_score, 0.0);
       CHECK_LE(matching_score, 1.0);
       keypoint_match_candidates_kp1.push_back(keypoint_iterator_kp1);
@@ -110,20 +120,23 @@ class GyroTwoFrameMatcher {
   /// Second matcher that is only quering keypoints of frame (k+1) that the
   /// initial matcher has queried before. Should be executed several times.
   /// Returns true if matches are still found.
-  bool matchInferiorMatches(std::vector<bool>* is_inferior_keypoint_kp1_matched);
+  bool matchInferiorMatches(
+      std::vector<bool>* is_inferior_keypoint_kp1_matched);
 
   int clamp(const int lower, const int upper, const int in) const;
 
   // The larger the matching score (which is smaller or equal to 1),
   // the higher the probability that a true match occurred.
-  double computeMatchingScore(const int num_matching_bits,
-                              const unsigned int descriptor_size_bits) const;
+  double computeMatchingScore(
+      const int num_matching_bits,
+      const unsigned int descriptor_size_bits) const;
 
   // Compute ratio test. Test is inspired by David Lowe's "ratio test"
   // for matching descriptors. Returns true if test is passed.
-  bool ratioTest(const unsigned int descriptor_size_bits,
-                 const unsigned int distance_shortest,
-                 const unsigned int distance_second_shortest) const;
+  bool ratioTest(
+      const unsigned int descriptor_size_bits,
+      const unsigned int distance_shortest,
+      const unsigned int distance_second_shortest) const;
 
   // The current frame.
   const VisualFrame& frame_kp1_;
@@ -165,7 +178,8 @@ class GyroTwoFrameMatcher {
   // the corresponding match iterator.
   std::unordered_map<int, MatchesIterator> kp1_idx_to_matches_iterator_map_;
   // Keep track of processed keypoints s.t. we don't process them again in the
-  // large window. Set every element to false for each keypoint (of frame k) iteration!
+  // large window. Set every element to false for each keypoint (of frame k)
+  // iteration!
   std::vector<bool> iteration_processed_keypoints_kp1_;
   // The queried keypoints in frame (k+1) and the corresponding
   // matching score are stored for each attempted match.
@@ -195,21 +209,26 @@ class GyroTwoFrameMatcher {
 
 void GyroTwoFrameMatcher::getKeypointIteratorsInWindow(
     const Eigen::Vector2d& predicted_keypoint_position,
-    const int window_half_side_length_px,
-    KeyPointIterator* it_keypoints_begin,
+    const int window_half_side_length_px, KeyPointIterator* it_keypoints_begin,
     KeyPointIterator* it_keypoints_end) const {
   CHECK_NOTNULL(it_keypoints_begin);
   CHECK_NOTNULL(it_keypoints_end);
-CHECK_GT(window_half_side_length_px, 0);
+  CHECK_GT(window_half_side_length_px, 0);
 
   // Compute search area for LUT iterators row-wise.
-  int LUT_index_top = clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position(1) + 0.5 - window_half_side_length_px));
-  int LUT_index_bottom = clamp(0, kImageHeight - 1, static_cast<int>(
-      predicted_keypoint_position(1) + 0.5 + window_half_side_length_px));
+  int LUT_index_top = clamp(
+      0, kImageHeight - 1,
+      static_cast<int>(
+          predicted_keypoint_position(1) + 0.5 - window_half_side_length_px));
+  int LUT_index_bottom = clamp(
+      0, kImageHeight - 1,
+      static_cast<int>(
+          predicted_keypoint_position(1) + 0.5 + window_half_side_length_px));
 
-  *it_keypoints_begin = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_top];
-  *it_keypoints_end = keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_bottom];
+  *it_keypoints_begin =
+      keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_top];
+  *it_keypoints_end =
+      keypoints_kp1_sorted_by_y_.begin() + corner_row_LUT_[LUT_index_bottom];
 
   CHECK_LE(LUT_index_top, LUT_index_bottom);
   CHECK_GE(LUT_index_bottom, 0);
@@ -224,8 +243,9 @@ inline int GyroTwoFrameMatcher::clamp(
 }
 
 inline double GyroTwoFrameMatcher::computeMatchingScore(
-    const int num_matching_bits, const unsigned int descriptor_size_bits) const {
-  return static_cast<double>(num_matching_bits)/descriptor_size_bits;
+    const int num_matching_bits,
+    const unsigned int descriptor_size_bits) const {
+  return static_cast<double>(num_matching_bits) / descriptor_size_bits;
 }
 
 inline bool GyroTwoFrameMatcher::ratioTest(
@@ -242,11 +262,11 @@ inline bool GyroTwoFrameMatcher::ratioTest(
     // Let the ratio test be successful.
     return true;
   } else {
-    return distance_closest/static_cast<float>(distance_second_closest) <
-        kLoweRatio;
+    return distance_closest / static_cast<float>(distance_second_closest) <
+           kLoweRatio;
   }
 }
 
-} // namespace aslam
+}  // namespace aslam
 
-#endif // MATCHER_GYRO_TWO_FRAME_MATCHER_H_
+#endif  // ASLAM_MATCHER_GYRO_TWO_FRAME_MATCHER_H_

@@ -8,9 +8,11 @@
 #include <stdio.h>
 #include <string>
 
+#include "aslam/common/time.h"
+
 namespace timing {
 
-const double kNumSecondsPerNanosecond = 1.e-9;
+const double kNumNanosecondsPerNanosecond = 1.e-9;
 
 Timing& Timing::Instance() {
   static Timing t;
@@ -22,7 +24,7 @@ Timing::Timing() : max_tag_length_(0u) {}
 Timing::~Timing() {}
 
 // Static functions to query the timers:
-size_t Timing::GetHandle(const std::string& tag) {
+size_t Timing::getHandle(const std::string& tag) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
   // Search for an existing tag.
   map_t::iterator tag_iterator = Instance().tag_map_.find(tag);
@@ -30,7 +32,7 @@ size_t Timing::GetHandle(const std::string& tag) {
     // If it is not there, create a tag.
     size_t handle = Instance().timers_.size();
     Instance().tag_map_[tag] = handle;
-    Instance().timers_.push_back(statistics::StatisticsMapValue());
+    Instance().timers_.push_back(statistics::StatisticsMapValue<int64_t>());
     // Track the maximum tag length to help printing a table of timing values
     // later.
     Instance().max_tag_length_ =
@@ -41,7 +43,7 @@ size_t Timing::GetHandle(const std::string& tag) {
   }
 }
 
-std::string Timing::GetTag(size_t handle) {
+std::string Timing::getTag(size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
   std::string tag;
 
@@ -56,120 +58,116 @@ std::string Timing::GetTag(size_t handle) {
 
 // Class functions used for timing.
 TimerImpl::TimerImpl(const std::string& tag, bool construct_stopped)
-    : is_timing_(false), handle_(Timing::GetHandle(tag)), tag_(tag) {
+    : is_timing_(false), handle_(Timing::getHandle(tag)), tag_(tag) {
   if (!construct_stopped) {
-    Start();
+    start();
   }
 }
 
 TimerImpl::~TimerImpl() {
-  if (IsTiming()) {
-    Stop();
+  if (is_timing_) {
+    stop();
   }
 }
 
-void TimerImpl::Start() {
+void TimerImpl::start() {
   is_timing_ = true;
   time_ = std::chrono::system_clock::now();
 }
 
-double TimerImpl::Stop() {
+int64_t TimerImpl::stop() {
   if (is_timing_) {
     std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
-    double dt =
-        static_cast<double>(
-            std::chrono::duration_cast<std::chrono::nanoseconds>(now - time_)
-                .count()) *
-        kNumSecondsPerNanosecond;
-    Timing::Instance().AddTime(handle_, dt);
+    const int64_t dt_ns =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(now - time_)
+            .count();
+    Timing::Instance().addTime(handle_, dt_ns);
     is_timing_ = false;
-    return dt;
+    return dt_ns;
   }
   return 0.0;
 }
 
-void TimerImpl::Discard() {
+void TimerImpl::discard() {
   is_timing_ = false;
 }
 
-bool TimerImpl::IsTiming() const {
-  return is_timing_;
-}
-
-size_t TimerImpl::GetHandle() const {
+size_t TimerImpl::getHandle() const {
   return handle_;
 }
 
-void Timing::AddTime(size_t handle, double seconds) {
+void Timing::addTime(const size_t handle, const int64_t time_nanoseconds) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  timers_[handle].AddValue(seconds);
+  timers_[handle].addValue(time_nanoseconds);
 }
 
-double Timing::GetTotalSeconds(size_t handle) {
+int64_t Timing::getTotalNumNanoseconds(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().timers_[handle].Sum();
+  return Instance().timers_[handle].getSum();
 }
 
-double Timing::GetTotalSeconds(const std::string& tag) {
-  return GetTotalSeconds(GetHandle(tag));
+int64_t Timing::getTotalNumNanoseconds(const std::string& tag) {
+  return getTotalNumNanoseconds(getHandle(tag));
 }
 
-double Timing::GetMeanSeconds(size_t handle) {
+double Timing::getMeanNanoseconds(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().timers_[handle].Mean();
+  return Instance().timers_[handle].getMean();
 }
 
-double Timing::GetMeanSeconds(const std::string& tag) {
-  return GetMeanSeconds(GetHandle(tag));
+double Timing::getMeanNanoseconds(const std::string& tag) {
+  return getMeanNanoseconds(getHandle(tag));
 }
 
-size_t Timing::GetNumSamples(size_t handle) {
+size_t Timing::getNumSamples(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().timers_[handle].TotalSamples();
+  return Instance().timers_[handle].getTotalNumSamples();
 }
 
-size_t Timing::GetNumSamples(const std::string& tag) {
-  return GetNumSamples(GetHandle(tag));
+size_t Timing::getNumSamples(const std::string& tag) {
+  return getNumSamples(getHandle(tag));
 }
 
-double Timing::GetVarianceSeconds(size_t handle) {
+double Timing::getVarianceNanoseconds(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().timers_[handle].LazyVariance();
+  return Instance().timers_[handle].getLazyVariance();
 }
 
-double Timing::GetVarianceSeconds(const std::string& tag) {
-  return GetVarianceSeconds(GetHandle(tag));
+double Timing::getVarianceNanoseconds(const std::string& tag) {
+  return getVarianceNanoseconds(getHandle(tag));
 }
 
-double Timing::GetMinSeconds(size_t handle) {
+int64_t Timing::getMinNanoseconds(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().timers_[handle].Min();
+  return Instance().timers_[handle].getMin();
 }
 
-double Timing::GetMinSeconds(const std::string& tag) {
-  return GetMinSeconds(GetHandle(tag));
+int64_t Timing::getMinNanoseconds(const std::string& tag) {
+  return getMinNanoseconds(getHandle(tag));
 }
 
-double Timing::GetMaxSeconds(size_t handle) {
+int64_t Timing::getMaxNanoseconds(const size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return Instance().timers_[handle].Max();
+  return Instance().timers_[handle].getMax();
 }
 
-double Timing::GetMaxSeconds(const std::string& tag) {
-  return GetMaxSeconds(GetHandle(tag));
+int64_t Timing::getMaxNanoseconds(const std::string& tag) {
+  return getMaxNanoseconds(getHandle(tag));
 }
 
-double Timing::GetHz(size_t handle) {
+double Timing::getHz(size_t handle) {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
-  return 1.0 / Instance().timers_[handle].RollingMean();
+  return 1.0 / Instance().timers_[handle].getRollingMean();
 }
 
-double Timing::GetHz(const std::string& tag) {
-  return GetHz(GetHandle(tag));
+double Timing::getHz(const std::string& tag) {
+  return getHz(getHandle(tag));
 }
 
-std::string Timing::SecondsToTimeString(double seconds) {
+std::string millisecondsToTimeString(const double milliseconds) {
+  constexpr double kMillisecondsToSeconds = 1e-3;
+  const double seconds = milliseconds * kMillisecondsToSeconds;
   double secs = fmod(seconds, 60);
   int minutes = (seconds / 60);
   int hours = (seconds / 3600);
@@ -185,7 +183,7 @@ std::string Timing::SecondsToTimeString(double seconds) {
   return buffer;
 }
 
-void Timing::WriteToYamlFile(const std::string& path) {
+void Timing::writeToYamlFile(const std::string& path) {
   const map_t& tag_map = Instance().tag_map_;
 
   if (tag_map.empty()) {
@@ -203,7 +201,7 @@ void Timing::WriteToYamlFile(const std::string& path) {
   for (const map_t::value_type& tag : tag_map) {
     const size_t index = tag.second;
 
-    if (GetNumSamples(index) > 0) {
+    if (getNumSamples(index) > 0) {
       std::string label = tag.first;
 
       // We do not want colons or hashes in a label, as they might interfere
@@ -211,19 +209,31 @@ void Timing::WriteToYamlFile(const std::string& path) {
       std::replace(label.begin(), label.end(), ':', '_');
       std::replace(label.begin(), label.end(), '#', '_');
 
-      output_file << label << ":" << "\n";
-      output_file << "  num_samples: " << GetNumSamples(index) << "\n";
-      output_file << "  total: " << GetTotalSeconds(index) << "\n";
-      output_file << "  mean: " << GetMeanSeconds(index) << "\n";
-      output_file << "  std_dev: " << sqrt(GetVarianceSeconds(index)) << "\n";
-      output_file << "  min: " << GetMinSeconds(index) << "\n";
-      output_file << "  max: " << GetMaxSeconds(index) << "\n";
+      output_file << label << ":"
+                  << "\n";
+      output_file << "  num_samples: " << getNumSamples(index) << "\n";
+      output_file << "  sum [ms]: "
+                  << aslam::time::to_milliseconds(getTotalNumNanoseconds(index))
+                  << "\n";
+      output_file << "  mean [ms]: "
+                  << aslam::time::to_milliseconds(getMeanNanoseconds(index))
+                  << "\n";
+      output_file << "  std_dev [ms]: "
+                  << aslam::time::to_milliseconds(
+                         sqrt(getVarianceNanoseconds(index)))
+                  << "\n";
+      output_file << "  min [ms]: "
+                  << aslam::time::to_milliseconds(getMinNanoseconds(index))
+                  << "\n";
+      output_file << "  max [ms]: "
+                  << aslam::time::to_milliseconds(getMaxNanoseconds(index))
+                  << "\n";
     }
     output_file << "\n";
   }
 }
 
-void Timing::Print(std::ostream& out) {  // NOLINT
+void Timing::print(std::ostream& out) {  // NOLINT
   map_t tagMap;
   {
     std::lock_guard<std::mutex> lock(Instance().mutex_);
@@ -234,7 +244,7 @@ void Timing::Print(std::ostream& out) {  // NOLINT
     return;
   }
 
-  out << "SM Timing\n";
+  out << "Timings in [ms]\n";
   out << "-----------\n";
   for (typename map_t::value_type t : tagMap) {
     size_t time_i = t.second;
@@ -244,32 +254,37 @@ void Timing::Print(std::ostream& out) {  // NOLINT
     out.width(7);
 
     out.setf(std::ios::right, std::ios::adjustfield);
-    out << GetNumSamples(time_i) << "\t";
-    if (GetNumSamples(time_i) > 0) {
-      out << SecondsToTimeString(GetTotalSeconds(time_i)) << "\t";
-      double meansec = GetMeanSeconds(time_i);
-      double stddev = sqrt(GetVarianceSeconds(time_i));
-      out << "(" << SecondsToTimeString(meansec) << " +- ";
-      out << SecondsToTimeString(stddev) << ")\t";
+    out << getNumSamples(time_i) << "\t";
+    if (getNumSamples(time_i) > 0u) {
+      out << aslam::time::timeNanosecondsToString(
+                 getTotalNumNanoseconds(time_i))
+          << "\t";
+      const double mean_ms =
+          aslam::time::to_milliseconds(getMeanNanoseconds(time_i));
+      const double stddev_ms =
+          aslam::time::to_milliseconds(sqrt(getVarianceNanoseconds(time_i)));
+      out << "(" << millisecondsToTimeString(mean_ms) << " +- ";
+      out << millisecondsToTimeString(stddev_ms) << ")\t";
 
-      double min_sec = GetMinSeconds(time_i);
-      double max_sec = GetMaxSeconds(time_i);
-
+      const double min_ms =
+          aslam::time::to_milliseconds(getMinNanoseconds(time_i));
+      const double max_ms =
+          aslam::time::to_milliseconds(getMaxNanoseconds(time_i));
       // The min or max are out of bounds.
-      out << "[" << SecondsToTimeString(min_sec) << ","
-          << SecondsToTimeString(max_sec) << "]";
+      out << "[" << millisecondsToTimeString(min_ms) << ","
+          << millisecondsToTimeString(max_ms) << "]";
     }
     out << std::endl;
   }
 }
 
-std::string Timing::Print() {
+std::string Timing::print() {
   std::stringstream ss;
-  Print(ss);
+  print(ss);
   return ss.str();
 }
 
-void Timing::Reset() {
+void Timing::reset() {
   std::lock_guard<std::mutex> lock(Instance().mutex_);
   Instance().tag_map_.clear();
 }

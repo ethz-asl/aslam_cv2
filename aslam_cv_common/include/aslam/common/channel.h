@@ -1,5 +1,5 @@
-#ifndef ASLAM_CV_COMMON_CHANNEL_H_
-#define ASLAM_CV_COMMON_CHANNEL_H_
+#ifndef ASLAM_COMMON_CHANNEL_H_
+#define ASLAM_COMMON_CHANNEL_H_
 
 /// \addtogroup Frames
 /// @{
@@ -15,6 +15,7 @@
 /// @}
 /// @}
 
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -28,34 +29,43 @@ namespace aslam {
 namespace channels {
 
 namespace internal {
-// TODO(schneith): Pointer ValueTypes are not cloned but only the pointers get copied. Make a
+// TODO(schneith): Pointer ValueTypes are not cloned but only the pointers get
+// copied. Make a
 //                 proper clone.
-template<typename ValueType, typename ValueTypeClonable>
+template <typename ValueType, typename ValueTypeClonable>
 struct ChannelValueClonerImpl {};
-template<typename ValueType>
+template <typename ValueType>
 struct ChannelValueClonerImpl<ValueType, std::false_type> {
-  static ValueType clone(const ValueType& value) { return value; }
+  static ValueType clone(const ValueType& value) {
+    return value;
+  }
 };
-template<typename ValueType>
+template <typename ValueType>
 struct ChannelValueClonerImpl<ValueType, std::true_type> {
-  static ValueType clone(const ValueType& value) { return value.clone(); }
+  static ValueType clone(const ValueType& value) {
+    return value.clone();
+  }
 };
-template<typename ValueType>
-struct ChannelValueCloner :
-    public ChannelValueClonerImpl<ValueType, typename is_cloneable<ValueType>::type> {};
+template <typename ValueType>
+struct ChannelValueCloner
+    : public ChannelValueClonerImpl<ValueType,
+                                    typename is_cloneable<ValueType>::type> {};
 
 // Exception for cv::Mat - Images are only shallowcopied.
-template<> struct ChannelValueCloner<cv::Mat> {
-  static cv::Mat clone(const cv::Mat& value) { return value; }
+template <>
+struct ChannelValueCloner<cv::Mat> {
+  static cv::Mat clone(const cv::Mat& value) {
+    return value;
+  }
 };
-}
+}  // namespace internal
 
 class ChannelBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   ASLAM_DISALLOW_EVIL_CONSTRUCTORS(ChannelBase);
   ChannelBase() {}
-  virtual ~ChannelBase() {};
+  virtual ~ChannelBase() {}
   virtual bool serializeToString(std::string* string) const = 0;
   virtual bool deSerializeFromString(const std::string& string) = 0;
   virtual bool serializeToBuffer(char** buffer, size_t* size) const = 0;
@@ -65,7 +75,7 @@ class ChannelBase {
   virtual bool compare(const ChannelBase& right) = 0;
 };
 
-template<typename TYPE>
+template <typename TYPE>
 class Channel : public aslam::Cloneable<ChannelBase, Channel<TYPE>> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -74,7 +84,9 @@ class Channel : public aslam::Cloneable<ChannelBase, Channel<TYPE>> {
   typedef TYPE Type;
   Channel() {}
   virtual ~Channel() {}
-  virtual std::string name() const { return "unnamed"; }
+  virtual std::string name() const {
+    return "unnamed";
+  }
   bool operator==(const Channel<TYPE>& other);
 
   Channel(const Channel<TYPE>& other) {
@@ -99,10 +111,12 @@ class Channel : public aslam::Cloneable<ChannelBase, Channel<TYPE>> {
   TYPE value_;
 
  private:
-  bool equal_to(const Channel<TYPE>& other, std::true_type /*is_not_pointer */) {
+  bool equal_to(
+      const Channel<TYPE>& other, std::true_type /*is_not_pointer */) {
     return value_ == other.value_;
   }
-  bool equal_to(const Channel<TYPE>& other, std::false_type /*is_not_pointer */) {
+  bool equal_to(
+      const Channel<TYPE>& other, std::false_type /*is_not_pointer */) {
     if (other == nullptr && value_ == nullptr) {
       return true;
     } else if (other.value_ != nullptr && value_ != nullptr) {
@@ -113,16 +127,18 @@ class Channel : public aslam::Cloneable<ChannelBase, Channel<TYPE>> {
   }
 };
 
-template<> bool Channel<cv::Mat>::operator==(const Channel<cv::Mat>& other);
-template<typename TYPE>
+template <>
+bool Channel<cv::Mat>::operator==(const Channel<cv::Mat>& other);
+template <typename TYPE>
 bool Channel<TYPE>::operator==(const Channel<TYPE>& other) {
   return equal_to(other, typename is_not_pointer<TYPE>::type());
 }
 
-typedef std::unordered_map<std::string, std::shared_ptr<ChannelBase>> ChannelMap;
+typedef std::unordered_map<std::string, std::shared_ptr<ChannelBase>>
+    ChannelMap;
 struct ChannelGroup {
   ChannelGroup() = default;
-  ChannelGroup(ChannelGroup& other) {
+  ChannelGroup(ChannelGroup& other) {  // NOLINT
     *this = other;
   }
   ChannelGroup& operator=(const ChannelGroup& other) {
@@ -152,4 +168,4 @@ bool isChannelGroupEqual(const ChannelGroup& left, const ChannelGroup& right);
 
 }  // namespace channels
 }  // namespace aslam
-#endif  // ASLAM_CV_COMMON_CHANNEL_H_
+#endif  // ASLAM_COMMON_CHANNEL_H_

@@ -3,7 +3,7 @@
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/thread-pool.h>
 
-int increment(int a){
+int increment(int a) {
   std::chrono::milliseconds dura(a);
   std::this_thread::sleep_for(dura);
   ++a;
@@ -56,7 +56,8 @@ TEST(ThreadPoolTests, ExecutionOrdering) {
     // Let's wait a small random amount of time to check if the threads respect
     // the incoming order of the messages when being delivered by multiple
     // threads.
-    std::this_thread::sleep_for(std::chrono::microseconds(rand() % 10));
+    std::this_thread::sleep_for(
+        std::chrono::microseconds(rand() % 10));  // NOLINT
     std::lock_guard<std::mutex> lock(receive_queue_mutexes.at(exclusivity_id));
     receive_queues[exclusivity_id].emplace_back(value);
   };

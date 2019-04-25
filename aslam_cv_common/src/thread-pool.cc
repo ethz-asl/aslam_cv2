@@ -6,8 +6,7 @@ namespace aslam {
 
 // The constructor just launches some amount of workers.
 ThreadPool::ThreadPool(const size_t threads)
-    : active_threads_(0),
-      stop_(false) {
+    : active_threads_(0), stop_(false) {
   for (size_t i = 0; i < threads; ++i)
     workers_.emplace_back(std::bind(&ThreadPool::run, this));
 }
@@ -38,7 +37,7 @@ void ThreadPool::run() {
           groupid_exclusivity_guards_.end(),
           [](const GuardMap::value_type& value) {
             CHECK_NE(value.second, kGroupdIdNonExclusiveTask)
-              << "There should never be a guard for a non-exclusive task.";
+                << "There should never be a guard for a non-exclusive task.";
             return value.second;
           });
 
@@ -94,8 +93,9 @@ void ThreadPool::run() {
     if (group_id != kGroupdIdNonExclusiveTask) {
       const GuardMap::iterator it_group_id_serviced =
           groupid_exclusivity_guards_.find(group_id);
-      CHECK(it_group_id_serviced == groupid_exclusivity_guards_.end() ||
-            it_group_id_serviced->second == false);
+      CHECK(
+          it_group_id_serviced == groupid_exclusivity_guards_.end() ||
+          it_group_id_serviced->second == false);
       it_group_id_serviced->second = true;
     }
 
@@ -108,8 +108,9 @@ void ThreadPool::run() {
     if (group_id != kGroupdIdNonExclusiveTask) {
       const GuardMap::iterator it_group_id_servied =
           groupid_exclusivity_guards_.find(group_id);
-      CHECK(it_group_id_servied != groupid_exclusivity_guards_.end() &&
-            it_group_id_servied->second == true);
+      CHECK(
+          it_group_id_servied != groupid_exclusivity_guards_.end() &&
+          it_group_id_servied->second == true);
       it_group_id_servied->second = false;
     }
 

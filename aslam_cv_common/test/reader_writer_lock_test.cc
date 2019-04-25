@@ -6,8 +6,8 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
-#include "aslam/common/entrypoint.h"
 #include "./reader_writer_mutex_fixture.h"
+#include "aslam/common/entrypoint.h"
 
 constexpr int kNumThreads = 20;
 

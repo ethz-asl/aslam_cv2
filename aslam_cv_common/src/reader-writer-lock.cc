@@ -76,8 +76,8 @@ bool ReaderWriterMutex::upgradeToWriteLock() {
 
 bool ReaderWriterMutex::isInUse() {
   std::unique_lock<std::mutex> lock(mutex_);
-  if (pending_readers_ > 0u || num_readers_ > 0u || num_pending_writers_ > 0u || current_writer_ ||
-      pending_upgrade_) {
+  if (pending_readers_ > 0u || num_readers_ > 0u || num_pending_writers_ > 0u ||
+      current_writer_ || pending_upgrade_) {
     // Active readers, writers, or threads are waiting for access.
     return true;
   }
@@ -88,7 +88,8 @@ ScopedReadLock::ScopedReadLock(ReaderWriterMutex* rw_lock) : rw_lock_(rw_lock) {
   CHECK_NOTNULL(rw_lock_)->acquireReadLock();
 }
 
-ScopedReadLock::ScopedReadLock(ScopedReadLock&& other) : rw_lock_(other.rw_lock_) {
+ScopedReadLock::ScopedReadLock(ScopedReadLock&& other)
+    : rw_lock_(other.rw_lock_) {
   other.rw_lock_ = nullptr;
 }
 
@@ -98,11 +99,13 @@ ScopedReadLock::~ScopedReadLock() {
   }
 }
 
-ScopedWriteLock::ScopedWriteLock(ReaderWriterMutex* rw_lock) : rw_lock_(rw_lock) {
+ScopedWriteLock::ScopedWriteLock(ReaderWriterMutex* rw_lock)
+    : rw_lock_(rw_lock) {
   CHECK_NOTNULL(rw_lock_)->acquireWriteLock();
 }
 
-ScopedWriteLock::ScopedWriteLock(ScopedWriteLock&& other) : rw_lock_(other.rw_lock_) {
+ScopedWriteLock::ScopedWriteLock(ScopedWriteLock&& other)
+    : rw_lock_(other.rw_lock_) {
   other.rw_lock_ = nullptr;
 }
 

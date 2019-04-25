@@ -1,5 +1,5 @@
-#ifndef ASLAM_CHANNEL_SERIALIZATION_H_
-#define ASLAM_CHANNEL_SERIALIZATION_H_
+#ifndef ASLAM_COMMON_CHANNEL_SERIALIZATION_H_
+#define ASLAM_COMMON_CHANNEL_SERIALIZATION_H_
 
 #include <cstdint>
 #include <iostream>
@@ -7,8 +7,8 @@
 #include <string>
 #include <type_traits>
 
-#include <glog/logging.h>
 #include <Eigen/Dense>
+#include <glog/logging.h>
 #include <opencv2/core/core.hpp>
 
 namespace aslam {
@@ -18,15 +18,15 @@ struct HeaderInformation {
   uint32_t rows;
   uint32_t cols;
   uint32_t depth;
-  uint32_t channels; ///< Needed for opencv support
+  uint32_t channels;  ///< Needed for opencv support
   size_t size() const;
   bool serializeToBuffer(char* buffer, size_t offset) const;
   bool deSerializeFromBuffer(const char* const bufferIn, size_t offset);
 };
 
-template<typename Scalar>
-void makeHeaderInformation(int rows, int cols, int channels,
-                           HeaderInformation* headerInformation) {
+template <typename Scalar>
+void makeHeaderInformation(
+    int rows, int cols, int channels, HeaderInformation* headerInformation) {
   CHECK_NOTNULL(headerInformation);
   headerInformation->rows = rows;
   headerInformation->cols = cols;
@@ -34,9 +34,10 @@ void makeHeaderInformation(int rows, int cols, int channels,
   headerInformation->depth = cv::DataType<Scalar>::depth;
 }
 
-template<typename Scalar>
-bool serializeToString(const char* const matrixData,
-                       int rows, int cols, int channels, std::string* string) {
+template <typename Scalar>
+bool serializeToString(
+    const char* const matrixData, int rows, int cols, int channels,
+    std::string* string) {
   CHECK_GE(rows, 0);
   CHECK_GE(cols, 0);
   CHECK_NOTNULL(string);
@@ -59,9 +60,10 @@ bool serializeToString(const char* const matrixData,
   return true;
 }
 
-template<typename Scalar>
-bool serializeToBuffer(const char* const matrixData, int rows, int cols,
-                       int channels, char** buffer, size_t* totalSize) {
+template <typename Scalar>
+bool serializeToBuffer(
+    const char* const matrixData, int rows, int cols, int channels,
+    char** buffer, size_t* totalSize) {
   CHECK_NOTNULL(totalSize);
   CHECK_NOTNULL(buffer);
   HeaderInformation header;
@@ -72,7 +74,7 @@ bool serializeToBuffer(const char* const matrixData, int rows, int cols,
   *buffer = new char[*totalSize];
   bool success = header.serializeToBuffer(*buffer, 0);
   if (!success) {
-    delete[] *buffer;
+    delete[] * buffer;
     *buffer = nullptr;
     return false;
   }
@@ -81,36 +83,38 @@ bool serializeToBuffer(const char* const matrixData, int rows, int cols,
   return true;
 }
 
-template<typename Scalar, int ROWS, int COLS>
-bool serializeToBuffer(const Eigen::Matrix<Scalar, ROWS, COLS>& matrix,
-                       char** buffer, size_t* size) {
+template <typename Scalar, int ROWS, int COLS>
+bool serializeToBuffer(
+    const Eigen::Matrix<Scalar, ROWS, COLS>& matrix, char** buffer,
+    size_t* size) {
   const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
   // Eigen matrices have only one channel
   constexpr int numChannels = 1;
-  return serializeToBuffer<Scalar>(matrixData, matrix.rows(), matrix.cols(),
-                                   numChannels, buffer, size);
+  return serializeToBuffer<Scalar>(
+      matrixData, matrix.rows(), matrix.cols(), numChannels, buffer, size);
 }
 
-template<typename Scalar, int ROWS, int COLS>
-bool serializeToString(const Eigen::Matrix<Scalar, ROWS, COLS>& matrix,
-                       std::string* string) {
+template <typename Scalar, int ROWS, int COLS>
+bool serializeToString(
+    const Eigen::Matrix<Scalar, ROWS, COLS>& matrix, std::string* string) {
   const char* const matrixData = reinterpret_cast<const char*>(matrix.data());
   // Eigen matrices have only one channel
   constexpr int numChannels = 1;
-  return serializeToString<Scalar>(matrixData, matrix.rows(), matrix.cols(),
-                                   numChannels, string);
+  return serializeToString<Scalar>(
+      matrixData, matrix.rows(), matrix.cols(), numChannels, string);
 }
 
-template<typename Scalar, int ROWS, int COLS>
-bool deSerializeFromBuffer(const char* const buffer, size_t size,
-                           Eigen::Matrix<Scalar, ROWS, COLS>* matrix) {
+template <typename Scalar, int ROWS, int COLS>
+bool deSerializeFromBuffer(
+    const char* const buffer, size_t size,
+    Eigen::Matrix<Scalar, ROWS, COLS>* matrix) {
   CHECK_NOTNULL(matrix);
   HeaderInformation header;
   CHECK_GE(size, header.size());
   bool success = header.deSerializeFromBuffer(buffer, 0);
   if (!success) {
-    LOG(ERROR) << "Failed to deserialize header from string: " <<
-        std::string(buffer, size);
+    LOG(ERROR) << "Failed to deserialize header from string: "
+               << std::string(buffer, size);
     return false;
   }
   if (ROWS != Eigen::Dynamic) {
@@ -137,26 +141,23 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size,
   return true;
 }
 
-template<typename Scalar, int ROWS, int COLS>
-bool deSerializeFromString(const std::string& string,
-                           Eigen::Matrix<Scalar, ROWS, COLS>* matrix) {
+template <typename Scalar, int ROWS, int COLS>
+bool deSerializeFromString(
+    const std::string& string, Eigen::Matrix<Scalar, ROWS, COLS>* matrix) {
   CHECK_NOTNULL(matrix);
   return deSerializeFromBuffer(string.data(), string.size(), matrix);
 }
 
-bool serializeToString(const cv::Mat& image,
-                       std::string* string);
+bool serializeToString(const cv::Mat& image, std::string* string);
 
-bool deSerializeFromString(const std::string& string,
-                           cv::Mat* image);
+bool deSerializeFromString(const std::string& string, cv::Mat* image);
 
-bool deSerializeFromBuffer(const char* const buffer, size_t size,
-                           cv::Mat* image);
+bool deSerializeFromBuffer(
+    const char* const buffer, size_t size, cv::Mat* image);
 
-bool serializeToBuffer(const cv::Mat& matrix,
-                       char** buffer, size_t* size);
+bool serializeToBuffer(const cv::Mat& matrix, char** buffer, size_t* size);
 
-template<typename Scalar>
+template <typename Scalar>
 bool serializeToString(const Scalar& value, std::string* string) {
   CHECK_NOTNULL(string);
   std::string value_string = std::to_string(value);
@@ -164,28 +165,27 @@ bool serializeToString(const Scalar& value, std::string* string) {
   return true;
 }
 
-template<typename Scalar>
-bool deSerializeFromString(const std::string& string,
-                           Scalar* value,
-                           typename std::enable_if<std::is_integral<Scalar>::value>::type* = 0) {
+template <typename Scalar>
+bool deSerializeFromString(
+    const std::string& string, Scalar* value,
+    typename std::enable_if<std::is_integral<Scalar>::value>::type* = 0) {
   CHECK_NOTNULL(value);
   CHECK(!string.empty());
   (*value) = static_cast<Scalar>(std::stoll(string));
   return true;
 }
 
-template<typename Scalar>
-bool deSerializeFromString(const std::string& string,
-                           Scalar* value,
-                           typename std::enable_if<std::is_floating_point<Scalar>::value>::type*
-                             = 0) {
+template <typename Scalar>
+bool deSerializeFromString(
+    const std::string& string, Scalar* value,
+    typename std::enable_if<std::is_floating_point<Scalar>::value>::type* = 0) {
   CHECK_NOTNULL(value);
   CHECK(!string.empty());
   (*value) = static_cast<Scalar>(std::stod(string));
   return true;
 }
 
-template<typename Scalar>
+template <typename Scalar>
 bool serializeToBuffer(const Scalar& value, char** buffer, size_t* size) {
   CHECK_NOTNULL(buffer);
   CHECK_NOTNULL(size);
@@ -194,8 +194,9 @@ bool serializeToBuffer(const Scalar& value, char** buffer, size_t* size) {
   memcpy(*buffer, &value, *size);
   return true;
 }
-template<typename Scalar>
-bool deSerializeFromBuffer(const char* const buffer, size_t size, Scalar* value) {
+template <typename Scalar>
+bool deSerializeFromBuffer(
+    const char* const buffer, size_t size, Scalar* value) {
   CHECK_NOTNULL(value);
   CHECK_EQ(size, sizeof(Scalar));
   memcpy(value, buffer, size);
@@ -205,4 +206,4 @@ bool deSerializeFromBuffer(const char* const buffer, size_t size, Scalar* value)
 }  // namespace internal
 }  // namespace aslam
 
-#endif  // ASLAM_CHANNEL_SERIALIZATION_H_
+#endif  // ASLAM_COMMON_CHANNEL_SERIALIZATION_H_

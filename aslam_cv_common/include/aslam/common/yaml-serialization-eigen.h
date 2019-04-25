@@ -1,5 +1,5 @@
-#ifndef ASLAM_CV_COMMON_EIGEN_YAML_SERIALIZATION_H_
-#define ASLAM_CV_COMMON_EIGEN_YAML_SERIALIZATION_H_
+#ifndef ASLAM_COMMON_YAML_SERIALIZATION_EIGEN_H_
+#define ASLAM_COMMON_YAML_SERIALIZATION_EIGEN_H_
 
 #include <Eigen/Core>
 #include <glog/logging.h>
@@ -30,10 +30,11 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
   }
 
   template <class Scalar, int A, int B, int C, int D, int E>
-  static bool decode(const Node& node,
-                     Eigen::Matrix<Scalar, A, B, C, D, E>& M) {
-    if(!node.IsMap()) {
-      LOG(ERROR) << "Unable to get parse the matrix because the node is not a map.";
+  static bool decode(
+      const Node& node, Eigen::Matrix<Scalar, A, B, C, D, E>& M) {  // NOLINT
+    if (!node.IsMap()) {
+      LOG(ERROR)
+          << "Unable to get parse the matrix because the node is not a map.";
       return false;
     }
 
@@ -41,9 +42,9 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
     IndexType rows = node["rows"].as<IndexType>();
     IndexType cols = node["cols"].as<IndexType>();
 
-    if(rows != A || cols != B) {
-      LOG(ERROR) << "The matrix is the wrong size (rows, cols). Wanted: (" << A << ","
-          << B << "), got (" << rows << ", " << cols << ")";
+    if (rows != A || cols != B) {
+      LOG(ERROR) << "The matrix is the wrong size (rows, cols). Wanted: (" << A
+                 << "," << B << "), got (" << rows << ", " << cols << ")";
       return false;
     }
 
@@ -52,9 +53,9 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
       LOG(ERROR) << "The matrix data is not a sequence.";
       return false;
     }
-    if(node["data"].size() != expected_size) {
-      LOG(ERROR) << "The data sequence is the wrong size. Wanted: " << expected_size <<
-          ", got: " << node["data"].size();
+    if (node["data"].size() != expected_size) {
+      LOG(ERROR) << "The data sequence is the wrong size. Wanted: "
+                 << expected_size << ", got: " << node["data"].size();
       return false;
     }
 
@@ -73,10 +74,12 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
   }
 
   template <class Scalar, int B, int C, int D, int E>
-  static bool decode(const Node& node,
-                     Eigen::Matrix<Scalar, Eigen::Dynamic, B, C, D, E>& M) {
-    if(!node.IsMap()) {
-      LOG(ERROR) << "Unable to get parse the matrix because the node is not a map.";
+  static bool decode(
+      const Node& node,
+      Eigen::Matrix<Scalar, Eigen::Dynamic, B, C, D, E>& M) {  // NOLINT
+    if (!node.IsMap()) {
+      LOG(ERROR)
+          << "Unable to get parse the matrix because the node is not a map.";
       return false;
     }
 
@@ -85,9 +88,10 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
     IndexType rows = node["rows"].as<IndexType>();
     IndexType cols = node["cols"].as<IndexType>();
 
-    if(cols != B) {
-      LOG(ERROR) << "The matrix is the wrong size (rows, cols). Wanted: (" << rows << ","
-          << B << "), got (" << rows << ", " << cols << ")";
+    if (cols != B) {
+      LOG(ERROR) << "The matrix is the wrong size (rows, cols). Wanted: ("
+                 << rows << "," << B << "), got (" << rows << ", " << cols
+                 << ")";
       return false;
     }
 
@@ -98,9 +102,9 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
       LOG(ERROR) << "The matrix data is not a sequence.";
       return false;
     }
-    if(node["data"].size() != expected_size) {
-      LOG(ERROR) << "The data sequence is the wrong size. Wanted: " << expected_size <<
-          ", got: " << node["data"].size();
+    if (node["data"].size() != expected_size) {
+      LOG(ERROR) << "The data sequence is the wrong size. Wanted: "
+                 << expected_size << ", got: " << node["data"].size();
       return false;
     }
 
@@ -119,10 +123,12 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
   }
 
   template <class Scalar, int A, int C, int D, int E>
-  static bool decode(const Node& node,
-                     Eigen::Matrix<Scalar, A, Eigen::Dynamic, C, D, E>& M) {
-    if(!node.IsMap()) {
-      LOG(ERROR) << "Unable to get parse the matrix because the node is not a map.";
+  static bool decode(
+      const Node& node,
+      Eigen::Matrix<Scalar, A, Eigen::Dynamic, C, D, E>& M) {  // NOLINT
+    if (!node.IsMap()) {
+      LOG(ERROR)
+          << "Unable to get parse the matrix because the node is not a map.";
       return false;
     }
 
@@ -131,9 +137,9 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
     IndexType rows = node["rows"].as<IndexType>();
     IndexType cols = node["cols"].as<IndexType>();
 
-    if(rows != A) {
-      LOG(ERROR) << "The matrix is the wrong size (rows, cols). Wanted: (" << A << ","
-          << cols << "), got (" << rows << ", " << cols << ")";
+    if (rows != A) {
+      LOG(ERROR) << "The matrix is the wrong size (rows, cols). Wanted: (" << A
+                 << "," << cols << "), got (" << rows << ", " << cols << ")";
       return false;
     }
 
@@ -144,9 +150,9 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
       LOG(ERROR) << "The matrix data is not a sequence.";
       return false;
     }
-    if(node["data"].size() != expected_size) {
-      LOG(ERROR) << "The data sequence is the wrong size. Wanted: " << expected_size <<
-          ", got: " << node["data"].size();
+    if (node["data"].size() != expected_size) {
+      LOG(ERROR) << "The data sequence is the wrong size. Wanted: "
+                 << expected_size << ", got: " << node["data"].size();
       return false;
     }
 
@@ -167,9 +173,12 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
   template <class Scalar, int C, int D, int E>
   static bool decode(
       const Node& node,
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, C, D, E>& M) {
-    if(!node.IsMap()) {
-      LOG(ERROR) << "Unable to get parse the matrix because the node is not a map.";
+      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, C, D, E>& /* NOLINT
+                                                                       */
+      M) {
+    if (!node.IsMap()) {
+      LOG(ERROR)
+          << "Unable to get parse the matrix because the node is not a map.";
       return false;
     }
 
@@ -185,9 +194,9 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
       LOG(ERROR) << "The matrix data is not a sequence.";
       return false;
     }
-    if(node["data"].size() != expected_size) {
-      LOG(ERROR) << "The data sequence is the wrong size. Wanted: " << expected_size <<
-          ", got: " << node["data"].size();
+    if (node["data"].size() != expected_size) {
+      LOG(ERROR) << "The data sequence is the wrong size. Wanted: "
+                 << expected_size << ", got: " << node["data"].size();
       return false;
     }
     YAML::const_iterator it = node["data"].begin();
@@ -206,4 +215,4 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
 };
 }  // namespace YAML
 
-#endif  // ASLAM_CV_COMMON_EIGEN_YAML_SERIALIZATION_H_
+#endif  // ASLAM_COMMON_YAML_SERIALIZATION_EIGEN_H_

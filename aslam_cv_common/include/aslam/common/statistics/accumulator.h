@@ -1,5 +1,5 @@
-#ifndef ASLAM_STATISTICS_ACCUMULATOR_H_
-#define ASLAM_STATISTICS_ACCUMULATOR_H_
+#ifndef ASLAM_COMMON_STATISTICS_ACCUMULATOR_H_
+#define ASLAM_COMMON_STATISTICS_ACCUMULATOR_H_
 
 #include <algorithm>
 #include <cmath>
@@ -9,10 +9,12 @@
 #include <glog/logging.h>
 
 namespace statistics {
-static constexpr int kInfiniteWindowSize = std::numeric_limits<int>::max();
+using IndexType = size_t;
+static constexpr IndexType kInfiniteWindowSize =
+    std::numeric_limits<IndexType>::max();
 // If the window size is set to -1, the vector will grow infinitely, otherwise,
 // the vector has a fixed size.
-template <typename SampleType, typename SumType, int WindowSize>
+template <typename SampleType, typename SumType, IndexType WindowSize>
 class Accumulator {
  public:
   Accumulator()
@@ -23,13 +25,13 @@ class Accumulator {
         min_(std::numeric_limits<SampleType>::max()),
         max_(std::numeric_limits<SampleType>::lowest()),
         most_recent_(0) {
-    CHECK_GT(WindowSize, 0);
+    CHECK_GT(WindowSize, 0u);
     if (WindowSize < kInfiniteWindowSize) {
       samples_.reserve(WindowSize);
     }
   }
 
-  void Add(SampleType sample) {
+  void add(const SampleType sample) {
     most_recent_ = sample;
     if (sample_index_ < WindowSize) {
       samples_.push_back(sample);
@@ -50,68 +52,72 @@ class Accumulator {
     }
   }
 
-  int total_samples() const {
+  size_t getTotalNumSamples() const {
     return total_samples_;
   }
 
-  SumType sum() const {
+  SumType getSum() const {
     return sum_;
   }
 
-  SumType Mean() const {
-    return (total_samples_ < 1) ? 0.0 : sum_ / total_samples_;
+  double getMean() const {
+    return (total_samples_ == 0u) ? 0.0
+                                  : static_cast<double>(sum_) /
+                                        static_cast<double>(total_samples_);
   }
 
   // Rolling mean is only used for fixed sized data for now. We don't need this
   // function for our infinite accumulator at this point.
-  SumType RollingMean() const {
+  double getRollingMean() const {
     if (WindowSize < kInfiniteWindowSize) {
-      return window_sum_ / std::min(sample_index_, WindowSize);
+      return static_cast<double>(window_sum_) /
+             static_cast<double>(std::min(sample_index_, WindowSize));
     } else {
-      return Mean();
+      return getMean();
     }
   }
 
-  SampleType GetMostRecent() const {
+  SampleType getMostRecent() const {
     return most_recent_;
   }
 
-  SumType max() const {
+  SumType getMax() const {
     return max_;
   }
 
-  SumType min() const {
+  SumType getMin() const {
     return min_;
   }
 
-  SumType LazyVariance() const {
-    if (samples_.size() < 2) {
+  double getLazyVariance() const {
+    if (samples_.size() < 2u) {
       return 0.0;
     }
 
-    SumType var = static_cast<SumType>(0.0);
-    SumType mean = RollingMean();
+    double var = 0.0;
+    double mean = getRollingMean();
 
-    for (unsigned int i = 0; i < samples_.size(); ++i) {
-      var += (samples_[i] - mean) * (samples_[i] - mean);
+    for (size_t i = 0u; i < samples_.size(); ++i) {
+      var += (static_cast<double>(samples_[i]) - mean) *
+             (static_cast<double>(samples_[i]) - mean);
     }
 
-    var /= samples_.size() - 1;
+    var /= static_cast<double>(samples_.size() - 1u);
     return var;
   }
 
-  SumType StandardDeviation() const {
-    return std::sqrt(LazyVariance());
+  double getStandardDeviation() const {
+    return std::sqrt(getLazyVariance());
   }
 
-  const std::vector<SampleType>& GetSamples() const {
+  const std::vector<SampleType>& getSamples() const {
     return samples_;
   }
 
  private:
   std::vector<SampleType> samples_;
-  int sample_index_;
-  int total_samples_;
+  IndexType sample_index_;
+  IndexType total_samples_;
   SumType sum_;
   SumType window_sum_;
   SampleType min_;
@@ -123,4 +129,4 @@ typedef Accumulator<double, double, kInfiniteWindowSize> Accumulatord;
 
 }  // namespace statistics
 
-#endif  // ASLAM_STATISTICS_ACCUMULATOR_H_
+#endif  // ASLAM_COMMON_STATISTICS_ACCUMULATOR_H_

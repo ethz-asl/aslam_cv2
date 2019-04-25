@@ -1,12 +1,12 @@
-#include <opencv2/core/core.hpp>
 #include <Eigen/Core>
 #include <eigen-checks/gtest.h>
 #include <gtest/gtest.h>
+#include <opencv2/core/core.hpp>
 
-#include <aslam/common/entrypoint.h>
-#include <aslam/common/opencv-predicates.h>
 #include <aslam/common/channel-definitions.h>
 #include <aslam/common/channel-serialization.h>
+#include <aslam/common/entrypoint.h>
+#include <aslam/common/opencv-predicates.h>
 
 template <typename SCALAR>
 class CvMatSerializationTest : public ::testing::Test {
@@ -20,19 +20,19 @@ class CvMatSerializationTest : public ::testing::Test {
     return row + num_cols * col + num_cols * num_rows * channel;
   }
 
-  void fill(cv::Mat * image) {
+  void fill(cv::Mat* image) {
     CHECK_NOTNULL(image);
-    for(int r = 0; r < image->rows; ++r) {
-      for( int c = 0; c < image->cols; ++c) {
-        for( int ch = 0; ch < image->channels(); ++ch) {
-          (&image->at<Scalar>(r,c))[ch] = getValue(r, c, ch);
+    for (int r = 0; r < image->rows; ++r) {
+      for (int c = 0; c < image->cols; ++c) {
+        for (int ch = 0; ch < image->channels(); ++ch) {
+          (&image->at<Scalar>(r, c))[ch] = getValue(r, c, ch);
         }
       }
     }
   }
 
   virtual void SetUp() {
-    for(int i = 0; i < num_channels; ++i) {
+    for (int i = 0; i < num_channels; ++i) {
       int type = CV_MAKETYPE(cv::DataType<SCALAR>::type, i);
       // http://docs.opencv.org/modules/core/doc/basic_structures.html#mat-create
       // Create should only allocate if necessary.
@@ -45,11 +45,11 @@ class CvMatSerializationTest : public ::testing::Test {
 };
 
 template <typename SCALAR>
-class SimpleTypeTestHarness  {
+class SimpleTypeTestHarness {
  public:
-  SimpleTypeTestHarness(SCALAR value) : value_(value) {
+  SimpleTypeTestHarness(SCALAR value) : value_(value) {  // NOLINT
     channelA_.value_ = value;
-   }
+  }
 
   void test() {
     char* buffer;
@@ -74,8 +74,9 @@ class SimpleTypeTestHarness  {
   SCALAR value_;
 };
 
-typedef ::testing::Types< int32_t, uint8_t,  int8_t, uint16_t, int16_t,
-    float, double> TypeTests;
+typedef ::testing::Types<int32_t, uint8_t, int8_t, uint16_t, int16_t, float,
+                         double>
+    TypeTests;
 TYPED_TEST_CASE(CvMatSerializationTest, TypeTests);
 
 template <typename TYPE>
@@ -90,10 +91,12 @@ class ChannelSerializationTest : public ::testing::Test {
     if (MatrixType::RowsAtCompileTime == Eigen::Dynamic &&
         MatrixType::ColsAtCompileTime == Eigen::Dynamic) {
       value_a.value_.resize(num_rows, num_cols);
-    } else if (MatrixType::RowsAtCompileTime == Eigen::Dynamic &&
+    } else if (
+        MatrixType::RowsAtCompileTime == Eigen::Dynamic &&
         MatrixType::ColsAtCompileTime != Eigen::Dynamic) {
       value_a.value_.resize(num_rows, Eigen::NoChange);
-    }  else if (MatrixType::RowsAtCompileTime != Eigen::Dynamic &&
+    } else if (
+        MatrixType::RowsAtCompileTime != Eigen::Dynamic &&
         MatrixType::ColsAtCompileTime == Eigen::Dynamic) {
       value_a.value_.resize(Eigen::NoChange, num_cols);
     }
@@ -103,16 +106,14 @@ class ChannelSerializationTest : public ::testing::Test {
   aslam::channels::Channel<MatrixType> value_b;
 };
 
-#define MAKE_TYPE_LIST(Scalar) \
-      Eigen::Matrix<Scalar, 20, 15>, \
-      Eigen::Matrix<Scalar, Eigen::Dynamic, 10>, \
-      Eigen::Matrix<Scalar, 25, Eigen::Dynamic>, \
+#define MAKE_TYPE_LIST(Scalar)                                              \
+  Eigen::Matrix<Scalar, 20, 15>, Eigen::Matrix<Scalar, Eigen::Dynamic, 10>, \
+      Eigen::Matrix<Scalar, 25, Eigen::Dynamic>,                            \
       Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>
 
-typedef ::testing::Types<MAKE_TYPE_LIST(double),
-                         MAKE_TYPE_LIST(float),
-                         MAKE_TYPE_LIST(int),
-                         MAKE_TYPE_LIST(unsigned char)> DoubleTests;
+typedef ::testing::Types<MAKE_TYPE_LIST(double), MAKE_TYPE_LIST(float),
+                         MAKE_TYPE_LIST(int), MAKE_TYPE_LIST(unsigned char)>
+    DoubleTests;
 TYPED_TEST_CASE(ChannelSerializationTest, DoubleTests);
 
 TYPED_TEST(ChannelSerializationTest, SerializeDeserializeString) {
@@ -121,12 +122,20 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeString) {
   std::string serialized_value;
   EXPECT_TRUE(this->value_a.serializeToString(&serialized_value));
   EXPECT_EQ(16u, header_info.size());
-  ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
-            this->value_a.value_.cols() *
-            sizeof(typename TypeParam::Scalar), serialized_value.size());
-  EXPECT_FALSE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, static_cast<Scalar>(1e-4)));
+  ASSERT_EQ(
+      header_info.size() +
+          this->value_a.value_.rows() * this->value_a.value_.cols() *
+              sizeof(typename TypeParam::Scalar),
+      serialized_value.size());
+  EXPECT_FALSE(
+      EIGEN_MATRIX_NEAR(
+          this->value_a.value_, this->value_b.value_,
+          static_cast<Scalar>(1e-4)));
   EXPECT_TRUE(this->value_b.deSerializeFromString(serialized_value));
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, static_cast<Scalar>(1e-4)));
+  EXPECT_TRUE(
+      EIGEN_MATRIX_NEAR(
+          this->value_a.value_, this->value_b.value_,
+          static_cast<Scalar>(1e-4)));
 }
 
 TYPED_TEST(ChannelSerializationTest, SerializeDeserializeBuffer) {
@@ -136,12 +145,20 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeBuffer) {
   size_t size;
   EXPECT_TRUE(this->value_a.serializeToBuffer(&buffer, &size));
   EXPECT_EQ(16u, header_info.size());
-  ASSERT_EQ(header_info.size() + this->value_a.value_.rows() *
-            this->value_a.value_.cols() *
-            sizeof(typename TypeParam::Scalar), size);
-  EXPECT_FALSE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, static_cast<Scalar>(1e-4)));
+  ASSERT_EQ(
+      header_info.size() +
+          this->value_a.value_.rows() * this->value_a.value_.cols() *
+              sizeof(typename TypeParam::Scalar),
+      size);
+  EXPECT_FALSE(
+      EIGEN_MATRIX_NEAR(
+          this->value_a.value_, this->value_b.value_,
+          static_cast<Scalar>(1e-4)));
   EXPECT_TRUE(this->value_b.deSerializeFromBuffer(buffer, size));
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, static_cast<Scalar>(1e-4)));
+  EXPECT_TRUE(
+      EIGEN_MATRIX_NEAR(
+          this->value_a.value_, this->value_b.value_,
+          static_cast<Scalar>(1e-4)));
 }
 
 TEST(ChannelSerialization, HeaderInfoSize) {
@@ -172,8 +189,12 @@ TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
   EXPECT_TRUE(keypoints_a.serializeToString(&serialized_value));
 
   aslam::internal::HeaderInformation header_info;
-  ASSERT_EQ(serialized_value.size(), header_info.size() + 2 * numKeypoints *
-            sizeof(aslam::channels::VISUAL_KEYPOINT_MEASUREMENTS::Type::Scalar));
+  ASSERT_EQ(
+      serialized_value.size(),
+      header_info.size() +
+          2 * numKeypoints *
+              sizeof(
+                  aslam::channels::VISUAL_KEYPOINT_MEASUREMENTS::Type::Scalar));
 
   aslam::channels::VISUAL_KEYPOINT_MEASUREMENTS keypoints_b;
 
@@ -183,37 +204,45 @@ TEST(ChannelSerialization, SerializeDeserializeNamedChannelFromString) {
 }
 
 TYPED_TEST(CvMatSerializationTest, SerializeDeserializeString) {
-  for(int ch = 0; ch < this->num_channels; ++ch) {
+  for (int ch = 0; ch < this->num_channels; ++ch) {
     std::string serialized_value;
     EXPECT_TRUE(this->imagesA_[ch].serializeToString(&serialized_value));
-    EXPECT_FALSE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
-                                           this->imagesB_[ch].value_, 1e-4));
+    EXPECT_FALSE(
+        gtest_catkin::ImagesEqual(
+            this->imagesA_[ch].value_, this->imagesB_[ch].value_, 1e-4));
     EXPECT_TRUE(this->imagesB_[ch].deSerializeFromString(serialized_value));
-    EXPECT_TRUE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
-                                          this->imagesB_[ch].value_, 1e-4));
+    EXPECT_TRUE(
+        gtest_catkin::ImagesEqual(
+            this->imagesA_[ch].value_, this->imagesB_[ch].value_, 1e-4));
     typedef TypeParam Scalar;
     // Unit test the comparison function
-    this->imagesB_[ch].value_.template at<Scalar>(1,1) = this->imagesB_[ch].value_.template at<Scalar>(1,1) + 1;
-    EXPECT_FALSE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
-                                          this->imagesB_[ch].value_, 1e-4));
+    this->imagesB_[ch].value_.template at<Scalar>(1, 1) =
+        this->imagesB_[ch].value_.template at<Scalar>(1, 1) + 1;
+    EXPECT_FALSE(
+        gtest_catkin::ImagesEqual(
+            this->imagesA_[ch].value_, this->imagesB_[ch].value_, 1e-4));
   }
 }
 
 TYPED_TEST(CvMatSerializationTest, SerializeDeserializeBuffer) {
-  for(int ch = 0; ch < this->num_channels; ++ch) {
+  for (int ch = 0; ch < this->num_channels; ++ch) {
     aslam::internal::HeaderInformation header_info;
     char* buffer;
     size_t size;
     EXPECT_TRUE(this->imagesA_[ch].serializeToBuffer(&buffer, &size));
     EXPECT_EQ(16u, header_info.size());
-    ASSERT_EQ(header_info.size() + this->imagesA_[ch].value_.rows *
-              this->imagesA_[ch].value_.cols * this->imagesA_[ch].value_.channels() *
-              sizeof(TypeParam), size);
-    EXPECT_FALSE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
-                                           this->imagesB_[ch].value_, 1e-4));
+    ASSERT_EQ(
+        header_info.size() +
+            this->imagesA_[ch].value_.rows * this->imagesA_[ch].value_.cols *
+                this->imagesA_[ch].value_.channels() * sizeof(TypeParam),
+        size);
+    EXPECT_FALSE(
+        gtest_catkin::ImagesEqual(
+            this->imagesA_[ch].value_, this->imagesB_[ch].value_, 1e-4));
     EXPECT_TRUE(this->imagesB_[ch].deSerializeFromBuffer(buffer, size));
-    EXPECT_TRUE(gtest_catkin::ImagesEqual(this->imagesA_[ch].value_,
-                                          this->imagesB_[ch].value_, 1e-4));
+    EXPECT_TRUE(
+        gtest_catkin::ImagesEqual(
+            this->imagesA_[ch].value_, this->imagesB_[ch].value_, 1e-4));
   }
 }
 
@@ -222,8 +251,8 @@ TEST(SimpleSerializationTest, SerializeDeserializeSimpleTypes) {
   SimpleTypeTestHarness<size_t>(10546548).test();
   SimpleTypeTestHarness<double>(0.457 * 1e12).test();
   SimpleTypeTestHarness<float> float_test(456.54578);
-  SimpleTypeTestHarness<long> long_test(-9415);
-  SimpleTypeTestHarness<long long> long_long_test(65465461321487);
+  SimpleTypeTestHarness<long> long_test(-9415);                     // NOLINT
+  SimpleTypeTestHarness<long long> long_long_test(65465461321487);  // NOLINT
 }
 
 ASLAM_UNITTEST_ENTRYPOINT

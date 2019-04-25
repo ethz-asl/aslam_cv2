@@ -35,14 +35,14 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ASLAM_NEON_HELPERS_H_
-#define ASLAM_NEON_HELPERS_H_
+#ifndef ASLAM_COMMON_NEON_HELPERS_H_
+#define ASLAM_COMMON_NEON_HELPERS_H_
 #ifdef __ARM_NEON
 #include <arm_neon.h>
 
 namespace brisk {
-inline uint8x16_t shuffle_epi8_neon(const uint8x16_t& lhs,
-                                    const uint8x16_t& mask) {
+inline uint8x16_t shuffle_epi8_neon(
+    const uint8x16_t& lhs, const uint8x16_t& mask) {
   uint8_t tmp_mask[16];
   uint8_t value[16];
   vst1q_u8(tmp_mask, mask);
@@ -50,13 +50,11 @@ inline uint8x16_t shuffle_epi8_neon(const uint8x16_t& lhs,
   uint8_t temp2_upper_array[16];
   for (int shuffleidx = 0; shuffleidx < 16; ++shuffleidx) {
     temp2_upper_array[shuffleidx] =
-        (tmp_mask[shuffleidx] & 0x80)
-        ? 0 :
-            value[tmp_mask[shuffleidx] & 0x0F];
+        (tmp_mask[shuffleidx] & 0x80) ? 0 : value[tmp_mask[shuffleidx] & 0x0F];
   }
   return vld1q_u8(&temp2_upper_array[0]);
 }
 }  // namespace brisk
 
 #endif  // __ARM_NEON
-#endif  // ASLAM_NEON_HELPERS_H_
+#endif  // ASLAM_COMMON_NEON_HELPERS_H_

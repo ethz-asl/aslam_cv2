@@ -1,5 +1,5 @@
-#ifndef ASLAM_CV_COMMON_YAML_SERIALIZATION_H_
-#define ASLAM_CV_COMMON_YAML_SERIALIZATION_H_
+#ifndef ASLAM_COMMON_YAML_SERIALIZATION_H_
+#define ASLAM_COMMON_YAML_SERIALIZATION_H_
 
 #include <fstream>  // NOLINT
 #include <list>
@@ -14,30 +14,30 @@
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 
-#include "yaml-serialization-eigen.h"
+#include "aslam/common/yaml-serialization-eigen.h"
 
 namespace YAML {
 
-/// \brief A function to get a value from a YAML node with non-exception error handling.
-/// \param[in] node The YAML node.
-/// \param[in] key The key used to dereference the node (node[key]).
-/// \param[out] value The return value.
+/// \brief A function to get a value from a YAML node with non-exception error
+/// handling. \param[in] node The YAML node. \param[in] key The key used to
+/// dereference the node (node[key]). \param[out] value The return value.
 /// \returns True if the value was filled in successfully. False otherwise.
-template<typename ValueType>
+template <typename ValueType>
 bool safeGet(const YAML::Node& node, const std::string& key, ValueType* value) {
   CHECK_NOTNULL(value);
   bool success = false;
-  if(!node.IsMap()) {
-    LOG(ERROR) << "Unable to get Node[\"" << key << "\"] because the node is not a map";
+  if (!node.IsMap()) {
+    LOG(ERROR) << "Unable to get Node[\"" << key
+               << "\"] because the node is not a map";
   } else {
     const YAML::Node sub_node = node[key];
-    if(sub_node) {
+    if (sub_node) {
       try {
         *value = sub_node.as<ValueType>();
         success = true;
-      } catch(const YAML::Exception& e) {
+      } catch (const YAML::Exception& e) {
         LOG(ERROR) << "Error getting key \"" << key << "\" as type "
-            << typeid(ValueType).name() << ": " << e.what();
+                   << typeid(ValueType).name() << ": " << e.what();
       }
     } else {
       LOG(ERROR) << "Key \"" << key << "\" does not exist";
@@ -47,8 +47,9 @@ bool safeGet(const YAML::Node& node, const std::string& key, ValueType* value) {
 }
 
 inline bool hasKey(const YAML::Node& node, const std::string& key) {
-  if(!node.IsMap()) {
-    LOG(ERROR) << "Unable to get Node[\"" << key << "\"] because the node is not a map";
+  if (!node.IsMap()) {
+    LOG(ERROR) << "Unable to get Node[\"" << key
+               << "\"] because the node is not a map";
     return false;
   }
   const YAML::Node sub_node = node[key];
@@ -69,7 +70,8 @@ struct convert<std::queue<ValueType> > {
     return node;
   }
 
-  static bool decode(const Node& node, std::queue<ValueType>& queue) {
+  static bool decode(
+      const Node& node, std::queue<ValueType>& queue) {  // NOLINT
     CHECK(node.IsSequence());
     for (size_t i = 0; i < node.size(); ++i) {
       ValueType tmp = node[i].as<ValueType>();
@@ -89,7 +91,8 @@ struct convert<std::unordered_set<KeyType> > {
     return node;
   }
 
-  static bool decode(const Node& node, std::unordered_set<KeyType>& set) {
+  static bool decode(
+      const Node& node, std::unordered_set<KeyType>& set) {  // NOLINT
     set.clear();
     CHECK(node.IsSequence());
     for (YAML::const_iterator it = node.begin(); it != node.end(); ++it) {
@@ -109,8 +112,9 @@ struct convert<std::unordered_map<KeyType, ValueType> > {
     return node;
   }
 
-  static bool decode(const Node& node,
-                     std::unordered_map<KeyType, ValueType>& map) {
+  static bool decode(
+      const Node& node,
+      std::unordered_map<KeyType, ValueType>& map) {  // NOLINT
     map.clear();
     for (YAML::const_iterator it = node.begin(); it != node.end(); ++it) {
       map[it->first.as<KeyType>()] = it->second.as<ValueType>();
@@ -129,7 +133,7 @@ bool Save(const ObjectType& object, std::ostream* ofs) {
     out = object;
     *ofs << out;
   } catch (const std::exception& e) {  // NOLINT
-    LOG(ERROR)<< "Encountered exception while saving yaml " << e.what();
+    LOG(ERROR) << "Encountered exception while saving yaml " << e.what();
     return false;
   }
   return true;
@@ -153,11 +157,10 @@ bool Load(const std::string& filename, ObjectType* object) {
     YAML::Node doc = YAML::LoadFile(filename.c_str());
     (*object) = doc.as<ObjectType>();
     return true;
-  }
-  catch (const std::exception& e) {  // NOLINT
+  } catch (const std::exception& e) {  // NOLINT
     LOG(ERROR) << "Encountered exception while reading yaml " << e.what();
     return false;
   }
 }
 }  // namespace YAML
-#endif  // ASLAM_CV_COMMON_YAML_SERIALIZATION_H_
+#endif  // ASLAM_COMMON_YAML_SERIALIZATION_H_

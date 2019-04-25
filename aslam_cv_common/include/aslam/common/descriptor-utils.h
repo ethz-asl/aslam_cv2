@@ -1,5 +1,5 @@
-#ifndef VI_MAP_DESCRIPTOR_UTILS_H_
-#define VI_MAP_DESCRIPTOR_UTILS_H_
+#ifndef ASLAM_COMMON_DESCRIPTOR_UTILS_H_
+#define ASLAM_COMMON_DESCRIPTOR_UTILS_H_
 
 #include <vector>
 
@@ -78,8 +78,7 @@ inline void getIndexOfDescriptorClosestToMedian(
   for (int descriptor_idx = 0; descriptor_idx < num_descriptors;
        ++descriptor_idx) {
     wrapped_descriptors.emplace_back(
-        &raw_descriptors.coeffRef(0, descriptor_idx),
-        descriptor_size_bytes);
+        &raw_descriptors.coeffRef(0, descriptor_idx), descriptor_size_bytes);
   }
 
   Eigen::MatrixXi hamming_distance_matrix =
@@ -90,7 +89,7 @@ inline void getIndexOfDescriptorClosestToMedian(
     const aslam::common::FeatureDescriptorConstRef& row_descriptor =
         wrapped_descriptors[descriptor_idx_row];
     for (int descriptor_idx_col = descriptor_idx_row + 1;
-        descriptor_idx_col < num_descriptors; ++descriptor_idx_col) {
+         descriptor_idx_col < num_descriptors; ++descriptor_idx_col) {
       const aslam::common::FeatureDescriptorConstRef& col_descriptor =
           wrapped_descriptors[descriptor_idx_col];
 
@@ -106,7 +105,8 @@ inline void getIndexOfDescriptorClosestToMedian(
   }
 
   Eigen::MatrixXi::Index eigen_median_descriptor_index;
-  hamming_distance_matrix.colwise().sum().minCoeff(&eigen_median_descriptor_index);
+  hamming_distance_matrix.colwise().sum().minCoeff(
+      &eigen_median_descriptor_index);
   CHECK_GE(static_cast<int>(eigen_median_descriptor_index), 0);
   *median_descriptor_index = static_cast<size_t>(eigen_median_descriptor_index);
   CHECK_LT(*median_descriptor_index, static_cast<size_t>(num_descriptors));
@@ -124,16 +124,17 @@ inline double descriptorMeanAbsoluteDeviation(
   double deviation = 0.;
   Hamming hamming_norm;
   for (int i = 0; i < descriptors.cols(); ++i) {
-    deviation += hamming_norm(descriptors.col(i).data(), mean.data(),
-                              descriptors.rows());
+    deviation += hamming_norm(
+        descriptors.col(i).data(), mean.data(), descriptors.rows());
   }
   deviation /= descriptors.cols();
   return deviation;
 }
 
 template <typename MeanType>
-void floatDescriptorMean(const DescriptorsType& descriptors,
-                         Eigen::Matrix<MeanType, Eigen::Dynamic, 1>* mean) {
+void floatDescriptorMean(
+    const DescriptorsType& descriptors,
+    Eigen::Matrix<MeanType, Eigen::Dynamic, 1>* mean) {
   CHECK_GT(descriptors.rows(), 0);
   CHECK_GT(descriptors.cols(), 0);
   CHECK_NOTNULL(mean)
@@ -156,8 +157,8 @@ void floatDescriptorMean(const DescriptorsType& descriptors,
 }
 
 template <typename FloatDescriptorType>
-double differenceToMeanSquaredNorm(const DescriptorType& descriptor,
-                                   const FloatDescriptorType& mean) {
+double differenceToMeanSquaredNorm(
+    const DescriptorType& descriptor, const FloatDescriptorType& mean) {
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(FloatDescriptorType);
   CHECK_EQ(mean.size(), static_cast<int>(descriptor.size() * kBitsPerByte));
 
@@ -195,8 +196,8 @@ inline double descriptorMeanStandardDeviation(
 
 // Returned in order: p1p0, p2p0, p3p0, ... pnp0, p2p1, p3p1, ..., just like in
 // matlab pdist.
-inline void pairwiseEuclidianDistances(const DescriptorsType& descriptors,
-                                       DescriptorType* result) {
+inline void pairwiseEuclidianDistances(
+    const DescriptorsType& descriptors, DescriptorType* result) {
   const int num_descriptors = descriptors.cols();
   CHECK_NOTNULL(result)
       ->resize(num_descriptors * (num_descriptors - 1) / 2, Eigen::NoChange);
@@ -214,4 +215,4 @@ inline void pairwiseEuclidianDistances(const DescriptorsType& descriptors,
 }  // namespace common
 }  // namespace aslam
 
-#endif  // VI_MAP_DESCRIPTOR_UTILS_H_
+#endif  // ASLAM_COMMON_DESCRIPTOR_UTILS_H_

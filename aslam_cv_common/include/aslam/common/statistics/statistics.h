@@ -1,7 +1,8 @@
-#ifndef ASLAM_STATISTICS_H_
-#define ASLAM_STATISTICS_H_
+#ifndef ASLAM_COMMON_STATISTICS_STATISTICS_H_
+#define ASLAM_COMMON_STATISTICS_STATISTICS_H_
 
 #include <chrono>
+#include <limits>
 #include <map>
 #include <mutex>
 #include <string>
@@ -17,99 +18,113 @@
 //
 // double my_distance = measureDistance();
 // statistics::DebugStatsCollector distance_stat("Distance measurement");
-// distance_stat.AddSample(my_distance);
+// distance_stat.addSample(my_distance);
 //
-// std::cout << statistics::Statistics::Print();
+// std::cout << statistics::Statistics::print();
 ///
 
 namespace statistics {
 
 const double kNumSecondsPerNanosecond = 1.e-9;
 
+template <class DataType>
 struct StatisticsMapValue {
-  static const int kWindowSize = 100;
+  static const size_t kWindowSize = 100u;
 
   inline StatisticsMapValue() {
     time_last_called_ = std::chrono::system_clock::now();
   }
 
-  inline void AddValue(double sample) {
+  inline void addValue(const DataType sample) {
     std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
-    double dt = static_cast<double>(
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        now - time_last_called_)
-                        .count()) *
-                kNumSecondsPerNanosecond;
+    const int64_t dt_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                              now - time_last_called_)
+                              .count();
     time_last_called_ = now;
 
-    values_.Add(sample);
-    time_deltas_.Add(dt);
+    values_.add(sample);
+    time_deltas_.add(dt_ns);
   }
-  inline double GetLastDeltaTime() const {
-    if (time_deltas_.total_samples()) {
-      return time_deltas_.GetMostRecent();
+
+  inline int64_t getLastDeltaTimeNanoseconds() const {
+    if (time_deltas_.getTotalNumSamples() > 0u) {
+      return time_deltas_.getMostRecent();
     } else {
-      return 0;
+      return -1;
     }
   }
-  inline double GetLastValue() const {
-    if (values_.total_samples()) {
-      return values_.GetMostRecent();
+
+  inline DataType getLastValue() const {
+    if (values_.getTotalNumSamples()) {
+      return values_.getMostRecent();
     } else {
-      return 0;
+      return static_cast<DataType>(0);
     }
   }
-  inline double Sum() const {
-    return values_.sum();
+
+  inline DataType getSum() const {
+    return values_.getSum();
   }
-  int TotalSamples() const {
-    return values_.total_samples();
+
+  size_t getTotalNumSamples() const {
+    return values_.getTotalNumSamples();
   }
-  double Mean() const {
-    return values_.Mean();
+
+  double getMean() const {
+    return values_.getMean();
   }
-  double RollingMean() const {
-    return values_.RollingMean();
+
+  double getRollingMean() const {
+    return values_.getRollingMean();
   }
-  double Max() const {
-    return values_.max();
+
+  DataType getMax() const {
+    return values_.getMax();
   }
-  double Min() const {
-    return values_.min();
+
+  DataType getMin() const {
+    return values_.getMin();
   }
-  double LazyVariance() const {
-    return values_.LazyVariance();
+
+  double getLazyVariance() const {
+    return values_.getLazyVariance();
   }
-  double MeanCallsPerSec() const {
-    double mean_dt = time_deltas_.Mean();
-    if (mean_dt != 0) {
-      return 1.0 / mean_dt;
+
+  double getMeanNumCallsPerSecond() const {
+    const double mean_dt_ns = time_deltas_.getMean();
+    CHECK_GE(mean_dt_ns, 0.0);
+    if (mean_dt_ns > std::numeric_limits<double>::epsilon()) {
+      return 1e9 / mean_dt_ns;
     } else {
       return -1.0;
     }
   }
 
-  double MeanDeltaTime() const {
-    return time_deltas_.Mean();
+  double getMeanDeltaTimeNanoseconds() const {
+    return time_deltas_.getMean();
   }
-  double RollingMeanDeltaTime() const {
-    return time_deltas_.RollingMean();
+
+  double getRollingMeanDeltaTimeNanoseconds() const {
+    return time_deltas_.getRollingMean();
   }
-  double MaxDeltaTime() const {
-    return time_deltas_.max();
+
+  int64_t getMaxDeltaTimeNanoseconds() const {
+    return time_deltas_.getMax();
   }
-  double MinDeltaTime() const {
-    return time_deltas_.min();
+
+  int64_t getMinDeltaTimeNanoseconds() const {
+    return time_deltas_.getMin();
   }
-  double LazyVarianceDeltaTime() const {
-    return time_deltas_.LazyVariance();
+
+  double getLazyVarianceDeltaTimeNanoseconds() const {
+    return time_deltas_.getLazyVariance();
   }
 
  private:
   // Create an accumulator with specified window size.
-  Accumulator<double, double, kWindowSize> values_;
-  Accumulator<double, double, kWindowSize> time_deltas_;
+  Accumulator<DataType, DataType, kWindowSize> values_;
+  Accumulator<int64_t, int64_t, kWindowSize> time_deltas_;
   std::chrono::time_point<std::chrono::system_clock> time_last_called_;
 };
 
@@ -118,24 +133,24 @@ struct StatisticsMapValue {
 // calls.
 class DummyStatsCollector {
  public:
-  explicit DummyStatsCollector(size_t /*handle*/) {}
-  explicit DummyStatsCollector(std::string const& /*tag*/) {}
-  void AddSample(double /*sample*/) const {}
-  void IncrementOne() const {}
-  size_t GetHandle() const {
+  explicit DummyStatsCollector(const size_t /*handle*/) {}
+  explicit DummyStatsCollector(const std::string& /*tag*/) {}
+  void addSample(const double /*sample*/) const {}
+  void incrementOne() const {}
+  size_t getHandle() const {
     return 0u;
   }
 };
 
 class StatsCollectorImpl {
  public:
-  explicit StatsCollectorImpl(size_t handle);
-  explicit StatsCollectorImpl(std::string const& tag);
+  explicit StatsCollectorImpl(const size_t handle);
+  explicit StatsCollectorImpl(const std::string& tag);
   ~StatsCollectorImpl() = default;
 
-  void AddSample(double sample) const;
-  void IncrementOne() const;
-  size_t GetHandle() const;
+  void addSample(const double sample) const;
+  void incrementOne() const;
+  size_t getHandle() const;
 
  private:
   size_t handle_;
@@ -146,55 +161,54 @@ class Statistics {
   typedef std::map<std::string, size_t> map_t;
   friend class StatsCollectorImpl;
   // Definition of static functions to query the stats.
-  static size_t GetHandle(std::string const& tag);
-  static bool HasHandle(std::string const& tag);
-  static std::string GetTag(size_t handle);
-  static double GetLastValue(size_t handle);
-  static double GetLastValue(std::string const& tag);
-  static double GetTotal(size_t handle);
-  static double GetTotal(std::string const& tag);
-  static double GetMean(size_t handle);
-  static double GetMean(std::string const& tag);
-  static size_t GetNumSamples(size_t handle);
-  static size_t GetNumSamples(std::string const& tag);
-  static double GetVariance(size_t handle);
-  static double GetVariance(std::string const& tag);
-  static double GetMin(size_t handle);
-  static double GetMin(std::string const& tag);
-  static double GetMax(size_t handle);
-  static double GetMax(std::string const& tag);
-  static double GetHz(size_t handle);
-  static double GetHz(std::string const& tag);
+  static size_t getHandle(const std::string& tag);
+  static bool hasHandle(const std::string& tag);
+  static std::string getTag(const size_t handle);
+  static double getLastValue(const size_t handle);
+  static double getLastValue(const std::string& tag);
+  static double getSum(const size_t handle);
+  static double getSum(const std::string& tag);
+  static double getMean(const size_t handle);
+  static double getMean(const std::string& tag);
+  static size_t getNumSamples(const size_t handle);
+  static size_t getNumSamples(const std::string& tag);
+  static double getVariance(const size_t handle);
+  static double getVariance(const std::string& tag);
+  static double getMin(const size_t handle);
+  static double getMin(const std::string& tag);
+  static double getMax(const size_t handle);
+  static double getMax(const std::string& tag);
+  static double getHz(const size_t handle);
+  static double getHz(const std::string& tag);
 
-  static double GetMeanDeltaTime(std::string const& tag);
-  static double GetMeanDeltaTime(size_t handle);
-  static double GetMaxDeltaTime(std::string const& tag);
-  static double GetMaxDeltaTime(size_t handle);
-  static double GetMinDeltaTime(std::string const& tag);
-  static double GetMinDeltaTime(size_t handle);
-  static double GetLastDeltaTime(std::string const& tag);
-  static double GetLastDeltaTime(size_t handle);
-  static double GetVarianceDeltaTime(std::string const& tag);
-  static double GetVarianceDeltaTime(size_t handle);
+  static double getMeanDeltaTimeNanoseconds(const std::string& tag);
+  static double getMeanDeltaTimeNanoseconds(const size_t handle);
+  static int64_t getMaxDeltaTimeNanoseconds(const std::string& tag);
+  static int64_t getMaxDeltaTimeNanoseconds(const size_t handle);
+  static int64_t getMinDeltaTimeNanoseconds(const std::string& tag);
+  static int64_t getMinDeltaTimeNanoseconds(const size_t handle);
+  static int64_t getLastDeltaTimeNanoseconds(const std::string& tag);
+  static int64_t getLastDeltaTimeNanoseconds(const size_t handle);
+  static double getVarianceDeltaTimeNanoseconds(const std::string& tag);
+  static double getVarianceDeltaTimeNanoseconds(const size_t handle);
 
-  static void WriteToYamlFile(const std::string& path);
-  static void Print(std::ostream& out);  // NOLINT
-  static std::string Print();
-  static std::string SecondsToTimeString(double seconds);
-  static void Reset();
-  static const map_t& GetStatsCollectors() {
+  static void writeToYamlFile(const std::string& path);
+  static void print(std::ostream& out);  // NOLINT
+  static std::string print();
+  static void reset();
+  static const map_t& getStatsCollectors() {
     return Instance().tag_map_;
   }
 
  private:
-  void AddSample(size_t handle, double sample);
+  void addSample(const size_t handle, const double sample);
 
   static Statistics& Instance();
 
   Statistics();
-  ~Statistics();
+  ~Statistics() = default;
 
-  typedef std::vector<statistics::StatisticsMapValue> list_t;
+  using list_t = std::vector<statistics::StatisticsMapValue<double>>;
 
   list_t stats_collectors_;
   map_t tag_map_;
@@ -203,11 +217,37 @@ class Statistics {
 };
 
 #if ENABLE_STATISTICS
-typedef StatsCollectorImpl StatsCollector;
+using StatsCollector = StatsCollectorImpl;
 #else
-typedef DummyStatsCollector StatsCollector;
+using StatsCollector = DummyStatsCollector;
 #endif
+
+inline std::string secondsToTimeString(const double seconds) {
+  double secs = fmod(seconds, 60);
+  int minutes = (seconds / 60);
+  int hours = (seconds / 3600);
+  minutes = minutes - (hours * 60);
+
+  char buffer[256];
+  snprintf(
+      buffer, sizeof(buffer),
+#ifdef SM_TIMING_SHOW_HOURS
+      "%02d:"
+#endif
+#ifdef SM_TIMING_SHOW_MINUTES
+      "%02d:"
+#endif
+      "%09.6f",
+#ifdef SM_TIMING_SHOW_HOURS
+      hours,
+#endif
+#ifdef SM_TIMING_SHOW_MINUTES
+      minutes,
+#endif
+      secs);
+  return buffer;
+}
 
 }  // namespace statistics
 
-#endif  // ASLAM_STATISTICS_H_
+#endif  // ASLAM_COMMON_STATISTICS_STATISTICS_H_

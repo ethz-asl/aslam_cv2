@@ -1,5 +1,5 @@
-#ifndef ASLAM_THREAD_POOL_H
-#define ASLAM_THREAD_POOL_H
+#ifndef ASLAM_COMMON_THREAD_POOL_H_
+#define ASLAM_COMMON_THREAD_POOL_H_
 
 // Adapted from https://github.com/progschj/ThreadPool on September 3, 2014
 //
@@ -25,8 +25,9 @@
 //   3. This notice may not be removed or altered from any source
 //   distribution.
 #include <condition_variable>
-#include <future>
+#include <deque>
 #include <functional>
+#include <future>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -34,6 +35,7 @@
 #include <stdexcept>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <glog/logging.h>
@@ -45,7 +47,7 @@ class ThreadPool {
   /// \brief Create a thread pool.
   ///
   /// \param[in] numThreads The number of threads in the pool.
-  ThreadPool(const size_t numThreads);
+  ThreadPool(const size_t numThreads);  // NOLINT
   ~ThreadPool();
 
   /// \brief Enqueue work for the thread pool
@@ -54,24 +56,26 @@ class ThreadPool {
   /// \param[in] function A function pointer to be called by a thread.
   /// \param[in] exclusivity_group_id All tasks belonging to the same group id
   ///            are executed in series and the order is guaranteed. A group id
-  ///            of kGroupdIdNonExclusiveTask means there are no such guarantees.
+  ///            of kGroupdIdNonExclusiveTask means there are no such
+  ///            guarantees.
   /// \returns A std::future that will return the result of calling function.
   ///          If this function is called after the thread pool has been
   ///          stopped, it will return an uninitialized future that will return
   ///          future.valid() == false
-  template<class Function, class ... Args>
-  std::future<typename std::result_of<Function(Args...)>::type>
-  enqueueOrdered(const size_t exclusivity_group_id, Function&& function,
-                 Args&&... args);
+  template <class Function, class... Args>
+  std::future<typename std::result_of<Function(Args...)>::type> enqueueOrdered(
+      const size_t exclusivity_group_id, Function&& function, Args&&... args);
   /// Same as method enqueueOrdered but the group id is set to -1 per default
   /// and all tasks are started in order but there is no guarantee on the result
   /// order.
-  template<class Function, class... Args>
-  std::future<typename std::result_of<Function(Args...)>::type>
-  enqueue(Function&& function, Args&&... args);
+  template <class Function, class... Args>
+  std::future<typename std::result_of<Function(Args...)>::type> enqueue(
+      Function&& function, Args&&... args);
 
-  /// \brief Stop the thread pool. This method is non-blocking.
-  void stop(){ stop_ = true; }
+  /// \brief.stop the thread pool. This method is non-blocking.
+  void stop() {
+    stop_ = true;
+  }
 
   // Number of queued tasks.
   size_t numQueuedTasks() const;
@@ -80,6 +84,7 @@ class ThreadPool {
 
   static constexpr size_t kGroupdIdNonExclusiveTask =
       std::numeric_limits<size_t>::max();
+
  private:
   // This version is not threadsafe.
   size_t numQueuedTasksImpl() const;
@@ -116,21 +121,21 @@ class ThreadPool {
 };
 
 // Add new work item to the pool.
-template<class Function, class... Args>
+template <class Function, class... Args>
 std::future<typename std::result_of<Function(Args...)>::type>
 ThreadPool::enqueue(Function&& function, Args&&... args) {
-  return enqueueOrdered(kGroupdIdNonExclusiveTask, function,
-                        std::forward<Args>(args)...);
+  return enqueueOrdered(
+      kGroupdIdNonExclusiveTask, function, std::forward<Args>(args)...);
 }
 
 // Add new work item to the pool.
-template<class Function, class... Args>
+template <class Function, class... Args>
 std::future<typename std::result_of<Function(Args...)>::type>
-ThreadPool::enqueueOrdered(const size_t exclusivity_group_id,
-                           Function&& function, Args&&... args) {
+ThreadPool::enqueueOrdered(
+    const size_t exclusivity_group_id, Function&& function, Args&&... args) {
   typedef typename std::result_of<Function(Args...)>::type return_type;
   // Don't allow enqueueing after stopping the pool.
-  if(stop_) {
+  if (stop_) {
     LOG(ERROR) << "enqueue() called on stopped ThreadPool";
     // An empty future will return valid() == false.
     return std::future<typename std::result_of<Function(Args...)>::type>();
@@ -141,13 +146,12 @@ ThreadPool::enqueueOrdered(const size_t exclusivity_group_id,
   std::future<return_type> res = task->get_future();
   {
     std::unique_lock<std::mutex> lock(tasks_mutex_);
-    groupid_tasks_.emplace_back(exclusivity_group_id, [task](){ (*task)();});
+    groupid_tasks_.emplace_back(exclusivity_group_id, [task]() { (*task)(); });
 
     // Initialize a group id exclusivity guard.
     if (exclusivity_group_id == kGroupdIdNonExclusiveTask) {
       ++num_queued_nonexclusive_tasks;
-    } else if (groupid_exclusivity_guards_.count(
-        exclusivity_group_id) == 0u) {
+    } else if (groupid_exclusivity_guards_.count(exclusivity_group_id) == 0u) {
       groupid_exclusivity_guards_.emplace(exclusivity_group_id, false);
     }
   }
@@ -157,4 +161,4 @@ ThreadPool::enqueueOrdered(const size_t exclusivity_group_id,
 
 }  // namespace aslam
 
-#endif // ASLAM_THREAD_POOL_H
+#endif  // ASLAM_COMMON_THREAD_POOL_H_

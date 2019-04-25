@@ -19,6 +19,8 @@ set(HEADERS
   include/aslam/matcher/matching-engine-non-exclusive.h
   include/aslam/matcher/matching-problem.h
   include/aslam/matcher/matching-problem-frame-to-frame.h
+  include/aslam/matcher/matching-problem-lines-to-frame.h
+  include/aslam/matcher/matching-problem-infinite-lines-to-frame.h
 )
 
 set(SOURCES
@@ -27,11 +29,11 @@ set(SOURCES
   src/match-visualization.cc
   src/matching-problem.cc
   src/matching-problem-frame-to-frame.cc
+  src/matching-problem-lines-to-frame.cc
+  src/matching-problem-infinite-lines-to-frame.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-
-add_doxygen(NOT_AUTOMATIC)
 
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
