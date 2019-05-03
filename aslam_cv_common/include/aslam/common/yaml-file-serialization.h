@@ -39,8 +39,7 @@ class YamlFileSerializable {
       return false;
     }
 
-    deserialize(yaml_node);
-    return true;
+    return deserialize(yaml_node);
   }
 };
 }  // namespace vi_map

@@ -1,11 +1,9 @@
 #include <aslam/common/sensor.h>
 
 namespace aslam {
-Sensor::Sensor(int sensor_type)
-    : sensor_type_(sensor_type) {}
+Sensor::Sensor(int sensor_type) : sensor_type_(sensor_type) {}
 
-Sensor::Sensor(const SensorId& id)
-    : id_(id) {
+Sensor::Sensor(const SensorId& id) : id_(id) {
   CHECK(id_.isValid());
 };
 
@@ -41,8 +39,8 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
   CHECK(!sensor_node.IsNull());
   std::string id_as_string;
   if (YAML::safeGet(
-        sensor_node, static_cast<std::string>(kYamlFieldNameId),
-        &id_as_string)) {
+          sensor_node, static_cast<std::string>(kYamlFieldNameId),
+          &id_as_string)) {
     CHECK(!id_as_string.empty());
     CHECK(id_.fromHexString(id_as_string));
   } else {
@@ -53,27 +51,26 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
 
   std::string sensor_type_as_string;
   if (YAML::safeGet(
-        sensor_node, static_cast<std::string>(kYamlFieldNameSensorType),
-        &sensor_type_as_string)) {
+          sensor_node, static_cast<std::string>(kYamlFieldNameSensorType),
+          &sensor_type_as_string)) {
     try {
       sensor_type_ = std::stoi(sensor_type_as_string);
-    } catch(const std::exception& e) {
-      LOG(ERROR)
-          << "Exception " << e.what() << ", sensor type "
-          << sensor_type_as_string << " must be an integer.";
+    } catch (const std::exception& e) {
+      LOG(ERROR) << "Exception " << e.what() << ", sensor type "
+                 << sensor_type_as_string << " must be an integer.";
       return false;
     }
   } else {
-    LOG(WARNING)
-        << "Unable to retrieve the sensor type, setting to unknown.";
+    LOG(WARNING) << "Unable to retrieve the sensor type, setting to unknown.";
     sensor_type_ = SensorType::kUnknown;
   }
 
-  if (sensor_type_ != aslam::SensorType::kNCamera && !YAML::safeGet(
-        sensor_node, static_cast<std::string>(kYamlFieldNameTopic), &topic_)) {
-    LOG(WARNING)
-        << "Unable to retrieve the sensor topic.";
-        return false;
+  if (sensor_type_ != aslam::SensorType::kNCamera &&
+      !YAML::safeGet(
+          sensor_node, static_cast<std::string>(kYamlFieldNameTopic),
+          &topic_)) {
+    LOG(ERROR) << "Unable to retrieve the sensor topic.";
+    return false;
   }
 
   return loadFromYamlNodeImpl(sensor_node);
