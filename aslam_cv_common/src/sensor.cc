@@ -73,6 +73,7 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
         sensor_node, static_cast<std::string>(kYamlFieldNameTopic), &topic_)) {
     LOG(WARNING)
         << "Unable to retrieve the sensor topic.";
+        return false;
   }
 
   return loadFromYamlNodeImpl(sensor_node);

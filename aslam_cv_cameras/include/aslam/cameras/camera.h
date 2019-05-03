@@ -134,6 +134,10 @@ class Camera : public Sensor {
   Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
          Type camera_type);
 
+  Sensor::Ptr cloneAsSensor() const override {
+    return std::dynamic_pointer_cast<Sensor>(std::shared_ptr<Camera>(clone()));
+  }
+
  public:
   virtual ~Camera() = default;
 

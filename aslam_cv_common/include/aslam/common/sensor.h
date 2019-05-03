@@ -37,6 +37,8 @@ class Sensor : public YamlFileSerializable {
         topic_(other.topic_) {}
   void operator=(const Sensor& other) = delete;
 
+  virtual Sensor::Ptr cloneAsSensor() const = 0;
+
   // Set the sensor id.
   void setId(const SensorId& id);
   void setSensorType(int sensor_type) { sensor_type_ = sensor_type; };

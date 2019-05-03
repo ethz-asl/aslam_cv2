@@ -73,10 +73,9 @@ class NCamera : public Sensor {
     return aligned_shared<NCamera>(*this);
   }
 
-  /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
-  //static NCamera::Ptr loadFromYaml(const std::string& yaml_file);
-  //static NCamera::Ptr deserializeFromYaml(
-  //    const YAML::Node& yaml_node);
+  Sensor::Ptr cloneAsSensor() const override {
+    return std::dynamic_pointer_cast<Sensor>(cloneToShared());
+  }
 
   /// Get the number of cameras.
   size_t getNumCameras() const;
