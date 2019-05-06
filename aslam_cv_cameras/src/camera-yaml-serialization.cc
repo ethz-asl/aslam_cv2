@@ -38,7 +38,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
                 << distortion_parameters.transpose() << std::endl <<
                 "See aslam::EquidistantDistortion::areParametersValid(...) for conditions on what "
                 "valid Equidistant distortion parameters look like.";
-            return true;
+            return false;
           }
         } else if(distortion_type == "fisheye") {
           if (aslam::FisheyeDistortion::areParametersValid(distortion_parameters)) {
@@ -48,7 +48,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
                 << distortion_parameters.transpose() << std::endl <<
                 "See aslam::FisheyeDistortion::areParametersValid(...) for conditions on what "
                 "valid Fisheye distortion parameters look like.";
-            return true;
+            return false;
           }
         } else if(distortion_type == "radial-tangential") {
           if (aslam::RadTanDistortion::areParametersValid(distortion_parameters)) {
@@ -58,21 +58,21 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
                 << distortion_parameters.transpose() << std::endl <<
                 "See aslam::RadTanDistortion::areParametersValid(...) for conditions on what "
                 "valid RadTan distortion parameters look like.";
-            return true;
+            return false;
           }
         } else {
             LOG(ERROR) << "Unknown distortion model: \"" << distortion_type << "\". "
                 << "Valid values are {none, equidistant, fisheye, radial-tangential}.";
-            return true;
+            return false;
         }
         if (!distortion->distortionParametersValid(distortion_parameters)) {
           LOG(ERROR) << "Invalid distortion parameters: " << distortion_parameters.transpose();
-          return true;
+          return false;
         }
       } else {
         LOG(ERROR) << "Unable to get the required parameters from the distortion. "
             << "Required: string type, VectorXd parameters.";
-        return true;
+        return false;
       }
     } else {
       distortion.reset(new aslam::NullDistortion());
@@ -95,7 +95,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
               << intrinsics.transpose() << std::endl <<
               "See aslam::PinholeCamera::areParametersValid(...) for conditions on what "
               "valid Pinhole camera intrinsics look like.";
-          return true;
+          return false;
         }
       } else if(camera_type == "unified-projection") {
         if (aslam::UnifiedProjectionCamera::areParametersValid(intrinsics)) {
@@ -106,17 +106,17 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
               << intrinsics.transpose() << std::endl <<
               "See aslam::UnifiedProjectionCamera::areParametersValid(...) for conditions on what "
               "valid UnifiedProjection camera intrinsics look like.";
-          return true;
+          return false;
         }
       } else {
         LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
             << "Valid values are {pinhole, unified-projection}.";
-        return true;
+        return false;
       }
     } else {
       LOG(ERROR) << "Unable to get the required parameters from the camera. "
           << "Required: string type, int image_height, int image_width, VectorXd intrinsics.";
-      return true;
+      return false;
     }
     // ID
     aslam::CameraId id;
@@ -125,7 +125,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       if(!id.fromHexString(id_string)) {
         LOG(ERROR) << "Unable to parse \"" << id_string << "\" as a hex string.";
         camera.reset();
-        return true;
+        return false;
       }
     } else {
       LOG(WARNING) << "Unable to get the id for the camera. Generating new random id.";
@@ -139,7 +139,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
       } else {
         LOG(ERROR) << "Unable to parse the parameter line-delay-nanoseconds.";
         camera.reset();
-        return true;
+        return false;
       }
     }
 
@@ -149,7 +149,7 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
   } catch(const std::exception& e) {
     LOG(ERROR) << "Yaml exception during parsing: " << e.what();
     camera.reset();
-    return true;
+    return false;
   }
   return true;
 }
