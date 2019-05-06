@@ -77,6 +77,15 @@ class NCamera : public Sensor {
     return std::dynamic_pointer_cast<Sensor>(cloneToShared());
   }
 
+  /// Get sensor type as an integer or as a string
+  int getSensorType() const override {
+    return SensorType::kNCamera;
+  }
+
+  std::string getSensorTypeString() const override {
+    return static_cast<std::string>(kNCameraIdentifier);
+  }
+
   /// Get the number of cameras.
   size_t getNumCameras() const;
 
@@ -153,8 +162,8 @@ private:
   bool isValidImpl() const override { return true; };
   void setRandomImpl() override {};
 
-  virtual bool loadFromYamlNodeImpl(const YAML::Node&);
-  virtual void saveToYamlNodeImpl(YAML::Node*) const;
+  virtual bool loadFromYamlNodeImpl(const YAML::Node&) override;
+  virtual void saveToYamlNodeImpl(YAML::Node*) const override;
 
   /// Internal consistency checks and initialization.
   void initInternal();

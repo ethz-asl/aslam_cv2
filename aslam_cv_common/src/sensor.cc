@@ -1,19 +1,13 @@
 #include <aslam/common/sensor.h>
 
 namespace aslam {
-Sensor::Sensor(int sensor_type) : sensor_type_(sensor_type) {}
 
 Sensor::Sensor(const SensorId& id) : id_(id) {
   CHECK(id_.isValid());
 };
 
-Sensor::Sensor(const SensorId& id, int sensor_type)
-    : id_(id), sensor_type_(sensor_type) {
-  CHECK(id_.isValid());
-};
-
-Sensor::Sensor(const SensorId& id, int sensor_type, const std::string& topic)
-    : id_(id), sensor_type_(sensor_type), topic_(topic) {
+Sensor::Sensor(const SensorId& id, const std::string& topic)
+    : id_(id), topic_(topic) {
   CHECK(id_.isValid());
 };
 
@@ -49,23 +43,7 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
   }
   CHECK(id_.isValid());
 
-  std::string sensor_type_as_string;
-  if (YAML::safeGet(
-          sensor_node, static_cast<std::string>(kYamlFieldNameSensorType),
-          &sensor_type_as_string)) {
-    try {
-      sensor_type_ = std::stoi(sensor_type_as_string);
-    } catch (const std::exception& e) {
-      LOG(ERROR) << "Exception " << e.what() << ", sensor type "
-                 << sensor_type_as_string << " must be an integer.";
-      return false;
-    }
-  } else {
-    LOG(WARNING) << "Unable to retrieve the sensor type, setting to unknown.";
-    sensor_type_ = SensorType::kUnknown;
-  }
-
-  if (sensor_type_ != aslam::SensorType::kNCamera &&
+  if (getSensorType() != aslam::SensorType::kNCamera &&
       !YAML::safeGet(
           sensor_node, static_cast<std::string>(kYamlFieldNameTopic),
           &topic_)) {
@@ -82,11 +60,12 @@ void Sensor::serialize(YAML::Node* sensor_node_ptr) const {
   CHECK(id_.isValid());
   sensor_node[static_cast<std::string>(kYamlFieldNameId)] = id_.hexString();
   sensor_node[static_cast<std::string>(kYamlFieldNameSensorType)] =
-      std::to_string(sensor_type_);
-  if (sensor_type_ != aslam::SensorType::kNCamera) {
+      getSensorTypeString();
+  if (getSensorType() != aslam::SensorType::kNCamera) {
     sensor_node[static_cast<std::string>(kYamlFieldNameTopic)] = topic_;
   }
 
   saveToYamlNodeImpl(&sensor_node);
 }
+
 }  // namespace aslam

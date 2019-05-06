@@ -9,11 +9,15 @@
 #include <aslam/common/yaml-file-serialization.h>
 
 namespace aslam {
+
 enum SensorType : int {
   kUnknown,
   kNCamera,
   kCamera
 };
+
+constexpr char kNCameraIdentifier[] = "NCAMERA";
+constexpr char kCameraIdentifier[] = "CAMERA";
 
 constexpr char kYamlFieldNameId[] = "id";
 constexpr char kYamlFieldNameSensorType[] = "sensor_type";
@@ -24,16 +28,13 @@ class Sensor : public YamlFileSerializable {
   ASLAM_POINTER_TYPEDEFS(Sensor);
 
   Sensor() {};
-  explicit Sensor(int sensor_type);
   explicit Sensor(const SensorId& id);
-  Sensor(const SensorId& id, int sensor_type);
-  Sensor(const SensorId& id, int sensor_type, const std::string& topic);
+  Sensor(const SensorId& id, const std::string& topic);
 
   virtual ~Sensor() = default;
 
   Sensor(const Sensor& other)
       : id_(other.id_),
-        sensor_type_(other.sensor_type_),
         topic_(other.topic_) {}
   void operator=(const Sensor& other) = delete;
 
@@ -41,13 +42,15 @@ class Sensor : public YamlFileSerializable {
 
   // Set the sensor id.
   void setId(const SensorId& id);
-  void setSensorType(int sensor_type) { sensor_type_ = sensor_type; };
   void setTopic(const std::string& topic) { topic_ = topic; }
 
   // Get the sensor id.
   const SensorId& getId() const { return id_; }
-  int getSensorType() const { return sensor_type_; }
   const std::string& getTopic() const {return topic_; }
+
+  // Virtual
+  virtual int getSensorType() const = 0;
+  virtual std::string getSensorTypeString() const = 0;
 
   bool isValid() const;
 
@@ -65,10 +68,9 @@ class Sensor : public YamlFileSerializable {
  protected:
   // The id of this sensor.
   SensorId id_;
-  int sensor_type_;
   std::string topic_;
-
 };
+
 }  // namespace aslam
 
 #endif  // ASLAM_COMMON_SENSOR_H_

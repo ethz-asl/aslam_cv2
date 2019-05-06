@@ -14,15 +14,12 @@
 
 namespace aslam {
 
-NCamera::NCamera()
-    : Sensor(aslam::SensorType::kNCamera) {}
+NCamera::NCamera() {}
 
-NCamera::NCamera(const NCameraId& id, const TransformationVector& T_C_B,
-                 const std::vector<Camera::Ptr>& cameras, const std::string& label)
-    : Sensor(id, aslam::SensorType::kNCamera),
-      T_C_B_(T_C_B),
-      cameras_(cameras),
-      label_(label) {
+NCamera::NCamera(
+    const NCameraId& id, const TransformationVector& T_C_B,
+    const std::vector<Camera::Ptr>& cameras, const std::string& label)
+    : Sensor(id), T_C_B_(T_C_B), cameras_(cameras), label_(label) {
   CHECK(id.isValid());
   initInternal();
 }
