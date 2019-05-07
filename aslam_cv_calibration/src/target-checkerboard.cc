@@ -46,12 +46,12 @@ TargetCheckerboard::TargetCheckerboard(const TargetCheckerboard::TargetConfigura
 
 Eigen::Matrix3Xd createCheckerboardPoints( //not sure but might be correct as is
     const TargetCheckerboard::TargetConfiguration& target_config) {
-  // point ordering: (e.g. 2x2 grid)
+  // point ordering: (e.g. 2x2 grid) (according to opencv)
   //          *-------*-------*-------*
   //          | BLACK | WHITE | BLACK |
-  //          *------(2)-----(3)------*
-  //          | WHITE | BLACK | WHITE |
   //          *------(0)-----(1)------*
+  //          | WHITE | BLACK | WHITE |
+  //          *------(2)-----(3)------*
   //    y     | BLACK | WHITE | BLACK |
   //   ^      *-------*-------*-------*
   //   |-->x
@@ -66,7 +66,7 @@ Eigen::Matrix3Xd createCheckerboardPoints( //not sure but might be correct as is
     for (size_t col_idx = 0u; col_idx < num_point_cols; ++col_idx) {
       Eigen::Vector3d point;
       point(0) = static_cast<double>(col_idx + 1) * tag_size;
-      point(1) = static_cast<double>(row_idx + 1) * tag_size;
+      point(1) = static_cast<double>(num_point_rows - row_idx) * tag_size;
       point(2) = 0.0;
 
       grid_points_meters.col(row_idx * num_point_cols + col_idx) = point;
