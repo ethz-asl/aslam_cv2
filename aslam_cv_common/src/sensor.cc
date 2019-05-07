@@ -16,6 +16,10 @@ void Sensor::setId(const SensorId& id) {
   CHECK(id_.isValid());
 };
 
+ void Sensor::setDescription(const std::string& description ) {
+   description_ = description;
+ }
+
 bool Sensor::isValid() const {
   if (!id_.isValid()) {
     LOG(ERROR) << "Invalid sensor id.";
@@ -51,6 +55,13 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
     return false;
   }
 
+  if (!YAML::safeGet(
+          sensor_node, static_cast<std::string>(kYamlFieldNameDescription),
+          &description_)) {
+    LOG(WARNING)
+        << "Unable to retrieve the sensor description.";
+  }
+
   return loadFromYamlNodeImpl(sensor_node);
 }
 
@@ -64,6 +75,8 @@ void Sensor::serialize(YAML::Node* sensor_node_ptr) const {
   if (getSensorType() != aslam::SensorType::kNCamera) {
     sensor_node[static_cast<std::string>(kYamlFieldNameTopic)] = topic_;
   }
+  sensor_node[static_cast<std::string>(kYamlFieldNameDescription)] =
+    description_;
 
   saveToYamlNodeImpl(&sensor_node);
 }
