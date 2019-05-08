@@ -78,7 +78,7 @@ class NCamera : public Sensor {
   }
 
   /// Get sensor type as an integer or as a string
-  int getSensorType() const override {
+  uint8_t getSensorType() const override {
     return SensorType::kNCamera;
   }
 
