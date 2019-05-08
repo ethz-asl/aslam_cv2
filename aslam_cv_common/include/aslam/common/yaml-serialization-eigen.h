@@ -69,7 +69,7 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
           ++it;
         }
       }
-    } else if (node.size() == rows) {
+    } else if (static_cast<int>(node.size()) == rows) {
       // If the 2D matrix is stored as a 2D, row-major matrix.
       for (IndexType i = 0; i < rows; ++i) {
         CHECK(it != it_end);
@@ -80,7 +80,7 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
         if (it->IsSequence()) {
           YAML::const_iterator col_it = it->begin();
           YAML::const_iterator col_it_end = it->end();
-          CHECK(it->size() == cols)
+          CHECK(static_cast<int>(it->size()) == cols)
               << "Wrong dimension of Eigen-type matrix! Expected " << cols
               << " columns, but provided " << it->size();
 
