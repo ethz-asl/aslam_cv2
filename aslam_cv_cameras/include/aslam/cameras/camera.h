@@ -481,7 +481,7 @@ class Camera : public Sensor {
   }
 
   /// Function to check whether the given intrinsic parameters are valid for this model.
-  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) = 0;
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) const = 0;
 
   /// @}
 
@@ -534,8 +534,9 @@ class Camera : public Sensor {
   /// @}
 
  private:
-  bool isValidImpl() const override { return true; }
-  void setRandomImpl() override {}
+  bool isValidImpl() const = 0;
+  void setRandomImpl() = 0;
+  bool isEqualImpl(const Sensor& other) const = 0;
 
   // TODO(smauq): Fix
   virtual bool loadFromYamlNodeImpl(const YAML::Node&) override {

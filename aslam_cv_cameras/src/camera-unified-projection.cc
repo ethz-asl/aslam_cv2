@@ -6,6 +6,8 @@
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/types.h>
 
+#include "aslam/cameras/random-camera-generator.h"
+
 namespace aslam {
 std::ostream& operator<<(std::ostream& out,
                                   const UnifiedProjectionCamera& camera) {
@@ -315,7 +317,8 @@ bool UnifiedProjectionCamera::areParametersValid(const Eigen::VectorXd& paramete
          (parameters[4] > 0.0);    //cv
 }
 
-bool UnifiedProjectionCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
+bool UnifiedProjectionCamera::intrinsicsValid(
+    const Eigen::VectorXd& intrinsics) const {
   return areParametersValid(intrinsics);
 }
 
@@ -330,5 +333,38 @@ void UnifiedProjectionCamera::printParameters(std::ostream& out, const std::stri
 
   out << "  distortion: ";
   distortion_->printParameters(out, text);
+}
+
+bool UnifiedProjectionCamera::isValidImpl() const {
+  return intrinsicsValid(intrinsics_);
+}
+
+void UnifiedProjectionCamera::setRandomImpl() {
+  UnifiedProjectionCamera::Ptr test_camera =
+      UnifiedProjectionCamera::createTestCamera();
+  CHECK(test_camera);
+  intrinsics_ = test_camera->intrinsics_;
+  camera_type_ = test_camera->camera_type_;
+  if (test_camera->distortion_) {
+    distortion_ = std::move(test_camera->distortion_);
+  }
+}
+
+bool UnifiedProjectionCamera::isEqualImpl(const Sensor& other) const {
+  const UnifiedProjectionCamera* other_camera =
+      dynamic_cast<const UnifiedProjectionCamera*>(&other);
+  if (other_camera == nullptr) {
+    return false;
+  }
+  return operator==(*other_camera);
+}
+
+UnifiedProjectionCamera::Ptr UnifiedProjectionCamera::createTestCamera() {
+  UnifiedProjectionCamera::Ptr camera(
+      new UnifiedProjectionCamera(0.9, 400, 300, 320, 240, 640, 480));
+  CameraId id;
+  generateId(&id);
+  camera->setId(id);
+  return camera;
 }
 }  // namespace aslam

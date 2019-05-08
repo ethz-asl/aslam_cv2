@@ -8,16 +8,17 @@ catkin_simple(ALL_DEPS_REQUIRED)
 # LIBRARIES #
 #############
 set(SOURCES
-  src/camera.cc
   src/camera-factory.cc
   src/camera-pinhole.cc
   src/camera-unified-projection.cc
   src/camera-yaml-serialization.cc
-  src/distortion.cc
+  src/camera.cc
   src/distortion-equidistant.cc
   src/distortion-fisheye.cc
   src/distortion-radtan.cc
+  src/distortion.cc
   src/ncamera.cc
+  src/random-camera-generator.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES})

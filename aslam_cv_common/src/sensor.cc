@@ -16,9 +16,9 @@ void Sensor::setId(const SensorId& id) {
   CHECK(id_.isValid());
 };
 
- void Sensor::setDescription(const std::string& description ) {
-   description_ = description;
- }
+void Sensor::setDescription(const std::string& description) {
+  description_ = description;
+}
 
 bool Sensor::isValid() const {
   if (!id_.isValid()) {
@@ -58,8 +58,7 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
   if (!YAML::safeGet(
           sensor_node, static_cast<std::string>(kYamlFieldNameDescription),
           &description_)) {
-    LOG(WARNING)
-        << "Unable to retrieve the sensor description.";
+    LOG(WARNING) << "Unable to retrieve the sensor description.";
   }
 
   return loadFromYamlNodeImpl(sensor_node);
@@ -76,9 +75,27 @@ void Sensor::serialize(YAML::Node* sensor_node_ptr) const {
     sensor_node[static_cast<std::string>(kYamlFieldNameTopic)] = topic_;
   }
   sensor_node[static_cast<std::string>(kYamlFieldNameDescription)] =
-    description_;
+      description_;
 
   saveToYamlNodeImpl(&sensor_node);
+}
+
+bool Sensor::operator==(const Sensor& other) const {
+  return isEqual(other);
+}
+
+bool Sensor::operator!=(const Sensor& other) const {
+  return !isEqual(other);
+}
+
+bool Sensor::isEqual(const Sensor& other) const {
+  bool is_equal = true;
+  is_equal &= id_ == other.id_;
+  is_equal &= topic_ == other.topic_;
+  is_equal &= description_ == other.description_;
+  is_equal &= getSensorType() == other.getSensorType();
+  is_equal &= isEqualImpl(other);
+  return is_equal;
 }
 
 }  // namespace aslam

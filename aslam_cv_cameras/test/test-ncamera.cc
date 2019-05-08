@@ -5,6 +5,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncamera.h>
+#include <aslam/cameras/random-camera-generator.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/yaml-serialization.h>
 
@@ -16,7 +17,7 @@ TEST(TestNCameraYamlSerialization, testEmptyYaml) {
 }
 
 TEST(TestNCameraYamlSerialization, testSerialization) {
-  aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(4u);
+  aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(4u);
   ASSERT_TRUE(ncamera.get() != nullptr);
 
   std::string filename = "test_ncamera.yaml";
@@ -49,7 +50,7 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
 }
 
 TEST(TestNCamera, testClone) {
-  aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(4u);
+  aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(4u);
   ASSERT_TRUE(ncamera.get() != nullptr);
 
   aslam::NCamera::Ptr ncamera_clone(ncamera->clone());
@@ -72,7 +73,7 @@ TEST(TestNCamera, testClone) {
 }
 
 TEST(TestNCamera, testCloneRigWithoutDistortion) {
-  aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(4u);
+  aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(4u);
   aslam::NCamera::Ptr ncamera_clone(ncamera->cloneRigWithoutDistortion());
 
   // Make sure the source rig has actually a distortion model set.

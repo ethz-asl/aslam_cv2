@@ -6,6 +6,8 @@
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/common/types.h>
 
+#include "aslam/cameras/random-camera-generator.h"
+
 namespace aslam {
 std::ostream& operator<<(std::ostream& out, const PinholeCamera& camera) {
   camera.printParameters(out, std::string(""));
@@ -232,7 +234,7 @@ bool PinholeCamera::areParametersValid(const Eigen::VectorXd& parameters) {
          (parameters[3] > 0.0);    //cv
 }
 
-bool PinholeCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
+bool PinholeCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) const {
   return areParametersValid(intrinsics);
 }
 
@@ -247,4 +249,36 @@ void PinholeCamera::printParameters(std::ostream& out, const std::string& text) 
   distortion_->printParameters(out, text);
 }
 const double PinholeCamera::kMinimumDepth = 1e-10;
+
+bool PinholeCamera::isValidImpl() const {
+  return intrinsicsValid(intrinsics_);
+}
+
+void PinholeCamera::setRandomImpl() {
+  PinholeCamera::Ptr test_camera = PinholeCamera::createTestCamera();
+  CHECK(test_camera);
+  intrinsics_ = test_camera->intrinsics_;
+  camera_type_ = test_camera->camera_type_;
+  if (test_camera->distortion_) {
+    distortion_ = std::move(test_camera->distortion_);
+  }
+}
+
+bool PinholeCamera::isEqualImpl(const Sensor& other) const {
+  const PinholeCamera* other_camera =
+      dynamic_cast<const PinholeCamera*>(&other);
+  if (other_camera == nullptr) {
+    return false;
+  }
+  return operator==(*other_camera);
+}
+
+PinholeCamera::Ptr PinholeCamera::createTestCamera() {
+  PinholeCamera::Ptr camera(new PinholeCamera(400, 300, 320, 240, 640, 480));
+  CameraId id;
+  generateId(&id);
+  camera->setId(id);
+  return camera;
+}
+
 }  // namespace aslam
