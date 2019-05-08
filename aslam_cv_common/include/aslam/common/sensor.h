@@ -10,7 +10,7 @@
 
 namespace aslam {
 
-enum SensorType : int {
+enum SensorType : uint8_t {
   kUnknown,
   kNCamera,
   kCamera
@@ -55,7 +55,7 @@ class Sensor : public YamlFileSerializable {
   const std::string& getDescription() const { return description_; }
 
   // Virtual
-  virtual int getSensorType() const = 0;
+  virtual uint8_t getSensorType() const = 0;
   virtual std::string getSensorTypeString() const = 0;
 
   bool isValid() const;

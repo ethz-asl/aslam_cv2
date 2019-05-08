@@ -154,7 +154,7 @@ class Camera : public Sensor {
   virtual aslam::Camera* clone() const = 0;
 
   /// Get sensor type as an integer or as a string
-  int getSensorType() const override {
+  uint8_t getSensorType() const override {
     return SensorType::kCamera;
   }
 
