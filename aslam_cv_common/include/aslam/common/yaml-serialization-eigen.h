@@ -22,8 +22,18 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
     CHECK_GT(rows, 0);
     CHECK_GT(cols, 0);
     for (IndexType i = 0; i < rows; ++i) {
-      for (IndexType j = 0; j < cols; ++j) {
-        node["data"].push_back(M(i, j));
+      if (cols > 1) {
+        YAML::Emitter ith_row;
+        ith_row << YAML::Flow;
+        ith_row << YAML::BeginSeq;
+        for (IndexType j = 0; j < cols; ++j) {
+          ith_row << M(i, j);
+        }
+        ith_row << YAML::EndSeq;
+        CHECK(ith_row.good()) << "Emitter error: " << ith_row.GetLastError();
+        node["data"].push_back(YAML::Load(ith_row.c_str()));
+      } else {
+        node["data"].push_back(M(i, 0));
       }
     }
     return node;
@@ -46,12 +56,12 @@ struct convert<Eigen::Matrix<Scalar_, A_, B_, C_, D_, E_> > {
     YAML::const_iterator it_end = node.end();
 
     // If the 2D matrix is stored as a linear array:
-    if (node.size() == rows * cols) {
+    if (static_cast<int>(node.size()) == rows * cols) {
       for (IndexType i = 0; i < rows; ++i) {
         for (IndexType j = 0; j < cols; ++j) {
           CHECK(it != it_end);
           if (it->IsSequence()) {
-            CHECK(it->size() != 1) << "Wrong dimension of Eigen-type matrix!";
+            CHECK(it->size() != 1u) << "Wrong dimension of Eigen-type matrix!";
             M(i, j) = it->begin()->as<Scalar>();
           } else {
             M(i, j) = it->as<Scalar>();
