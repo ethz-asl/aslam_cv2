@@ -190,10 +190,7 @@ class Camera : public Sensor {
   /// @{
  public:
   /// \brief Get a label for the camera.
-  const std::string& getLabel() const {return label_;}
-
-  /// \brief Set a label for the camera.
-  void setLabel(const std::string& label) {label_ = label;}
+  const std::string& getDescription() const {return label_;}
 
   /// \brief The width of the image in pixels.
   uint32_t imageWidth() const { return image_width_; }

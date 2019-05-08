@@ -142,10 +142,6 @@ bool convert<std::shared_ptr<aslam::Camera> >::decode(const Node& node,
         return false;
       }
     }
-
-    if(node["label"]) {
-      camera->setLabel(node["label"].as<std::string>());
-    }
   } catch(const std::exception& e) {
     LOG(ERROR) << "Yaml exception during parsing: " << e.what();
     camera.reset();
@@ -166,7 +162,7 @@ bool convert<aslam::Camera>::decode(const Node& /*node*/, aslam::Camera& /*camer
 Node convert<aslam::Camera>::encode(const aslam::Camera& camera) {
   Node camera_node;
 
-  camera_node["label"] = camera.getLabel();
+  camera_node["label"] = camera.getDescription();
   if(camera.getId().isValid()) {
     camera_node["id"] = camera.getId().hexString();
   }
