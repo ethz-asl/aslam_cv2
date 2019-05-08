@@ -48,11 +48,11 @@ class NCamera : public Sensor {
   /// @param id unique id for this camera rig
   /// @param T_C_B a list of transformations that take points from B to Ci
   /// @param cameras a list cameras
-  /// @param label a human-readable name for this camera rig
+  /// @param description a human-readable description of this camera rig
   NCamera(const NCameraId& id,
       const TransformationVector& T_C_B,
       const std::vector<std::shared_ptr<Camera>>& cameras,
-      const std::string& label);
+      const std::string& description);
 
   /// Initialize from a property tree.
   NCamera(const sm::PropertyTree& propertyTree);
@@ -75,6 +75,15 @@ class NCamera : public Sensor {
 
   Sensor::Ptr cloneAsSensor() const override {
     return std::dynamic_pointer_cast<Sensor>(cloneToShared());
+  }
+
+  /// Get sensor type as an integer or as a string
+  int getSensorType() const override {
+    return SensorType::kNCamera;
+  }
+
+  std::string getSensorTypeString() const override {
+    return static_cast<std::string>(kNCameraIdentifier);
   }
 
   /// Get the number of cameras.
@@ -131,12 +140,6 @@ class NCamera : public Sensor {
   /// @returns -1 if the rig doesn't have a camera with this id.
   int getCameraIndex(const CameraId& id) const;
 
-  /// Get a label for the camera.
-  inline const std::string& getLabel() const {return label_;}
-
-  /// Set a label for the camera.
-  inline void setLabel(const std::string& label) {label_ = label;}
-
   /// Create a test NCamera object for unit testing.
   static NCamera::Ptr createTestNCamera(size_t num_cameras);
 
@@ -153,8 +156,8 @@ private:
   bool isValidImpl() const override { return true; };
   void setRandomImpl() override {};
 
-  virtual bool loadFromYamlNodeImpl(const YAML::Node&);
-  virtual void saveToYamlNodeImpl(YAML::Node*) const;
+  virtual bool loadFromYamlNodeImpl(const YAML::Node&) override;
+  virtual void saveToYamlNodeImpl(YAML::Node*) const override;
 
   /// Internal consistency checks and initialization.
   void initInternal();
@@ -167,9 +170,6 @@ private:
 
   /// Map from camera id to index.
   std::unordered_map<CameraId, size_t> id_to_index_;
-
-  /// A label for this camera rig, a name.
-  std::string label_;
 };
 
 } // namespace aslam

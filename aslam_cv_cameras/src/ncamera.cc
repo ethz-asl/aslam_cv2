@@ -14,16 +14,14 @@
 
 namespace aslam {
 
-NCamera::NCamera()
-    : Sensor(aslam::SensorType::kNCamera) {}
+NCamera::NCamera() {}
 
-NCamera::NCamera(const NCameraId& id, const TransformationVector& T_C_B,
-                 const std::vector<Camera::Ptr>& cameras, const std::string& label)
-    : Sensor(id, aslam::SensorType::kNCamera),
-      T_C_B_(T_C_B),
-      cameras_(cameras),
-      label_(label) {
+NCamera::NCamera(
+    const NCameraId& id, const TransformationVector& T_C_B,
+    const std::vector<Camera::Ptr>& cameras, const std::string& description)
+    : Sensor(id), T_C_B_(T_C_B), cameras_(cameras) {
   CHECK(id.isValid());
+  description_ = description;
   initInternal();
 }
 
@@ -34,8 +32,7 @@ NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
 
 NCamera::NCamera(const NCamera& other) :
     Sensor(other),
-    T_C_B_(other.T_C_B_),
-    label_(other.label_) {
+    T_C_B_(other.T_C_B_) {
   // Clone all contained cameras.
   for (size_t idx = 0u; idx < other.getNumCameras(); ++idx) {
     cameras_.emplace_back(other.getCamera(idx).clone());
@@ -45,12 +42,6 @@ NCamera::NCamera(const NCamera& other) :
 
 bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   CHECK(yaml_node.IsMap());
-
-  // Parse the label.
-  if (!YAML::safeGet(yaml_node, "label", &label_)) {
-    LOG(ERROR) << "Unable to get the label for the ncamera.";
-    return false;
-  }
 
   // Parse the cameras.
   const YAML::Node& cameras_node = yaml_node["cameras"];
@@ -113,7 +104,6 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
 void NCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
   CHECK_NOTNULL(yaml_node);
   YAML::Node& node = *yaml_node;
-  node["label"] = label_;
 
   YAML::Node cameras_node;
   size_t num_cameras = numCameras();
@@ -251,8 +241,8 @@ NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
 
   aslam::NCameraId rig_id;
   generateId(&rig_id);
-  std::string label("Test camera rig");
-  return aslam::NCamera::Ptr(new aslam::NCamera(rig_id, T_C_B_vector, cameras, label));
+  std::string description("Test camera rig");
+  return aslam::NCamera::Ptr(new aslam::NCamera(rig_id, T_C_B_vector, cameras, description));
 }
 
 NCamera::Ptr NCamera::createSurroundViewTestNCamera() {
@@ -293,9 +283,9 @@ NCamera::Ptr NCamera::createSurroundViewTestNCamera() {
   rig_transformations.emplace_back(q_B_C1.inverse(), -t_B_C1);
   rig_transformations.emplace_back(q_B_C2.inverse(), -t_B_C2);
   rig_transformations.emplace_back(q_B_C3.inverse(), -t_B_C3);
-  std::string label = "Artificial Planar 4-Pinhole-Camera-Rig";
+  std::string description = "Artificial Planar 4-Pinhole-Camera-Rig";
   return aligned_shared<aslam::NCamera>(
-      rig_id, rig_transformations, cameras, label);
+      rig_id, rig_transformations, cameras, description);
 }
 
 aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
@@ -318,7 +308,7 @@ aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
 bool NCamera::operator==(const NCamera& other) const {
   bool same = true;
   same &= getNumCameras() == other.getNumCameras();
-  same &= label_ == other.label_;
+  same &= description_ == other.description_;
   same &= id_ == other.id_;
   if (same) {
     for (size_t i = 0; i < getNumCameras(); ++i) {
@@ -330,6 +320,7 @@ bool NCamera::operator==(const NCamera& other) const {
   return same;
 }
 
+// TODO(smauq): Fix this with respect to base class
 std::string NCamera::getComparisonString(const NCamera& other) const {
   if (operator==(other)) {
     return "There is no difference between the given ncameras.\n";
@@ -341,9 +332,9 @@ std::string NCamera::getComparisonString(const NCamera& other) const {
     ss << "The id is " << id_ << ", the other id is " << other.id_ << std::endl;
   }
 
-  if (label_ != other.label_) {
-    ss << "The label is " << label_ << ", the other label is " << other.label_
-        << std::endl;
+  if (description_ != other.description_) {
+    ss << "The description is " << description_ << ", the other description is "
+        << other.description_ << std::endl;
   }
 
   if (getNumCameras() != other.getNumCameras()) {

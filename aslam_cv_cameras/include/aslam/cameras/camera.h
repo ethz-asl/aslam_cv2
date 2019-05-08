@@ -153,6 +153,15 @@ class Camera : public Sensor {
   /// \brief Clones the camera instance and returns a pointer to the copy.
   virtual aslam::Camera* clone() const = 0;
 
+  /// Get sensor type as an integer or as a string
+  int getSensorType() const override {
+    return SensorType::kCamera;
+  }
+
+  std::string getSensorTypeString() const override {
+    return static_cast<std::string>(kCameraIdentifier);
+  }
+
   /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
   static std::shared_ptr<Camera> loadFromYaml(const std::string& yaml_file);
   /// Save this ncamera to a yaml file.
@@ -529,10 +538,10 @@ class Camera : public Sensor {
   void setRandomImpl() override {}
 
   // TODO(smauq): Fix
-  virtual bool loadFromYamlNodeImpl(const YAML::Node&) {
+  virtual bool loadFromYamlNodeImpl(const YAML::Node&) override {
     return true;
   }
-  virtual void saveToYamlNodeImpl(YAML::Node*) const {}
+  virtual void saveToYamlNodeImpl(YAML::Node*) const override {}
 
   /// The delay per scanline for a rolling shutter camera in nanoseconds.
   uint64_t line_delay_nanoseconds_;

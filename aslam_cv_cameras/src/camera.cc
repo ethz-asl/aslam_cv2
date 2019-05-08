@@ -27,10 +27,10 @@ std::ostream& operator<< (std::ostream& out, const ProjectionResult& state) {
 }
 
 /// Camera constructor with distortion
-Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
-               uint32_t image_width, uint32_t image_height, Type camera_type)
-    : Sensor(aslam::SensorType::kCamera),
-      line_delay_nanoseconds_(0),
+Camera::Camera(
+    const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
+    uint32_t image_width, uint32_t image_height, Type camera_type)
+    : line_delay_nanoseconds_(0),
       label_("unnamed camera"),
       image_width_(image_width),
       image_height_(image_height),
@@ -41,10 +41,10 @@ Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& 
 }
 
 /// Camera constructor without distortion
-Camera::Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
-               Type camera_type)
-    : Sensor(aslam::SensorType::kCamera),
-      line_delay_nanoseconds_(0),
+Camera::Camera(
+    const Eigen::VectorXd& intrinsics, uint32_t image_width,
+    uint32_t image_height, Type camera_type)
+    : line_delay_nanoseconds_(0),
       label_("unnamed camera"),
       image_width_(image_width),
       image_height_(image_height),
