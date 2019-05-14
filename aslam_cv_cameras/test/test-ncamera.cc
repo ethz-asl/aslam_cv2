@@ -5,6 +5,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncamera.h>
+#include <aslam/cameras/random-camera-generator.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/yaml-serialization.h>
 
@@ -16,7 +17,7 @@ TEST(TestNCameraYamlSerialization, testEmptyYaml) {
 }
 
 TEST(TestNCameraYamlSerialization, testSerialization) {
-  aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(4u);
+  aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(4u);
   ASSERT_TRUE(ncamera.get() != nullptr);
 
   std::string filename = "test_ncamera.yaml";
@@ -26,8 +27,9 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
   ncamera_loaded->deserializeFromFile(filename);
   ASSERT_TRUE(ncamera_loaded.get() != nullptr);
 
-  EXPECT_EQ(ncamera_loaded->getTopic(), ncamera->getTopic());
   EXPECT_EQ(ncamera_loaded->getId(), ncamera->getId());
+  EXPECT_EQ(ncamera_loaded->getTopic(), ncamera->getTopic());
+  EXPECT_EQ(ncamera_loaded->getDescription(), ncamera->getDescription());
 
   size_t num_cameras = ncamera_loaded->getNumCameras();
   EXPECT_EQ(num_cameras, 4u);
@@ -38,6 +40,7 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
 
     EXPECT_EQ(camera_loaded.getId(), camera_gt.getId());
     EXPECT_EQ(camera_loaded.getTopic(), camera_gt.getTopic());
+    EXPECT_EQ(camera_loaded.getDescription(), camera_gt.getDescription());
     EXPECT_EQ(camera_loaded.imageHeight(), camera_gt.imageHeight());
     EXPECT_EQ(camera_loaded.imageWidth(), camera_gt.imageWidth());
     EXPECT_TRUE(EIGEN_MATRIX_NEAR(ncamera->get_T_C_B(cam_idx).getTransformationMatrix(),
@@ -49,16 +52,17 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
 }
 
 TEST(TestNCamera, testClone) {
-  aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(4u);
+  aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(4u);
   ASSERT_TRUE(ncamera.get() != nullptr);
 
   aslam::NCamera::Ptr ncamera_clone(ncamera->clone());
   EXPECT_TRUE(ncamera_clone.get() != ncamera.get());
 
   // Make sure all members are equal.
-  EXPECT_EQ(ncamera->getTopic(), ncamera_clone->getTopic());
-  EXPECT_EQ(ncamera->getNumCameras(), ncamera_clone->getNumCameras());
   EXPECT_EQ(ncamera->getId(), ncamera_clone->getId());
+  EXPECT_EQ(ncamera->getTopic(), ncamera_clone->getTopic());
+  EXPECT_EQ(ncamera->getDescription(), ncamera_clone->getDescription());
+  EXPECT_EQ(ncamera->getNumCameras(), ncamera_clone->getNumCameras());
 
   for (int idx = 0; idx < static_cast<int>(ncamera->getNumCameras()); ++idx) {
     EXPECT_EQ(ncamera->get_T_C_B(idx), ncamera_clone->get_T_C_B(idx));
@@ -72,7 +76,7 @@ TEST(TestNCamera, testClone) {
 }
 
 TEST(TestNCamera, testCloneRigWithoutDistortion) {
-  aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(4u);
+  aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(4u);
   aslam::NCamera::Ptr ncamera_clone(ncamera->cloneRigWithoutDistortion());
 
   // Make sure the source rig has actually a distortion model set.

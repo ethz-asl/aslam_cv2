@@ -3,15 +3,17 @@
 
 #include <glog/logging.h>
 
-#include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
+#include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/ncamera.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/predicates.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/common/yaml-serialization.h>
+
+#include "aslam/cameras/random-camera-generator.h"
 
 namespace aslam {
 
@@ -260,69 +262,6 @@ int NCamera::getCameraIndex(const CameraId& id) const {
   }
 }
 
-NCamera::Ptr NCamera::createTestNCamera(size_t num_cameras) {
-  std::vector<aslam::Camera::Ptr> cameras;
-  Aligned<std::vector, aslam::Transformation> T_C_B_vector;
-
-  for(size_t camera_idx = 0u; camera_idx < num_cameras; ++camera_idx) {
-    cameras.push_back(aslam::PinholeCamera::createTestCamera<aslam::RadTanDistortion>());
-
-    // Offset each camera 0.1 m in x direction and rotate it to face forward.
-    Eigen::Vector3d position(0.1 * (camera_idx + 1), 0.0, 0.0);
-    aslam::Quaternion q_C_B(0.5, 0.5, -0.5, 0.5);
-    aslam::Transformation T_C_B(q_C_B, position);
-    T_C_B_vector.push_back(T_C_B);
-  }
-
-  aslam::NCameraId rig_id;
-  generateId(&rig_id);
-  std::string description("Test camera rig");
-  return aslam::NCamera::Ptr(new aslam::NCamera(rig_id, T_C_B_vector, cameras, description));
-}
-
-NCamera::Ptr NCamera::createSurroundViewTestNCamera() {
-  std::vector<aslam::Camera::Ptr> cameras;
-  cameras.push_back(aslam::PinholeCamera::createTestCamera());
-  cameras.push_back(aslam::PinholeCamera::createTestCamera());
-  cameras.push_back(aslam::PinholeCamera::createTestCamera());
-  cameras.push_back(aslam::PinholeCamera::createTestCamera());
-  aslam::NCameraId rig_id;
-  generateId(&rig_id);
-  // This defines an artificial camera system similar to the one on the V-Charge or JanETH car.
-  aslam::Position3D t_B_C0(2.0, 0.0, 0.0);
-  Eigen::Matrix3d R_B_C0 = Eigen::Matrix3d::Zero();
-  R_B_C0(1, 0) = -1.0;
-  R_B_C0(2, 1) = -1.0;
-  R_B_C0(0, 2) = 1.0;
-  aslam::Quaternion q_B_C0(R_B_C0);
-  aslam::Position3D t_B_C1(0.0, 1.0, 0.0);
-  Eigen::Matrix3d R_B_C1 = Eigen::Matrix3d::Zero();
-  R_B_C1(0, 0) = 1.0;
-  R_B_C1(2, 1) = -1.0;
-  R_B_C1(1, 2) = 1.0;
-  aslam::Quaternion q_B_C1(R_B_C1);
-  aslam::Position3D t_B_C2(-1.0, 0.0, 0.0);
-  Eigen::Matrix3d R_B_C2 = Eigen::Matrix3d::Zero();
-  R_B_C2(1, 0) = 1.0;
-  R_B_C2(2, 1) = -1.0;
-  R_B_C2(0, 2) = -1.0;
-  aslam::Quaternion q_B_C2(R_B_C2);
-  aslam::Position3D t_B_C3(0.0, -1.0, 0.0);
-  Eigen::Matrix3d R_B_C3 = Eigen::Matrix3d::Zero();
-  R_B_C3(0, 0) = -1.0;
-  R_B_C3(2, 1) = -1.0;
-  R_B_C3(1, 2) = -1.0;
-  aslam::Quaternion q_B_C3(R_B_C3);
-  aslam::TransformationVector rig_transformations;
-  rig_transformations.emplace_back(q_B_C0.inverse(), -t_B_C0);
-  rig_transformations.emplace_back(q_B_C1.inverse(), -t_B_C1);
-  rig_transformations.emplace_back(q_B_C2.inverse(), -t_B_C2);
-  rig_transformations.emplace_back(q_B_C3.inverse(), -t_B_C3);
-  std::string description = "Artificial Planar 4-Pinhole-Camera-Rig";
-  return aligned_shared<aslam::NCamera>(
-      rig_id, rig_transformations, cameras, description);
-}
-
 aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
   aslam::NCamera::Ptr rig_without_distortion(this->clone());
   // Remove distortion and assign new IDs to the rig and all cameras.
@@ -397,6 +336,63 @@ std::string NCamera::getComparisonString(const NCamera& other) const {
   }
 
   return ss.str();
+}
+
+bool NCamera::isValidImpl() const {
+  for (const aslam::Camera::Ptr& camera : cameras_) {
+    CHECK(camera);
+    if (!camera->isValid()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void NCamera::setRandomImpl() {
+  id_to_index_.clear();
+  T_C_B_.clear();
+  cameras_.clear();
+
+  // TODO(all): use inified random number generator with fixable seed.
+  Eigen::Vector2f random_numbers;
+  random_numbers.setRandom();
+  (random_numbers + Eigen::Vector2f::Ones()) *
+      8.f;  // random_numbers elements are in [1,16]
+  TransformationVector T_C_B_vector;
+
+  std::vector<aslam::Camera::Ptr> cameras;
+  const size_t num_cameras = random_numbers(0);  // in [1,16]
+  CHECK_LE(num_cameras, 16u);
+  CHECK_GE(num_cameras, 1u);
+  for (size_t camera_idx = 0u; camera_idx < num_cameras; ++camera_idx) {
+    aslam::Camera::Ptr random_camera;
+    if (random_numbers(1) > 8) {
+      random_camera.reset(new aslam::PinholeCamera());
+      random_camera->setRandom();
+      cameras.push_back(random_camera);
+    } else {
+      random_camera.reset(new aslam::UnifiedProjectionCamera());
+      random_camera->setRandom();
+      cameras.push_back(random_camera);
+    }
+
+    // Offset each camera 0.1 m in x direction and rotate it to face forward.
+    Eigen::Vector3d position(0.1 * (camera_idx + 1), 0.0, 0.0);
+    aslam::Quaternion q_C_B(0.5, 0.5, -0.5, 0.5);
+    aslam::Transformation T_C_B(q_C_B, position);
+    T_C_B_vector.push_back(T_C_B);
+    id_to_index_[random_camera->getId()] = camera_idx;
+  }
+  T_C_B_ = T_C_B_vector;
+  cameras_ = cameras;
+}
+
+bool NCamera::isEqualImpl(const Sensor& other) const {
+  const NCamera* other_ncamera = dynamic_cast<const NCamera*>(&other);
+  if (other_ncamera == nullptr) {
+    return false;
+  }
+  return operator==(*other_ncamera);
 }
 
 }  // namespace aslam

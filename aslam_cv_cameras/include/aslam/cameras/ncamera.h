@@ -77,7 +77,7 @@ class NCamera : public Sensor {
   }
 
   /// Get sensor type as an integer or as a string
-  int getSensorType() const override {
+  uint8_t getSensorType() const override {
     return SensorType::kNCamera;
   }
 
@@ -139,21 +139,18 @@ class NCamera : public Sensor {
   /// @returns -1 if the rig doesn't have a camera with this id.
   int getCameraIndex(const CameraId& id) const;
 
-  /// Create a test NCamera object for unit testing.
-  static NCamera::Ptr createTestNCamera(size_t num_cameras);
-
-  /// Creates an artificial 4-camera rig in a plane with a camera pointing in
-  /// each direction. (similar to the V-Charge or JanETH camera system)
-  static aslam::NCamera::Ptr createSurroundViewTestNCamera();
-
   /// Create a copy of this NCamera with all distortion models removed. All internal cameras
   /// get cloned and new IDs will be assigned to the cloned NCamera and all contained cameras.
   aslam::NCamera::Ptr cloneRigWithoutDistortion() const;
 
   std::string getComparisonString(const NCamera& other) const;
-private:
-  bool isValidImpl() const override { return true; };
-  void setRandomImpl() override {};
+
+ private:
+  bool isValidImpl() const override;
+
+  void setRandomImpl() override;
+
+  bool isEqualImpl(const Sensor& other) const override;
 
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;

@@ -154,7 +154,7 @@ class Camera : public Sensor {
   virtual aslam::Camera* clone() const = 0;
 
   /// Get sensor type as an integer or as a string
-  int getSensorType() const override {
+  uint8_t getSensorType() const override {
     return SensorType::kCamera;
   }
 
@@ -470,7 +470,7 @@ class Camera : public Sensor {
   }
 
   /// Function to check whether the given intrinsic parameters are valid for this model.
-  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) = 0;
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) const = 0;
 
   /// @}
 
@@ -523,8 +523,9 @@ class Camera : public Sensor {
   /// @}
 
  private:
-  bool isValidImpl() const override { return true; }
-  void setRandomImpl() override {}
+  bool isValidImpl() const = 0;
+  void setRandomImpl() = 0;
+  bool isEqualImpl(const Sensor& other) const = 0;
 
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;
