@@ -10,6 +10,7 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/unique-id.h>
+#include <aslam/common/yaml-serialization.h>
 
 namespace aslam {
 
@@ -70,6 +71,9 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
                          const Eigen::VectorXd& distortion_parameters,
                          Camera::Type camera_type,
                          Distortion::Type distortion_type);
+
+/// \brief A factory function to create a derived class camera from a YAML node
+Camera::Ptr createCamera(const YAML::Node& yaml_node);
 
 }  // namespace aslam
 

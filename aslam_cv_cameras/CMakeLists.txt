@@ -27,8 +27,8 @@ add_doxygen(NOT_AUTOMATIC)
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_cameras test/test-cameras.cc)
-target_link_libraries(test_cameras ${PROJECT_NAME})
+#catkin_add_gtest(test_cameras test/test-cameras.cc)
+#target_link_libraries(test_cameras ${PROJECT_NAME})
 
 catkin_add_gtest(test_distortions test/test-distortions.cc)
 target_link_libraries(test_distortions ${PROJECT_NAME})

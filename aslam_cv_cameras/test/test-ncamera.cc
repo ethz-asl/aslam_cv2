@@ -11,7 +11,7 @@
 
 TEST(TestNCameraYamlSerialization, testEmptyYaml) {
   YAML::Node node = YAML::Load("{}");
-  aslam::NCamera::Ptr ncamera(new aslam::NCamera());
+  aslam::NCamera::Ptr ncamera = aligned_shared<aslam::NCamera>();
   bool success = ncamera->deserialize(node);
   EXPECT_EQ(success, false);
 }

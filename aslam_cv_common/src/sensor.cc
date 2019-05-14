@@ -34,7 +34,16 @@ void Sensor::setRandom() {
 }
 
 bool Sensor::deserialize(const YAML::Node& sensor_node) {
-  CHECK(!sensor_node.IsNull());
+  if (!sensor_node.IsDefined() || sensor_node.IsNull()) {
+    LOG(ERROR) << "Invalid YAML node for sensor deserialization.";
+    return false;
+  }
+
+  if (!sensor_node.IsMap()) {
+    LOG(WARNING) << "Sensor YAML node must be a map.";
+    return false;
+  }
+
   std::string id_as_string;
   if (YAML::safeGet(
           sensor_node, static_cast<std::string>(kYamlFieldNameId),

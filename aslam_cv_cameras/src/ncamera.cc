@@ -3,17 +3,17 @@
 
 #include <glog/logging.h>
 
+#include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/ncamera.h>
+#include <aslam/cameras/random-camera-generator.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/predicates.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/common/yaml-serialization.h>
-
-#include "aslam/cameras/random-camera-generator.h"
 
 namespace aslam {
 
@@ -48,6 +48,13 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
 
   // Parse the cameras.
   const YAML::Node& cameras_node = yaml_node["cameras"];
+  if (!cameras_node.IsDefined() || cameras_node.IsNull()) {
+    LOG(ERROR)
+        << "Invalid cameras YAML node in NCamera. Can not parse NCamera with"
+        << " no cameras defined.";
+    return false;
+  }
+
   if (!cameras_node.IsSequence()) {
     LOG(ERROR)
         << "Unable to parse the cameras because the camera node is not a sequence.";
@@ -76,39 +83,9 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
 
     // Retrieve the type of the camera
     const YAML::Node& intrinsics_node = camera_node["camera"];
-    if (!intrinsics_node.IsDefined() || intrinsics_node.IsNull()) {
-      LOG(ERROR) << "Unable to get intrinsics node for camera " << camera_index;
-      return false;
-    }
-
-    if (!intrinsics_node.IsMap()) {
-      LOG(ERROR)
-          << "Intrinsics node for camera " << camera_index << " is not a map.";
-      return false;
-    }
-
-    std::string camera_type;
-    if (!YAML::safeGet(intrinsics_node, "type", &camera_type)) {
-      LOG(ERROR) << "Unable to get camera type for " << camera_index;
-      return false;
-    }
-
-    // Based on the type deserialize the camera
-    Camera::Ptr camera;
-    if(camera_type == "pinhole") {
-      camera = std::dynamic_pointer_cast<Camera>(
-          std::make_shared<PinholeCamera>());
-    } else if(camera_type == "unified-projection") {
-      camera = std::dynamic_pointer_cast<Camera>(
-          std::make_shared<UnifiedProjectionCamera>());
-    } else {
-      LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
-          << "Valid values are {pinhole, unified-projection}.";
-      return false;
-    }
-
-    if (!camera->deserialize(intrinsics_node)) {
-      LOG(ERROR) << "Unable to deserialize camera " << camera_index;
+    Camera::Ptr camera = createCamera(intrinsics_node);
+    if (!camera) {
+      LOG(ERROR) << "Failed to deserialize camera " << camera_index;
       return false;
     }
 

@@ -62,4 +62,44 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
   return camera;
 }
 
+Camera::Ptr createCamera(const YAML::Node& yaml_node) {
+  if (!yaml_node.IsDefined() || yaml_node.IsNull()) {
+    LOG(ERROR) << "Camera YAML node is invalid.";
+    return nullptr;
+  }
+
+  if (!yaml_node.IsMap()) {
+    LOG(ERROR)
+        << "Intrinsics node for camera is not a map.";
+    return nullptr;
+  }
+
+  std::string camera_type;
+  if (!YAML::safeGet(yaml_node, "type", &camera_type)) {
+    LOG(ERROR) << "Unable to get camera type.";
+    return nullptr;
+  }
+
+  // Based on the type deserialize the camera
+  Camera::Ptr camera;
+  if(camera_type == "pinhole") {
+    camera = std::dynamic_pointer_cast<Camera>(
+        aligned_shared<PinholeCamera>());
+  } else if(camera_type == "unified-projection") {
+    camera = std::dynamic_pointer_cast<Camera>(
+        aligned_shared<UnifiedProjectionCamera>());
+  } else {
+    LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
+        << "Valid values are {pinhole, unified-projection}.";
+    return nullptr;
+  }
+
+  if (!camera->deserialize(yaml_node)) {
+    LOG(ERROR) << "Camera deserialization failed.";
+    return nullptr;
+  }
+
+  return camera;
+}
+
 }  // namespace aslam
