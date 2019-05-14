@@ -141,9 +141,6 @@ class Camera : public Sensor {
  public:
   virtual ~Camera() = default;
 
-  /// \brief Compare this camera to another camera object.
-  virtual bool operator==(const Camera& other) const;
-
   /// \brief Convenience function to print the state using streams.
   std::ostream& operator<<(std::ostream& out) {
     this->printParameters(out, std::string(""));
@@ -177,6 +174,9 @@ class Camera : public Sensor {
   };
 
   void operator=(const Camera&) = delete;
+
+  /// \brief Compare only the parameters of Camera to the ones of another Camera
+  bool isEqualCameraImpl(const Camera& other) const;
 
   /// @}
 

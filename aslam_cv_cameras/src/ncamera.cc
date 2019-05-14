@@ -256,22 +256,6 @@ aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
 }
 
 // TODO(smauq): Fix this with respect to base class
-bool NCamera::operator==(const NCamera& other) const {
-  bool same = true;
-  same &= getNumCameras() == other.getNumCameras();
-  same &= description_ == other.description_;
-  same &= id_ == other.id_;
-  if (same) {
-    for (size_t i = 0; i < getNumCameras(); ++i) {
-      same &= aslam::checkSharedEqual(cameras_[i], other.cameras_[i]);
-      same &= ((T_C_B_[i].getTransformationMatrix() - other.T_C_B_[i].getTransformationMatrix())
-          .cwiseAbs().maxCoeff() < common::macros::kEpsilon);
-    }
-  }
-  return same;
-}
-
-// TODO(smauq): Fix this with respect to base class
 std::string NCamera::getComparisonString(const NCamera& other) const {
   if (operator==(other)) {
     return "There is no difference between the given ncameras.\n";
@@ -369,7 +353,17 @@ bool NCamera::isEqualImpl(const Sensor& other) const {
   if (other_ncamera == nullptr) {
     return false;
   }
-  return operator==(*other_ncamera);
+
+  if (getNumCameras() != other_ncamera->getNumCameras()) {
+    return false;
+  }
+  bool is_equal = true;
+  for (size_t i = 0; i < getNumCameras(); ++i) {
+    is_equal &= aslam::checkSharedEqual(cameras_[i], other_ncamera->cameras_[i]);
+    is_equal &= ((T_C_B_[i].getTransformationMatrix() - other_ncamera->T_C_B_[i].getTransformationMatrix())
+        .cwiseAbs().maxCoeff() < common::macros::kEpsilon);
+  }
+  return is_equal;
 }
 
 }  // namespace aslam

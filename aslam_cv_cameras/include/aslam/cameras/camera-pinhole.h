@@ -98,9 +98,6 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
 
   virtual ~PinholeCamera() {};
 
-  /// \brief Compare this camera to another camera object.
-  virtual bool operator==(const Camera& other) const;
-
   /// \brief Convenience function to print the state using streams.
   friend std::ostream& operator<<(std::ostream& out, const PinholeCamera& camera);
 

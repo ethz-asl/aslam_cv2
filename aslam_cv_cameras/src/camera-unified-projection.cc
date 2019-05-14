@@ -51,23 +51,6 @@ UnifiedProjectionCamera::UnifiedProjectionCamera(double xi, double focallength_c
         (Eigen::Matrix<double, 5, 1>() << xi, focallength_cols, focallength_rows, imagecenter_cols,
             imagecenter_rows).finished(), image_width, image_height) {}
 
-bool UnifiedProjectionCamera::operator==(const Camera& other) const {
-  // Check that the camera models are the same.
-  const UnifiedProjectionCamera* rhs = dynamic_cast<const UnifiedProjectionCamera*>(&other);
-  if (!rhs)
-    return false;
-
-  // Verify that the base members are equal.
-  if (!Camera::operator==(other))
-    return false;
-
-  // Compare the distortion model (if distortion is set for both).
-  if ( !(*(this->distortion_) == *(rhs->distortion_)) )
-      return false;
-
-  return true;
-}
-
 bool UnifiedProjectionCamera::backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                                            Eigen::Vector3d* out_point_3d) const {
   CHECK_NOTNULL(out_point_3d);
@@ -356,7 +339,16 @@ bool UnifiedProjectionCamera::isEqualImpl(const Sensor& other) const {
   if (other_camera == nullptr) {
     return false;
   }
-  return operator==(*other_camera);
+
+  // Verify that the base members are equal.
+  if (!isEqualCameraImpl(*other_camera))
+    return false;
+
+  // Compare the distortion model (if distortion is set for both).
+  if ( !(*(this->distortion_) == *(other_camera->distortion_)) )
+      return false;
+
+  return true;
 }
 
 UnifiedProjectionCamera::Ptr UnifiedProjectionCamera::createTestCamera() {

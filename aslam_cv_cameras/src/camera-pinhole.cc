@@ -44,23 +44,6 @@ PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
         Eigen::Vector4d(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows),
         image_width, image_height) {}
 
-bool PinholeCamera::operator==(const Camera& other) const {
-  // Check that the camera models are the same.
-  const PinholeCamera* rhs = dynamic_cast<const PinholeCamera*>(&other);
-  if (!rhs)
-    return false;
-
-  // Verify that the base members are equal.
-  if (!Camera::operator==(other))
-    return false;
-
-  // Compare the distortion model (if distortion is set for both).
-  if ( !(*(this->distortion_) == *(rhs->distortion_)) )
-    return false;
-
-  return true;
-}
-
 bool PinholeCamera::backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                                  Eigen::Vector3d* out_point_3d) const {
   CHECK_NOTNULL(out_point_3d);
@@ -270,7 +253,16 @@ bool PinholeCamera::isEqualImpl(const Sensor& other) const {
   if (other_camera == nullptr) {
     return false;
   }
-  return operator==(*other_camera);
+
+  // Verify that the base members are equal.
+  if (!isEqualCameraImpl(*other_camera))
+    return false;
+
+  // Compare the distortion model (if distortion is set for both).
+  if ( !(*(this->distortion_) == *(other_camera->distortion_)) )
+    return false;
+
+  return true;
 }
 
 PinholeCamera::Ptr PinholeCamera::createTestCamera() {

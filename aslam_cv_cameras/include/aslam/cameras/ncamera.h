@@ -60,7 +60,6 @@ class NCamera : public Sensor {
   /// Copy constructor for clone.
   NCamera(const NCamera&);
   void operator=(const NCamera&) = delete;
-  bool operator==(const NCamera& other) const;
 
   /// Methods to clone this instance. All contained camera objects are cloned.
   /// (Make sure the Camera and NCamera ID's are set to your requirement after cloning!)

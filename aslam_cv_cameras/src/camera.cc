@@ -63,8 +63,7 @@ void Camera::printParameters(std::ostream& out, const std::string& text) const {
   out << "  image (cols,rows): " << imageWidth() << ", " << imageHeight() << std::endl;
 }
 
-bool Camera::operator==(const Camera& other) const {
-  // \TODO(slynen) should we include the id and name here?
+bool Camera::isEqualCameraImpl(const Camera& other) const {
   return (this->intrinsics_ == other.intrinsics_) &&
          (this->line_delay_nanoseconds_ == other.line_delay_nanoseconds_) &&
          (this->image_width_ == other.image_width_) &&
