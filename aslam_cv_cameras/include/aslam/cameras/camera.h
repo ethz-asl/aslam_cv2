@@ -162,11 +162,6 @@ class Camera : public Sensor {
     return static_cast<std::string>(kCameraIdentifier);
   }
 
-  /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
-  static std::shared_ptr<Camera> loadFromYaml(const std::string& yaml_file);
-  /// Save this ncamera to a yaml file.
-  bool saveToYaml(const std::string& yaml_file) const;
-
  protected:
   /// Copy constructor for clone operation.
   Camera(const Camera& other) :
@@ -189,12 +184,6 @@ class Camera : public Sensor {
   /// \name Information about the camera
   /// @{
  public:
-  /// \brief Get a label for the camera.
-  const std::string& getLabel() const {return label_;}
-
-  /// \brief Set a label for the camera.
-  void setLabel(const std::string& label) {label_ = label;}
-
   /// \brief The width of the image in pixels.
   uint32_t imageWidth() const { return image_width_; }
 
@@ -537,20 +526,17 @@ class Camera : public Sensor {
   bool isValidImpl() const override { return true; }
   void setRandomImpl() override {}
 
-  // TODO(smauq): Fix
-  virtual bool loadFromYamlNodeImpl(const YAML::Node&) override {
-    return true;
-  }
-  virtual void saveToYamlNodeImpl(YAML::Node*) const override {}
+  bool loadFromYamlNodeImpl(const YAML::Node&) override;
+  void saveToYamlNodeImpl(YAML::Node*) const override;
 
   /// The delay per scanline for a rolling shutter camera in nanoseconds.
   uint64_t line_delay_nanoseconds_;
   /// A label for this camera, a name.
   std::string label_;
   /// The width of the image.
-  const uint32_t image_width_;
+  uint32_t image_width_;
   /// The height of the image.
-  const uint32_t image_height_;
+  uint32_t image_height_;
   /// The image mask.
   cv::Mat_<uint8_t> mask_;
 

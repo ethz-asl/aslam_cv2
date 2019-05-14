@@ -46,11 +46,10 @@ class UnifiedProjectionCamera : public aslam::Cloneable<Camera, UnifiedProjectio
   /// \name Constructors/destructors and operators
   /// @{
 
- protected:
+ public:
   /// \brief Empty constructor for serialization interface.
   UnifiedProjectionCamera();
 
- public:
   /// Copy constructor for clone operation.
   UnifiedProjectionCamera(const UnifiedProjectionCamera& other) = default;
 

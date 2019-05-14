@@ -12,7 +12,6 @@ set(SOURCES
   src/camera-factory.cc
   src/camera-pinhole.cc
   src/camera-unified-projection.cc
-  src/camera-yaml-serialization.cc
   src/distortion.cc
   src/distortion-equidistant.cc
   src/distortion-fisheye.cc

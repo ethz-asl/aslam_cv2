@@ -45,11 +45,10 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// \name Constructors/destructors and operators
   /// @{
 
- protected:
+ public:
   /// \brief Empty constructor for serialization interface.
   PinholeCamera();
 
- public:
   /// Copy constructor for clone operation.
   PinholeCamera(const PinholeCamera& other) = default;
   void operator=(const PinholeCamera&) = delete;

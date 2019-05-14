@@ -10,7 +10,6 @@
 #include <aslam/common/pose-types.h>
 #include <aslam/common/sensor.h>
 #include <aslam/common/unique-id.h>
-#include <aslam/common/yaml-serialization.h>
 #include <gtest/gtest_prod.h>
 
 namespace sm {
@@ -156,8 +155,8 @@ private:
   bool isValidImpl() const override { return true; };
   void setRandomImpl() override {};
 
-  virtual bool loadFromYamlNodeImpl(const YAML::Node&) override;
-  virtual void saveToYamlNodeImpl(YAML::Node*) const override;
+  bool loadFromYamlNodeImpl(const YAML::Node&) override;
+  void saveToYamlNodeImpl(YAML::Node*) const override;
 
   /// Internal consistency checks and initialization.
   void initInternal();

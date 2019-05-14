@@ -13,7 +13,6 @@
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/cameras/distortion-null.h>
-#include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
 #include <aslam/common/numdiff-jacobian-tester.h>
@@ -675,4 +674,3 @@ TEST(TestCameraFactory, testBadIntrinsics2) {
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
-

@@ -26,7 +26,7 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
   ncamera_loaded->deserializeFromFile(filename);
   ASSERT_TRUE(ncamera_loaded.get() != nullptr);
 
-  EXPECT_EQ(ncamera_loaded->getLabel(), ncamera->getLabel());
+  EXPECT_EQ(ncamera_loaded->getTopic(), ncamera->getTopic());
   EXPECT_EQ(ncamera_loaded->getId(), ncamera->getId());
 
   size_t num_cameras = ncamera_loaded->getNumCameras();
@@ -37,7 +37,7 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
     const aslam::Camera& camera_gt = ncamera->getCamera(cam_idx);
 
     EXPECT_EQ(camera_loaded.getId(), camera_gt.getId());
-    EXPECT_EQ(camera_loaded.getLabel(), camera_gt.getLabel());
+    EXPECT_EQ(camera_loaded.getTopic(), camera_gt.getTopic());
     EXPECT_EQ(camera_loaded.imageHeight(), camera_gt.imageHeight());
     EXPECT_EQ(camera_loaded.imageWidth(), camera_gt.imageWidth());
     EXPECT_TRUE(EIGEN_MATRIX_NEAR(ncamera->get_T_C_B(cam_idx).getTransformationMatrix(),
@@ -56,7 +56,7 @@ TEST(TestNCamera, testClone) {
   EXPECT_TRUE(ncamera_clone.get() != ncamera.get());
 
   // Make sure all members are equal.
-  EXPECT_EQ(ncamera->getLabel(), ncamera_clone->getLabel());
+  EXPECT_EQ(ncamera->getTopic(), ncamera_clone->getTopic());
   EXPECT_EQ(ncamera->getNumCameras(), ncamera_clone->getNumCameras());
   EXPECT_EQ(ncamera->getId(), ncamera_clone->getId());
 
