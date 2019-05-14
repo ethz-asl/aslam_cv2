@@ -255,50 +255,6 @@ aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
   return rig_without_distortion;
 }
 
-// TODO(smauq): Fix this with respect to base class
-std::string NCamera::getComparisonString(const NCamera& other) const {
-  if (operator==(other)) {
-    return "There is no difference between the given ncameras.\n";
-  }
-
-  std::ostringstream ss;
-
-  if (id_ != other.id_) {
-    ss << "The id is " << id_ << ", the other id is " << other.id_ << std::endl;
-  }
-
-  if (description_ != other.description_) {
-    ss << "The description is " << description_ << ", the other description is "
-        << other.description_ << std::endl;
-  }
-
-  if (getNumCameras() != other.getNumCameras()) {
-    ss << "The number of cameras is " << getNumCameras()
-        << ", the other number of cameras is " << other.getNumCameras()
-        << std::endl;
-  } else {
-    for (size_t i = 0; i < getNumCameras(); ++i) {
-      double max_coeff_diff = (T_C_B_[i].getTransformationMatrix() -
-            other.T_C_B_[i].getTransformationMatrix()).cwiseAbs().maxCoeff();
-      if (max_coeff_diff >= common::macros::kEpsilon) {
-        ss << "The maximum coefficient of camera transformation " << i
-            << " differs by " << max_coeff_diff << std::endl;
-        ss << "The transformation matrices are:\n" << T_C_B_[i] << "\nand\n"
-            << other.T_C_B_[i] << std::endl;
-      }
-      if (!aslam::checkSharedEqual(cameras_[i], other.cameras_[i])) {
-        ss << "Camera " << i << " differs" << std::endl;
-      }
-    }
-  }
-
-  if (id_to_index_ != other.id_to_index_) {
-    ss << "The id to index map differs!" << std::endl;
-  }
-
-  return ss.str();
-}
-
 bool NCamera::isValidImpl() const {
   for (const aslam::Camera::Ptr& camera : cameras_) {
     CHECK(camera);

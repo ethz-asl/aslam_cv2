@@ -142,8 +142,6 @@ class NCamera : public Sensor {
   /// get cloned and new IDs will be assigned to the cloned NCamera and all contained cameras.
   aslam::NCamera::Ptr cloneRigWithoutDistortion() const;
 
-  std::string getComparisonString(const NCamera& other) const;
-
  private:
   bool isValidImpl() const override;
 
