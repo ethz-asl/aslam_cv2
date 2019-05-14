@@ -47,12 +47,10 @@ bool Sensor::deserialize(const YAML::Node& sensor_node) {
   }
   CHECK(id_.isValid());
 
-  if (getSensorType() != aslam::SensorType::kNCamera &&
-      !YAML::safeGet(
+  if (!YAML::safeGet(
           sensor_node, static_cast<std::string>(kYamlFieldNameTopic),
           &topic_)) {
-    LOG(ERROR) << "Unable to retrieve the sensor topic.";
-    return false;
+    LOG(WARNING) << "Unable to retrieve the sensor topic for sensor " << id_;
   }
 
   if (!YAML::safeGet(
@@ -71,9 +69,7 @@ void Sensor::serialize(YAML::Node* sensor_node_ptr) const {
   sensor_node[static_cast<std::string>(kYamlFieldNameId)] = id_.hexString();
   sensor_node[static_cast<std::string>(kYamlFieldNameSensorType)] =
       getSensorTypeString();
-  if (getSensorType() != aslam::SensorType::kNCamera) {
-    sensor_node[static_cast<std::string>(kYamlFieldNameTopic)] = topic_;
-  }
+  sensor_node[static_cast<std::string>(kYamlFieldNameTopic)] = topic_;
   sensor_node[static_cast<std::string>(kYamlFieldNameDescription)] =
       description_;
 
