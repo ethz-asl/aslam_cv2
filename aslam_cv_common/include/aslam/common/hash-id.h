@@ -72,7 +72,7 @@ class HashId {
    * Returns a short hexadecimal tag.
    */
   inline const std::string shortHex() const {
-    return hexString().substr(0u, 2u);
+    return hexString().substr(0u, 4u);
   }
 
   /**
