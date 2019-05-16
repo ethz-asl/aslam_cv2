@@ -1,14 +1,15 @@
-#ifndef ASLAM_PIPELINE_MAPPED_UNDISTORTER_INL_H_
-#define ASLAM_PIPELINE_MAPPED_UNDISTORTER_INL_H_
+#ifndef ASLAM_CAMERAS_MAPPED_UNDISTORTER_INL_H_
+#define ASLAM_CAMERAS_MAPPED_UNDISTORTER_INL_H_
 
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera.h>
+#include <aslam/cameras/convert-maps-legacy.h>
 #include <aslam/common/undistort-helpers.h>
 
 namespace aslam {
 
 template <>
-inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
+inline std::shared_ptr<MappedUndistorter> createMappedUndistorter(
     const aslam::Camera& camera, float alpha, float scale,
     aslam::InterpolationMethod interpolation_type) {
   switch (camera.getType()) {
@@ -34,13 +35,12 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
 }
 
 template <typename CameraType>
-inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
+inline std::shared_ptr<MappedUndistorter> createMappedUndistorter(
     const CameraType& camera, float alpha, float scale,
     aslam::InterpolationMethod interpolation_type) {
   CHECK_GE(alpha, 0.0);
   CHECK_LE(alpha, 1.0);
   CHECK_GT(scale, 0.0);
-
   // Create a copy of the input camera.
   aslam::Camera::Ptr input_camera(camera.clone());
   CHECK(input_camera);
@@ -70,8 +70,7 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
               input_camera);
       CHECK(unified_proj_cam_ptr != nullptr)
           << "Cast to unified projection camera failed.";
-      intrinsics << unified_proj_cam_ptr->xi(), output_camera_matrix(0, 0),
-          output_camera_matrix(1, 1), output_camera_matrix(0, 2),
+      output_camera_matrix(1, 1), output_camera_matrix(0, 2),
           output_camera_matrix(1, 2);
       output_camera.reset(
           new UnifiedProjectionCamera(intrinsics, output_width, output_height));
@@ -88,9 +87,16 @@ inline std::unique_ptr<MappedUndistorter> createMappedUndistorter(
   common::buildUndistortMap(
       *input_camera, *output_camera, CV_16SC2, map_u, map_v);
 
-  return std::unique_ptr<MappedUndistorter>(new MappedUndistorter(
-      input_camera, output_camera, map_u, map_v, interpolation_type));
+  // Convert map to non-fixed point representation for easy lookup of values.
+  cv::Mat map_u_float = map_u.clone();
+  cv::Mat map_v_float = map_v.clone();
+  aslam::convertMapsLegacy(map_u, map_v, map_u_float, map_v_float, CV_32FC1);
+
+  return std::shared_ptr<MappedUndistorter>(
+      new MappedUndistorter(
+          input_camera, output_camera, map_u, map_v, map_u_float, map_v_float,
+          interpolation_type));
 }
 
 }  // namespace aslam
-#endif  // ASLAM_PIPELINE_MAPPED_UNDISTORTER_INL_H_
+#endif  // ASLAM_CAMERAS_MAPPED_UNDISTORTER_INL_H_

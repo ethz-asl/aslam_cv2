@@ -1,5 +1,5 @@
-#ifndef ASLAM_TEST_CONVERT_MAPS_LEGACY_H
-#define ASLAM_TEST_CONVERT_MAPS_LEGACY_H
+#ifndef ASLAM_CAMERAS_CONVERT_MAPS_LEGACY_H
+#define ASLAM_CAMERAS_CONVERT_MAPS_LEGACY_H
 
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -13,4 +13,4 @@ void convertMapsLegacy(cv::InputArray _map1, cv::InputArray _map2,
                        int dstm1type, bool nninterpolate = false);
 } // namespace aslam
 
-#endif // ASLAM_TEST_CONVERT_MAPS_LEGACY_H
+#endif // ASLAM_CAMERAS_CONVERT_MAPS_LEGACY_H

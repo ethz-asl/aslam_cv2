@@ -1,7 +1,7 @@
 #include <aslam/pipeline/visual-pipeline-brisk.h>
 
+#include <aslam/cameras/undistorter.h>
 #include <aslam/frames/visual-frame.h>
-#include <aslam/pipeline/undistorter.h>
 #include <brisk/brisk.h>
 #include <glog/logging.h>
 

@@ -38,8 +38,7 @@ class Distortion {
   /// @param[in] dist_coeffs     Vector containing the distortion parameters.
   /// @param[in] distortion_type DistortionType enum value with information which distortion
   ///                            model is used by the derived class.
-  Distortion(const Eigen::VectorXd& dist_coeffs,
-             Type distortion_type);
+  Distortion(const Eigen::VectorXd& dist_coeffs, Type distortion_type);
 
  public:
   virtual ~Distortion() { };
@@ -121,7 +120,7 @@ class Distortion {
   void undistort(Eigen::Vector2d* point) const;
 
   /// \brief Apply undistortion to recover a point in the normalized image plane.
-  /// @param[in]    point     External distortion coefficients to use.
+  /// @param[in]    point     The distorted point.
   /// @param[out]   out_point The undistorted point in normalized image plane.
   void undistort(const Eigen::Vector2d& point, Eigen::Vector2d* out_point) const;
 

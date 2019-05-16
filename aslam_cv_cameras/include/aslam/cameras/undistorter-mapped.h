@@ -1,5 +1,5 @@
-#ifndef ASLAM_PIPELINE_MAPPED_UNDISTORTER_H_
-#define ASLAM_PIPELINE_MAPPED_UNDISTORTER_H_
+#ifndef ASLAM_CAMERAS_MAPPED_UNDISTORTER_H_
+#define ASLAM_CAMERAS_MAPPED_UNDISTORTER_H_
 
 #include <opencv2/core/core.hpp>
 
@@ -7,7 +7,7 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
-#include <aslam/pipeline/undistorter.h>
+#include <aslam/cameras/undistorter.h>
 
 namespace aslam {
 
@@ -24,7 +24,7 @@ namespace aslam {
 /// @param[in] interpolation_type Check \ref InterpolationMethod to see the available types.
 /// @return Pointer to the created mapped undistorter.
 template <typename CameraType>
-std::unique_ptr<MappedUndistorter> createMappedUndistorter(
+std::shared_ptr<MappedUndistorter> createMappedUndistorter(
     const CameraType& camera, float alpha, float scale,
     aslam::InterpolationMethod interpolation_type);
 
@@ -39,7 +39,7 @@ std::unique_ptr<MappedUndistorter> createMappedUndistorter(
 /// @param[in] scale Output image size scaling parameter wrt. to input image size.
 /// @param[in] interpolation_type Check \ref MappedUndistorter to see the available types.
 /// @return Pointer to the created mapped undistorter.
-std::unique_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
+std::shared_ptr<MappedUndistorter> createMappedUndistorterToPinhole(
     const aslam::UnifiedProjectionCamera& unified_proj_camera,
     float alpha, float scale, aslam::InterpolationMethod interpolation_type);
 
@@ -69,13 +69,21 @@ public:
   /// \param[in] interpolation Interpolation method used for undistortion.
   ///                          (\ref InterpolationMethod)
   MappedUndistorter(aslam::Camera::Ptr input_camera, aslam::Camera::Ptr output_camera,
-                    const cv::Mat& map_u, const cv::Mat& map_v, InterpolationMethod interpolation);
+                   const cv::Mat& map_u, const cv::Mat& map_v, 
+                   const cv::Mat& map_u_float, const cv::Mat& map_v_float, 
+                   InterpolationMethod interpolation);
 
   virtual ~MappedUndistorter() = default;
 
   /// \brief Produce an undistorted image from an input image.
   virtual void processImage(const cv::Mat& input_image, cv::Mat* output_image) const;
 
+  /// \brief Undisort a point using the map.
+  void processPoint(const Eigen::Vector2d& input_point, Eigen::Vector2d* output_point) const;
+  
+  /// \brief Undistort a point using the map.
+  void processPoint(Eigen::Vector2d* point) const;
+  
   /// Get the undistorter map for the u-coordinate.
   const cv::Mat& getUndistortMapU() const { return map_u_; };
 
@@ -87,12 +95,16 @@ private:
   const cv::Mat map_u_;
   /// \brief LUT for v coordinates.
   const cv::Mat map_v_;
+  /// \brief Non-fixed point LUT for u coordinates.
+  const cv::Mat map_u_float_;
+  /// \brief Non-fixed point LUT for v coordinates.
+  const cv::Mat map_v_float_;
   /// \brief Interpolation strategy
   InterpolationMethod interpolation_method_;
 };
 
 }  // namespace aslam
 
-#include "aslam/pipeline/undistorter-mapped-inl.h"
+#include "aslam/cameras/undistorter-mapped-inl.h"
 
-#endif // ASLAM_PIPELINE_MAPPED_UNDISTORTER_H_
+#endif // ASLAM_CAMERAS_MAPPED_UNDISTORTER_H_

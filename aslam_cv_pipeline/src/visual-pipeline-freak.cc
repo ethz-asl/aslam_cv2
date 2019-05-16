@@ -1,6 +1,7 @@
 #include <aslam/pipeline/visual-pipeline-freak.h>
+
+#include <aslam/cameras/undistorter.h>
 #include <aslam/frames/visual-frame.h>
-#include <aslam/pipeline/undistorter.h>
 #include <brisk/brisk.h>
 #include <glog/logging.h>
 #include <opencv2/features2d.hpp>

@@ -13,12 +13,15 @@ set(SOURCES
   src/camera-pinhole.cc
   src/camera-unified-projection.cc
   src/camera-yaml-serialization.cc
+  src/convert-maps-legacy.cc
   src/distortion.cc
   src/distortion-equidistant.cc
   src/distortion-fisheye.cc
   src/distortion-radtan.cc
   src/ncamera.cc
-  src/ncamera-yaml-serialization.cc
+  src/ncamera-yaml-serialization.cc   
+  src/undistorter.cc
+  src/undistorter-mapped.cc 
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES})
@@ -37,6 +40,8 @@ target_link_libraries(test_distortions ${PROJECT_NAME})
 catkin_add_gtest(test_ncamera test/test-ncamera.cc)
 target_link_libraries(test_ncamera ${PROJECT_NAME})
 
+catkin_add_gtest(test_undistorters test/test-undistorters.cc)
+target_link_libraries(test_undistorters ${PROJECT_NAME}) 
 ##########
 # EXPORT #
 ##########
