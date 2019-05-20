@@ -13,13 +13,13 @@ NCamera::Ptr createTestNCamera(size_t num_cameras) {
   Aligned<std::vector, Transformation> T_C_B_vector;
 
   for (size_t camera_idx = 0u; camera_idx < num_cameras; ++camera_idx) {
-    cameras.push_back(PinholeCamera::createTestCamera<RadTanDistortion>());
+    cameras.emplace_back(PinholeCamera::createTestCamera<RadTanDistortion>());
 
     // Offset each camera 0.1 m in x direction and rotate it to face forward.
     Eigen::Vector3d position(0.1 * (camera_idx + 1), 0.0, 0.0);
     Quaternion q_C_B(0.5, 0.5, -0.5, 0.5);
     Transformation T_C_B(q_C_B, position);
-    T_C_B_vector.push_back(T_C_B);
+    T_C_B_vector.emplace_back(T_C_B);
   }
 
   NCameraId rig_id;
@@ -30,10 +30,10 @@ NCamera::Ptr createTestNCamera(size_t num_cameras) {
 
 NCamera::Ptr createSurroundViewTestNCamera() {
   std::vector<Camera::Ptr> cameras;
-  cameras.push_back(PinholeCamera::createTestCamera());
-  cameras.push_back(PinholeCamera::createTestCamera());
-  cameras.push_back(PinholeCamera::createTestCamera());
-  cameras.push_back(PinholeCamera::createTestCamera());
+  cameras.emplace_back(PinholeCamera::createTestCamera());
+  cameras.emplace_back(PinholeCamera::createTestCamera());
+  cameras.emplace_back(PinholeCamera::createTestCamera());
+  cameras.emplace_back(PinholeCamera::createTestCamera());
   NCameraId rig_id;
   generateId(&rig_id);
   // This defines an artificial camera system similar to the one on the V-Charge

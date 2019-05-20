@@ -12,6 +12,7 @@
 
 TEST(NFrame, MinTimestamp) {
   aslam::NCamera::Ptr ncamera = aslam::createSurroundViewTestNCamera();
+  CHECK(ncamera);
   aslam::VisualFrame::Ptr frame_0(new aslam::VisualFrame);
   frame_0->setCameraGeometry(ncamera->getCameraShared(0));
   frame_0->setTimestampNanoseconds(123);

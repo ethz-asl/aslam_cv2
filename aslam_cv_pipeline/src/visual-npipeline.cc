@@ -338,6 +338,7 @@ void VisualNPipeline::waitForAllWorkToComplete() const {
 VisualNPipeline::Ptr VisualNPipeline::createTestVisualNPipeline(
     size_t num_cameras, size_t num_threads, int64_t timestamp_tolerance_ns) {
   NCamera::Ptr ncamera = createTestNCamera(num_cameras);
+  CHECK(ncamera);
   CHECK_EQ(ncamera->numCameras(), num_cameras);
   const bool kCopyImages = false;
   std::vector<VisualPipeline::Ptr> null_pipelines;

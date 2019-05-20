@@ -31,9 +31,8 @@ std::ostream& operator<< (std::ostream& out, const ProjectionResult& state) {
 /// Camera constructor with distortion
 Camera::Camera(
     const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
-    uint32_t image_width, uint32_t image_height, Type camera_type)
+    const uint32_t image_width, const uint32_t image_height, Type camera_type)
     : line_delay_nanoseconds_(0),
-      label_("unnamed camera"),
       image_width_(image_width),
       image_height_(image_height),
       intrinsics_(intrinsics),
@@ -44,10 +43,9 @@ Camera::Camera(
 
 /// Camera constructor without distortion
 Camera::Camera(
-    const Eigen::VectorXd& intrinsics, uint32_t image_width,
-    uint32_t image_height, Type camera_type)
+    const Eigen::VectorXd& intrinsics, const uint32_t image_width,
+    const uint32_t image_height, Type camera_type)
     : line_delay_nanoseconds_(0),
-      label_("unnamed camera"),
       image_width_(image_width),
       image_height_(image_height),
       intrinsics_(intrinsics),
@@ -58,7 +56,7 @@ void Camera::printParameters(std::ostream& out, const std::string& text) const {
   if(text.size() > 0) {
     out << text << std::endl;
   }
-  out << "Camera(" << this->id_ << "): " << this->label_ << std::endl;
+  out << "Camera(" << this->id_ << "): " << this->id_ << std::endl;
   out << "  line delay: " << this->line_delay_nanoseconds_ << std::endl;
   out << "  image (cols,rows): " << imageWidth() << ", " << imageHeight() << std::endl;
 }
@@ -81,7 +79,7 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   if (distortion_config.IsDefined() && !distortion_config.IsNull()) {
     if(!distortion_config.IsMap()) {
       LOG(ERROR)
-          << "Unable to parse the camera because the distortion node is not a sequence.";
+          << "Unable to parse the camera because the distortion node is not a map.";
       return false;
     }
 

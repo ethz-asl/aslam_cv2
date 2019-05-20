@@ -11,7 +11,7 @@
 #include <aslam/common/hash-id.h>
 #include <aslam/common/internal/unique-id.h>
 
-static constexpr int kDefaultIDPrintLength = 10;
+static constexpr unsigned kDefaultIDPrintLength = 10;
 
 namespace aslam {
 template <typename IdType>

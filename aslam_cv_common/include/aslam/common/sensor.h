@@ -16,21 +16,24 @@ enum SensorType : uint8_t {
   kCamera
 };
 
-constexpr char kNCameraIdentifier[] = "NCAMERA";
-constexpr char kCameraIdentifier[] = "CAMERA";
+constexpr const char kNCameraIdentifier[] = "NCAMERA";
+constexpr const char kCameraIdentifier[] = "CAMERA";
 
-constexpr char kYamlFieldNameId[] = "id";
-constexpr char kYamlFieldNameSensorType[] = "sensor_type";
-constexpr char kYamlFieldNameTopic[] = "topic";
-constexpr char kYamlFieldNameDescription[] = "description";
+constexpr const char kYamlFieldNameId[] = "id";
+constexpr const char kYamlFieldNameSensorType[] = "sensor_type";
+constexpr const char kYamlFieldNameTopic[] = "topic";
+constexpr const char kYamlFieldNameDescription[] = "description";
 
 class Sensor : public YamlFileSerializable {
  public:
   ASLAM_POINTER_TYPEDEFS(Sensor);
 
-  Sensor(){};
+  Sensor() = default;
   explicit Sensor(const SensorId& id);
   explicit Sensor(const SensorId& id, const std::string& topic);
+  explicit Sensor(
+      const SensorId& id, const std::string& topic,
+      const std::string& description);
 
   virtual ~Sensor() = default;
 

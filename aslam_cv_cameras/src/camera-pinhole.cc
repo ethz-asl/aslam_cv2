@@ -240,6 +240,10 @@ bool PinholeCamera::isValidImpl() const {
 void PinholeCamera::setRandomImpl() {
   PinholeCamera::Ptr test_camera = PinholeCamera::createTestCamera();
   CHECK(test_camera);
+  line_delay_nanoseconds_ = test_camera->line_delay_nanoseconds_;
+  image_width_ = test_camera->image_width_;
+  image_height_ = test_camera->image_height_;
+  mask_= test_camera->mask_;
   intrinsics_ = test_camera->intrinsics_;
   camera_type_ = test_camera->camera_type_;
   if (test_camera->distortion_) {
@@ -255,12 +259,14 @@ bool PinholeCamera::isEqualImpl(const Sensor& other) const {
   }
 
   // Verify that the base members are equal.
-  if (!isEqualCameraImpl(*other_camera))
+  if (!isEqualCameraImpl(*other_camera)) {
     return false;
+  }
 
   // Compare the distortion model (if distortion is set for both).
-  if ( !(*(this->distortion_) == *(other_camera->distortion_)) )
+  if (!(*(this->distortion_) == *(other_camera->distortion_))) {
     return false;
+  }
 
   return true;
 }

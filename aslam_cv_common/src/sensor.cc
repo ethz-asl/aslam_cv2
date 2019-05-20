@@ -11,9 +11,16 @@ Sensor::Sensor(const SensorId& id, const std::string& topic)
   CHECK(id_.isValid());
 };
 
-void Sensor::setId(const SensorId& id) {
-  id_ = id;
+Sensor::Sensor(
+    const SensorId& id, const std::string& topic,
+    const std::string& description)
+    : id_(id), topic_(topic), description_(description) {
   CHECK(id_.isValid());
+};
+
+void Sensor::setId(const SensorId& id) {
+  CHECK(id_.isValid());
+  id_ = id;
 };
 
 void Sensor::setDescription(const std::string& description) {
@@ -99,7 +106,12 @@ bool Sensor::isEqual(const Sensor& other) const {
   is_equal &= topic_ == other.topic_;
   is_equal &= description_ == other.description_;
   is_equal &= getSensorType() == other.getSensorType();
-  is_equal &= isEqualImpl(other);
+
+  // optimize to avoid unncessary comparisons
+  if (is_equal) {
+    is_equal &= isEqualImpl(other);
+  }
+
   return is_equal;
 }
 
