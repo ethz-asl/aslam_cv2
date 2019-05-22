@@ -22,9 +22,8 @@ NCamera::NCamera() {}
 NCamera::NCamera(
     const NCameraId& id, const TransformationVector& T_C_B,
     const std::vector<Camera::Ptr>& cameras, const std::string& description)
-    : Sensor(id), T_C_B_(T_C_B), cameras_(cameras) {
+    : Sensor(id, std::string(), description), T_C_B_(T_C_B), cameras_(cameras) {
   CHECK(id.isValid());
-  description_ = description;
   initInternal();
 }
 
@@ -41,10 +40,14 @@ NCamera::NCamera(const NCamera& other) :
     cameras_.emplace_back(other.getCamera(idx).clone());
   }
   initInternal();
+  CHECK(isValid());
 }
 
 bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
-  CHECK(yaml_node.IsMap());
+  if(!yaml_node.IsMap()) {
+    LOG(ERROR) << "Unable to parse the NCamera because the node is not a map.";
+    return false;
+  }
 
   // Parse the cameras.
   const YAML::Node& cameras_node = yaml_node["cameras"];
@@ -103,8 +106,8 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     aslam::Transformation T_B_C(q_B_C, T_B_C_raw.block<3,1>(0,3));
 
     // Fill in the data in the ncamera.
-    cameras_.push_back(camera);
-    T_C_B_.push_back(T_B_C.inverse());
+    cameras_.emplace_back(camera);
+    T_C_B_.emplace_back(T_B_C.inverse());
   }
 
   initInternal();
@@ -118,7 +121,7 @@ void NCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
 
   YAML::Node cameras_node;
   size_t num_cameras = numCameras();
-  for (size_t camera_index = 0; camera_index < num_cameras; ++camera_index) {
+  for (size_t camera_index = 0u; camera_index < num_cameras; ++camera_index) {
     YAML::Node intrinsics_node;
     getCamera(camera_index).serialize(&intrinsics_node);
 
@@ -241,6 +244,8 @@ int NCamera::getCameraIndex(const CameraId& id) const {
 
 aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
   aslam::NCamera::Ptr rig_without_distortion(this->clone());
+  CHECK(rig_without_distortion);
+
   // Remove distortion and assign new IDs to the rig and all cameras.
   for (Camera::Ptr& camera : rig_without_distortion->cameras_) {
     camera->removeDistortion();
@@ -272,32 +277,30 @@ void NCamera::setRandomImpl() {
 
   // TODO(all): use inified random number generator with fixable seed.
   Eigen::Vector2f random_numbers;
-  random_numbers.setRandom();
-  (random_numbers + Eigen::Vector2f::Ones()) *
-      8.f;  // random_numbers elements are in [1,16]
+  random_numbers.setRandom(); // range is [-1, 1]
   TransformationVector T_C_B_vector;
 
   std::vector<aslam::Camera::Ptr> cameras;
-  const size_t num_cameras = random_numbers(0);  // in [1,16]
-  CHECK_LE(num_cameras, 16u);
+  const size_t num_cameras = (random_numbers(0) + 1.f) * 7.f + 1.f; // [1, 15]
+  CHECK_LE(num_cameras, 15u);
   CHECK_GE(num_cameras, 1u);
   for (size_t camera_idx = 0u; camera_idx < num_cameras; ++camera_idx) {
     aslam::Camera::Ptr random_camera;
-    if (random_numbers(1) > 8) {
+    if (random_numbers(1) > 0.f) {
       random_camera.reset(new aslam::PinholeCamera());
       random_camera->setRandom();
-      cameras.push_back(random_camera);
+      cameras.emplace_back(random_camera);
     } else {
       random_camera.reset(new aslam::UnifiedProjectionCamera());
       random_camera->setRandom();
-      cameras.push_back(random_camera);
+      cameras.emplace_back(random_camera);
     }
 
     // Offset each camera 0.1 m in x direction and rotate it to face forward.
     Eigen::Vector3d position(0.1 * (camera_idx + 1), 0.0, 0.0);
     aslam::Quaternion q_C_B(0.5, 0.5, -0.5, 0.5);
     aslam::Transformation T_C_B(q_C_B, position);
-    T_C_B_vector.push_back(T_C_B);
+    T_C_B_vector.emplace_back(T_C_B);
     id_to_index_[random_camera->getId()] = camera_idx;
   }
   T_C_B_ = T_C_B_vector;
@@ -310,11 +313,12 @@ bool NCamera::isEqualImpl(const Sensor& other) const {
     return false;
   }
 
-  if (getNumCameras() != other_ncamera->getNumCameras()) {
+  const size_t num_cameras = cameras_.size();
+  if (num_cameras != other_ncamera->cameras_.size()) {
     return false;
   }
   bool is_equal = true;
-  for (size_t i = 0; i < getNumCameras(); ++i) {
+  for (size_t i = 0u; i < num_cameras && is_equal; ++i) {
     is_equal &= aslam::checkSharedEqual(cameras_[i], other_ncamera->cameras_[i]);
     is_equal &= ((T_C_B_[i].getTransformationMatrix() - other_ncamera->T_C_B_[i].getTransformationMatrix())
         .cwiseAbs().maxCoeff() < common::macros::kEpsilon);

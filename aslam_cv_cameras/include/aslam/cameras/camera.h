@@ -123,7 +123,7 @@ class Camera : public Sensor {
   /// @param[in] camera_type  CameraType enum value with information which camera
   ///                         model is used by the derived class.
   Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
-         uint32_t image_width, uint32_t image_height, Type camera_type);
+         const uint32_t image_width, const uint32_t image_height, Type camera_type);
 
   /// \brief Camera base constructor without distortion.
   /// @param[in] intrinsics   Vector containing the intrinsic parameters.
@@ -131,8 +131,8 @@ class Camera : public Sensor {
   /// @param[in] image_height Image height in pixels.
   /// @param[in] camera_type  CameraType enum value with information which camera
   ///                         model is used by the derived class.
-  Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
-         Type camera_type);
+  Camera(const Eigen::VectorXd& intrinsics, const uint32_t image_width,
+         const uint32_t image_height, Type camera_type);
 
   Sensor::Ptr cloneAsSensor() const override {
     return std::dynamic_pointer_cast<Sensor>(std::shared_ptr<Camera>(clone()));
@@ -164,7 +164,6 @@ class Camera : public Sensor {
   Camera(const Camera& other) :
     Sensor(other),
     line_delay_nanoseconds_(other.line_delay_nanoseconds_),
-    label_(other.label_),
     image_width_(other.image_width_),
     image_height_(other.image_height_),
     intrinsics_(other.intrinsics_),
@@ -530,10 +529,9 @@ class Camera : public Sensor {
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;
 
+ protected:
   /// The delay per scanline for a rolling shutter camera in nanoseconds.
   uint64_t line_delay_nanoseconds_;
-  /// A label for this camera, a name.
-  std::string label_;
   /// The width of the image.
   uint32_t image_width_;
   /// The height of the image.
@@ -541,7 +539,6 @@ class Camera : public Sensor {
   /// The image mask.
   cv::Mat_<uint8_t> mask_;
 
- protected:
   /// Parameter vector for the intrinsic parameters of the model.
   Eigen::VectorXd intrinsics_;
 

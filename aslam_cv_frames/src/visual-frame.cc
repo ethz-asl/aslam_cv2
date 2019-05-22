@@ -449,7 +449,7 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   aslam::VisualFrame::DescriptorsT descriptors = aslam::VisualFrame::DescriptorsT::Zero(48, 0);
   frame->swapDescriptors(&descriptors);
   aslam::FrameId id;
-  generateId(&id);;
+  generateId(&id);
   frame->setId(id);
   return frame;
 }
