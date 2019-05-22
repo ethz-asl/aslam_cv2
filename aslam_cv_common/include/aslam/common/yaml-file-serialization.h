@@ -1,5 +1,5 @@
-#ifndef ASLAM_CV_COMMON_FILE_SERIALIZABLE_H_
-#define ASLAM_CV_COMMON_FILE_SERIALIZABLE_H_
+#ifndef ASLAM_CV_COMMON_YAML_FILE_SERIALIZATION_H_
+#define ASLAM_CV_COMMON_YAML_FILE_SERIALIZATION_H_
 
 #include <fstream>  // NOLINT
 #include <limits>
@@ -23,8 +23,8 @@ class YamlFileSerializable {
     CHECK(yaml_node.IsDefined());
 
     std::ofstream output_file_stream(file_name);
-    CHECK(output_file_stream.is_open()) << "Failed to open file " << file_name
-                                        << " for writing.";
+    CHECK(output_file_stream.is_open())
+        << "Failed to open file " << file_name << " for writing.";
     output_file_stream << yaml_node;
     output_file_stream.close();
   }
@@ -42,6 +42,6 @@ class YamlFileSerializable {
     return deserialize(yaml_node);
   }
 };
-}  // namespace vi_map
+}  // namespace aslam
 
-#endif  // ASLAM_CV_COMMON_FILE_SERIALIZABLE_H_
+#endif  // ASLAM_CV_COMMON_YAML_FILE_SERIALIZATION_H_

@@ -10,11 +10,7 @@
 
 namespace aslam {
 
-enum SensorType : uint8_t {
-  kUnknown,
-  kNCamera,
-  kCamera
-};
+enum SensorType : uint8_t { kUnknown, kNCamera, kCamera };
 
 constexpr char kNCameraIdentifier[] = "NCAMERA";
 constexpr char kCameraIdentifier[] = "CAMERA";
@@ -38,7 +34,11 @@ class Sensor : public YamlFileSerializable {
       : id_(other.id_),
         topic_(other.topic_),
         description_(other.description_) {}
-  void operator=(const Sensor& other) = delete;
+  void operator=(const Sensor& other) {
+    id_ = other.id_;
+    topic_ = other.topic_;
+    description_ = other.description_;
+  }
 
   bool operator==(const Sensor& other) const;
   bool operator!=(const Sensor& other) const;
