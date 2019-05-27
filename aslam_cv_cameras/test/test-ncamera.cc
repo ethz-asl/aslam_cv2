@@ -18,14 +18,14 @@ TEST(TestNCameraYamlSerialization, testEmptyYaml) {
 
 TEST(TestNCameraYamlSerialization, testSerialization) {
   aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(4u);
-  CHECK(ncamera);
+  ASSERT_TRUE(ncamera);
 
   std::string filename = "test_ncamera.yaml";
   ncamera->serializeToFile(filename);
 
   aslam::NCamera::Ptr ncamera_loaded(new aslam::NCamera());
-  CHECK(ncamera_loaded);
-  ncamera_loaded->deserializeFromFile(filename);
+  ASSERT_TRUE(ncamera_loaded);
+  ASSERT_TRUE(ncamera_loaded->deserializeFromFile(filename));
   ASSERT_TRUE(ncamera_loaded.get() != nullptr);
 
   EXPECT_EQ(ncamera_loaded->getId(), ncamera->getId());
@@ -54,7 +54,7 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
 
 TEST(TestNCamera, testClone) {
   aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(4u);
-  CHECK(ncamera);
+  ASSERT_TRUE(ncamera);
 
   aslam::NCamera::Ptr ncamera_clone(ncamera->clone());
   EXPECT_TRUE(ncamera_clone.get() != ncamera.get());
@@ -78,9 +78,9 @@ TEST(TestNCamera, testClone) {
 
 TEST(TestNCamera, testCloneRigWithoutDistortion) {
   aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(4u);\
-  CHECK(ncamera);
+  ASSERT_TRUE(ncamera);
   aslam::NCamera::Ptr ncamera_clone(ncamera->cloneRigWithoutDistortion());
-  CHECK(ncamera_clone);
+  ASSERT_TRUE(ncamera_clone);
 
   // Make sure the source rig has actually a distortion model set.
   for (size_t idx = 0u; idx < ncamera->getNumCameras(); ++idx) {
