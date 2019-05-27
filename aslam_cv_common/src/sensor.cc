@@ -3,23 +3,23 @@
 namespace aslam {
 
 Sensor::Sensor(const SensorId& id) : id_(id) {
-  CHECK(id_.isValid());
+  CHECK(id.isValid());
 };
 
 Sensor::Sensor(const SensorId& id, const std::string& topic)
     : id_(id), topic_(topic) {
-  CHECK(id_.isValid());
+  CHECK(id.isValid());
 };
 
 Sensor::Sensor(
     const SensorId& id, const std::string& topic,
     const std::string& description)
     : id_(id), topic_(topic), description_(description) {
-  CHECK(id_.isValid());
+  CHECK(id.isValid());
 };
 
 void Sensor::setId(const SensorId& id) {
-  CHECK(id_.isValid());
+  CHECK(id.isValid());
   id_ = id;
 };
 
