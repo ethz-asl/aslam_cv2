@@ -15,9 +15,10 @@ namespace aslam {
 namespace calibration {
 
 /// \brief Construct a calibration target
-///        num_tag_rows:              number of tags in y-dir
-///        num_tag_cols:              number of tags in x-dir
-///        tag_size_meter:            size of a tag [m]
+///        rows:                      number of internal corners (8x8 chessboard would be 7x7 internal corners)
+///        cols:                      number of internal corners
+///        row_spacing_meters:        spacing in y-direction [m]
+///        col_spacing_meters:        spacing in x-direction [m]
 ///
 ///   point ordering in _points: (e.g. 2x2 grid)
 ///          *-------*-------*-------*
@@ -36,17 +37,20 @@ class TargetCheckerboard : public TargetBase {
   //target extraction options
   struct TargetConfiguration {
     TargetConfiguration()
-        : num_tag_rows(6u),
-          num_tag_cols(6u),
-          tag_size_meter(0.088){}
+        : rows(6u),
+          cols(6u),
+          row_spacing_meters(0.088),
+          col_spacing_meters(0.088){}
           
-    /// Number of tags in row direction.
-    size_t num_tag_rows;
-    /// Number of tags in col direction.
-    size_t num_tag_cols;
+    /// number of internal corners in row direction.
+    size_t rows;
+    /// number of internal corners in col direction.
+    size_t cols;
 
-    /// Size of one tag. [m]
-    double tag_size_meter;
+    /// spacing in y-direction [m]
+    double row_spacing_meters;
+    /// spacing in x-direction [m]
+    double col_spacing_meters;
 
     static TargetConfiguration fromYaml(const std::string& yaml_file);
   };

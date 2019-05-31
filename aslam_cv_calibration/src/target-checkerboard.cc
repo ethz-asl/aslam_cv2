@@ -23,14 +23,14 @@ TargetCheckerboard::TargetConfiguration::fromYaml(const std::string& yaml_file) 
     std::string target_type;
     YAML::safeGet(yaml_node, "target_type", &target_type);
     CHECK_EQ(target_type, "aprilgrid") << "Wrong target type.";
-    YAML::safeGet(yaml_node, "tagCols", &target_config.num_tag_cols);
-    CHECK_GT(target_config.num_tag_cols, 0u);
-    YAML::safeGet(yaml_node, "tagRows", &target_config.num_tag_rows);
-    CHECK_GT(target_config.num_tag_rows, 0u);
-    YAML::safeGet(yaml_node, "tagSize", &target_config.tag_size_meter);
-    CHECK_GT(target_config.tag_size_meter, 0.0);
-    double relative_tag_spacing;
-    YAML::safeGet(yaml_node, "tagSpacing", &relative_tag_spacing);
+    YAML::safeGet(yaml_node, "tagCols", &target_config.cols);
+    CHECK_GT(target_config.cols, 0u);
+    YAML::safeGet(yaml_node, "rows", &target_config.rows);
+    CHECK_GT(target_config.rows, 0u);
+    YAML::safeGet(yaml_node, "rowSpacingMeters", &target_config.row_spacing_meters);
+    CHECK_GT(target_config.row_spacing_meters, 0.0);
+    YAML::safeGet(yaml_node, "colSpacingMeters", &target_config.col_spacing_meters);
+    CHECK_GT(target_config.col_spacing_meters, 0.0);
   } catch (const YAML::Exception& ex) {
     LOG(FATAL) << "Failed to load yaml file " << yaml_file
                << " with the error: \n " << ex.what() << ".";
@@ -39,9 +39,10 @@ TargetCheckerboard::TargetConfiguration::fromYaml(const std::string& yaml_file) 
 }
 
 TargetCheckerboard::TargetCheckerboard(const TargetCheckerboard::TargetConfiguration& target_config)
-    : TargetBase(target_config.num_tag_rows, target_config.num_tag_cols, //maybe -1 here?
+    : TargetBase(target_config.rows, target_config.cols,
                   createCheckerboardPoints(target_config)), target_config_(target_config) {
-  CHECK_GT(target_config.tag_size_meter, 0.0);
+  CHECK_GT(target_config.row_spacing_meters, 0.0);
+  CHECK_GT(target_config.col_spacing_meters, 0.0);
 }
 
 Eigen::Matrix3Xd createCheckerboardPoints( //not sure but might be correct as is
@@ -56,17 +57,15 @@ Eigen::Matrix3Xd createCheckerboardPoints( //not sure but might be correct as is
   //   ^      *-------*-------*-------*
   //   |-->x
   //|-->x
-  const double tag_size = target_config.tag_size_meter;
-  const size_t num_point_rows = target_config.num_tag_rows;
-  const size_t num_point_cols = target_config.num_tag_cols;
-  CHECK_GT(tag_size, 0.0);
+  const size_t num_point_rows = target_config.rows;
+  const size_t num_point_cols = target_config.cols;
   Eigen::Matrix3Xd grid_points_meters =
       Eigen::Matrix3Xd(3, num_point_rows * num_point_cols);
   for (size_t row_idx = 0u; row_idx < num_point_rows; ++row_idx) {
     for (size_t col_idx = 0u; col_idx < num_point_cols; ++col_idx) {
       Eigen::Vector3d point;
-      point(0) = static_cast<double>(col_idx + 1) * tag_size;
-      point(1) = static_cast<double>(num_point_rows - row_idx) * tag_size;
+      point(0) = static_cast<double>(col_idx + 1) * target_config.col_spacing_meters;
+      point(1) = static_cast<double>(num_point_rows - row_idx) * target_config.row_spacing_meters;
       point(2) = 0.0;
 
       grid_points_meters.col(row_idx * num_point_cols + col_idx) = point;
