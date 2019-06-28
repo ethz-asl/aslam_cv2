@@ -99,6 +99,31 @@ TYPED_TEST(TestDistortions, DistortAndUndistortUsingExternalParameters) {
   }
 }
 
+TYPED_TEST(TestDistortions, TemplatedDistortUsingExternalParameters) {
+  // Set new parameters.
+  Eigen::VectorXd dist_coeff = this->distortion_->getParameters();
+  this->distortion_->setParameters(dist_coeff / 2.0);
+
+  // Box on the normalized image plane corresponds to
+  // a pinhole camera with a resolution of 2000x2000, f=200 and c=1000.
+  static constexpr double box_side = 5.0;
+  static constexpr double step_size = 0.1;
+
+  for (double u = -box_side / 2.0; u < box_side / 2.0; u += step_size) {
+    for (double v = -box_side / 2.0; v < box_side / 2.0; v += step_size) {
+      Eigen::Vector2d keypoint(u, v);
+      Eigen::Vector2d keypoint2 = keypoint;
+
+      // Standard version of distort function.
+      this->distortion_->distortUsingExternalCoefficients(&dist_coeff, &keypoint, nullptr);
+      // Templated version of distort function.
+      this->distortion_->distortUsingExternalCoefficients(dist_coeff, &keypoint2);
+
+      EXPECT_TRUE(EIGEN_MATRIX_NEAR(keypoint2, keypoint, 1e-12));
+    }
+  }
+}
+
 TYPED_TEST(TestDistortions, DistortAndUndistortImageCenter) {
   Eigen::Vector2d keypoint(0.0, 0.0);
 

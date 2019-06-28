@@ -63,8 +63,7 @@ class FisheyeDistortion : public aslam::Cloneable<Distortion, FisheyeDistortion>
   /// @param[out] out_point   The distorted point.
   template <typename ScalarType, typename MDistortion>
   void distortUsingExternalCoefficients(const Eigen::MatrixBase<MDistortion>& dist_coeffs,
-                                        const Eigen::Matrix<ScalarType, 2, 1>& point,
-                                        Eigen::Matrix<ScalarType, 2, 1>* out_point) const;
+                                        Eigen::Matrix<ScalarType, 2, 1>* point) const;
 
   /// \brief Apply distortion to the point and provide the Jacobian of the distortion with respect
   ///        to small changes in the distortion parameters.
