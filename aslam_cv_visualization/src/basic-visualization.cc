@@ -22,7 +22,7 @@ void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image) {
       keypoint = frame.getKeypointMeasurement(keypoint_idx);
     }
     cv::circle(*image, cv::Point(keypoint[0], keypoint[1]), 1,
-               cv::Scalar(0, 255, 255), 1, CV_AA);
+               cv::Scalar(0, 255, 255), 1, cv::LINE_AA);
   }
 }
 
@@ -125,7 +125,7 @@ void assembleMultiImage(const aslam::VisualNFrame::ConstPtr& nframe,
     }
 
     cv::cvtColor(nframe->getFrame(frame_idx).getRawImage(), individual_images[frame_idx],
-                 CV_GRAY2BGR);
+                 cv::COLOR_GRAY2BGR);
 
     CHECK(nframe->getFrame(frame_idx).getCameraGeometry());
     const size_t image_width =
@@ -217,10 +217,10 @@ void drawFeatureTrackPatches(const aslam::FeatureTrack& track, size_t keypoint_n
 
     // Draw the keypoint.
     cv::Mat keypoint_neighbourhood_image;
-    cv::cvtColor(keypoint_image(roi_keypoint), keypoint_neighbourhood_image, CV_GRAY2BGR);
+    cv::cvtColor(keypoint_image(roi_keypoint), keypoint_neighbourhood_image, cv::COLOR_GRAY2BGR);
     cv::Point keypoint_coords_subimage(keypoint[0] - roi_keypoint.x, keypoint[1] - roi_keypoint.y);
     cv::circle(keypoint_neighbourhood_image, keypoint_coords_subimage, 1,
-               cv::Scalar(0, 255, 255), 1, CV_AA);
+               cv::Scalar(0, 255, 255), 1, cv::LINE_AA);
 
     keypoint_neighbourhood_image.copyTo((*image)(roi_subimage));
     ++keypoint_index;
@@ -264,7 +264,7 @@ bool drawFeatureTracks(const aslam::FeatureTracks& tracks, cv::Mat* image) {
 
   // Draw the tracks in the image of the last keypoint of the first track.
   const cv::Mat& frame_image = tracks.front().getLastKeypointIdentifier().getFrame().getRawImage();
-  cv::cvtColor(frame_image, *image, CV_GRAY2BGR);
+  cv::cvtColor(frame_image, *image, cv::COLOR_GRAY2BGR);
 
   // Draw all keypoints on the tracks.
   for (const aslam::FeatureTrack& track : tracks) {
@@ -275,7 +275,7 @@ bool drawFeatureTracks(const aslam::FeatureTracks& tracks, cv::Mat* image) {
       const cv::Point keypoint_cv(keypoint(0), keypoint(1));
       const size_t kRadiusPx = 1u;
       const size_t kThicknessPx = 1u;
-      cv::circle(*image, keypoint_cv, kRadiusPx, kYellow, kThicknessPx, CV_AA);
+      cv::circle(*image, keypoint_cv, kRadiusPx, kYellow, kThicknessPx, cv::LINE_AA);
       if (is_first_keypoint_drawn) {
         cv::line(*image, keypoint_cv, last_keypoint_cv, kYellow);
       } else {
@@ -286,5 +286,5 @@ bool drawFeatureTracks(const aslam::FeatureTracks& tracks, cv::Mat* image) {
   }
   return true;
 }
-  
+
 }  // namespace aslam_cv_visualization

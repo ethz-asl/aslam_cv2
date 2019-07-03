@@ -13,7 +13,7 @@ void visualizeMatches(const aslam::VisualFrame& frame_kp1,
                       cv::Mat* image) {
   CHECK_NOTNULL(image);
 
-  cv::cvtColor(frame_kp1.getRawImage(), *image, CV_GRAY2BGR);
+  cv::cvtColor(frame_kp1.getRawImage(), *image, cv::COLOR_GRAY2BGR);
 
   VLOG(4) << "Converted raw image from grayscale to color.";
 

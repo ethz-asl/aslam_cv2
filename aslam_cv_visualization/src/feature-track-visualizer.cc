@@ -82,16 +82,16 @@ void VisualFrameFeatureTrackVisualizer::drawContinuousFeatureTracks(
         cv::Point point_end_line((*measurement_it)(0), (*measurement_it)(1));
         if (terminated) {
           cv::line(*image, point_start_line, point_end_line, cv::Scalar(0, 0, 255), kLineWidth,
-                   CV_AA);
+                   cv::LINE_AA);
         } else {
           cv::line(*image, point_start_line, point_end_line, track_it->second.color, kLineWidth,
-                   CV_AA);
+                   cv::LINE_AA);
         }
         point_start_line = point_end_line;
       }
       if (!terminated) {
         cv::circle(*image, point_start_line, kCircleRadius, cv::Scalar(0.0, 255.0, 255.0, 20),
-                   kLineWidth, CV_AA);
+                   kLineWidth, cv::LINE_AA);
       }
     }
 
