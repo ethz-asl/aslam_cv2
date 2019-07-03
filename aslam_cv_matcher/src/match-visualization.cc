@@ -142,8 +142,8 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
       LOG(FATAL) << "Unknown FeatureVisualizationType: "
                  << static_cast<int>(type);
   }
-  cvtColor(image_A, sub_image_A, CV_GRAY2BGR);
-  cvtColor(image_B, sub_image_B, CV_GRAY2BGR);
+  cvtColor(image_A, sub_image_A, cv::COLOR_GRAY2BGR);
+  cvtColor(image_B, sub_image_B, cv::COLOR_GRAY2BGR);
 
   // Draw keypoints.
   cv::drawKeypoints(sub_image_A, key_points_A, sub_image_A, kRed,

@@ -9,6 +9,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/core/eigen.hpp>
+#include <opencv2/core/types_c.h>
+#include <opencv2/core/mat.hpp>
 
 // This file contains modified opencv routines which use aslam's distort and project functionality.
 // Original functions can be found here:
@@ -29,8 +31,9 @@ static void getUndistortRectangles(const DerivedCameraType& input_camera, bool u
                                    cv::Rect_<float>& inner, cv::Rect_<float>& outer) {
   const int N = 9;
   int x, y, k;
-  cv::Ptr<CvMat> _pts(cvCreateMat(1, N * N, CV_32FC2));
-  CvPoint2D32f* pts = (CvPoint2D32f*) (_pts->data.ptr);
+  cv::Mat *m = new cv::Mat(1, N * N, CV_32FC2);
+  cv::Ptr<cv::Mat> _pts(m);
+  CvPoint2D32f* pts = (CvPoint2D32f*) (_pts->data);
 
   for (y = k = 0; y < N; y++) {
     for (x = 0; x < N; x++) {
