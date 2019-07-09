@@ -1,8 +1,7 @@
 #ifndef ASLAM_MATCH_OUTLIER_REJECTION_TWOPT_H_
 #define ASLAM_MATCH_OUTLIER_REJECTION_TWOPT_H_
 
-#include <vector>
-
+#include <unordered_set>
 #include <Eigen/Core>
 #include <glog/logging.h>
 

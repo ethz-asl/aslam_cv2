@@ -1,8 +1,6 @@
 #include "aslam/geometric-vision/match-outlier-rejection-twopt.h"
 
 #include <memory>
-#include <unordered_set>
-#include <vector>
 
 #include <aslam/common/pose-types.h>
 #include <aslam/frames/visual-frame.h>
