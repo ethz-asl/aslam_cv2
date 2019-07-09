@@ -62,6 +62,18 @@ void convertMatchesWithScoreToMatches(
                                        matches_with_score_A_B, matches_A_B);
 }
 
+template<typename TypedMatches>
+void convertFrameToFrameMatchesToMatches(
+    const TypedMatches& matches_typed_A_B, Matches* raw_matches_A_B) {
+  CHECK_NOTNULL(raw_matches_A_B)->clear();
+
+  raw_matches_A_B->reserve(matches_typed_A_B.size());
+  for (const aslam::FrameToFrameMatch& match_A_B : matches_typed_A_B) {
+    raw_matches_A_B->emplace_back(
+        aslam::Match(match_A_B.getKeypointIndexAppleFrame(),
+                     match_A_B.getKeypointIndexBananaFrame()));
+  }
+}
 }  // namespace aslam
 
 #endif  // ASLAM_MATCHER_MATCH_HELPERS_INL_H_

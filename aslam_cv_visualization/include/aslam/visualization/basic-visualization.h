@@ -43,6 +43,9 @@ void visualizeMatches(const aslam::VisualFrame& frame_kp1,
                       const aslam::VisualFrame& frame_k,
                       const MatchesWithScore& matches,
                       cv::Mat* image);
+void visualizeMatchesWithoutScore(
+    const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
+    const aslam::Matches& matches, cv::Mat* image);
 
 ////////////////////////////////////////////////
 /// Low-Level functions - They only draw some visualization onto an image.
