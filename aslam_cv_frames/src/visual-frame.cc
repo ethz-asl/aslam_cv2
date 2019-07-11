@@ -65,6 +65,9 @@ bool VisualFrame::hasKeypointScales() const{
 bool VisualFrame::hasDescriptors() const{
   return aslam::channels::has_DESCRIPTORS_Channel(channels_);
 }
+bool VisualFrame::hasDescriptorsDouble() const{
+  return aslam::channels::has_DESCRIPTORS_DOUBLE_Channel(channels_);
+}
 bool VisualFrame::hasTrackIds() const {
   return aslam::channels::has_TRACK_IDS_Channel(channels_);
 }
@@ -89,6 +92,9 @@ const Eigen::VectorXd& VisualFrame::getKeypointScores() const {
 }
 const VisualFrame::DescriptorsT& VisualFrame::getDescriptors() const {
   return aslam::channels::get_DESCRIPTORS_Data(channels_);
+}
+const VisualFrame::DescriptorsDoubleT& VisualFrame::getDescriptorsDouble() const {
+  return aslam::channels::get_DESCRIPTORS_DOUBLE_Data(channels_);
 }
 const Eigen::VectorXi& VisualFrame::getTrackIds() const {
   return aslam::channels::get_TRACK_IDS_Data(channels_);
@@ -129,6 +135,11 @@ Eigen::VectorXd* VisualFrame::getKeypointScoresMutable() {
 VisualFrame::DescriptorsT* VisualFrame::getDescriptorsMutable() {
   VisualFrame::DescriptorsT& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
+  return &descriptors;
+}
+VisualFrame::DescriptorsDoubleT* VisualFrame::getDescriptorsDoubleMutable() {
+  VisualFrame::DescriptorsDoubleT& descriptors =
+      aslam::channels::get_DESCRIPTORS_DOUBLE_Data(channels_);
   return &descriptors;
 }
 Eigen::VectorXi* VisualFrame::getTrackIdsMutable() {
@@ -176,6 +187,12 @@ double VisualFrame::getKeypointScore(size_t index) const {
 const unsigned char* VisualFrame::getDescriptor(size_t index) const {
   VisualFrame::DescriptorsT& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
+  CHECK_LT(static_cast<int>(index), descriptors.cols());
+  return &descriptors.coeffRef(0, index);
+}
+const double* VisualFrame::getDescriptorDouble(size_t index) const {
+  VisualFrame::DescriptorsDoubleT& descriptors =
+      aslam::channels::get_DESCRIPTORS_DOUBLE_Data(channels_);
   CHECK_LT(static_cast<int>(index), descriptors.cols());
   return &descriptors.coeffRef(0, index);
 }
@@ -249,6 +266,17 @@ void VisualFrame::setDescriptors(
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   descriptors = descriptors_new;
 }
+
+void VisualFrame::setDescriptorsDouble(
+    const DescriptorsDoubleT& descriptors_new) {
+  if (!aslam::channels::has_DESCRIPTORS_DOUBLE_Channel(channels_)) {
+    aslam::channels::add_DESCRIPTORS_DOUBLE_Channel(&channels_);
+  }
+  VisualFrame::DescriptorsDoubleT& descriptors =
+      aslam::channels::get_DESCRIPTORS_DOUBLE_Data(channels_);
+  descriptors = descriptors_new;
+}
+
 void VisualFrame::setTrackIds(const Eigen::VectorXi& track_ids_new) {
   if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
     aslam::channels::add_TRACK_IDS_Channel(&channels_);

@@ -38,6 +38,7 @@ class VisualFrame  {
   /// \brief The descriptor matrix stores descriptors in columns, i.e. the descriptor matrix
   ///        has num_bytes_per_descriptor rows and num_descriptors columns.
   typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
+  typedef Eigen::Matrix<double, Eigen::Dynamic, 128> DescriptorsDoubleT;
   typedef Eigen::VectorXd KeypointScoresT;
 
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
@@ -81,6 +82,9 @@ class VisualFrame  {
   /// Are there descriptors stored in this frame?
   bool hasDescriptors() const;
 
+  /// Are there descriptors stored in this frame?
+  bool hasDescriptorsDouble() const;
+
   /// Are there track ids stored in this frame?
   bool hasTrackIds() const;
 
@@ -119,6 +123,9 @@ class VisualFrame  {
   /// The descriptors stored in a frame.
   const DescriptorsT& getDescriptors() const;
 
+  /// The ocv descriptors stored in a frame.
+  const DescriptorsDoubleT& getDescriptorsDouble() const;
+
   /// The track ids stored in this frame.
   const Eigen::VectorXi& getTrackIds() const;
 
@@ -150,6 +157,9 @@ class VisualFrame  {
 
   /// A pointer to the descriptors, can be used to swap in new data.
   DescriptorsT* getDescriptorsMutable();
+
+  /// A pointer to the descriptors, can be used to swap in new data.
+  DescriptorsDoubleT* getDescriptorsDoubleMutable();
 
   /// A pointer to the track ids, can be used to swap in new data.
   Eigen::VectorXi* getTrackIdsMutable();
@@ -183,6 +193,9 @@ class VisualFrame  {
   /// Return pointer location of the descriptor pointed to by index.
   const unsigned char* getDescriptor(size_t index) const;
 
+  /// Return pointer location of the descriptor pointed to by index.
+  const double* getDescriptorDouble(size_t index) const;
+
   /// Return the track id at index. (-1: not tracked)
   int getTrackId(size_t index) const;
 
@@ -207,6 +220,10 @@ class VisualFrame  {
 
   /// Replace (copy) the internal descriptors by the passed ones.
   void setDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+
+  /// Replace (copy) the internal opencv descriptors by the passed ones.
+  void setDescriptorsDouble(const DescriptorsDoubleT& descriptors);
+  void setDescriptorsDouble(const cv::Mat& descriptors);
 
   /// Replace (copy) the internal track ids by the passed ones.
   void setTrackIds(const Eigen::VectorXi& track_ids);

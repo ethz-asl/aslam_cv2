@@ -29,3 +29,9 @@ target_link_libraries(test_visual-nframe ${PROJECT_NAME})
 ##########
 cs_install()
 cs_export()
+
+##################
+# CMake Indexing #
+##################
+FILE(GLOB_RECURSE LibFiles "include/*")
+add_custom_target(headers SOURCES ${LibFiles})
