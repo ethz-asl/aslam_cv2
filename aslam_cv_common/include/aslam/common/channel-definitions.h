@@ -26,11 +26,33 @@ DECLARE_CHANNEL(VISUAL_KEYPOINT_SCORES, Eigen::VectorXd)
 
 /// The keypoint descriptors. (extractor output)
 /// (cols are descriptors)
+// visual keypoint binary descriptors
 DECLARE_CHANNEL(DESCRIPTORS,
                 Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>)
 
 /// Track ID's for tracked features. (-1 if not tracked); (feature tracker output)
+// visual keypoint track ids
 DECLARE_CHANNEL(TRACK_IDS, Eigen::VectorXi)
+
+/// The semantic channels are separated from the visual keypoints, so don't try
+/// to access the semantic measurements with visual keypoints index.
+
+/// Parameters of bounding boxes from detectors in pixel coordinates
+/// one col per box in the order of centroid_row, centroid_col, height, width 
+DECLARE_CHANNEL(SEMANTIC_OBJECT_MEASUREMENTS, Eigen::Matrix4Xi)
+
+/// Semantic object measurement uncertainy from the detector
+/// cols are uncertainties
+DECLARE_CHANNEL(SEMANTIC_OBJECT_MEASUREMENT_UNCERTAINTIES, Eigen::VectorXd)
+
+/// Semantic measurements descriptors
+/// cols are descriptor
+DECLARE_CHANNEL(SEMANTIC_OBJECT_DESCRIPTORS,
+                Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>)
+
+/// Semantic object measurement track ids
+/// -1 if not tracked 
+DECLARE_CHANNEL(SEMANTIC_OBJECT_TRACK_IDS, Eigen::VectorXi)
 
 /// The raw image.
 DECLARE_CHANNEL(RAW_IMAGE, cv::Mat)
