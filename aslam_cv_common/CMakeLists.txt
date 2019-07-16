@@ -38,6 +38,8 @@ add_doxygen(NOT_AUTOMATIC)
 ##########
 # GTESTS #
 ##########
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
+
 catkin_add_gtest(test_channel-serialization test/test-channel-serialization.cc)
 target_link_libraries(test_channel-serialization ${PROJECT_NAME})
 
