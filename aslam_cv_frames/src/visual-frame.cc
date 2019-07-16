@@ -250,7 +250,9 @@ void VisualFrame::setDescriptors(
   descriptors = descriptors_new;
 }
 void VisualFrame::setTrackIds(const Eigen::VectorXi& track_ids_new) {
+  VLOG(1) << "set track id";
   if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
+  VLOG(1) << "===================== set track id";
     aslam::channels::add_TRACK_IDS_Channel(&channels_);
   }
   Eigen::VectorXi& data =
