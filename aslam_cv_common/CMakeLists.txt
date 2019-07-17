@@ -38,8 +38,6 @@ add_doxygen(NOT_AUTOMATIC)
 ##########
 # GTESTS #
 ##########
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
-
 catkin_add_gtest(test_channel-serialization test/test-channel-serialization.cc)
 target_link_libraries(test_channel-serialization ${PROJECT_NAME})
 
@@ -65,6 +63,7 @@ target_link_libraries(test_time ${PROJECT_NAME})
 
 catkin_add_gtest(test_reader_writer_lock_test test/reader_writer_lock_test.cc)
 target_link_libraries(test_reader_writer_lock_test ${PROJECT_NAME})
+target_link_libraries(test_reader_writer_lock_test -pthread)
 
 catkin_add_gtest(test_occupancy_grid test/test-occupancy-grid.cc)
 target_link_libraries(test_occupancy_grid ${catkin_LIBRARIES})
