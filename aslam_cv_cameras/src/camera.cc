@@ -157,6 +157,8 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     camera_type_ = Type::kPinhole;
   } else if(camera_type == "unified-projection") {
     camera_type_ = Type::kUnifiedProjection;
+  } else if(camera_type == "lidar") {
+    camera_type_ = Type::kLidar;
   } else {
     LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
         << "Valid values are {pinhole, unified-projection}.";
@@ -164,8 +166,9 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   }
 
   // Get the camera intrinsics
-  if (!YAML::safeGet(yaml_node, "intrinsics", &intrinsics_)) {
-    LOG(ERROR) << "Unable to get image width.";
+  if (camera_type_ != Type::kLidar &&
+      !YAML::safeGet(yaml_node, "intrinsics", &intrinsics_)) {
+    LOG(ERROR) << "Unable to get intrinsics.";
     return false;
   }
 
@@ -200,6 +203,9 @@ void Camera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
       break;
     case aslam::Camera::Type::kUnifiedProjection:
       node["type"] = "unified-projection";
+      break;
+    case aslam::Camera::Type::kLidar:
+      node["type"] = "lidar";
       break;
     default:
       LOG(ERROR) << "Unknown camera model: "

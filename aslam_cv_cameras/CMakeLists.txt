@@ -10,6 +10,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 set(SOURCES
   src/camera-factory.cc
   src/camera-pinhole.cc
+  src/camera-lidar.cc
   src/camera-unified-projection.cc
   src/camera.cc
   src/distortion-equidistant.cc

@@ -103,7 +103,8 @@ class Camera : public Sensor {
 
   enum class Type {
     kPinhole = 0,
-    kUnifiedProjection = 1
+    kUnifiedProjection = 1,
+    kLidar = 2
   };
 
   //////////////////////////////////////////////////////////////
