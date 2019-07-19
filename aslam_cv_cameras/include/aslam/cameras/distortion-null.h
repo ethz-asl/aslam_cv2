@@ -140,7 +140,7 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
 
   /// Static function that checks whether the given intrinsic parameters are
   /// valid for this model.
-  static bool areParametersValid(const Eigen::VectorXd& parameters) {
+  static bool areParametersValid(const Eigen::VectorXd& /*parameters*/) {
     // As the parameters do not have an impact, all parameters are valid.
     return true;
   }
@@ -150,7 +150,7 @@ class NullDistortion : public aslam::Cloneable<Distortion, NullDistortion> {
   ///            Parameters will NOT be stored.
   /// @return If the distortion parameters are valid.
   virtual bool distortionParametersValid(
-      const Eigen::VectorXd& dist_coeffs) const {
+      const Eigen::VectorXd& /*dist_coeffs*/) const {
     // As the parameters do not have an impact, all parameters are valid.
     return true;
   }
