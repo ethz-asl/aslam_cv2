@@ -45,6 +45,14 @@ DECLARE_CHANNEL(SEMANTIC_OBJECT_MEASUREMENTS, Eigen::Matrix4Xi)
 /// cols are uncertainties
 DECLARE_CHANNEL(SEMANTIC_OBJECT_MEASUREMENT_UNCERTAINTIES, Eigen::VectorXd)
 
+/// Semantic object class ids from the detector
+/// cols are ids
+DECLARE_CHANNEL(SEMANTIC_OBJECT_CLASS_IDS, Eigen::VectorXi)
+
+/// Semantic object class name from the detector
+/// cols are class names
+// DECLARE_CHANNEL(SEMANTIC_OBJECT_CLASS_NAMES, std::vector<std::string>)
+
 /// Semantic measurements descriptors
 /// cols are descriptor
 DECLARE_CHANNEL(SEMANTIC_OBJECT_DESCRIPTORS,

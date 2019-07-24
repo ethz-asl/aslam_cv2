@@ -27,6 +27,7 @@ EXPECT_DEATH(frame.getKeypointOrientation(0), "^");
 EXPECT_DEATH(frame.getSemanticObjectDescriptor(0), "^");
 EXPECT_DEATH(frame.getSemanticObjectMeasurement(0), "^");
 EXPECT_DEATH(frame.getSemanticObjectMeasurementUncertainty(0), "^");
+EXPECT_DEATH(frame.getSemanticObjectClassId(0), "^");
 EXPECT_DEATH(frame.getSemanticObjectTrackId(0), "^");
 }
 
@@ -41,6 +42,7 @@ EXPECT_DEATH(frame.getRawImage(), "^");
 EXPECT_DEATH(frame.getSemanticObjectDescriptors(), "^");
 EXPECT_DEATH(frame.getSemanticObjectMeasurements(), "^");
 EXPECT_DEATH(frame.getSemanticObjectMeasurementUncertainties(), "^");
+EXPECT_DEATH(frame.getSemanticObjectClassIds(), "^");
 EXPECT_DEATH(frame.getSemanticObjectTrackIds(), "^");
 }
 
@@ -56,6 +58,7 @@ EXPECT_DEATH(frame.getSemanticObjectDescriptorsMutable(), "^");
 EXPECT_DEATH(frame.getSemanticObjectMeasurementsMutable(), "^");
 EXPECT_DEATH(frame.getSemanticObjectMeasurementUncertaintiesMutable(), "^");
 EXPECT_DEATH(frame.getSemanticObjectDescriptorsMutable(), "^");
+EXPECT_DEATH(frame.getSemanticObjectClassIdsMutable(), "^");
 EXPECT_DEATH(frame.getSemanticObjectTrackIdsMutable(), "^");
 }
 
@@ -183,6 +186,21 @@ for (int i = 0; i < data.cols(); ++i) {
 }
 }
 
+TEST(Frame, SetGetSemanticObjectClassIds) {
+aslam::VisualFrame frame;
+Eigen::VectorXi data;
+data.resize(10);
+data.setRandom();
+frame.setSemanticObjectClassIds(data);
+const Eigen::VectorXi& data_2 = frame.getSemanticObjectClassIds();
+EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 0));
+EXPECT_EQ(&data_2, frame.getSemanticObjectClassIdsMutable());
+for (int i = 0; i < data.cols(); ++i) {
+  double ref = frame.getSemanticObjectClassId(i);
+  EXPECT_EQ(data(i), ref);
+}
+}
+
 TEST(Frame, SetGetSemanticObjectTrackIds) {
 aslam::VisualFrame frame;
 Eigen::VectorXi data;
@@ -259,6 +277,8 @@ TEST(Frame, CopyConstructor) {
   aslam::VisualFrame::SemanticObjectDescriptorsT sem_descriptors =
       aslam::VisualFrame::SemanticObjectDescriptorsT::Random(4096, kNumRandomValues);
   frame.setSemanticObjectDescriptors(sem_descriptors);
+  Eigen::VectorXi sem_class_ids = Eigen::VectorXi::Random(1, 10);
+  frame.setSemanticObjectClassIds(sem_class_ids);
   Eigen::VectorXi sem_track_ids = Eigen::VectorXi::Random(1, 10);
   frame.setSemanticObjectTrackIds(sem_track_ids);
   
@@ -284,6 +304,7 @@ TEST(Frame, CopyConstructor) {
   EIGEN_MATRIX_EQUAL(boxes, frame_cloned.getSemanticObjectMeasurements());
   EIGEN_MATRIX_EQUAL(sem_uncertainties, frame_cloned.getSemanticObjectMeasurementUncertainties());
   EIGEN_MATRIX_EQUAL(sem_descriptors, frame_cloned.getSemanticObjectDescriptors());
+  EIGEN_MATRIX_EQUAL(sem_class_ids, frame_cloned.getSemanticObjectClassIds());
   EIGEN_MATRIX_EQUAL(sem_track_ids, frame_cloned.getSemanticObjectTrackIds());  
 
   EXPECT_NEAR_OPENCV(image, frame_cloned.getRawImage(), 0);
