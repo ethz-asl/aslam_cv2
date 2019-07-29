@@ -10,21 +10,34 @@
 
 namespace aslam {
 std::ostream& operator<<(std::ostream& out, const LidarCamera& camera) {
-  camera.printParameters(out, std::string(""));
+  camera.printParameters(
+      out, std::string("Lidar cameras don't have parameters."));
   return out;
 }
 
-LidarCamera::LidarCamera() 
+LidarCamera::LidarCamera()
     : Base(Eigen::Vector4d::Zero(), 0, 0, Camera::Type::kLidar) {}
 
-
 LidarCamera::LidarCamera(uint32_t image_width, uint32_t image_height)
-    : Base(Eigen::Vector4d::Zero(),
-        image_width, image_height, Camera::Type::kLidar) {}
+    : Base(
+          Eigen::Vector4d::Zero(), image_width, image_height,
+          Camera::Type::kLidar) {}
 
-bool LidarCamera::backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
-                                 Eigen::Vector3d* out_point_3d) const {
+bool LidarCamera::backProject3(
+    const Eigen::Ref<const Eigen::Vector2d>& keypoint,
+    Eigen::Vector3d* out_point_3d) const {
+  // Assumtion: The point gets reporjected onto the "unit cylinder", meaning a
+  // cylinder with unit radius and infinite height.
   CHECK_NOTNULL(out_point_3d);
+
+  double yaw =
+      (keypoint[0] - cu()) / fu() * 2 * M_PI;  // rotation around camera Y axis.
+  double pitch = (-keypoint[1] + cv()) / fv() * 2 *
+                 M_PI;  // Elevation around camera X axis.
+
+  (*out_point_3d)[0] = -sin(yaw);
+  (*out_point_3d)[1] = -tan(pitch);
+  (*out_point_3d)[2] = -cos(yaw);
 
   // Always valid for the lidar model.
   return true;
@@ -76,7 +89,8 @@ bool LidarCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) const {
   return true;
 }
 
-void LidarCamera::printParameters(std::ostream& out, const std::string& text) const {
+void LidarCamera::printParameters(
+    std::ostream& out, const std::string& text) const {
   Camera::printParameters(out, text);
 }
 
@@ -90,7 +104,7 @@ void LidarCamera::setRandomImpl() {
   line_delay_nanoseconds_ = test_camera->line_delay_nanoseconds_;
   image_width_ = test_camera->image_width_;
   image_height_ = test_camera->image_height_;
-  mask_= test_camera->mask_;
+  mask_ = test_camera->mask_;
   intrinsics_ = test_camera->intrinsics_;
   camera_type_ = test_camera->camera_type_;
   if (test_camera->distortion_) {
@@ -99,8 +113,7 @@ void LidarCamera::setRandomImpl() {
 }
 
 bool LidarCamera::isEqualImpl(const Sensor& other) const {
-  const LidarCamera* other_camera =
-      dynamic_cast<const LidarCamera*>(&other);
+  const LidarCamera* other_camera = dynamic_cast<const LidarCamera*>(&other);
   if (other_camera == nullptr) {
     return false;
   }
@@ -109,7 +122,7 @@ bool LidarCamera::isEqualImpl(const Sensor& other) const {
 }
 
 LidarCamera::Ptr LidarCamera::createTestCamera() {
-  LidarCamera::Ptr camera(new LidarCamera(0,0));
+  LidarCamera::Ptr camera(new LidarCamera(0, 0));
   CameraId id;
   generateId(&id);
   camera->setId(id);

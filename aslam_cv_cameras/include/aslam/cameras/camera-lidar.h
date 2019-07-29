@@ -37,8 +37,9 @@ class LidarCamera : public aslam::Cloneable<Camera, LidarCamera> {
 
   friend std::ostream& operator<<(std::ostream& out, const LidarCamera& camera);
 
-  virtual bool backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
-                            Eigen::Vector3d* out_point_3d) const;
+  virtual bool backProject3(
+      const Eigen::Ref<const Eigen::Vector2d>& keypoint,
+      Eigen::Vector3d* out_point_3d) const;
 
   virtual const ProjectionResult project3Functional(
       const Eigen::Ref<const Eigen::Vector3d>& point_3d,
@@ -65,18 +66,20 @@ class LidarCamera : public aslam::Cloneable<Camera, LidarCamera> {
   /// @}
 
  public:
-
-  /// \brief Returns the number of intrinsic parameters used in this camera model.
+  /// \brief Returns the number of intrinsic parameters used in this camera
+  /// model.
   inline static constexpr int parameterCount() {
-      return kNumOfParams;
+    return kNumOfParams;
   }
 
-  /// \brief Returns the number of intrinsic parameters used in this camera model.
+  /// \brief Returns the number of intrinsic parameters used in this camera
+  /// model.
   inline virtual int getParameterSize() const {
-      return kNumOfParams;
+    return kNumOfParams;
   }
 
-  /// Static function that checks whether the given intrinsic parameters are valid for this model.
+  /// Static function that checks whether the given intrinsic parameters are
+  /// valid for this model.
   static bool areParametersValid(const Eigen::VectorXd& parameters);
 
   /// Function to check whether the given intrinsic parameters are valid for
@@ -86,15 +89,14 @@ class LidarCamera : public aslam::Cloneable<Camera, LidarCamera> {
   /// Print the internal parameters of the camera in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras
-  virtual void printParameters(std::ostream& out, const std::string& text) const;
-
+  virtual void printParameters(
+      std::ostream& out, const std::string& text) const;
 
   /// \brief Create a test camera object for unit testing.
   template <typename DistortionType>
   static LidarCamera::Ptr createTestCamera() {
     Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
-    LidarCamera::Ptr camera(
-        new LidarCamera(320, 1024));
+    LidarCamera::Ptr camera(new LidarCamera(320, 1024));
     CameraId id;
     generateId(&id);
     camera->setId(id);
@@ -104,7 +106,7 @@ class LidarCamera : public aslam::Cloneable<Camera, LidarCamera> {
   /// \brief Create a test camera object for unit testing. (without distortion)
   static LidarCamera::Ptr createTestCamera();
 
- private: 
+ private:
   bool isValidImpl() const override;
   void setRandomImpl() override;
   bool isEqualImpl(const Sensor& other) const override;
