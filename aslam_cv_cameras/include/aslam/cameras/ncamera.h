@@ -147,7 +147,7 @@ class NCamera : public Sensor {
 
   void setRandomImpl() override;
 
-  bool isEqualImpl(const Sensor& other) const override;
+  bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;

@@ -524,7 +524,7 @@ class Camera : public Sensor {
  private:
   bool isValidImpl() const = 0;
   void setRandomImpl() = 0;
-  bool isEqualImpl(const Sensor& other) const = 0;
+  bool isEqualImpl(const Sensor& other, const bool verbose) const = 0;
 
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;

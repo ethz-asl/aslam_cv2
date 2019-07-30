@@ -2,26 +2,30 @@
 
 namespace aslam {
 
-Sensor::Sensor(const SensorId& id) : id_(id) {
+Sensor::Sensor() : topic_(""), description_("") {
+  generateId(&id_);
+}
+
+Sensor::Sensor(const SensorId& id) : id_(id), topic_(""), description_("") {
   CHECK(id.isValid());
-};
+}
 
 Sensor::Sensor(const SensorId& id, const std::string& topic)
-    : id_(id), topic_(topic) {
+    : id_(id), topic_(topic), description_("") {
   CHECK(id.isValid());
-};
+}
 
 Sensor::Sensor(
     const SensorId& id, const std::string& topic,
     const std::string& description)
     : id_(id), topic_(topic), description_(description) {
   CHECK(id.isValid());
-};
+}
 
 void Sensor::setId(const SensorId& id) {
   CHECK(id.isValid());
   id_ = id;
-};
+}
 
 void Sensor::setDescription(const std::string& description) {
   description_ = description;
@@ -100,16 +104,27 @@ bool Sensor::operator!=(const Sensor& other) const {
   return !isEqual(other);
 }
 
-bool Sensor::isEqual(const Sensor& other) const {
+bool Sensor::isEqual(const Sensor& other, const bool verbose) const {
   bool is_equal = true;
   is_equal &= id_ == other.id_;
   is_equal &= topic_ == other.topic_;
   is_equal &= description_ == other.description_;
   is_equal &= getSensorType() == other.getSensorType();
 
+  if (!is_equal) {
+    LOG_IF(WARNING, verbose) << "this sensor: "
+                             << "\n id: " << id_ << "\n topic: " << topic_
+                             << "\n description: " << description_
+                             << "\n sensor_type: " << getSensorType();
+    LOG_IF(WARNING, verbose) << "other sensor: "
+                             << "\n id: " << id_ << "\n topic: " << other.topic_
+                             << "\n description: " << other.description_
+                             << "\n sensor_type: " << other.getSensorType();
+  }
+
   // optimize to avoid unncessary comparisons
   if (is_equal) {
-    is_equal &= isEqualImpl(other);
+    is_equal &= isEqualImpl(other, verbose);
   }
 
   return is_equal;

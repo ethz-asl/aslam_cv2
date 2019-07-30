@@ -251,7 +251,7 @@ void PinholeCamera::setRandomImpl() {
   }
 }
 
-bool PinholeCamera::isEqualImpl(const Sensor& other) const {
+bool PinholeCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   const PinholeCamera* other_camera =
       dynamic_cast<const PinholeCamera*>(&other);
   if (other_camera == nullptr) {

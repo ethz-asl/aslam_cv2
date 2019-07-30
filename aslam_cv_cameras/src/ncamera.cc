@@ -307,7 +307,7 @@ void NCamera::setRandomImpl() {
   cameras_ = cameras;
 }
 
-bool NCamera::isEqualImpl(const Sensor& other) const {
+bool NCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   const NCamera* other_ncamera = dynamic_cast<const NCamera*>(&other);
   if (other_ncamera == nullptr) {
     return false;

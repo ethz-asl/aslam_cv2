@@ -337,7 +337,7 @@ void UnifiedProjectionCamera::setRandomImpl() {
   }
 }
 
-bool UnifiedProjectionCamera::isEqualImpl(const Sensor& other) const {
+bool UnifiedProjectionCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   const UnifiedProjectionCamera* other_camera =
       dynamic_cast<const UnifiedProjectionCamera*>(&other);
   if (other_camera == nullptr) {
