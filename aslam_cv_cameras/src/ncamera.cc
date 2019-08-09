@@ -112,16 +112,18 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
 
     // Get the transformation matrix T_B_C (takes points from the frame C to
     // frame B).
-    Eigen::Matrix4d T_B_C_raw;
-    if (!YAML::safeGet(camera_node, "T_B_C", &T_B_C_raw)) {
-      LOG(ERROR) << "Unable to get extrinsic transformation T_B_C for camera "
-                 << camera_index;
+    Eigen::Matrix4d input_matrix;
+    aslam::Transformation T_B_C;
+    if (YAML::safeGet(camera_node, "T_B_C", &input_matrix)) {
+      T_B_C = aslam::Transformation(input_matrix);
+    } else if (YAML::safeGet(camera_node, "T_C_B", &input_matrix)) {
+      T_B_C = aslam::Transformation(input_matrix).inverse();
+    } else {
+      LOG(ERROR)
+          << "Unable to get extrinsic transformation T_B_C or T_C_B for camera "
+          << camera_index;
       return false;
     }
-    // This call will fail hard if the matrix is not a rotation matrix.
-    aslam::Quaternion q_B_C = aslam::Quaternion(
-        static_cast<Eigen::Matrix3d>(T_B_C_raw.block<3, 3>(0, 0)));
-    aslam::Transformation T_B_C(q_B_C, T_B_C_raw.block<3, 1>(0, 3));
 
     // Fill in the data in the ncamera.
     cameras_.emplace_back(camera);
