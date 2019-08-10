@@ -114,9 +114,11 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     // frame B).
     Eigen::Matrix4d input_matrix;
     aslam::Transformation T_B_C;
-    if (YAML::safeGet(camera_node, "T_B_C", &input_matrix)) {
+    if (camera_node["T_B_C"]) {
+      CHECK(YAML::safeGet(camera_node, "T_B_C", &input_matrix));
       T_B_C = aslam::Transformation(input_matrix);
-    } else if (YAML::safeGet(camera_node, "T_C_B", &input_matrix)) {
+    } else if (camera_node["T_C_B"]) {
+      CHECK(YAML::safeGet(camera_node, "T_C_B", &input_matrix));
       T_B_C = aslam::Transformation(input_matrix).inverse();
     } else {
       LOG(ERROR)
