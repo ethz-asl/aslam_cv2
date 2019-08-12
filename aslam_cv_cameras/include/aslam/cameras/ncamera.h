@@ -53,6 +53,22 @@ class NCamera : public Sensor {
       const std::vector<std::shared_ptr<Camera>>& cameras,
       const std::string& description);
 
+  // public:
+  /// \brief initialize from a list of transformations and a list of cameras
+  ///
+  /// The two lists must be parallel arrays (same size). The transformation
+  /// at T_C_B[i] corresponds to the camera at cameras[i].
+  ///
+  /// @param id unique id for this camera rig
+  /// @param T_C_B a list of transformations that take points from B to Ci
+  /// @param cameras a list cameras
+  /// @param description a human-readable description of this camera rig
+  NCamera(
+      const NCameraId& id, const TransformationVector& T_C_B,
+      const Eigen::Matrix<double,6,6>& localization_covariance,
+      const std::vector<std::shared_ptr<Camera>>& cameras,
+      const std::string& description);
+
   /// Initialize from a property tree.
   NCamera(const sm::PropertyTree& propertyTree);
   virtual ~NCamera() = default;
@@ -132,6 +148,12 @@ class NCamera : public Sensor {
   /// Does this rig have a camera with this id.
   bool hasCameraWithId(const CameraId& id) const;
 
+  /// Whether the covariance matrix for visual localization has been set
+  bool hasLocalizationCovariance() const;
+
+  // Get the 6DoF localization covariance matrix
+  bool getLocalizationCovariance(Eigen::Matrix<double,6,6>* covariance) const;
+
   /// \brief Get the index of the camera with the id.
   /// @returns -1 if the rig doesn't have a camera with this id.
   int getCameraIndex(const CameraId& id) const;
@@ -150,6 +172,10 @@ class NCamera : public Sensor {
 
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;
+
+  Eigen::Matrix<double, 6, 6> localization_covariance_;
+
+  bool has_localization_covariance_;
 
   /// Internal consistency checks and initialization.
   void initInternal();

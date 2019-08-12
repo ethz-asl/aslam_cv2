@@ -28,9 +28,10 @@ NCamera::UniquePtr createUniqueTestNCamera(size_t num_cameras) {
 
   NCameraId rig_id;
   generateId(&rig_id);
+  Eigen::Matrix<double,6,6> localization_covariance = Eigen::Matrix<double,6,6>::Identity();
   std::string description("Test camera rig");
   return std::move(aligned_unique<aslam::NCamera>(
-      rig_id, T_C_B_vector, cameras, description));
+      rig_id, T_C_B_vector, localization_covariance, cameras, description));
 }
 
 NCamera::Ptr createSurroundViewTestNCamera() {

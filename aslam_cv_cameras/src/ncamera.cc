@@ -37,7 +37,7 @@ NCamera* NCamera::cloneWithNewIds() const {
   return new_ncamera;
 }
 
-NCamera::NCamera() {}
+NCamera::NCamera() : has_localization_covariance_(false) {}
 
 NCamera::NCamera(
     const NCameraId& id, const TransformationVector& T_C_B,
@@ -47,12 +47,26 @@ NCamera::NCamera(
   initInternal();
 }
 
+NCamera::NCamera(
+    const NCameraId& id, const TransformationVector& T_C_B,
+    const Eigen::Matrix<double,6,6>& localization_covariance,
+    const std::vector<Camera::Ptr>& cameras, const std::string& description)
+    : Sensor(id, std::string(), description), T_C_B_(T_C_B),
+    localization_covariance_(localization_covariance),
+    cameras_(cameras) {
+  CHECK(id.isValid());
+  has_localization_covariance_ = true;
+  initInternal();
+}
+
 NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
   // TODO(PTF): fill in
   CHECK(false) << "Not implemented";
 }
 
-NCamera::NCamera(const NCamera& other) : Sensor(other), T_C_B_(other.T_C_B_) {
+NCamera::NCamera(const NCamera& other) : Sensor(other), T_C_B_(other.T_C_B_),
+ has_localization_covariance_(other.has_localization_covariance_),
+ localization_covariance_(other.localization_covariance_) {
   // Clone all contained cameras.
   for (size_t idx = 0u; idx < other.getNumCameras(); ++idx) {
     cameras_.emplace_back(other.getCamera(idx).clone());
@@ -65,6 +79,11 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   if (!yaml_node.IsMap()) {
     LOG(ERROR) << "Unable to parse the NCamera because the node is not a map.";
     return false;
+  }
+
+  if (yaml_node["T_G_B_covariance"]) {
+    CHECK(YAML::safeGet(yaml_node, "T_G_B_covariance", &localization_covariance_));
+    has_localization_covariance_ = true;
   }
 
   // Parse the cameras.
@@ -142,6 +161,13 @@ void NCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
   YAML::Node& node = *yaml_node;
 
   YAML::Node cameras_node;
+
+  if (has_localization_covariance_)
+  {
+    YAML::Node localization_covariance_node;
+    node["T_G_B_covariance"] = localization_covariance_;
+  }
+
   size_t num_cameras = numCameras();
   for (size_t camera_index = 0u; camera_index < num_cameras; ++camera_index) {
     YAML::Node intrinsics_node;
@@ -252,6 +278,18 @@ const CameraId& NCamera::getCameraId(size_t camera_index) const {
 bool NCamera::hasCameraWithId(const CameraId& id) const {
   CHECK(id.isValid());
   return id_to_index_.find(id) != id_to_index_.end();
+}
+
+bool NCamera::hasLocalizationCovariance() const{
+  return has_localization_covariance_;
+}
+
+bool NCamera::getLocalizationCovariance(Eigen::Matrix<double,6,6>* covariance) const{
+  if (has_localization_covariance_)
+  {
+    *covariance = localization_covariance_;
+  }
+  return false;
 }
 
 int NCamera::getCameraIndex(const CameraId& id) const {
