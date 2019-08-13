@@ -19,6 +19,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 set(SOURCES
   src/channel.cc
   src/channel-serialization.cc
+  src/covariance-helpers.cc
   src/hash-id.cc
   src/reader-first-reader-writer-lock.cc
   src/reader-writer-lock.cc
@@ -54,6 +55,9 @@ target_link_libraries(test_hash_id ${PROJECT_NAME})
 
 catkin_add_gtest(test_stl_helpers test/test-stl-helpers.cc)
 target_link_libraries(test_stl_helpers ${PROJECT_NAME})
+
+catkin_add_gtest(test_covariance_helpers test/test-covariance-helpers.cc)
+target_link_libraries(test_covariance_helpers ${PROJECT_NAME})
 
 catkin_add_gtest(test_thread-pool test/test-thread-pool.cc)
 target_link_libraries(test_thread-pool ${PROJECT_NAME})
