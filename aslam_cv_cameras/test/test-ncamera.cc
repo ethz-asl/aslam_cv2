@@ -28,7 +28,7 @@ TEST(TestNCameraYamlSerialization, testSerialization) {
   ASSERT_TRUE(ncamera_loaded->deserializeFromFile(filename));
   ASSERT_TRUE(ncamera_loaded.get() != nullptr);
 
-  ASSERT_TRUE(ncamera_loaded->hasLocalizationCovariance());  
+  ASSERT_TRUE(ncamera_loaded->hasFixedLocalizationCovariance());
 
   EXPECT_EQ(ncamera_loaded->getId(), ncamera->getId());
   EXPECT_EQ(ncamera_loaded->getTopic(), ncamera->getTopic());

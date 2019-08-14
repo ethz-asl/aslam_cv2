@@ -3,9 +3,10 @@
 namespace aslam {
 namespace common {
 
-void rotateCovariance(const aslam::Transformation& T_B_A,
-                      const aslam::TransformationCovariance& A_covariance,
-                      aslam::TransformationCovariance* B_covariance) {
+void rotateCovariance(
+    const aslam::Transformation& T_B_A,
+    const aslam::TransformationCovariance& A_covariance,
+    aslam::TransformationCovariance* B_covariance) {
   Eigen::Matrix<double, 6, 6> covariance_transformation_B_A =
       Eigen::Matrix<double, 6, 6>::Identity();
   covariance_transformation_B_A.block<3, 3>(0, 0) = T_B_A.getRotationMatrix();
