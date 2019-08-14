@@ -95,9 +95,6 @@ class VisualFrame  {
   /// Are there semantic object class ids stored in this frame?
   bool hasSemanticObjectClassIds() const;
 
-  /// Are there semantic object class names stored in this frame?
-  // bool hasSemanticObjectClassNames() const;
-
   /// Are there semantic object descriptors stored in this frame?
   bool hasSemanticObjectDescriptors() const;
 
@@ -128,6 +125,11 @@ class VisualFrame  {
     return static_cast<size_t>(getKeypointMeasurements().cols());
   }
 
+  /// Get the number of keypoints measurements stored in this frame.
+  inline size_t getNumSemanticObjectMeasurements() const {
+    return static_cast<size_t>(getSemanticObjectMeasurements().cols());
+  }
+
   /// The keypoint measurement uncertainties stored in a frame.
   const Eigen::VectorXd& getKeypointMeasurementUncertainties() const;
 
@@ -154,9 +156,6 @@ class VisualFrame  {
 
   /// The semantic object measurement uncertainties stored in this frame.
   const Eigen::VectorXi& getSemanticObjectClassIds() const;
-
-  /// The semantic object measurement uncertainties stored in this frame.
-  // const std::vector<std::string>& getSemanticObjectClassNames() const;
 
   /// The semantic object descriptors stored in this frame.
   const SemanticObjectDescriptorsT& getSemanticObjectDescriptors() const;
@@ -205,9 +204,6 @@ class VisualFrame  {
   /// A pointer to the semantic object class ids, can be used to swap in new data.
   Eigen::VectorXi* getSemanticObjectClassIdsMutable();
 
-  /// A pointer to the semantic object class names, can be used to swap in new data.
-  // std::vector<std::string>* getSemanticObjectClassNamesMutable();
-
   /// A pointer to the semantic object descriptors, can be used to swap in new data.
   SemanticObjectDescriptorsT* getSemanticObjectDescriptorsMutable();
 
@@ -255,9 +251,6 @@ class VisualFrame  {
   /// Return the semantic object class id at index.
   int getSemanticObjectClassId(size_t index) const;
 
-  /// Return the semantic object class name at index.
-  // std::string getSemanticObjectClassName(size_t index) const;
-
   /// Return pointer location of the descriptor pointed to by index.
   const Eigen::MatrixXf getSemanticObjectDescriptor(size_t index) const;
 
@@ -298,9 +291,6 @@ class VisualFrame  {
 
   /// Replace (copy) the internal semantic object class ids by the passed ones.
   void setSemanticObjectClassIds(const Eigen::VectorXi& ids);
-
-  /// Replace (copy) the internal semantic object class ids by the passed ones.
-  // void setSemanticObjectClassNames(const std::vector<std::string>& ids);
 
   /// Replace (copy) the internal semantic object descriptors by the passed ones.
   void setSemanticObjectDescriptors(const SemanticObjectDescriptorsT& descriptors);
@@ -360,9 +350,6 @@ class VisualFrame  {
 
   /// Replace (swap) the internal semantic object class ids by the passed ones.
   void swapSemanticObjectClassIds(Eigen::VectorXi* ids);
-
-  /// Replace (swap) the internal semantic object class names by the passed ones.
-  // void swapSemanticObjectClassNames(std::vector<std::string>* names);
 
   /// Replace (swap) the internal semantic object descriptors by the passed ones.
   void swapSemanticObjectDescriptors(SemanticObjectDescriptorsT* descriptors);

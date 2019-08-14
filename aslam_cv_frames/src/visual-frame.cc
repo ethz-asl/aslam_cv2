@@ -120,9 +120,6 @@ const Eigen::VectorXd& VisualFrame::getSemanticObjectMeasurementUncertainties() 
 const Eigen::VectorXi& VisualFrame::getSemanticObjectClassIds() const {
   return aslam::channels::get_SEMANTIC_OBJECT_CLASS_IDS_Data(channels_);
 }
-// const std::vector<std::string>& VisualFrame::getSemanticObjectClassNames() const {
-//   return aslam::channels::get_SEMANTIC_OBJECT_CLASS_NAMES_Data(channels_);
-// }
 const VisualFrame::SemanticObjectDescriptorsT& VisualFrame::getSemanticObjectDescriptors() const {
   return aslam::channels::get_SEMANTIC_OBJECT_DESCRIPTORS_Data(channels_);
 }
@@ -187,11 +184,6 @@ Eigen::VectorXi* VisualFrame::getSemanticObjectClassIdsMutable() {
       aslam::channels::get_SEMANTIC_OBJECT_CLASS_IDS_Data(channels_);
     return &ids;
 }
-// std::vector<std::string>* VisualFrame::getSemanticObjectClassNamesMutable() {
-//   std::vector<std::string>& names =
-//       aslam::channels::get_SEMANTIC_OBJECT_CLASS_NAMES_Data(channels_);
-//     return &names;
-// }
 VisualFrame::SemanticObjectDescriptorsT* VisualFrame::getSemanticObjectDescriptorsMutable() {
   VisualFrame::SemanticObjectDescriptorsT& descriptors =
       aslam::channels::get_SEMANTIC_OBJECT_DESCRIPTORS_Data(channels_);
@@ -270,11 +262,6 @@ int VisualFrame::getSemanticObjectClassId(size_t index) const {
   CHECK_LT(static_cast<int>(index), class_ids.rows());
   return class_ids.coeff(index, 0);
 }
-// std::string VisualFrame::getSemanticObjectClassName(size_t index) const {
-//   std::vector<std::string>& class_names =
-//       aslam::channels::get_SEMANTIC_OBJECT_CLASS_NAMES_Data(channels_);
-//   return class_names[index];
-// }
 const Eigen::MatrixXf VisualFrame::getSemanticObjectDescriptor(size_t index) const {
   VisualFrame::SemanticObjectDescriptorsT& descriptors =
       aslam::channels::get_SEMANTIC_OBJECT_DESCRIPTORS_Data(channels_);
@@ -388,17 +375,6 @@ void VisualFrame::setSemanticObjectClassIds(
       aslam::channels::get_SEMANTIC_OBJECT_CLASS_IDS_Data(channels_);
   data = class_ids_new;
 }
-
-// void VisualFrame::setSemanticObjectClassNames(
-//     const std::vector<std::string>& class_names_new) {
-//   if (!aslam::channels::has_SEMANTIC_OBJECT_CLASS_NAMES_Channel(channels_)) {
-//     aslam::channels::add_SEMANTIC_OBJECT_CLASS_NAMES_Channel(&channels_);
-//   }
-//   std::vector<std::string>& data =
-//       aslam::channels::get_SEMANTIC_OBJECT_CLASS_NAMES_Data(channels_);
-//   data = class_names_new;
-// }
-
 void VisualFrame::setSemanticObjectDescriptors(
     const SemanticObjectDescriptorsT& descriptors_new) {
   if (!aslam::channels::has_SEMANTIC_OBJECT_DESCRIPTORS_Channel(channels_)) {
@@ -516,14 +492,6 @@ void VisualFrame::swapSemanticObjectClassIds(Eigen::VectorXi* class_ids_new) {
       aslam::channels::get_SEMANTIC_OBJECT_CLASS_IDS_Data(channels_);
   data.swap(*class_ids_new);
 }
-// void VisualFrame::swapSemanticObjectClassNames(std::vector<std::string>* class_names_new) {
-//   if (!aslam::channels::has_SEMANTIC_OBJECT_CLASS_NAMES_Channel(channels_)) {
-//     aslam::channels::add_SEMANTIC_OBJECT_CLASS_NAMES_Channel(&channels_);
-//   }
-//   std::vector<std::string>& data =
-//       aslam::channels::get_SEMANTIC_OBJECT_CLASS_NAMES_Data(channels_);
-//   data.swap(*class_names_new);
-// }
 void VisualFrame::swapSemanticObjectDescriptors(SemanticObjectDescriptorsT* descriptors_new) {
   if (!aslam::channels::has_SEMANTIC_OBJECT_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_SEMANTIC_OBJECT_DESCRIPTORS_Channel(&channels_);
@@ -565,8 +533,6 @@ void VisualFrame::clearSemanticObjectChannels() {
   Eigen::VectorXd zero_vector_double = Eigen::VectorXd::Zero(zero_boxes.cols());
   setSemanticObjectMeasurementUncertainties(zero_vector_double);
   setSemanticObjectClassIds(zero_vector_int);
-  // std::vector<std::string> empty_vector_string;
-  // setSemanticObjectClassNames(empty_vector_string);
   setSemanticObjectDescriptors(aslam::VisualFrame::SemanticObjectDescriptorsT());
 }
 
@@ -686,8 +652,6 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   frame->swapSemanticObjectMeasurementUncertainties(&semantic_object_measurements_uncertainties);
   Eigen::VectorXi semantic_object_class_ids = Eigen::VectorXi::Zero(0);
   frame->swapSemanticObjectClassIds(&semantic_object_class_ids);
-  // std::vector<std::string> semantic_object_class_names;
-  // frame->swapSemanticObjectClassNames(&semantic_object_class_names);
   aslam::VisualFrame::SemanticObjectDescriptorsT semantic_descriptors = aslam::VisualFrame::SemanticObjectDescriptorsT::Zero(4096, 0);
   frame->swapSemanticObjectDescriptors(&semantic_descriptors);
   
