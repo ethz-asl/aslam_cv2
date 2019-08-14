@@ -291,6 +291,7 @@ bool NCamera::getFixedLocalizationCovariance(
     aslam::TransformationCovariance *covariance) const {
   if (has_fixed_localization_covariance_) {
     *covariance = fixed_localization_covariance_;
+    return true;
   }
   return false;
 }
