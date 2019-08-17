@@ -157,16 +157,16 @@ for (int i = 0; i < data.cols(); ++i) {
 
 TEST(Frame, SetGetSemanticObjectMeasurements) {
 aslam::VisualFrame frame;
-Eigen::Matrix4Xi data;
+Eigen::Matrix4Xd data;
 data.resize(Eigen::NoChange, 10);
 data.setRandom();
 frame.setSemanticObjectMeasurements(data);
-const Eigen::Matrix4Xi& data_2 = frame.getSemanticObjectMeasurements();
+const Eigen::Matrix4Xd& data_2 = frame.getSemanticObjectMeasurements();
 EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
 EXPECT_EQ(&data_2, frame.getSemanticObjectMeasurementsMutable());
 for (int i = 0; i < data.cols(); ++i) {
-  const Eigen::Vector4i& ref = frame.getSemanticObjectMeasurement(i);
-  const Eigen::Vector4i& should = data.block<4, 1>(0, i);
+  const Eigen::Vector4d& ref = frame.getSemanticObjectMeasurement(i);
+  const Eigen::Vector4d& should = data.block<4, 1>(0, i);
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(should, ref, 1e-6));
 }
 }
@@ -270,7 +270,7 @@ TEST(Frame, CopyConstructor) {
   Eigen::VectorXi track_ids = Eigen::VectorXi::Random(1, 10);
   frame.setTrackIds(track_ids);
 
-  Eigen::Matrix4Xi boxes = Eigen::Matrix4Xi::Random(4, kNumRandomValues);
+  Eigen::Matrix4Xd boxes = Eigen::Matrix4Xd::Random(4, kNumRandomValues);
   frame.setSemanticObjectMeasurements(boxes);
   Eigen::VectorXd sem_uncertainties = Eigen::VectorXd::Random(1, kNumRandomValues);
   frame.setSemanticObjectMeasurementUncertainties(sem_uncertainties);

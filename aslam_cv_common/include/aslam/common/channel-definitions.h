@@ -39,7 +39,7 @@ DECLARE_CHANNEL(TRACK_IDS, Eigen::VectorXi)
 
 /// Parameters of bounding boxes from detectors in pixel coordinates
 /// one col per box in the order of centroid_row, centroid_col, height, width 
-DECLARE_CHANNEL(SEMANTIC_OBJECT_MEASUREMENTS, Eigen::Matrix4Xi)
+DECLARE_CHANNEL(SEMANTIC_OBJECT_MEASUREMENTS, Eigen::Matrix4Xd)
 
 /// Semantic object measurement uncertainy from the detector
 /// cols are uncertainties

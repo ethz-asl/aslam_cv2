@@ -111,7 +111,7 @@ const VisualFrame::DescriptorsT& VisualFrame::getDescriptors() const {
 const Eigen::VectorXi& VisualFrame::getTrackIds() const {
   return aslam::channels::get_TRACK_IDS_Data(channels_);
 }
-const Eigen::Matrix4Xi& VisualFrame::getSemanticObjectMeasurements() const {
+const Eigen::Matrix4Xd& VisualFrame::getSemanticObjectMeasurements() const {
   return aslam::channels::get_SEMANTIC_OBJECT_MEASUREMENTS_Data(channels_);
 }
 const Eigen::VectorXd& VisualFrame::getSemanticObjectMeasurementUncertainties() const {
@@ -169,8 +169,8 @@ Eigen::VectorXi* VisualFrame::getTrackIdsMutable() {
       aslam::channels::get_TRACK_IDS_Data(channels_);
   return &track_ids;
 }
-Eigen::Matrix4Xi* VisualFrame::getSemanticObjectMeasurementsMutable() {
-  Eigen::Matrix4Xi& boxes =
+Eigen::Matrix4Xd* VisualFrame::getSemanticObjectMeasurementsMutable() {
+  Eigen::Matrix4Xd& boxes =
       aslam::channels::get_SEMANTIC_OBJECT_MEASUREMENTS_Data(channels_);
     return &boxes;
 }
@@ -243,9 +243,9 @@ int VisualFrame::getTrackId(size_t index) const {
   CHECK_LT(static_cast<int>(index), track_ids.rows());
   return track_ids.coeff(index, 0);
 }
-const Eigen::Block<Eigen::Matrix4Xi, 4, 1>
+const Eigen::Block<Eigen::Matrix4Xd, 4, 1>
 VisualFrame::getSemanticObjectMeasurement(size_t index) const {
-  Eigen::Matrix4Xi& boxes =
+  Eigen::Matrix4Xd& boxes =
       aslam::channels::get_SEMANTIC_OBJECT_MEASUREMENTS_Data(channels_);
   CHECK_LT(static_cast<int>(index), boxes.cols());
   return boxes.block<4, 1>(0, index);
@@ -349,11 +349,11 @@ void VisualFrame::setTrackIds(const Eigen::VectorXi& track_ids_new) {
   data = track_ids_new;
 }
 void VisualFrame::setSemanticObjectMeasurements(
-    const Eigen::Matrix4Xi& boxes_new) {
+    const Eigen::Matrix4Xd& boxes_new) {
   if (!aslam::channels::has_SEMANTIC_OBJECT_MEASUREMENTS_Channel(channels_)) {
     aslam::channels::add_SEMANTIC_OBJECT_MEASUREMENTS_Channel(&channels_);
   }
-  Eigen::Matrix4Xi& boxes =
+  Eigen::Matrix4Xd& boxes =
       aslam::channels::get_SEMANTIC_OBJECT_MEASUREMENTS_Data(channels_);
   boxes = boxes_new;
 }
@@ -468,11 +468,11 @@ void VisualFrame::swapTrackIds(Eigen::VectorXi* track_ids_new) {
   track_ids.swap(*track_ids_new);
 }
 
-void VisualFrame::swapSemanticObjectMeasurements(Eigen::Matrix4Xi* boxes_new) {
+void VisualFrame::swapSemanticObjectMeasurements(Eigen::Matrix4Xd* boxes_new) {
   if (!aslam::channels::has_SEMANTIC_OBJECT_MEASUREMENTS_Channel(channels_)) {
     aslam::channels::add_SEMANTIC_OBJECT_MEASUREMENTS_Channel(&channels_);
   }
-  Eigen::Matrix4Xi& boxes =
+  Eigen::Matrix4Xd& boxes =
       aslam::channels::get_SEMANTIC_OBJECT_MEASUREMENTS_Data(channels_);
   boxes.swap(*boxes_new);
 }
@@ -524,7 +524,7 @@ void VisualFrame::clearKeypointChannels() {
 }
 
 void VisualFrame::clearSemanticObjectChannels() {
-  Eigen::Matrix4Xi zero_boxes;
+  Eigen::Matrix4Xd zero_boxes;
   setSemanticObjectMeasurements(zero_boxes);
 
   Eigen::VectorXi zero_vector_int = Eigen::VectorXi::Zero(zero_boxes.cols());
@@ -646,7 +646,7 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   aslam::VisualFrame::DescriptorsT descriptors = aslam::VisualFrame::DescriptorsT::Zero(48, 0);
   frame->swapDescriptors(&descriptors);
 
-  Eigen::Matrix4Xi semantic_object_measurements = Eigen::Matrix4Xi::Zero(2, 0);
+  Eigen::Matrix4Xd semantic_object_measurements = Eigen::Matrix4Xd::Zero(4, 0);
   frame->swapSemanticObjectMeasurements(&semantic_object_measurements);
   Eigen::VectorXd semantic_object_measurements_uncertainties = Eigen::VectorXd::Zero(0);
   frame->swapSemanticObjectMeasurementUncertainties(&semantic_object_measurements_uncertainties);

@@ -149,7 +149,7 @@ class VisualFrame  {
   const Eigen::VectorXi& getTrackIds() const;
 
   /// The semantic object measurements stored in this frame.
-  const Eigen::Matrix4Xi& getSemanticObjectMeasurements() const;
+  const Eigen::Matrix4Xd& getSemanticObjectMeasurements() const;
 
   /// The semantic object measurement uncertainties stored in this frame.
   const Eigen::VectorXd& getSemanticObjectMeasurementUncertainties() const;
@@ -196,7 +196,7 @@ class VisualFrame  {
   Eigen::VectorXi* getTrackIdsMutable();
 
   /// A pointer to the semantic object measurements, can be used to swap in new data.
-  Eigen::Matrix4Xi* getSemanticObjectMeasurementsMutable();
+  Eigen::Matrix4Xd* getSemanticObjectMeasurementsMutable();
   
   /// A pointer to the semantic object measurement uncertainties, can be used to swap in new data.
   Eigen::VectorXd* getSemanticObjectMeasurementUncertaintiesMutable();
@@ -243,7 +243,7 @@ class VisualFrame  {
   int getTrackId(size_t index) const;
 
   /// Return block expression of the semantic object measurement pointed to by index.
-  const Eigen::Block<Eigen::Matrix4Xi, 4, 1> getSemanticObjectMeasurement(size_t index) const;
+  const Eigen::Block<Eigen::Matrix4Xd, 4, 1> getSemanticObjectMeasurement(size_t index) const;
 
   /// Return the semantic object measurement uncertainty at index.
   double getSemanticObjectMeasurementUncertainty(size_t index) const;
@@ -283,7 +283,7 @@ class VisualFrame  {
   void setTrackIds(const Eigen::VectorXi& track_ids);
 
   /// Replace (copy) the internal semantic object measurements by the passed ones.
-  void setSemanticObjectMeasurements(const Eigen::Matrix4Xi& boxes);
+  void setSemanticObjectMeasurements(const Eigen::Matrix4Xd& boxes);
 
   /// Replace (copy) the internal semantic object measurement uncertainties
   ///        by the passed ones.
@@ -342,7 +342,7 @@ class VisualFrame  {
 
   /// Replace (swap) the internal semantic object measurements by the passed ones.
   /// This method creates the channel if it doesn't exist
-  void swapSemanticObjectMeasurements(Eigen::Matrix4Xi* boxes);
+  void swapSemanticObjectMeasurements(Eigen::Matrix4Xd* boxes);
 
   /// Replace (swap) the internal semantic object measurement uncertainties
   /// by the passed ones.
