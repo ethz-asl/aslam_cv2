@@ -30,10 +30,10 @@ bool LidarCamera::backProject3(
   // cylinder with unit radius and infinite height.
   CHECK_NOTNULL(out_point_3d);
 
-  double yaw =
-      (keypoint[0] - cu()) / fu() * 2 * M_PI;  // rotation around camera Y axis.
-  double pitch = (-keypoint[1] + cv()) / fv() * 2 *
-                 M_PI;  // Elevation around camera X axis.
+  double yaw = 0;
+      //(keypoint[0] - cu()) / fu() * 2 * M_PI;  // rotation around camera Y axis.
+  double pitch =0;// (-keypoint[1] + cv()) / fv() * 2 *
+                 //M_PI;  // Elevation around camera X axis.
 
   (*out_point_3d)[0] = -sin(yaw);
   (*out_point_3d)[1] = -tan(pitch);
