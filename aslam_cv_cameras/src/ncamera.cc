@@ -290,10 +290,17 @@ bool NCamera::hasFixedLocalizationCovariance() const {
 bool NCamera::getFixedLocalizationCovariance(
     aslam::TransformationCovariance *covariance) const {
   if (has_fixed_localization_covariance_) {
+    CHECK(covariance);
     *covariance = fixed_localization_covariance_;
     return true;
   }
   return false;
+}
+
+void NCamera::setFixedLocalizationCovariance(
+  const aslam::TransformationCovariance& covariance) {
+  fixed_localization_covariance_ = covariance;
+  has_fixed_localization_covariance_ = true;
 }
 
 int NCamera::getCameraIndex(const CameraId& id) const {
