@@ -77,9 +77,6 @@ bool VisualFrame::hasSemanticObjectMeasurementUncertainties() const {
 bool VisualFrame::hasSemanticObjectClassIds() const {
   return aslam::channels::has_SEMANTIC_OBJECT_CLASS_IDS_Channel(channels_);
 }
-// bool VisualFrame::hasSemanticObjectClassNames() const {
-//   return aslam::channels::has_SEMANTIC_OBJECT_CLASS_NAMES_Channel(channels_);
-// }
 bool VisualFrame::hasSemanticObjectDescriptors() const {
   return aslam::channels::has_SEMANTIC_OBJECT_DESCRIPTORS_Channel(channels_);
 }
@@ -262,7 +259,7 @@ int VisualFrame::getSemanticObjectClassId(size_t index) const {
   CHECK_LT(static_cast<int>(index), class_ids.rows());
   return class_ids.coeff(index, 0);
 }
-const Eigen::MatrixXf VisualFrame::getSemanticObjectDescriptor(size_t index) const {
+const Eigen::MatrixXf::ColXpr VisualFrame::getSemanticObjectDescriptor(size_t index) const {
   VisualFrame::SemanticObjectDescriptorsT& descriptors =
       aslam::channels::get_SEMANTIC_OBJECT_DESCRIPTORS_Data(channels_);
   CHECK_LT(static_cast<int>(index), descriptors.cols());

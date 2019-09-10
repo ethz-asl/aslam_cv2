@@ -252,7 +252,7 @@ class VisualFrame  {
   int getSemanticObjectClassId(size_t index) const;
 
   /// Return pointer location of the descriptor pointed to by index.
-  const Eigen::MatrixXf getSemanticObjectDescriptor(size_t index) const;
+  const Eigen::MatrixXf::ColXpr getSemanticObjectDescriptor(size_t index) const;
 
   /// Return the semantic object track id at index. (-1: not tracked)
   int getSemanticObjectTrackId(size_t index) const;

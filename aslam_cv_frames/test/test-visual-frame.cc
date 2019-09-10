@@ -150,7 +150,7 @@ const aslam::VisualFrame::SemanticObjectDescriptorsT& data_2 =
 EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 0));
 EXPECT_EQ(&data_2, frame.getSemanticObjectDescriptorsMutable());
 for (int i = 0; i < data.cols(); ++i) {
-  const Eigen::MatrixXf data = frame.getSemanticObjectDescriptor(i);
+  const Eigen::MatrixXf::ColXpr data = frame.getSemanticObjectDescriptor(i);  
   EXPECT_EQ(data_2.col(i), data);
 }
 }

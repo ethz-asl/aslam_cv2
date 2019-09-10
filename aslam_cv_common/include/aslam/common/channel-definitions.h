@@ -26,40 +26,38 @@ DECLARE_CHANNEL(VISUAL_KEYPOINT_SCORES, Eigen::VectorXd)
 
 /// The keypoint descriptors. (extractor output)
 /// (cols are descriptors)
-// visual keypoint binary descriptors
+/// This channel stores the visual keypoint binary descriptors
 DECLARE_CHANNEL(DESCRIPTORS,
                 Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>)
 
 /// Track ID's for tracked features. (-1 if not tracked); (feature tracker output)
-// visual keypoint track ids
+/// This channel stores the visual keypoint track ids
 DECLARE_CHANNEL(TRACK_IDS, Eigen::VectorXi)
 
 /// The semantic channels are separated from the visual keypoints, so don't try
 /// to access the semantic measurements with visual keypoints index.
 
 /// Parameters of bounding boxes from detectors in pixel coordinates
-/// one col per box in the order of centroid_col, centroid_row, bb width, bb height 
+/// This channel is organized as one col per box and the values 
+/// are in the order of centroid_col, centroid_row, bb width, bb height 
 DECLARE_CHANNEL(SEMANTIC_OBJECT_MEASUREMENTS, Eigen::Matrix4Xd)
 
 /// Semantic object measurement uncertainy from the detector
-/// cols are uncertainties
+/// (cols are uncertainties)
 DECLARE_CHANNEL(SEMANTIC_OBJECT_MEASUREMENT_UNCERTAINTIES, Eigen::VectorXd)
 
 /// Semantic object class ids from the detector
-/// cols are ids
+/// (cols are ids)
 DECLARE_CHANNEL(SEMANTIC_OBJECT_CLASS_IDS, Eigen::VectorXi)
 
-/// Semantic object class name from the detector
-/// cols are class names
-// DECLARE_CHANNEL(SEMANTIC_OBJECT_CLASS_NAMES, std::vector<std::string>)
-
 /// Semantic measurements descriptors
-/// cols are descriptor
+/// (cols are descriptor)
 DECLARE_CHANNEL(SEMANTIC_OBJECT_DESCRIPTORS,
                 Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>)
 
 /// Semantic object measurement track ids
-/// -1 if not tracked 
+/// (cols are object track ids)
+/// The value of -1 is stored if not the measurement is not tracked 
 DECLARE_CHANNEL(SEMANTIC_OBJECT_TRACK_IDS, Eigen::VectorXi)
 
 /// The raw image.
