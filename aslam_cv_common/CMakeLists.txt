@@ -27,6 +27,7 @@ set(SOURCES
   src/statistics.cc
   src/thread-pool.cc
   src/timer.cc
+  src/transformation-from-eigen.cc
   src/internal/unique-id.cc
   ${PROTO_SRCS}
   ${PROTO_HDRS}

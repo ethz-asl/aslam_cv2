@@ -12,6 +12,7 @@
 #include <aslam/cameras/random-camera-generator.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/predicates.h>
+#include <aslam/common/transformation-from-eigen.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/common/yaml-serialization.h>
 
@@ -139,10 +140,10 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     aslam::Transformation T_B_C;
     if (camera_node["T_B_C"]) {
       CHECK(YAML::safeGet(camera_node, "T_B_C", &input_matrix));
-      T_B_C = aslam::Transformation(input_matrix);
+      T_B_C = common::transformationFromApproximateMatrix(input_matrix);
     } else if (camera_node["T_C_B"]) {
       CHECK(YAML::safeGet(camera_node, "T_C_B", &input_matrix));
-      T_B_C = aslam::Transformation(input_matrix).inverse();
+      T_B_C = common::transformationFromApproximateMatrix(input_matrix).inverse();
     } else {
       LOG(ERROR)
           << "Unable to get extrinsic transformation T_B_C or T_C_B for camera "
