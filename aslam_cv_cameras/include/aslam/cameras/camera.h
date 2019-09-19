@@ -384,6 +384,23 @@ class Camera : public Sensor {
   int64_t maxTemporalOffsetNanoSeconds() const {
     return this->imageHeight() * line_delay_nanoseconds_;
   }
+  /// @}
+	
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to support compressed images.
+  /// @{
+
+  /// \brief Holds whether this camera receives compressed images.
+  /// @return Returns true for compressed images, false otherwise
+  bool hasCompressedImages() const {
+    return is_compressed_;
+  }
+
+  /// \brief Set the whether this camera has compressed images.
+  /// @param[in] is_compressed Compressed images.
+  void setCompressedImages(const bool is_compressed) {
+    is_compressed_ = is_compressed;
+  }
 
   /// @}
 
@@ -538,6 +555,8 @@ class Camera : public Sensor {
   uint32_t image_height_;
   /// The image mask.
   cv::Mat_<uint8_t> mask_;
+	/// Has compressed images.
+	bool is_compressed_;
 
   /// Parameter vector for the intrinsic parameters of the model.
   Eigen::VectorXd intrinsics_;
