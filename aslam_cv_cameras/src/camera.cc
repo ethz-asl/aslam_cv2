@@ -186,14 +186,15 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     line_delay_nanoseconds_ = 0;
   }
 	
-  // Get the optional compressenes definition for images or set the default.
-  if (!YAML::safeGet(yaml_node, "compressed", &is_compressed_)) {
-    LOG(WARNING)
-        << "Unable to parse parameter compressed."
-        << "Setting to default value = false.";
-    is_compressed_ = false;
-  }
-
+  // Get the optional compressed definition for images or set the default
+  if (YAML::hasKey(yaml_node, "compressed")) {
+		if (!YAML::safeGet(yaml_node, "compressed", &is_compressed_)) {
+			LOG(WARNING)
+					<< "Unable to parse parameter compressed."
+					<< "Setting to default value = false.";
+			is_compressed_ = false;
+		}
+	}
   return true;
 }
 
