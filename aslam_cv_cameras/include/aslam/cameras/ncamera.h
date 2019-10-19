@@ -154,6 +154,9 @@ class NCamera : public Sensor {
   // Get the 6DoF localization covariance matrix
   bool getFixedLocalizationCovariance(aslam::TransformationCovariance *covariance) const;
 
+  // Set the 6Dof localization covariance matrix
+  void setFixedLocalizationCovariance(const aslam::TransformationCovariance& covariance);
+
   /// \brief Get the index of the camera with the id.
   /// @returns -1 if the rig doesn't have a camera with this id.
   int getCameraIndex(const CameraId& id) const;
