@@ -121,6 +121,11 @@ void ThreadPool::run() {
   }
 }
 
+size_t ThreadPool::numActiveThreads() const {
+  std::unique_lock<std::mutex> lock(this->tasks_mutex_);
+  return active_threads_;
+}
+
 void ThreadPool::waitForEmptyQueue() const {
   std::unique_lock<std::mutex> lock(this->tasks_mutex_);
   // Only exit if all tasks are complete by tracking the number of
