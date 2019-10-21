@@ -37,7 +37,8 @@ Camera::Camera(
       image_height_(image_height),
       intrinsics_(intrinsics),
       camera_type_(camera_type),
-      distortion_(std::move(distortion)) {
+      distortion_(std::move(distortion)),
+			is_compressed_(false) {
   CHECK_NOTNULL(distortion_.get());
 }
 
@@ -50,7 +51,8 @@ Camera::Camera(
       image_height_(image_height),
       intrinsics_(intrinsics),
       camera_type_(camera_type),
-      distortion_(new NullDistortion()) {}
+      distortion_(new NullDistortion()),
+			is_compressed_(false) {}
 
 void Camera::printParameters(std::ostream& out, const std::string& text) const {
   if(text.size() > 0) {
@@ -176,13 +178,23 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   }
 
   // Get the optional linedelay in nanoseconds or set the default
-  if(!YAML::safeGet(yaml_node, "line-delay-nanoseconds", &line_delay_nanoseconds_)){
+  if (!YAML::safeGet(yaml_node, "line-delay-nanoseconds", 
+				&line_delay_nanoseconds_)){
     LOG(WARNING)
         << "Unable to parse parameter line-delay-nanoseconds."
         << "Setting to default value = 0.";
     line_delay_nanoseconds_ = 0;
   }
-
+	
+  // Get the optional compressed definition for images or set the default
+  if (YAML::hasKey(yaml_node, "compressed")) {
+		if (!YAML::safeGet(yaml_node, "compressed", &is_compressed_)) {
+			LOG(WARNING)
+					<< "Unable to parse parameter compressed."
+					<< "Setting to default value = false.";
+			is_compressed_ = false;
+		}
+	}
   return true;
 }
 
@@ -190,6 +202,7 @@ void Camera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
   CHECK_NOTNULL(yaml_node);
   YAML::Node& node = *yaml_node;
 
+  node["compressed"] = hasCompressedImages();
   node["line-delay-nanoseconds"] = getLineDelayNanoSeconds();
   node["image_height"] = imageHeight();
   node["image_width"] = imageWidth();
