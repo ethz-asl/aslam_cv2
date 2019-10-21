@@ -42,7 +42,7 @@ NCamera::NCamera() : has_fixed_localization_covariance_(false) {}
 NCamera::NCamera(
     const NCameraId& id, const TransformationVector& T_C_B,
     const std::vector<Camera::Ptr>& cameras, const std::string& description)
-    : Sensor(id, std::string(), description), T_C_B_(T_C_B), cameras_(cameras) {
+    : Sensor(id, std::string(), description), T_C_B_(T_C_B), cameras_(cameras), has_fixed_localization_covariance_(false) {
   CHECK(id.isValid());
   initInternal();
 }
