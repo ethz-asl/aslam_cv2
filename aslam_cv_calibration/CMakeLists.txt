@@ -7,6 +7,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
+add_definitions(-std=c++11)
 
 set(HEADERS
   include/aslam/calibration/target-base.h

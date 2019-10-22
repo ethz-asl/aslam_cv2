@@ -1,7 +1,6 @@
 include(${CMAKE_CURRENT_LIST_DIR}/detect_simd.cmake)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -O3")
+add_definitions(-std=c++11)
 
 set(ENABLE_TIMING FALSE CACHE BOOL "Set to TRUE to enable timing")
 message(STATUS "Timers enabled? ${ENABLE_TIMING}")
