@@ -7,8 +7,6 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -O3")
 
 cs_add_library(${PROJECT_NAME}_kaze
   src/kaze/fed.cpp
