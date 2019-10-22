@@ -7,7 +7,8 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-add_definitions(-std=c++11)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -O3")
 
 set(HEADERS
   include/aslam/calibration/target-base.h

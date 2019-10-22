@@ -7,25 +7,26 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 # LIBRARIES #
 #############
-add_definitions(-std=c++11)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -O3")
 
-cs_add_library(${PROJECT_NAME}_kaze   
+cs_add_library(${PROJECT_NAME}_kaze
   src/kaze/fed.cpp
   src/kaze/KAZE.cpp
   src/kaze/nldiffusion_functions.cpp
   src/kaze/utils.cpp
 )
 
-cs_add_library(${PROJECT_NAME}_lsd 
+cs_add_library(${PROJECT_NAME}_lsd
   src/lsd/lsd-opencv.cc
 )
 
-cs_add_library(${PROJECT_NAME} 
+cs_add_library(${PROJECT_NAME}
   src/line-segment-detector.cc
 )
 
 target_link_libraries(${PROJECT_NAME}
-  ${PROJECT_NAME}_kaze 
+  ${PROJECT_NAME}_kaze
   ${PROJECT_NAME}_lsd
 )
 
