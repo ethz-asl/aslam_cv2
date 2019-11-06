@@ -23,7 +23,6 @@ cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 
-add_definitions(-std=c++11)
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 ##########
@@ -33,7 +32,7 @@ catkin_add_gtest(test_triangulation
   test/test-triangulation.cc
   include/aslam/triangulation/test/triangulation-fixture.h
 )
-target_link_libraries(test_triangulation ${PROJECT_NAME}) 
+target_link_libraries(test_triangulation ${PROJECT_NAME})
 
 ##########
 # EXPORT #
