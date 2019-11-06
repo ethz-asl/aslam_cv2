@@ -4,6 +4,7 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
+#include <aslam/cameras/camera-3d-lidar.h>
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/cameras/distortion-fisheye.h>
@@ -82,15 +83,16 @@ Camera::Ptr createCamera(const YAML::Node& yaml_node) {
 
   // Based on the type deserialize the camera
   Camera::Ptr camera;
-  if(camera_type == "pinhole") {
-    camera = std::dynamic_pointer_cast<Camera>(
-        aligned_shared<PinholeCamera>());
-  } else if(camera_type == "unified-projection") {
+  if (camera_type == "pinhole") {
+    camera = std::dynamic_pointer_cast<Camera>(aligned_shared<PinholeCamera>());
+  } else if (camera_type == "unified-projection") {
     camera = std::dynamic_pointer_cast<Camera>(
         aligned_shared<UnifiedProjectionCamera>());
+  } else if (camera_type == "lidar-3d") {
+    camera = std::dynamic_pointer_cast<Camera>(aligned_shared<CameraLidar3D>());
   } else {
     LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
-        << "Valid values are {pinhole, unified-projection}.";
+               << "Valid values are {pinhole, unified-projection, lidar-3d}.";
     return nullptr;
   }
 

@@ -63,11 +63,29 @@ void Camera::printParameters(std::ostream& out, const std::string& text) const {
   out << "  image (cols,rows): " << imageWidth() << ", " << imageHeight() << std::endl;
 }
 
-bool Camera::isEqualCameraImpl(const Camera& other) const {
-  return (this->intrinsics_ == other.intrinsics_) &&
-         (this->line_delay_nanoseconds_ == other.line_delay_nanoseconds_) &&
-         (this->image_width_ == other.image_width_) &&
-         (this->image_height_ == other.image_height_);
+bool Camera::isEqualCameraImpl(const Camera& other, const bool verbose) const {
+  const bool is_same =
+      ((this->intrinsics_ - other.intrinsics_).norm() < 1e-6) &&
+      (this->line_delay_nanoseconds_ == other.line_delay_nanoseconds_) &&
+      (this->image_width_ == other.image_width_) &&
+      (this->image_height_ == other.image_height_);
+  if (verbose && !is_same) {
+    // clang-format off
+    LOG(ERROR) << "Cameras are not the same,"
+      << "\ncamera A:\n"
+        << this->intrinsics_.transpose() << "\n"
+        << this->line_delay_nanoseconds_ << "\n"
+        << this->image_width_ << "\n"
+        << this->image_height_
+      << "\ncamera B:\n"
+        << other.intrinsics_.transpose() << "\n"
+        << other.line_delay_nanoseconds_ << "\n"
+        << other.image_width_ << "\n"
+        << other.image_height_;
+    // clang-format on
+  }
+
+  return is_same;
 }
 
 bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
@@ -158,6 +176,8 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     camera_type_ = Type::kPinhole;
   } else if(camera_type == "unified-projection") {
     camera_type_ = Type::kUnifiedProjection;
+  } else if(camera_type == "lidar-3d") {
+    camera_type_ = Type::kLidar3D;
   } else {
     LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
         << "Valid values are {pinhole, unified-projection}.";
@@ -212,6 +232,9 @@ void Camera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
       break;
     case aslam::Camera::Type::kUnifiedProjection:
       node["type"] = "unified-projection";
+      break;
+    case aslam::Camera::Type::kLidar3D:
+      node["type"] = "lidar-3d";
       break;
     default:
       LOG(ERROR) << "Unknown camera model: "
