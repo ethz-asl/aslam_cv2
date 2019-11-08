@@ -37,9 +37,8 @@ class LidarCamera : public aslam::Cloneable<Camera, LidarCamera> {
 
   friend std::ostream& operator<<(std::ostream& out, const LidarCamera& camera);
 
-  virtual bool backProject3(
-      const Eigen::Ref<const Eigen::Vector2d>& keypoint,
-      Eigen::Vector3d* out_point_3d) const;
+  virtual bool backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
+                            Eigen::Vector3d* out_point_3d) const;
 
   virtual const ProjectionResult project3Functional(
       const Eigen::Ref<const Eigen::Vector3d>& point_3d,
@@ -68,15 +67,11 @@ class LidarCamera : public aslam::Cloneable<Camera, LidarCamera> {
  public:
   /// \brief Returns the number of intrinsic parameters used in this camera
   /// model.
-  inline static constexpr int parameterCount() {
-    return kNumOfParams;
-  }
+  inline static constexpr int parameterCount() { return kNumOfParams; }
 
   /// \brief Returns the number of intrinsic parameters used in this camera
   /// model.
-  inline virtual int getParameterSize() const {
-    return kNumOfParams;
-  }
+  inline virtual int getParameterSize() const { return kNumOfParams; }
 
   /// Static function that checks whether the given intrinsic parameters are
   /// valid for this model.
@@ -89,8 +84,8 @@ class LidarCamera : public aslam::Cloneable<Camera, LidarCamera> {
   /// Print the internal parameters of the camera in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
   /// text used by the calling function to distinguish cameras
-  virtual void printParameters(
-      std::ostream& out, const std::string& text) const;
+  virtual void printParameters(std::ostream& out,
+                               const std::string& text) const;
 
   /// \brief Create a test camera object for unit testing.
   template <typename DistortionType>
@@ -109,7 +104,7 @@ class LidarCamera : public aslam::Cloneable<Camera, LidarCamera> {
  private:
   bool isValidImpl() const override;
   void setRandomImpl() override;
-  bool isEqualImpl(const Sensor& other) const override;
+  bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 };
 
 }  // namespace aslam

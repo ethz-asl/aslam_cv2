@@ -1,17 +1,16 @@
+#include <aslam/cameras/camera-factory.h>
+#include <aslam/cameras/camera-lidar.h>
+#include <aslam/common/types.h>
+
 #include <memory>
 #include <utility>
-
-#include <aslam/cameras/camera-lidar.h>
-
-#include <aslam/cameras/camera-factory.h>
-#include <aslam/common/types.h>
 
 #include "aslam/cameras/random-camera-generator.h"
 
 namespace aslam {
 std::ostream& operator<<(std::ostream& out, const LidarCamera& camera) {
-  camera.printParameters(
-      out, std::string("Lidar cameras don't have parameters."));
+  camera.printParameters(out,
+                         std::string("Lidar cameras don't have parameters."));
   return out;
 }
 
@@ -19,9 +18,8 @@ LidarCamera::LidarCamera()
     : Base(Eigen::Vector4d::Zero(), 0, 0, Camera::Type::kLidar) {}
 
 LidarCamera::LidarCamera(uint32_t image_width, uint32_t image_height)
-    : Base(
-          Eigen::Vector4d::Zero(), image_width, image_height,
-          Camera::Type::kLidar) {}
+    : Base(Eigen::Vector4d::Zero(), image_width, image_height,
+           Camera::Type::kLidar) {}
 
 bool LidarCamera::backProject3(
     const Eigen::Ref<const Eigen::Vector2d>& keypoint,
@@ -31,9 +29,9 @@ bool LidarCamera::backProject3(
   CHECK_NOTNULL(out_point_3d);
 
   double yaw = 0;
-      //(keypoint[0] - cu()) / fu() * 2 * M_PI;  // rotation around camera Y axis.
-  double pitch =0;// (-keypoint[1] + cv()) / fv() * 2 *
-                 //M_PI;  // Elevation around camera X axis.
+  //(keypoint[0] - cu()) / fu() * 2 * M_PI;  // rotation around camera Y axis.
+  double pitch = 0;  // (-keypoint[1] + cv()) / fv() * 2 *
+                     // M_PI;  // Elevation around camera X axis.
 
   (*out_point_3d)[0] = -sin(yaw);
   (*out_point_3d)[1] = -tan(pitch);
@@ -89,14 +87,12 @@ bool LidarCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) const {
   return true;
 }
 
-void LidarCamera::printParameters(
-    std::ostream& out, const std::string& text) const {
+void LidarCamera::printParameters(std::ostream& out,
+                                  const std::string& text) const {
   Camera::printParameters(out, text);
 }
 
-bool LidarCamera::isValidImpl() const {
-  return true;
-}
+bool LidarCamera::isValidImpl() const { return true; }
 
 void LidarCamera::setRandomImpl() {
   LidarCamera::Ptr test_camera = LidarCamera::createTestCamera();
@@ -112,7 +108,8 @@ void LidarCamera::setRandomImpl() {
   }
 }
 
-bool LidarCamera::isEqualImpl(const Sensor& other) const {
+bool LidarCamera::isEqualImpl(const Sensor& other,
+                              const bool /*verbose*/) const {
   const LidarCamera* other_camera = dynamic_cast<const LidarCamera*>(&other);
   if (other_camera == nullptr) {
     return false;
