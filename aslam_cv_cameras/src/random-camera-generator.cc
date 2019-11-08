@@ -9,6 +9,10 @@
 namespace aslam {
 
 NCamera::Ptr createTestNCamera(size_t num_cameras) {
+  return aligned_shared<aslam::NCamera>(*createUniqueTestNCamera(num_cameras));
+}
+
+NCamera::UniquePtr createUniqueTestNCamera(size_t num_cameras) {
   std::vector<Camera::Ptr> cameras;
   Aligned<std::vector, Transformation> T_C_B_vector;
 
@@ -24,11 +28,17 @@ NCamera::Ptr createTestNCamera(size_t num_cameras) {
 
   NCameraId rig_id;
   generateId(&rig_id);
+  Eigen::Matrix<double,6,6> localization_covariance = Eigen::Matrix<double,6,6>::Identity();
   std::string description("Test camera rig");
-  return NCamera::Ptr(new NCamera(rig_id, T_C_B_vector, cameras, description));
+  return std::move(aligned_unique<aslam::NCamera>(
+      rig_id, T_C_B_vector, localization_covariance, cameras, description));
 }
 
 NCamera::Ptr createSurroundViewTestNCamera() {
+  return aligned_shared<aslam::NCamera>(*createSurroundViewUniqueTestNCamera());
+}
+
+NCamera::UniquePtr createSurroundViewUniqueTestNCamera() {
   std::vector<Camera::Ptr> cameras;
   cameras.emplace_back(PinholeCamera::createTestCamera());
   cameras.emplace_back(PinholeCamera::createTestCamera());
@@ -68,8 +78,8 @@ NCamera::Ptr createSurroundViewTestNCamera() {
   rig_transformations.emplace_back(q_B_C2.inverse(), -t_B_C2);
   rig_transformations.emplace_back(q_B_C3.inverse(), -t_B_C3);
   std::string description = "Artificial Planar 4-Pinhole-Camera-Rig";
-  return aligned_shared<NCamera>(
-      rig_id, rig_transformations, cameras, description);
+  return std::move(aligned_unique<aslam::NCamera>(
+      rig_id, rig_transformations, cameras, description));
 }
 
 }  // namespace aslam

@@ -46,17 +46,28 @@ class UniqueId;
   extern void defineId##__FILE__##__LINE__(void)
 
 // This macro needs to be called outside of any namespace.
-#define UNIQUE_ID_DEFINE_ID_HASH(TypeName)                      \
-  namespace std {                                               \
-  template <>                                                   \
-  struct hash<TypeName> {                                       \
-    typedef TypeName argument_type;                             \
-    typedef std::size_t value_type;                             \
-    value_type operator()(const argument_type& hash_id) const { \
-      return hash_id.hashToSizeT();                             \
-    }                                                           \
-  };                                                            \
-  }                                                             \
+#define UNIQUE_ID_DEFINE_ID_HASH(TypeName)                                   \
+  namespace std {                                                            \
+  template <>                                                                \
+  struct hash<TypeName> {                                                    \
+    typedef TypeName argument_type;                                          \
+    typedef std::size_t value_type;                                          \
+    value_type operator()(const argument_type& hash_id) const {              \
+      return hash_id.hashToSizeT();                                          \
+    }                                                                        \
+  };                                                                         \
+                                                                             \
+  template <>                                                                \
+  struct hash<std::pair<TypeName, TypeName>> {                               \
+    typedef TypeName argument_type;                                          \
+    typedef std::size_t value_type;                                          \
+    value_type operator()(                                                   \
+        const std::pair<argument_type, argument_type>& hash_id_pair) const { \
+      return hash_id_pair.first.hashToSizeT() ^                              \
+             hash_id_pair.second.hashToSizeT();                              \
+    }                                                                        \
+  };                                                                         \
+  }                                                                          \
   extern void defineId##__FILE__##__LINE__(void)
 
 #define ALIAS_UNIQUE_ID(BaseIdType, AliasedIdType)  \
@@ -246,7 +257,7 @@ struct hash<aslam::Id> {
     return std::hash<std::string>()(hashId.hexString());
   }
 };
-}
+}  // namespace std
 
 UNIQUE_ID_DEFINE_ID_HASH(aslam::FrameId);
 UNIQUE_ID_DEFINE_ID_HASH(aslam::NFramesId);

@@ -245,13 +245,19 @@ class UnifiedProjectionCamera
   /// \brief Create a test camera object for unit testing.
   template <typename DistortionType>
   static UnifiedProjectionCamera::Ptr createTestCamera() {
+    return UnifiedProjectionCamera::Ptr(std::move(createTestCameraUnique<DistortionType>()));
+  }
+
+  /// \brief Create a test camera object for unit testing.
+  template <typename DistortionType>
+  static UnifiedProjectionCamera::UniquePtr createTestCameraUnique() {
     Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
-    UnifiedProjectionCamera::Ptr camera(new UnifiedProjectionCamera(
+    UnifiedProjectionCamera::UniquePtr camera(new UnifiedProjectionCamera(
         0.9, 400, 300, 320, 240, 640, 480, distortion));
     CameraId id;
     generateId(&id);
     camera->setId(id);
-    return camera;
+    return std::move(camera);
   }
 
   /// \brief Create a test camera object for unit testing. (without distortion)
@@ -263,7 +269,7 @@ class UnifiedProjectionCamera
 
   bool isValidImpl() const override;
   void setRandomImpl() override;
-  bool isEqualImpl(const Sensor& other) const override;
+  bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 };
 
 }  // namespace aslam

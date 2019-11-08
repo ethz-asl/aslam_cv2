@@ -24,7 +24,7 @@ class Sensor : public YamlFileSerializable {
  public:
   ASLAM_POINTER_TYPEDEFS(Sensor);
 
-  Sensor() = default;
+  Sensor();
   explicit Sensor(const SensorId& id);
   explicit Sensor(const SensorId& id, const std::string& topic);
   explicit Sensor(
@@ -45,7 +45,7 @@ class Sensor : public YamlFileSerializable {
 
   bool operator==(const Sensor& other) const;
   bool operator!=(const Sensor& other) const;
-  bool isEqual(const Sensor& other) const;
+  bool isEqual(const Sensor& other, const bool verbose = false) const;
 
   virtual Sensor::Ptr cloneAsSensor() const = 0;
 
@@ -83,7 +83,7 @@ class Sensor : public YamlFileSerializable {
  private:
   virtual bool isValidImpl() const = 0;
   virtual void setRandomImpl() = 0;
-  virtual bool isEqualImpl(const Sensor& other) const = 0;
+  virtual bool isEqualImpl(const Sensor& other, const bool verbose) const = 0;
 
   virtual bool loadFromYamlNodeImpl(const YAML::Node& sensor_node) = 0;
   virtual void saveToYamlNodeImpl(YAML::Node* sensor_node) const = 0;

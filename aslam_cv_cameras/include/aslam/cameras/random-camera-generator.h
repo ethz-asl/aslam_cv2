@@ -22,10 +22,12 @@ namespace aslam {
 
 /// Create a test NCamera object for unit testing.
 NCamera::Ptr createTestNCamera(size_t num_cameras);
+NCamera::UniquePtr createUniqueTestNCamera(size_t num_cameras);
 
 /// Creates an artificial 4-camera rig in a plane with a camera pointing in
 /// each direction. (similar to the V-Charge or JanETH camera system)
 NCamera::Ptr createSurroundViewTestNCamera();
+NCamera::UniquePtr createSurroundViewUniqueTestNCamera();
 
 /// \brief Create a test camera object for intrinsics unit testing. (with null
 /// distortion)

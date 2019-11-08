@@ -31,14 +31,14 @@ namespace aslam {
 class NCamera : public Sensor {
  public:
   ASLAM_POINTER_TYPEDEFS(NCamera);
-  enum {CLASS_SERIALIZATION_VERSION = 1};
+  enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-//protected:
+  // protected:
   /// Default constructor builds an empty camera rig.
   NCamera();
 
-//public:
+  // public:
   /// \brief initialize from a list of transformations and a list of cameras
   ///
   /// The two lists must be parallel arrays (same size). The transformation
@@ -48,8 +48,24 @@ class NCamera : public Sensor {
   /// @param T_C_B a list of transformations that take points from B to Ci
   /// @param cameras a list cameras
   /// @param description a human-readable description of this camera rig
-  NCamera(const NCameraId& id,
-      const TransformationVector& T_C_B,
+  NCamera(
+      const NCameraId& id, const TransformationVector& T_C_B,
+      const std::vector<std::shared_ptr<Camera>>& cameras,
+      const std::string& description);
+
+  // public:
+  /// \brief initialize from a list of transformations and a list of cameras
+  ///
+  /// The two lists must be parallel arrays (same size). The transformation
+  /// at T_C_B[i] corresponds to the camera at cameras[i].
+  ///
+  /// @param id unique id for this camera rig
+  /// @param T_C_B a list of transformations that take points from B to Ci
+  /// @param cameras a list cameras
+  /// @param description a human-readable description of this camera rig
+  NCamera(
+      const NCameraId& id, const TransformationVector& T_C_B,
+      const aslam::TransformationCovariance& localization_covariance,
       const std::vector<std::shared_ptr<Camera>>& cameras,
       const std::string& description);
 
@@ -62,10 +78,8 @@ class NCamera : public Sensor {
   void operator=(const NCamera&) = delete;
 
   /// Methods to clone this instance. All contained camera objects are cloned.
-  /// (Make sure the Camera and NCamera ID's are set to your requirement after cloning!)
-  NCamera* clone() const {
-    return new NCamera(static_cast<NCamera const&>(*this));
-  };
+  NCamera* clone() const;
+  NCamera* cloneWithNewIds() const;
 
   NCamera::Ptr cloneToShared() const {
     return aligned_shared<NCamera>(*this);
@@ -134,12 +148,22 @@ class NCamera : public Sensor {
   /// Does this rig have a camera with this id.
   bool hasCameraWithId(const CameraId& id) const;
 
+  /// Whether the covariance matrix for visual localization has been set
+  bool hasFixedLocalizationCovariance() const;
+
+  // Get the 6DoF localization covariance matrix
+  bool getFixedLocalizationCovariance(aslam::TransformationCovariance *covariance) const;
+
+  // Set the 6Dof localization covariance matrix
+  void setFixedLocalizationCovariance(const aslam::TransformationCovariance& covariance);
+
   /// \brief Get the index of the camera with the id.
   /// @returns -1 if the rig doesn't have a camera with this id.
   int getCameraIndex(const CameraId& id) const;
 
-  /// Create a copy of this NCamera with all distortion models removed. All internal cameras
-  /// get cloned and new IDs will be assigned to the cloned NCamera and all contained cameras.
+  /// Create a copy of this NCamera with all distortion models removed. All
+  /// internal cameras get cloned and new IDs will be assigned to the cloned
+  /// NCamera and all contained cameras.
   aslam::NCamera::Ptr cloneRigWithoutDistortion() const;
 
  private:
@@ -147,10 +171,14 @@ class NCamera : public Sensor {
 
   void setRandomImpl() override;
 
-  bool isEqualImpl(const Sensor& other) const override;
+  bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;
+
+  aslam::TransformationCovariance fixed_localization_covariance_;
+
+  bool has_fixed_localization_covariance_;
 
   /// Internal consistency checks and initialization.
   void initInternal();
@@ -165,6 +193,6 @@ class NCamera : public Sensor {
   std::unordered_map<CameraId, size_t> id_to_index_;
 };
 
-} // namespace aslam
+}  // namespace aslam
 
 #endif /* ASLAM_NCAMERA_H_ */

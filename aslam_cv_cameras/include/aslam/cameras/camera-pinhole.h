@@ -239,13 +239,20 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// \brief Create a test camera object for unit testing.
   template <typename DistortionType>
   static PinholeCamera::Ptr createTestCamera() {
+    return PinholeCamera::Ptr(
+        std::move(createTestCameraUnique<DistortionType>()));
+  }
+
+  /// \brief Create a test camera object for unit testing.
+  template <typename DistortionType>
+  static PinholeCamera::UniquePtr createTestCameraUnique() {
     Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
-    PinholeCamera::Ptr camera(
+    PinholeCamera::UniquePtr camera(
         new PinholeCamera(400, 300, 320, 240, 640, 480, distortion));
     CameraId id;
     generateId(&id);
     camera->setId(id);
-    return camera;
+    return std::move(camera);
   }
 
   /// \brief Create a test camera object for unit testing. (without distortion)
@@ -257,7 +264,7 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
 
   bool isValidImpl() const override;
   void setRandomImpl() override;
-  bool isEqualImpl(const Sensor& other) const override;
+  bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 };
 
 }  // namespace aslam

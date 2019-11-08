@@ -135,7 +135,6 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
       return false;
     }
   } else {
-    LOG(WARNING) << "Unable to get distortion node for camera, setting no distortion.";
     distortion_.reset(new aslam::NullDistortion());
   }
 
