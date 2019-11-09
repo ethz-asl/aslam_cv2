@@ -176,7 +176,7 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     camera_type_ = Type::kPinhole;
   } else if(camera_type == "unified-projection") {
     camera_type_ = Type::kUnifiedProjection;
-  } else if(camera_type == "lidar-3d") {
+  } else if(camera_type == "camera-3d-lidar") {
     camera_type_ = Type::kLidar3D;
   } else {
     LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
@@ -198,14 +198,14 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   }
 
   // Get the optional linedelay in nanoseconds or set the default
-  if (!YAML::safeGet(yaml_node, "line-delay-nanoseconds", 
+  if (!YAML::safeGet(yaml_node, "line-delay-nanoseconds",
 				&line_delay_nanoseconds_)){
     LOG(WARNING)
         << "Unable to parse parameter line-delay-nanoseconds."
         << "Setting to default value = 0.";
     line_delay_nanoseconds_ = 0;
   }
-	
+
   // Get the optional compressed definition for images or set the default
   if (YAML::hasKey(yaml_node, "compressed")) {
 		if (!YAML::safeGet(yaml_node, "compressed", &is_compressed_)) {
@@ -234,7 +234,7 @@ void Camera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
       node["type"] = "unified-projection";
       break;
     case aslam::Camera::Type::kLidar3D:
-      node["type"] = "lidar-3d";
+      node["type"] = "camera-3d-lidar";
       break;
     default:
       LOG(ERROR) << "Unknown camera model: "

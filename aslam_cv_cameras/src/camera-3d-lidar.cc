@@ -9,38 +9,37 @@
 #include "aslam/cameras/random-camera-generator.h"
 
 namespace aslam {
-std::ostream& operator<<(std::ostream& out, const CameraLidar3D& camera) {
+std::ostream& operator<<(std::ostream& out, const Camera3DLidar& camera) {
   camera.printParameters(out, std::string(""));
   return out;
 }
 
-CameraLidar3D::CameraLidar3D()
+Camera3DLidar::Camera3DLidar()
     : Base(Eigen::Vector3d::Zero(), 0, 0, Camera::Type::kLidar3D) {}
 
-CameraLidar3D::CameraLidar3D(
+Camera3DLidar::Camera3DLidar(
     const Eigen::VectorXd& intrinsics, uint32_t image_width,
     uint32_t image_height)
     : Base(intrinsics, image_width, image_height, Camera::Type::kLidar3D) {
   CHECK(intrinsicsValid(intrinsics));
 }
 
-bool CameraLidar3D::backProject3(
+bool Camera3DLidar::backProject3(
     const Eigen::Ref<const Eigen::Vector2d>& keypoint,
     Eigen::Vector3d* out_point_3d) const {
   CHECK_NOTNULL(out_point_3d);
 
   Eigen::Vector2d kp = keypoint;
-  kp[0] = kp[0] * horizontalResolution() - horizontalCenter();
-  kp[1] = (kp[1] * verticalResolution()) - verticalCenter();
-  (*out_point_3d)[0] = std::sin(kp[0]);
-  (*out_point_3d)[1] = std::tan(kp[1]);
-  (*out_point_3d)[2] = std::cos(kp[0]);
-
-  // Always valid for the pinhole model.
+  kp[0] = horizontalCenter() - (kp[0] * horizontalResolution());
+  kp[1] = verticalCenter() - (kp[1] * verticalResolution());
+  (*out_point_3d)[0] = -std::sin(kp[0]) * std::cos(kp[1]);
+  (*out_point_3d)[1] = -std::sin(kp[1]);
+  (*out_point_3d)[2] = std::cos(kp[0]) * std::cos(kp[1]);
+  out_point_3d->normalize();
   return true;
 }
 
-const ProjectionResult CameraLidar3D::project3Functional(
+const ProjectionResult Camera3DLidar::project3Functional(
     const Eigen::Ref<const Eigen::Vector3d>& point_3d,
     const Eigen::VectorXd* intrinsics_external,
     const Eigen::VectorXd* distortion_coefficients_external,
@@ -74,7 +73,7 @@ const ProjectionResult CameraLidar3D::project3Functional(
       point_3d, *intrinsics, dummy_distortion_coefficients, out_keypoint);
 }
 
-Eigen::Vector2d CameraLidar3D::createRandomKeypoint() const {
+Eigen::Vector2d Camera3DLidar::createRandomKeypoint() const {
   Eigen::Vector2d out;
   out.setRandom();
   // Unit tests often fail when the point is near the border. Keep the point
@@ -87,7 +86,7 @@ Eigen::Vector2d CameraLidar3D::createRandomKeypoint() const {
   return out;
 }
 
-Eigen::Vector3d CameraLidar3D::createRandomVisiblePoint(double depth) const {
+Eigen::Vector3d Camera3DLidar::createRandomVisiblePoint(double depth) const {
   CHECK_GT(depth, 0.0) << "Depth needs to be positive!";
   Eigen::Vector3d point_3d;
 
@@ -99,7 +98,7 @@ Eigen::Vector3d CameraLidar3D::createRandomVisiblePoint(double depth) const {
   return point_3d * depth;
 }
 
-void CameraLidar3D::getBorderRays(Eigen::MatrixXd& rays) const {
+void Camera3DLidar::getBorderRays(Eigen::MatrixXd& rays) const {
   rays.resize(4, 8);
   Eigen::Vector4d ray;
   backProject4(Eigen::Vector2d(0.0, 0.0), &ray);
@@ -120,19 +119,17 @@ void CameraLidar3D::getBorderRays(Eigen::MatrixXd& rays) const {
   rays.col(7) = ray;
 }
 
-bool CameraLidar3D::areParametersValid(const Eigen::VectorXd& parameters) {
+bool Camera3DLidar::areParametersValid(const Eigen::VectorXd& parameters) {
   return (parameters.size() == parameterCount()) &&
          (parameters[Parameters::kHorizontalResolutionRad] > 0.0) &&
-         (parameters[Parameters::kVerticalResolutionRad] > 0.0) &&
-         (parameters[Parameters::kVerticalCenterRad] >= 0.0) &&
-         (parameters[Parameters::kHorizontalCenterRad] >= 0.0);
+         (parameters[Parameters::kVerticalResolutionRad] > 0.0);
 }
 
-bool CameraLidar3D::intrinsicsValid(const Eigen::VectorXd& intrinsics) const {
+bool Camera3DLidar::intrinsicsValid(const Eigen::VectorXd& intrinsics) const {
   return areParametersValid(intrinsics);
 }
 
-void CameraLidar3D::printParameters(
+void Camera3DLidar::printParameters(
     std::ostream& out, const std::string& text) const {
   Camera::printParameters(out, text);
   out << "  horizontal angular resolution [rad]: " << horizontalResolution()
@@ -142,14 +139,14 @@ void CameraLidar3D::printParameters(
   out << "  line delay [ns]: " << line_delay_nanoseconds_ << std::endl;
 }
 
-const double CameraLidar3D::kSquaredMinimumDepth = 0.0001;
+const double Camera3DLidar::kSquaredMinimumDepth = 0.0001;
 
-bool CameraLidar3D::isValidImpl() const {
+bool Camera3DLidar::isValidImpl() const {
   return intrinsicsValid(intrinsics_);
 }
 
-void CameraLidar3D::setRandomImpl() {
-  CameraLidar3D::Ptr test_camera = CameraLidar3D::createTestCamera();
+void Camera3DLidar::setRandomImpl() {
+  Camera3DLidar::Ptr test_camera = Camera3DLidar::createTestCamera();
   CHECK(test_camera);
   line_delay_nanoseconds_ = test_camera->line_delay_nanoseconds_;
   image_width_ = test_camera->image_width_;
@@ -162,11 +159,11 @@ void CameraLidar3D::setRandomImpl() {
   }
 }
 
-bool CameraLidar3D::isEqualImpl(const Sensor& other, const bool verbose) const {
-  const CameraLidar3D* other_camera =
-      dynamic_cast<const CameraLidar3D*>(&other);
+bool Camera3DLidar::isEqualImpl(const Sensor& other, const bool verbose) const {
+  const Camera3DLidar* other_camera =
+      dynamic_cast<const Camera3DLidar*>(&other);
   if (other_camera == nullptr) {
-    LOG_IF(ERROR, verbose) << "Other camera is not a CameraLidar3D!";
+    LOG_IF(ERROR, verbose) << "Other camera is not a Camera3DLidar!";
     return false;
   }
 

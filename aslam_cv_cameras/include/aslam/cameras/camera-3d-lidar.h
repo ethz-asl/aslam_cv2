@@ -13,15 +13,15 @@ namespace aslam {
 class MappedUndistorter;
 class NCamera;
 
-/// \class CameraLidar3D
+/// \class Camera3DLidar
 /// \brief An implementation of a projection model for a 360 degree 3D lidar.
-class CameraLidar3D : public aslam::Cloneable<Camera, CameraLidar3D> {
+class Camera3DLidar : public aslam::Cloneable<Camera, Camera3DLidar> {
   friend class NCamera;
 
   enum { kNumOfParams = 4 };
 
  public:
-  ASLAM_POINTER_TYPEDEFS(CameraLidar3D);
+  ASLAM_POINTER_TYPEDEFS(Camera3DLidar);
 
   enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -39,27 +39,27 @@ class CameraLidar3D : public aslam::Cloneable<Camera, CameraLidar3D> {
 
  public:
   /// \brief Empty constructor for serialization interface.
-  CameraLidar3D();
+  Camera3DLidar();
 
   /// Copy constructor for clone operation.
-  CameraLidar3D(const CameraLidar3D& other) = default;
-  void operator=(const CameraLidar3D&) = delete;
+  Camera3DLidar(const Camera3DLidar& other) = default;
+  void operator=(const Camera3DLidar&) = delete;
 
  public:
-  /// \brief Construct a CameraLidar3D
+  /// \brief Construct a Camera3DLidar
   /// @param[in] intrinsics  (Horizontal-, vertical- resolution in radians,
   /// frequency in Hz).
   /// @param[in] image_width  Image width in pixels.
   /// @param[in] image_height Image height in pixels.
-  CameraLidar3D(
+  Camera3DLidar(
       const Eigen::VectorXd& intrinsics, uint32_t image_width,
       uint32_t image_height);
 
-  virtual ~CameraLidar3D(){};
+  virtual ~Camera3DLidar(){};
 
   /// \brief Convenience function to print the state using streams.
   friend std::ostream& operator<<(
-      std::ostream& out, const CameraLidar3D& camera);
+      std::ostream& out, const Camera3DLidar& camera);
 
   /// @}
 
@@ -224,21 +224,23 @@ class CameraLidar3D : public aslam::Cloneable<Camera, CameraLidar3D> {
 
   /// \brief Create a test camera object for unit testing.
   template <typename DistortionType = NullDistortion>
-  static CameraLidar3D::Ptr createTestCamera() {
-    return CameraLidar3D::Ptr(
+  static Camera3DLidar::Ptr createTestCamera() {
+    return Camera3DLidar::Ptr(
         std::move(createTestCameraUnique<DistortionType>()));
   }
 
-  /// \brief Create a test camera object for unit testing. Simulates OS-1 lidar.
+  /// \brief Create a test camera object for unit testing.
+  // Simulates OS-1 64-beam lidar.
   template <typename DistortionType = NullDistortion>
-  static CameraLidar3D::UniquePtr createTestCameraUnique() {
+  static Camera3DLidar::UniquePtr createTestCameraUnique() {
     Eigen::VectorXd intrinsics(4, 1);
     intrinsics[Parameters::kHorizontalResolutionRad] = 2. * M_PI / 1024.;
-    intrinsics[Parameters::kVerticalResolutionRad] = 0.558505361 / 64.;
-    intrinsics[Parameters::kVerticalCenterRad] = 0.558505361 / 2.;
-    intrinsics[Parameters::kHorizontalCenterRad] = 0.0;
+    intrinsics[Parameters::kVerticalResolutionRad] =
+        0.009203703;  // 0.527333333 deg
+    intrinsics[Parameters::kVerticalCenterRad] = 0.289916642;  // 16.611 deg
+    intrinsics[Parameters::kHorizontalCenterRad] = 0;
 
-    CameraLidar3D::UniquePtr camera = aligned_unique<CameraLidar3D>(
+    Camera3DLidar::UniquePtr camera = aligned_unique<Camera3DLidar>(
         intrinsics, 1024u /*width*/, 64u /*height*/);
     CameraId id;
     generateId(&id);

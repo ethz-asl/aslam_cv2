@@ -88,11 +88,11 @@ Camera::Ptr createCamera(const YAML::Node& yaml_node) {
   } else if (camera_type == "unified-projection") {
     camera = std::dynamic_pointer_cast<Camera>(
         aligned_shared<UnifiedProjectionCamera>());
-  } else if (camera_type == "lidar-3d") {
-    camera = std::dynamic_pointer_cast<Camera>(aligned_shared<CameraLidar3D>());
+  } else if (camera_type == "camera-3d-lidar") {
+    camera = std::dynamic_pointer_cast<Camera>(aligned_shared<Camera3DLidar>());
   } else {
     LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
-               << "Valid values are {pinhole, unified-projection, lidar-3d}.";
+               << "Valid values are {pinhole, unified-projection, camera-3d-lidar}.";
     return nullptr;
   }
 

@@ -29,7 +29,7 @@ struct CameraDistortion {
 };
 
 using testing::Types;
-typedef Types<CameraDistortion<aslam::CameraLidar3D, aslam::NullDistortion>>
+typedef Types<CameraDistortion<aslam::Camera3DLidar, aslam::NullDistortion>>
     Implementations;
 
 ///////////////////////////////////////////////
@@ -147,42 +147,36 @@ TYPED_TEST(TestCameras, CameraTest_isInvertible) {
   // Then check that the back projection matches the projection.
   for (size_t n = 0; n < N; ++n) {
     points1.col(n) = this->camera_->createRandomVisiblePoint(depth);
-    aslam::ProjectionResult result =
-        this->camera_->project3(points1.col(n), &keypoint);
+    if (this->camera_->project3(points1.col(n), &keypoint)
+            .getDetailedStatus() !=
+        aslam::ProjectionResult::Status::KEYPOINT_VISIBLE) {
+      LOG(ERROR) << "Projected point " << n << " is not in the image!";
+    }
     projections1.col(n) = keypoint;
 
-    if (aslam::ProjectionResult::Status::KEYPOINT_VISIBLE !=
-        result.getDetailedStatus()) {
-      LOG(ERROR) << "Error could not project test point to image: 3DPoint "
-                 << points1.col(n).transpose() << " to img coord "
-                 << keypoint.transpose();
-      continue;
-    }
     bool success = this->camera_->backProject3(keypoint, &point);
     ASSERT_TRUE(success);
-    point.normalize();
+
     points2.col(n) = point * depth;
   }
-  // The distortion models are not invertible so we have to be generous here.
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points2, 1e-2));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points2, 1e-6));
 
   // Do the same with the vectorized functions.
   std::vector<aslam::ProjectionResult> result;
   this->camera_->project3Vectorized(points1, &projections3, &result);
   for (size_t n = 0; n < N; ++n) {
-    ASSERT_EQ(
-        aslam::ProjectionResult::Status::KEYPOINT_VISIBLE,
-        result[n].getDetailedStatus());
+    if (result[n].getDetailedStatus() !=
+        aslam::ProjectionResult::Status::KEYPOINT_VISIBLE) {
+      LOG(ERROR) << "Projected point " << n << " is not in the image!";
+    }
   }
   std::vector<unsigned char> success;
   this->camera_->backProject3Vectorized(projections3, &points3, &success);
   for (size_t n = 0; n < N; ++n) {
     ASSERT_TRUE(success[n]);
-    points3.col(n).normalize();
     points3.col(n) *= depth;
   }
-  // The distortion models are not invertible so we have to be generous here.
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points3, 1e-2));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(points1, points3, 1e-6));
 }
 
 TYPED_TEST(TestCameras, TestClone) {

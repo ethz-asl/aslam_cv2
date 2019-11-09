@@ -8,9 +8,9 @@ catkin_simple(ALL_DEPS_REQUIRED)
 # LIBRARIES #
 #############
 set(SOURCES
+  src/camera-3d-lidar.cc
   src/camera-factory.cc
   src/camera-pinhole.cc
-  src/camera-3d-lidar.cc
   src/camera-unified-projection.cc
   src/camera.cc
   src/distortion-equidistant.cc
@@ -31,8 +31,8 @@ add_doxygen(NOT_AUTOMATIC)
 catkin_add_gtest(test_cameras test/test-cameras.cc)
 target_link_libraries(test_cameras ${PROJECT_NAME})
 
-catkin_add_gtest(test_camera_lidar_3d test/test-camera-lidar-3d.cc)
-target_link_libraries(test_camera_lidar_3d ${PROJECT_NAME})
+catkin_add_gtest(test_camera_3d_lidar test/test-camera-3d-lidar.cc)
+target_link_libraries(test_camera_3d_lidar ${PROJECT_NAME})
 
 catkin_add_gtest(test_distortions test/test-distortions.cc)
 target_link_libraries(test_distortions ${PROJECT_NAME})
