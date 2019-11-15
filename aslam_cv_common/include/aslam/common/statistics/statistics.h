@@ -29,22 +29,26 @@ const double kNumSecondsPerNanosecond = 1.e-9;
 struct StatisticsMapValue {
   static const int kWindowSize = 100;
 
-  inline StatisticsMapValue() {
-    time_last_called_ = std::chrono::system_clock::now();
-  }
+  inline StatisticsMapValue()
+      : time_last_called_(std::chrono::system_clock::from_time_t(0)),
+        epoch_clock_(std::chrono::system_clock::from_time_t(0)) {}
 
   inline void AddValue(double sample) {
     std::chrono::time_point<std::chrono::system_clock> now =
         std::chrono::system_clock::now();
-    double dt = static_cast<double>(
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        now - time_last_called_)
-                        .count()) *
-                kNumSecondsPerNanosecond;
-    time_last_called_ = now;
 
+    // Only calculate delta time if it has been called before.
+    if (time_last_called_ != epoch_clock_) {
+      double dt = static_cast<double>(
+                      std::chrono::duration_cast<std::chrono::nanoseconds>(
+                          now - time_last_called_)
+                          .count()) *
+                  kNumSecondsPerNanosecond;
+      time_deltas_.Add(dt);
+    }
+
+    time_last_called_ = now;
     values_.Add(sample);
-    time_deltas_.Add(dt);
   }
   inline double GetLastDeltaTime() const {
     if (time_deltas_.total_samples()) {
@@ -111,6 +115,7 @@ struct StatisticsMapValue {
   Accumulator<double, double, kWindowSize> values_;
   Accumulator<double, double, kWindowSize> time_deltas_;
   std::chrono::time_point<std::chrono::system_clock> time_last_called_;
+  std::chrono::time_point<std::chrono::system_clock> epoch_clock_;
 };
 
 // A class that has the statistics interface but does nothing. Swapping this in
