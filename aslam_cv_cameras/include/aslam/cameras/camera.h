@@ -167,8 +167,9 @@ class Camera : public Sensor {
     image_width_(other.image_width_),
     image_height_(other.image_height_),
     intrinsics_(other.intrinsics_),
-    camera_type_(other.camera_type_) {
-    CHECK(other.distortion_);
+    camera_type_(other.camera_type_), 
+    is_compressed_(other.is_compressed_) {
+      CHECK(other.distortion_);
       distortion_.reset(other.distortion_->clone());
   };
 
