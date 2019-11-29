@@ -259,7 +259,7 @@ bool PinholeCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   }
 
   // Verify that the base members are equal.
-  if (!isEqualCameraImpl(*other_camera)) {
+  if (!isEqualCameraImpl(*other_camera, verbose)) {
     return false;
   }
 

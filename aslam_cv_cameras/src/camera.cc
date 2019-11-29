@@ -63,12 +63,30 @@ void Camera::printParameters(std::ostream& out, const std::string& text) const {
   out << "  image (cols,rows): " << imageWidth() << ", " << imageHeight() << std::endl;
 }
 
-bool Camera::isEqualCameraImpl(const Camera& other) const {
-  return (this->intrinsics_ == other.intrinsics_) &&
-         (this->line_delay_nanoseconds_ == other.line_delay_nanoseconds_) &&
-         (this->image_width_ == other.image_width_) &&
-         (this->image_height_ == other.image_height_);
-}
+bool Camera::isEqualCameraImpl(const Camera& other, const bool verbose) const {
+  bool is_equal =
+      (this->intrinsics_.isApprox(
+          other.intrinsics_, aslam::common::macros::kEpsilon)) &&
+      (this->line_delay_nanoseconds_ == other.line_delay_nanoseconds_) &&
+      (this->image_width_ == other.image_width_) &&
+      (this->image_height_ == other.image_height_);
+  if (!is_equal) {
+    LOG_IF(WARNING, verbose)
+        << "this sensor: "
+        << "\n intrinsics: " << this->intrinsics_
+        << "\n line_delay_nanoseconds: " << this->line_delay_nanoseconds_
+        << "\n image_width:: " << this->image_width_
+        << "\n image_height: " << this->image_height_;
+    LOG_IF(WARNING, verbose)
+        << "other sensor: "
+        << "\n intrinsics: " << other.intrinsics_
+        << "\n line_delay_nanoseconds: " << other.line_delay_nanoseconds_
+        << "\n image_width:: " << other.image_width_
+        << "\n image_height: " << other.image_height_;
+  }
+
+  return is_equal;
+}  // namespace aslam
 
 bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   if(!yaml_node.IsMap()) {

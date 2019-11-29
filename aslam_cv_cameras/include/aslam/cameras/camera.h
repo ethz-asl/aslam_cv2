@@ -176,7 +176,7 @@ class Camera : public Sensor {
   void operator=(const Camera&) = delete;
 
   /// \brief Compare only the parameters of Camera to the ones of another Camera
-  bool isEqualCameraImpl(const Camera& other) const;
+  bool isEqualCameraImpl(const Camera& other, const bool verbose) const;
 
   /// @}
 
