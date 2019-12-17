@@ -27,6 +27,8 @@ NCamera* NCamera::cloneWithNewIds() const {
   aslam::SensorId ncamera_id;
   generateId(&ncamera_id);
   new_ncamera->setId(ncamera_id);
+
+  // Recurse into cameras and change the cloned camera ids
   for (size_t camera_idx = 0u; camera_idx < new_ncamera->numCameras();
        ++camera_idx) {
     SensorId camera_id;
@@ -34,6 +36,9 @@ NCamera* NCamera::cloneWithNewIds() const {
     aslam::Camera::Ptr camera = new_ncamera->getCameraShared(camera_idx);
     camera->setId(camera_id);
   }
+
+  new_ncamera->initInternal();
+  CHECK(new_ncamera->isValid());
   return new_ncamera;
 }
 
@@ -68,6 +73,7 @@ NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
 NCamera::NCamera(const NCamera& other)
     : Sensor(other),
       T_C_B_(other.T_C_B_),
+      id_to_index_(other.id_to_index_),
       has_fixed_localization_covariance_(other.has_fixed_localization_covariance_),
       fixed_localization_covariance_(other.fixed_localization_covariance_) {
   // Clone all contained cameras.
