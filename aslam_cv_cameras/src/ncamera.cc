@@ -73,7 +73,6 @@ NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
 NCamera::NCamera(const NCamera& other)
     : Sensor(other),
       T_C_B_(other.T_C_B_),
-      id_to_index_(other.id_to_index_),
       has_fixed_localization_covariance_(other.has_fixed_localization_covariance_),
       fixed_localization_covariance_(other.fixed_localization_covariance_) {
   // Clone all contained cameras.
