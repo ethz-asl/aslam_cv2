@@ -18,8 +18,8 @@ Camera3DLidar::Camera3DLidar()
     : Base(Eigen::Vector3d::Zero(), 0, 0, Camera::Type::kLidar3D) {}
 
 Camera3DLidar::Camera3DLidar(
-    const Eigen::VectorXd& intrinsics, uint32_t image_width,
-    uint32_t image_height)
+    const Eigen::VectorXd& intrinsics, const uint32_t image_width,
+    const uint32_t image_height)
     : Base(intrinsics, image_width, image_height, Camera::Type::kLidar3D) {
   CHECK(intrinsicsValid(intrinsics));
 }
@@ -78,7 +78,7 @@ Eigen::Vector2d Camera3DLidar::createRandomKeypoint() const {
   out.setRandom();
   // Unit tests often fail when the point is near the border. Keep the point
   // away from the border.
-  double border = std::min(imageWidth(), imageHeight()) * 0.1;
+  const double border = std::min(imageWidth(), imageHeight()) * 0.1;
 
   out(0) = border + std::abs(out(0)) * (imageWidth() - border * 2.0);
   out(1) = border + std::abs(out(1)) * (imageHeight() - border * 2.0);

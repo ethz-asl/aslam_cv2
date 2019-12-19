@@ -52,8 +52,8 @@ class Camera3DLidar : public aslam::Cloneable<Camera, Camera3DLidar> {
   /// @param[in] image_width  Image width in pixels.
   /// @param[in] image_height Image height in pixels.
   Camera3DLidar(
-      const Eigen::VectorXd& intrinsics, uint32_t image_width,
-      uint32_t image_height);
+      const Eigen::VectorXd& intrinsics, const uint32_t image_width,
+      const uint32_t image_height);
 
   virtual ~Camera3DLidar(){};
 
