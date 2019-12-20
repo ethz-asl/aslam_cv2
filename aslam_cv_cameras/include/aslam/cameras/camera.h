@@ -103,7 +103,8 @@ class Camera : public Sensor {
 
   enum class Type {
     kPinhole = 0,
-    kUnifiedProjection = 1
+    kUnifiedProjection = 1,
+    kLidar3D = 2,
   };
 
   //////////////////////////////////////////////////////////////
@@ -176,7 +177,7 @@ class Camera : public Sensor {
   void operator=(const Camera&) = delete;
 
   /// \brief Compare only the parameters of Camera to the ones of another Camera
-  bool isEqualCameraImpl(const Camera& other) const;
+  bool isEqualCameraImpl(const Camera& other, const bool verbose = false) const;
 
   /// @}
 
