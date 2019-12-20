@@ -3,8 +3,10 @@
 #include <glog/logging.h>
 
 #include <aslam/cameras/camera.h>
+#include <aslam/cameras/distortion-equidistant.h>
+#include <aslam/cameras/distortion-fisheye.h>
 #include <aslam/cameras/distortion-null.h>
-#include <aslam/cameras/yaml/camera-yaml-serialization.h>
+#include <aslam/cameras/distortion-radtan.h>
 #include <aslam/common/yaml-serialization.h>
 
 // TODO(slynen) Enable commented out PropertyTree support
@@ -27,67 +29,217 @@ std::ostream& operator<< (std::ostream& out, const ProjectionResult& state) {
 }
 
 /// Camera constructor with distortion
-Camera::Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
-               uint32_t image_width, uint32_t image_height, Type camera_type)
+Camera::Camera(
+    const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
+    const uint32_t image_width, const uint32_t image_height, Type camera_type)
     : line_delay_nanoseconds_(0),
-      label_("unnamed camera"),
       image_width_(image_width),
       image_height_(image_height),
       intrinsics_(intrinsics),
       camera_type_(camera_type),
-      distortion_(std::move(distortion)) {
+      distortion_(std::move(distortion)),
+			is_compressed_(false) {
   CHECK_NOTNULL(distortion_.get());
 }
 
 /// Camera constructor without distortion
-Camera::Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
-               Type camera_type)
+Camera::Camera(
+    const Eigen::VectorXd& intrinsics, const uint32_t image_width,
+    const uint32_t image_height, Type camera_type)
     : line_delay_nanoseconds_(0),
-      label_("unnamed camera"),
       image_width_(image_width),
       image_height_(image_height),
       intrinsics_(intrinsics),
       camera_type_(camera_type),
-      distortion_(new NullDistortion()) {}
+      distortion_(new NullDistortion()),
+			is_compressed_(false) {}
 
 void Camera::printParameters(std::ostream& out, const std::string& text) const {
   if(text.size() > 0) {
     out << text << std::endl;
   }
-  out << "Camera(" << this->id_ << "): " << this->label_ << std::endl;
+  out << "Camera(" << this->id_ << "): " << this->id_ << std::endl;
   out << "  line delay: " << this->line_delay_nanoseconds_ << std::endl;
   out << "  image (cols,rows): " << imageWidth() << ", " << imageHeight() << std::endl;
 }
 
-bool Camera::operator==(const Camera& other) const {
-  // \TODO(slynen) should we include the id and name here?
+bool Camera::isEqualCameraImpl(const Camera& other) const {
   return (this->intrinsics_ == other.intrinsics_) &&
          (this->line_delay_nanoseconds_ == other.line_delay_nanoseconds_) &&
          (this->image_width_ == other.image_width_) &&
          (this->image_height_ == other.image_height_);
 }
 
-Camera::Ptr Camera::loadFromYaml(const std::string& yaml_file) {
-  try {
-    YAML::Node doc = YAML::LoadFile(yaml_file.c_str());
-    return doc.as<aslam::Camera::Ptr>();
-  } catch (const std::exception& ex) {
-    LOG(ERROR) << "Failed to load Camera from file " << yaml_file << " with the error: \n"
-               << ex.what();
-  }
-  // Return nullptr in the failure case.
-  return Camera::Ptr();
-}
-
-bool Camera::saveToYaml(const std::string& yaml_file) const {
-  try {
-    YAML::Save(*this, yaml_file);
-  } catch (const std::exception& ex) {
-    LOG(ERROR) << "Failed to save camera to file " << yaml_file << " with the error: \n"
-               << ex.what();
+bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
+  if(!yaml_node.IsMap()) {
+    LOG(ERROR) << "Unable to parse the camera because the node is not a map.";
     return false;
   }
+
+  // Determine the distortion type. Start with no distortion.
+  const YAML::Node& distortion_config = yaml_node["distortion"];
+  if (distortion_config.IsDefined() && !distortion_config.IsNull()) {
+    if(!distortion_config.IsMap()) {
+      LOG(ERROR)
+          << "Unable to parse the camera because the distortion node is not a map.";
+      return false;
+    }
+
+    std::string distortion_type;
+    Eigen::VectorXd distortion_parameters;
+    if(YAML::safeGet(distortion_config, "type", &distortion_type) &&
+       YAML::safeGet(distortion_config, "parameters", &distortion_parameters)) {
+      if(distortion_type == "none") {
+          distortion_.reset(new aslam::NullDistortion());
+      } else if(distortion_type == "equidistant") {
+        if (aslam::EquidistantDistortion::areParametersValid(distortion_parameters)) {
+          distortion_.reset(new aslam::EquidistantDistortion(distortion_parameters));
+        } else {
+          LOG(ERROR) << "Invalid distortion parameters for the Equidistant distortion model: "
+              << distortion_parameters.transpose() << std::endl <<
+              "See aslam::EquidistantDistortion::areParametersValid(...) for conditions on what "
+              "valid Equidistant distortion parameters look like.";
+          return false;
+        }
+      } else if(distortion_type == "fisheye") {
+        if (aslam::FisheyeDistortion::areParametersValid(distortion_parameters)) {
+          distortion_.reset(new aslam::FisheyeDistortion(distortion_parameters));
+        } else {
+          LOG(ERROR) << "Invalid distortion parameters for the Fisheye distortion model: "
+              << distortion_parameters.transpose() << std::endl <<
+              "See aslam::FisheyeDistortion::areParametersValid(...) for conditions on what "
+              "valid Fisheye distortion parameters look like.";
+          return false;
+        }
+      } else if(distortion_type == "radial-tangential") {
+        if (aslam::RadTanDistortion::areParametersValid(distortion_parameters)) {
+          distortion_.reset(new aslam::RadTanDistortion(distortion_parameters));
+        } else {
+          LOG(ERROR) << "Invalid distortion parameters for the RadTan distortion model: "
+              << distortion_parameters.transpose() << std::endl <<
+              "See aslam::RadTanDistortion::areParametersValid(...) for conditions on what "
+              "valid RadTan distortion parameters look like.";
+          return false;
+        }
+      } else {
+          LOG(ERROR) << "Unknown distortion model: \"" << distortion_type << "\". "
+              << "Valid values are {none, equidistant, fisheye, radial-tangential}.";
+          return false;
+      }
+
+      if (!distortion_->distortionParametersValid(distortion_parameters)) {
+        LOG(ERROR) << "Invalid distortion parameters: " << distortion_parameters.transpose();
+        return false;
+      }
+    } else {
+      LOG(ERROR) << "Unable to get the required parameters from the distortion. "
+          << "Required: string type, VectorXd parameters.";
+      return false;
+    }
+  } else {
+    distortion_.reset(new aslam::NullDistortion());
+  }
+
+  // Get the image width and height
+  if (!YAML::safeGet(yaml_node, "image_width", &image_width_) ||
+      !YAML::safeGet(yaml_node, "image_height", &image_height_)) {
+    LOG(ERROR) << "Unable to get the image size.";
+    return false;
+  }
+
+  // Get the camera type
+  std::string camera_type;
+  if (!YAML::safeGet(yaml_node, "type", &camera_type)) {
+    LOG(ERROR) << "Unable to get camera type";
+    return false;
+  }
+
+  if(camera_type == "pinhole") {
+    camera_type_ = Type::kPinhole;
+  } else if(camera_type == "unified-projection") {
+    camera_type_ = Type::kUnifiedProjection;
+  } else {
+    LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
+        << "Valid values are {pinhole, unified-projection}.";
+    return false;
+  }
+
+  // Get the camera intrinsics
+  if (!YAML::safeGet(yaml_node, "intrinsics", &intrinsics_)) {
+    LOG(ERROR) << "Unable to get image width.";
+    return false;
+  }
+
+  if (!intrinsicsValid(intrinsics_)) {
+    LOG(ERROR)
+        << "Invalid intrinsics parameters for the " << camera_type <<
+        " camera model" << intrinsics_.transpose() << std::endl;
+    return false;
+  }
+
+  // Get the optional linedelay in nanoseconds or set the default
+  if (!YAML::safeGet(yaml_node, "line-delay-nanoseconds", 
+				&line_delay_nanoseconds_)){
+    LOG(WARNING)
+        << "Unable to parse parameter line-delay-nanoseconds."
+        << "Setting to default value = 0.";
+    line_delay_nanoseconds_ = 0;
+  }
+	
+  // Get the optional compressed definition for images or set the default
+  if (YAML::hasKey(yaml_node, "compressed")) {
+		if (!YAML::safeGet(yaml_node, "compressed", &is_compressed_)) {
+			LOG(WARNING)
+					<< "Unable to parse parameter compressed."
+					<< "Setting to default value = false.";
+			is_compressed_ = false;
+		}
+	}
   return true;
+}
+
+void Camera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
+  CHECK_NOTNULL(yaml_node);
+  YAML::Node& node = *yaml_node;
+
+  node["compressed"] = hasCompressedImages();
+  node["line-delay-nanoseconds"] = getLineDelayNanoSeconds();
+  node["image_height"] = imageHeight();
+  node["image_width"] = imageWidth();
+  switch(getType()) {
+    case aslam::Camera::Type::kPinhole:
+      node["type"] = "pinhole";
+      break;
+    case aslam::Camera::Type::kUnifiedProjection:
+      node["type"] = "unified-projection";
+      break;
+    default:
+      LOG(ERROR) << "Unknown camera model: "
+        << static_cast<std::underlying_type<aslam::Camera::Type>::type>(getType());
+  }
+  node["intrinsics"] = getParameters();
+
+  const aslam::Distortion& distortion = getDistortion();
+  if(distortion.getType() != aslam::Distortion::Type::kNoDistortion) {
+    YAML::Node distortion_node;
+    switch(distortion.getType()) {
+      case aslam::Distortion::Type::kEquidistant:
+        distortion_node["type"] = "equidistant";
+        break;
+      case aslam::Distortion::Type::kFisheye:
+        distortion_node["type"] = "fisheye";
+        break;
+      case aslam::Distortion::Type::kRadTan:
+        distortion_node["type"] = "radial-tangential";
+        break;
+      default:
+        LOG(ERROR) << "Unknown distortion model: "
+          << static_cast<std::underlying_type<aslam::Distortion::Type>::type>(
+              distortion.getType());
+    }
+    distortion_node["parameters"] = distortion.getParameters();
+    node["distortion"] = distortion_node;
+  }
 }
 
 const ProjectionResult Camera::project3(const Eigen::Ref<const Eigen::Vector3d>& point_3d,
@@ -244,4 +396,3 @@ ProjectionResult::Status ProjectionResult::PROJECTION_INVALID =
 ProjectionResult::Status ProjectionResult::UNINITIALIZED =
     ProjectionResult::Status::UNINITIALIZED;
 }  // namespace aslam
-

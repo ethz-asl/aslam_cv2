@@ -13,7 +13,6 @@
 #include <aslam/cameras/distortion-radtan.h>
 #include <aslam/cameras/distortion-equidistant.h>
 #include <aslam/cameras/distortion-null.h>
-#include <aslam/cameras/yaml/camera-yaml-serialization.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/memory.h>
 #include <aslam/common/numdiff-jacobian-tester.h>
@@ -372,9 +371,12 @@ TYPED_TEST(TestCameras, validMaskTest) {
 
 TYPED_TEST(TestCameras, YamlSerialization){
   ASSERT_NE(this->camera_, nullptr);
-  this->camera_->saveToYaml("test.yaml");
-  aslam::Camera::Ptr camera = aslam::Camera::loadFromYaml("test.yaml");
-  ASSERT_NE(camera, nullptr);
+  this->camera_->serializeToFile("test.yaml");
+  typename TypeParam::CameraType::Ptr camera =
+      aligned_shared<typename TypeParam::CameraType>();
+  bool success = camera->deserializeFromFile("test.yaml");
+
+  EXPECT_TRUE(success);
   EXPECT_TRUE(*camera.get() == *this->camera_.get());
 }
 
@@ -634,15 +636,13 @@ TEST(TestParameters, testUnifiedProjectionParameters) {
 
 TEST(TestCameraFactory, testEmptyYaml) {
   YAML::Node node = YAML::Load("{}");
-  aslam::Camera::Ptr camera;
-  camera = node.as<aslam::Camera::Ptr>();
+  aslam::Camera::Ptr camera = aslam::createCamera(node);
   EXPECT_EQ(camera, nullptr);
 }
 
 TEST(TestCameraFactory, testNoDistortionYaml) {
   YAML::Node node = YAML::Load("{type: pinhole, intrinsics: {rows: 4, cols: 1, data: [100,110,320,240]}, image_height: 480, image_width: 640}");
-  aslam::Camera::Ptr camera;
-  camera = node.as<aslam::Camera::Ptr>();
+  aslam::Camera::Ptr camera = aslam::createCamera(node);
   EXPECT_TRUE(camera.get() != nullptr);
   EXPECT_EQ(typeid(*camera.get()), typeid(aslam::PinholeCamera));
   aslam::PinholeCamera::Ptr pincam = std::dynamic_pointer_cast<aslam::PinholeCamera>(camera);
@@ -661,18 +661,15 @@ TEST(TestCameraFactory, testNoDistortionYaml) {
 TEST(TestCameraFactory, testBadIntrinsics1) {
   // Data size doesn't match the rows/cols
   YAML::Node node = YAML::Load("{type: pinhole, intrinsics: {rows: 4, cols: 1, data: [100,110,320]}, image_height: 480, image_width: 640}");
-  aslam::Camera::Ptr camera;
-  camera = node.as<aslam::Camera::Ptr>();
+  aslam::Camera::Ptr camera = aslam::createCamera(node);
   EXPECT_EQ(camera, nullptr);
 }
 
 TEST(TestCameraFactory, testBadIntrinsics2) {
   // Intrinsics size doesn't match the required size.
   YAML::Node node = YAML::Load("{type: pinhole, intrinsics: {rows: 3, cols: 1, data: [100,110,320]}, image_height: 480, image_width: 640}");
-  aslam::Camera::Ptr camera;
-  camera = node.as<aslam::Camera::Ptr>();
+  aslam::Camera::Ptr camera = aslam::createCamera(node);
   EXPECT_EQ(camera, nullptr);
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
-

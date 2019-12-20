@@ -6,6 +6,8 @@
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/common/types.h>
 
+#include "aslam/cameras/random-camera-generator.h"
+
 namespace aslam {
 std::ostream& operator<<(std::ostream& out, const PinholeCamera& camera) {
   camera.printParameters(out, std::string(""));
@@ -41,23 +43,6 @@ PinholeCamera::PinholeCamera(double focallength_cols, double focallength_rows,
     : PinholeCamera(
         Eigen::Vector4d(focallength_cols, focallength_rows, imagecenter_cols, imagecenter_rows),
         image_width, image_height) {}
-
-bool PinholeCamera::operator==(const Camera& other) const {
-  // Check that the camera models are the same.
-  const PinholeCamera* rhs = dynamic_cast<const PinholeCamera*>(&other);
-  if (!rhs)
-    return false;
-
-  // Verify that the base members are equal.
-  if (!Camera::operator==(other))
-    return false;
-
-  // Compare the distortion model (if distortion is set for both).
-  if ( !(*(this->distortion_) == *(rhs->distortion_)) )
-    return false;
-
-  return true;
-}
 
 bool PinholeCamera::backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                                  Eigen::Vector3d* out_point_3d) const {
@@ -232,7 +217,7 @@ bool PinholeCamera::areParametersValid(const Eigen::VectorXd& parameters) {
          (parameters[3] > 0.0);    //cv
 }
 
-bool PinholeCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) {
+bool PinholeCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) const {
   return areParametersValid(intrinsics);
 }
 
@@ -247,4 +232,51 @@ void PinholeCamera::printParameters(std::ostream& out, const std::string& text) 
   distortion_->printParameters(out, text);
 }
 const double PinholeCamera::kMinimumDepth = 1e-10;
+
+bool PinholeCamera::isValidImpl() const {
+  return intrinsicsValid(intrinsics_);
+}
+
+void PinholeCamera::setRandomImpl() {
+  PinholeCamera::Ptr test_camera = PinholeCamera::createTestCamera();
+  CHECK(test_camera);
+  line_delay_nanoseconds_ = test_camera->line_delay_nanoseconds_;
+  image_width_ = test_camera->image_width_;
+  image_height_ = test_camera->image_height_;
+  mask_= test_camera->mask_;
+  intrinsics_ = test_camera->intrinsics_;
+  camera_type_ = test_camera->camera_type_;
+  if (test_camera->distortion_) {
+    distortion_ = std::move(test_camera->distortion_);
+  }
+}
+
+bool PinholeCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
+  const PinholeCamera* other_camera =
+      dynamic_cast<const PinholeCamera*>(&other);
+  if (other_camera == nullptr) {
+    return false;
+  }
+
+  // Verify that the base members are equal.
+  if (!isEqualCameraImpl(*other_camera)) {
+    return false;
+  }
+
+  // Compare the distortion model (if distortion is set for both).
+  if (!(*(this->distortion_) == *(other_camera->distortion_))) {
+    return false;
+  }
+
+  return true;
+}
+
+PinholeCamera::Ptr PinholeCamera::createTestCamera() {
+  PinholeCamera::Ptr camera(new PinholeCamera(400, 300, 320, 240, 640, 480));
+  CameraId id;
+  generateId(&id);
+  camera->setId(id);
+  return camera;
+}
+
 }  // namespace aslam

@@ -8,17 +8,16 @@ catkin_simple(ALL_DEPS_REQUIRED)
 # LIBRARIES #
 #############
 set(SOURCES
-  src/camera.cc
   src/camera-factory.cc
   src/camera-pinhole.cc
   src/camera-unified-projection.cc
-  src/camera-yaml-serialization.cc
-  src/distortion.cc
+  src/camera.cc
   src/distortion-equidistant.cc
   src/distortion-fisheye.cc
   src/distortion-radtan.cc
+  src/distortion.cc
   src/ncamera.cc
-  src/ncamera-yaml-serialization.cc
+  src/random-camera-generator.cc
 )
 
 cs_add_library(${PROJECT_NAME} ${SOURCES})
@@ -28,8 +27,8 @@ add_doxygen(NOT_AUTOMATIC)
 ##########
 # GTESTS #
 ##########
-catkin_add_gtest(test_cameras test/test-cameras.cc)
-target_link_libraries(test_cameras ${PROJECT_NAME})
+#catkin_add_gtest(test_cameras test/test-cameras.cc)
+#target_link_libraries(test_cameras ${PROJECT_NAME})
 
 catkin_add_gtest(test_distortions test/test-distortions.cc)
 target_link_libraries(test_distortions ${PROJECT_NAME})

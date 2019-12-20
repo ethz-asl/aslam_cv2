@@ -22,7 +22,7 @@ class VisualNPipelineTest : public ::testing::Test {
                         unsigned num_threads,
                         int64_t timestamp_tolerance_ns) {
     NCameraId id;
-    id.randomize();
+    generateId(&id);
     Aligned<std::vector, kindr::minimal::QuatTransformation> T_C_B;
     std::vector<Camera::Ptr> cameras;
     std::vector<VisualPipeline::Ptr> pipelines;

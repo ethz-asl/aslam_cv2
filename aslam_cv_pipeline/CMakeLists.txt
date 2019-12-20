@@ -34,17 +34,16 @@ cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_doxygen(NOT_AUTOMATIC)
 
-add_definitions(-std=c++11)
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS} -lpthread")
 
 ##########
 # GTESTS #
 ##########
 catkin_add_gtest(test_undistorters test/test-undistorters.cc)
-target_link_libraries(test_undistorters ${PROJECT_NAME}) 
+target_link_libraries(test_undistorters ${PROJECT_NAME})
 
 catkin_add_gtest(test_visual-npipeline test/test-visual-npipeline.cc)
-target_link_libraries(test_visual-npipeline ${PROJECT_NAME}) 
+target_link_libraries(test_visual-npipeline ${PROJECT_NAME})
 
 ##########
 # EXPORT #

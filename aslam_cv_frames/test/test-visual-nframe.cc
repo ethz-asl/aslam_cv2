@@ -3,6 +3,7 @@
 #include <opencv2/core/core.hpp>
 
 #include <aslam/cameras/ncamera.h>
+#include <aslam/cameras/random-camera-generator.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/opencv-predicates.h>
 #include <aslam/common/unique-id.h>
@@ -10,7 +11,8 @@
 #include <aslam/frames/visual-nframe.h>
 
 TEST(NFrame, MinTimestamp) {
-  aslam::NCamera::Ptr ncamera = aslam::NCamera::createSurroundViewTestNCamera();
+  aslam::NCamera::Ptr ncamera = aslam::createSurroundViewTestNCamera();
+  CHECK(ncamera);
   aslam::VisualFrame::Ptr frame_0(new aslam::VisualFrame);
   frame_0->setCameraGeometry(ncamera->getCameraShared(0));
   frame_0->setTimestampNanoseconds(123);
@@ -24,7 +26,7 @@ TEST(NFrame, MinTimestamp) {
   frame_3->setCameraGeometry(ncamera->getCameraShared(3));
   frame_3->setTimestampNanoseconds(5);
   aslam::NFramesId nframe_id;
-  nframe_id.randomize();
+  generateId(&nframe_id);
   aslam::VisualNFrame nframe(nframe_id, 4);
   nframe.setNCameras(ncamera);
   nframe.setFrame(0, frame_0);
@@ -36,7 +38,7 @@ TEST(NFrame, MinTimestamp) {
 }
 
 TEST(NFrame, CopyConstructor) {
-  aslam::NCamera::Ptr ncamera = aslam::NCamera::createTestNCamera(2);
+  aslam::NCamera::Ptr ncamera = aslam::createTestNCamera(2);
   aslam::VisualFrame::Ptr frame_0(new aslam::VisualFrame);
   frame_0->setCameraGeometry(ncamera->getCameraShared(0));
   frame_0->setTimestampNanoseconds(123);
@@ -49,7 +51,7 @@ TEST(NFrame, CopyConstructor) {
   cv::randu(image, cv::Scalar::all(0), cv::Scalar::all(255));
   frame_1->setRawImage(image);
   aslam::NFramesId nframe_id;
-  nframe_id.randomize();
+  generateId(&nframe_id);
   aslam::VisualNFrame nframe(nframe_id, 2);
   nframe.setNCameras(ncamera);
   nframe.setFrame(0, frame_0);

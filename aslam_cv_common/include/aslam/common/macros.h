@@ -3,12 +3,14 @@
 
 #include <memory>
 
+#include <aslam/common/memory.h>
+
 #define ASLAM_DISALLOW_EVIL_CONSTRUCTORS(TypeName)     \
   TypeName(const TypeName&) = delete;                  \
   void operator=(const TypeName&) = delete
 
 #define ASLAM_POINTER_TYPEDEFS(TypeName)               \
-  typedef std::unique_ptr<TypeName> UniquePtr;         \
+  typedef AlignedUniquePtr<TypeName> UniquePtr;        \
   typedef std::shared_ptr<TypeName> Ptr;               \
   typedef std::shared_ptr<const TypeName> ConstPtr
 
