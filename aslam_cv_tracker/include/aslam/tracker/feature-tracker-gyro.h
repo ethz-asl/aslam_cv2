@@ -168,7 +168,7 @@ void GyroTracker::eraseVectorElementsByIndex(
     std::vector<bool>::const_iterator it_to_erase = erase_index.begin();
     typename std::vector<Type>::iterator it_erase_from = std::remove_if(
         vec->begin(), vec->end(),
-        [&it_to_erase](const Type& whatever) -> bool {
+        [&it_to_erase](const Type& /*whatever*/) -> bool {
           return *it_to_erase++ == true;
         }
     );

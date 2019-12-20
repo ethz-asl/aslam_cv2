@@ -3,9 +3,9 @@
 #include <aslam/common/statistics/statistics.h>
 #include <glog/logging.h>
 
-DEFINE_int32(gyro_matcher_small_search_distance_px, 10, 
+DEFINE_int32(gyro_matcher_small_search_distance_px, 10,
     "Small search rectangle size for keypoint matches.");
-DEFINE_int32(gyro_matcher_large_search_distance_px, 20, 
+DEFINE_int32(gyro_matcher_large_search_distance_px, 20,
     "Large search rectangle size for keypoint matches."
     " Only used if small search was unsuccessful.");
 
@@ -29,7 +29,7 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
     matches_kp1_k_(matches_with_score_kp1_k),
     is_keypoint_kp1_matched_(kNumPointsKp1, false),
     iteration_processed_keypoints_kp1_(kNumPointsKp1, false),
-    small_search_distance_px_(FLAGS_gyro_matcher_small_search_distance_px), 
+    small_search_distance_px_(FLAGS_gyro_matcher_small_search_distance_px),
     large_search_distance_px_(FLAGS_gyro_matcher_large_search_distance_px) {
   CHECK(frame_kp1.isValid());
   CHECK(frame_k.isValid());
@@ -47,9 +47,9 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
       "is less or equal to 512 bits. Adapt the following check if this "
       "framework uses larger binary descriptors.";
   CHECK_GT(kImageHeight, 0u);
-  CHECK_EQ(iteration_processed_keypoints_kp1_.size(), kNumPointsKp1);
-  CHECK_EQ(is_keypoint_kp1_matched_.size(), kNumPointsKp1);
-  CHECK_EQ(prediction_success_.size(), predicted_keypoint_positions_kp1_.cols());
+  CHECK_EQ(static_cast<int>(iteration_processed_keypoints_kp1_.size()), kNumPointsKp1);
+  CHECK_EQ(static_cast<int>(is_keypoint_kp1_matched_.size()), kNumPointsKp1);
+  CHECK_EQ(static_cast<int>(prediction_success_.size()), predicted_keypoint_positions_kp1_.cols());
   CHECK_GT(small_search_distance_px_, 0);
   CHECK_GT(large_search_distance_px_, 0);
   CHECK_GE(large_search_distance_px_, small_search_distance_px_);
@@ -101,7 +101,7 @@ void GyroTwoFrameMatcher::initialize() {
     }
     corner_row_LUT_.push_back(v);
   }
-  CHECK_EQ(static_cast<int>(corner_row_LUT_.size()), kImageHeight);
+  CHECK_EQ(corner_row_LUT_.size(), kImageHeight);
 }
 
 void GyroTwoFrameMatcher::match() {
@@ -164,7 +164,7 @@ void GyroTwoFrameMatcher::matchKeypoint(const int idx_k) {
     }
 
     CHECK_LT(it->channel_index, kNumPointsKp1);
-    CHECK_GE(it->channel_index, 0u);
+    CHECK_GE(it->channel_index, 0);
     const common::FeatureDescriptorConstRef& descriptor_kp1 =
         descriptors_kp1_wrapped_[it->channel_index];
     unsigned int distance = common::GetNumBitsDifferent(descriptor_k, descriptor_kp1);

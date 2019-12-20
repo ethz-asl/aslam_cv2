@@ -35,10 +35,10 @@ Camera::Camera(
     : line_delay_nanoseconds_(0),
       image_width_(image_width),
       image_height_(image_height),
+      is_compressed_(false),
       intrinsics_(intrinsics),
       camera_type_(camera_type),
-      distortion_(std::move(distortion)),
-			is_compressed_(false) {
+      distortion_(std::move(distortion)) {
   CHECK_NOTNULL(distortion_.get());
 }
 
@@ -49,10 +49,10 @@ Camera::Camera(
     : line_delay_nanoseconds_(0),
       image_width_(image_width),
       image_height_(image_height),
+      is_compressed_(false),
       intrinsics_(intrinsics),
       camera_type_(camera_type),
-      distortion_(new NullDistortion()),
-			is_compressed_(false) {}
+      distortion_(new NullDistortion()) {}
 
 void Camera::printParameters(std::ostream& out, const std::string& text) const {
   if(text.size() > 0) {
@@ -68,7 +68,8 @@ bool Camera::isEqualCameraImpl(const Camera& other, const bool verbose) const {
       ((this->intrinsics_ - other.intrinsics_).norm() < 1e-6) &&
       (this->line_delay_nanoseconds_ == other.line_delay_nanoseconds_) &&
       (this->image_width_ == other.image_width_) &&
-      (this->image_height_ == other.image_height_);
+      (this->image_height_ == other.image_height_) &&
+      (this->is_compressed_ == other.is_compressed_);
   if (verbose && !is_same) {
     // clang-format off
     LOG(ERROR) << "Cameras are not the same,"
@@ -76,12 +77,14 @@ bool Camera::isEqualCameraImpl(const Camera& other, const bool verbose) const {
         << this->intrinsics_.transpose() << "\n"
         << this->line_delay_nanoseconds_ << "\n"
         << this->image_width_ << "\n"
-        << this->image_height_
+        << this->image_height_<< "\n"
+        << this->is_compressed_
       << "\ncamera B:\n"
         << other.intrinsics_.transpose() << "\n"
         << other.line_delay_nanoseconds_ << "\n"
         << other.image_width_ << "\n"
-        << other.image_height_;
+        << other.image_height_ << "\n"
+        << this->is_compressed_;
     // clang-format on
   }
 
