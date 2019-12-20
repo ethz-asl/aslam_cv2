@@ -181,10 +181,6 @@ class NCamera : public Sensor {
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;
 
-  aslam::TransformationCovariance T_G_B_fixed_localization_covariance_;
-
-  bool has_T_G_B_fixed_localization_covariance_;
-
   /// Internal consistency checks and initialization.
   void initInternal();
 
@@ -196,6 +192,12 @@ class NCamera : public Sensor {
 
   /// Map from camera id to index.
   std::unordered_map<CameraId, size_t> id_to_index_;
+
+  /// This is a fixed parameter that can be passed in along with the camera
+  /// calibration and it represents the covariance of a visual localization based
+  /// on this camera.
+  TransformationCovariance T_G_B_fixed_localization_covariance_;
+  bool has_T_G_B_fixed_localization_covariance_;
 };
 
 }  // namespace aslam

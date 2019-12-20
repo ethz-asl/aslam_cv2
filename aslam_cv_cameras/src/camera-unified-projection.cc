@@ -345,7 +345,7 @@ bool UnifiedProjectionCamera::isEqualImpl(const Sensor& other, const bool verbos
   }
 
   // Verify that the base members are equal.
-  if (!isEqualCameraImpl(*other_camera)) {
+  if (!isEqualCameraImpl(*other_camera, verbose)) {
     return false;
   }
 

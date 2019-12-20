@@ -91,8 +91,9 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   CHECK(frame_kp1->hasTrackIds());
   CHECK(frame_kp1->hasDescriptors());
   CHECK(frame_kp1->hasRawImage());
-  CHECK_EQ(frame_kp1->getDescriptors().rows(),
-           frame_kp1->getDescriptorSizeBytes());
+  CHECK_EQ(
+      frame_kp1->getDescriptors().rows(),
+      static_cast<int>(frame_kp1->getDescriptorSizeBytes()));
   CHECK_EQ(frame_kp1->getKeypointMeasurements().cols(),
            frame_kp1->getDescriptors().cols());
   CHECK_EQ(camera_.getId(), CHECK_NOTNULL(
@@ -119,7 +120,9 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   predictKeypointsByRotation(frame_k, q_Ckp1_Ck,
                              &predicted_keypoint_positions_kp1,
                              &prediction_success);
-  CHECK_EQ(prediction_success.size(), predicted_keypoint_positions_kp1.cols());
+  CHECK_EQ(
+    static_cast<int>(prediction_success.size()),
+    predicted_keypoint_positions_kp1.cols());
 
   // Match descriptors of frame k with those of frame (k+1).
   GyroTwoFrameMatcher matcher(
@@ -155,7 +158,9 @@ void GyroTracker::lkTracking(
       FrameToFrameMatchesWithScore* matches_kp1_k) {
   CHECK_NOTNULL(frame_kp1);
   CHECK_NOTNULL(matches_kp1_k);
-  CHECK_EQ(prediction_success.size(), predicted_keypoint_positions_kp1.cols());
+  CHECK_EQ(
+    static_cast<int>(prediction_success.size()),
+    predicted_keypoint_positions_kp1.cols());
   CHECK_LE(lk_candidate_indices_k.size(), prediction_success.size());
 
   const int kInitialSizeKp1 = frame_kp1->getTrackIds().size();
@@ -322,11 +327,12 @@ void GyroTracker::computeTrackedMatches(
 void GyroTracker::computeLKCandidates(
     const FrameToFrameMatchesWithScore& matches_kp1_k,
     const FrameStatusTrackLength& status_track_length_k,
-    const VisualFrame& frame_k,
+    const VisualFrame& /*frame_k*/,
     const VisualFrame& frame_kp1,
     std::vector<int>* lk_candidate_indices_k) const {
   CHECK_NOTNULL(lk_candidate_indices_k)->clear();
-  CHECK_EQ(status_track_length_k.size(), track_ids_k_km1_[0].size());
+  CHECK_EQ(
+    static_cast<int>(status_track_length_k.size()), track_ids_k_km1_[0].size());
 
   std::vector<int> unmatched_indices_k;
   computeUnmatchedIndicesOfFrameK(
@@ -361,7 +367,7 @@ void GyroTracker::computeLKCandidates(
   }
 
   const size_t kNumPointsKp1 = frame_kp1.getTrackIds().size();
-  CHECK_EQ(kNumPointsKp1, frame_kp1.getDescriptors().cols());
+  CHECK_EQ(static_cast<int>(kNumPointsKp1), frame_kp1.getDescriptors().cols());
   const size_t kLkNumCandidatesBeforeCutoff =
       indices_detected_and_tracked.size() + indices_lktracked.size();
   const size_t kLkNumMaxCandidates = static_cast<size_t>(
@@ -412,7 +418,7 @@ void GyroTracker::computeUnmatchedIndicesOfFrameK(
     const FrameToFrameMatchesWithScore& matches_kp1_k,
     std::vector<int>* unmatched_indices_k) const {
   CHECK_GT(track_ids_k_km1_.size(), 0u);
-  CHECK_GE(track_ids_k_km1_[0].size(), matches_kp1_k.size());
+  CHECK_GE(track_ids_k_km1_[0].size(), static_cast<int>(matches_kp1_k.size()));
   CHECK_NOTNULL(unmatched_indices_k)->clear();
 
   const size_t kNumPointsK = track_ids_k_km1_[0].size();
