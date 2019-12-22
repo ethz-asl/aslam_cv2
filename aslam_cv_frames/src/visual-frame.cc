@@ -653,7 +653,7 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   frame->swapSemanticObjectDescriptors(&semantic_descriptors);
   
   aslam::FrameId id;
-  id.randomize();
+  generateId(&id);
   frame->setId(id);
   return frame;
 }

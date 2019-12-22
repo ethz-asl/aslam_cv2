@@ -47,7 +47,7 @@ VariableCameraAngle::createCamera() {
   CHECK(camera);
 
   aslam::CameraId cam_id;
-  cam_id.randomize();
+  generateId(&cam_id);
   camera->setId(cam_id);
 
   return camera;
@@ -113,7 +113,7 @@ TEST_P(VariableCameraAngle, MultiPinholeCameraP3pInterface) {
 
   // Create a complete NCamera object.
   aslam::NCameraId cam_id;
-  cam_id.randomize();
+  generateId(&cam_id);
 
   // Cameras.
   std::vector<aslam::Camera::Ptr> cameras;

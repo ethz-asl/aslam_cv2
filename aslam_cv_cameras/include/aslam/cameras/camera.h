@@ -11,6 +11,7 @@
 #include <glog/logging.h>
 
 #include <aslam/common/macros.h>
+#include <aslam/common/sensor.h>
 #include <aslam/common/types.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/cameras/distortion.h>
@@ -93,7 +94,7 @@ struct ProjectionResult {
 ///        homogeneous points. The actual projection is implemented in the derived classes
 ///        for euclidean coordinates only; homogeneous coordinates are support by a conversion.
 ///        The intrinsic parameters are documented in the specialized camera classes.
-class Camera {
+class Camera : public Sensor {
  public:
   ASLAM_POINTER_TYPEDEFS(Camera);
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -102,7 +103,8 @@ class Camera {
 
   enum class Type {
     kPinhole = 0,
-    kUnifiedProjection = 1
+    kUnifiedProjection = 1,
+    kLidar3D = 2,
   };
 
   //////////////////////////////////////////////////////////////
@@ -122,7 +124,7 @@ class Camera {
   /// @param[in] camera_type  CameraType enum value with information which camera
   ///                         model is used by the derived class.
   Camera(const Eigen::VectorXd& intrinsics, aslam::Distortion::UniquePtr& distortion,
-         uint32_t image_width, uint32_t image_height, Type camera_type);
+         const uint32_t image_width, const uint32_t image_height, Type camera_type);
 
   /// \brief Camera base constructor without distortion.
   /// @param[in] intrinsics   Vector containing the intrinsic parameters.
@@ -130,14 +132,15 @@ class Camera {
   /// @param[in] image_height Image height in pixels.
   /// @param[in] camera_type  CameraType enum value with information which camera
   ///                         model is used by the derived class.
-  Camera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height,
-         Type camera_type);
+  Camera(const Eigen::VectorXd& intrinsics, const uint32_t image_width,
+         const uint32_t image_height, Type camera_type);
+
+  Sensor::Ptr cloneAsSensor() const override {
+    return std::dynamic_pointer_cast<Sensor>(std::shared_ptr<Camera>(clone()));
+  }
 
  public:
-  virtual ~Camera() {};
-
-  /// \brief Compare this camera to another camera object.
-  virtual bool operator==(const Camera& other) const;
+  virtual ~Camera() = default;
 
   /// \brief Convenience function to print the state using streams.
   std::ostream& operator<<(std::ostream& out) {
@@ -148,26 +151,35 @@ class Camera {
   /// \brief Clones the camera instance and returns a pointer to the copy.
   virtual aslam::Camera* clone() const = 0;
 
-  /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
-  static std::shared_ptr<Camera> loadFromYaml(const std::string& yaml_file);
-  /// Save this ncamera to a yaml file.
-  bool saveToYaml(const std::string& yaml_file) const;
+  /// Get sensor type as an integer or as a string
+  uint8_t getSensorType() const override {
+    return SensorType::kCamera;
+  }
+
+  std::string getSensorTypeString() const override {
+    return static_cast<std::string>(kCameraIdentifier);
+  }
 
  protected:
   /// Copy constructor for clone operation.
-  Camera(const Camera& other) :
-    line_delay_nanoseconds_(other.line_delay_nanoseconds_),
-    label_(other.label_),
-    id_(other.id_),
-    image_width_(other.image_width_),
-    image_height_(other.image_height_),
-    intrinsics_(other.intrinsics_),
-    camera_type_(other.camera_type_) {
+  Camera(const Camera& other)
+      : Sensor(other),
+        line_delay_nanoseconds_(other.line_delay_nanoseconds_),
+        image_width_(other.image_width_),
+        image_height_(other.image_height_),
+        mask_(other.mask_.clone()),
+        is_compressed_(other.is_compressed_),
+        intrinsics_(other.intrinsics_),
+        camera_type_(other.camera_type_),
+        distortion_(nullptr) {
     CHECK(other.distortion_);
-      distortion_.reset(other.distortion_->clone());
+    distortion_.reset(other.distortion_->clone());
   };
 
   void operator=(const Camera&) = delete;
+
+  /// \brief Compare only the parameters of Camera to the ones of another Camera
+  bool isEqualCameraImpl(const Camera& other, const bool verbose = false) const;
 
   /// @}
 
@@ -175,18 +187,6 @@ class Camera {
   /// \name Information about the camera
   /// @{
  public:
-  /// \brief Get the camera id.
-  const aslam::CameraId& getId() const { return id_; }
-
-  /// \brief Set the camera id.
-  void setId(const aslam::CameraId& id) { id_ = id; }
-
-  /// \brief Get a label for the camera.
-  const std::string& getLabel() const {return label_;}
-
-  /// \brief Set a label for the camera.
-  void setLabel(const std::string& label) {label_ = label;}
-
   /// \brief The width of the image in pixels.
   uint32_t imageWidth() const { return image_width_; }
 
@@ -388,6 +388,23 @@ class Camera {
   int64_t maxTemporalOffsetNanoSeconds() const {
     return this->imageHeight() * line_delay_nanoseconds_;
   }
+  /// @}
+
+  //////////////////////////////////////////////////////////////
+  /// \name Methods to support compressed images.
+  /// @{
+
+  /// \brief Holds whether this camera receives compressed images.
+  /// @return Returns true for compressed images, false otherwise
+  bool hasCompressedImages() const {
+    return is_compressed_;
+  }
+
+  /// \brief Set the whether this camera has compressed images.
+  /// @param[in] is_compressed Compressed images.
+  void setCompressedImages(const bool is_compressed) {
+    is_compressed_ = is_compressed;
+  }
 
   /// @}
 
@@ -473,7 +490,7 @@ class Camera {
   }
 
   /// Function to check whether the given intrinsic parameters are valid for this model.
-  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) = 0;
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) const = 0;
 
   /// @}
 
@@ -526,20 +543,25 @@ class Camera {
   /// @}
 
  private:
-  /// The delay per scanline for a rolling shutter camera in nanoseconds.
-  uint64_t line_delay_nanoseconds_;
-  /// A label for this camera, a name.
-  std::string label_;
-  /// The id of this camera.
-  aslam::CameraId id_;
-  /// The width of the image.
-  const uint32_t image_width_;
-  /// The height of the image.
-  const uint32_t image_height_;
-  /// The image mask.
-  cv::Mat_<uint8_t> mask_;
+  bool isValidImpl() const = 0;
+  void setRandomImpl() = 0;
+  bool isEqualImpl(const Sensor& other, const bool verbose) const = 0;
+
+  bool loadFromYamlNodeImpl(const YAML::Node&) override;
+  void saveToYamlNodeImpl(YAML::Node*) const override;
 
  protected:
+  /// The delay per scanline for a rolling shutter camera in nanoseconds.
+  uint64_t line_delay_nanoseconds_;
+  /// The width of the image.
+  uint32_t image_width_;
+  /// The height of the image.
+  uint32_t image_height_;
+  /// The image mask.
+  cv::Mat_<uint8_t> mask_;
+	/// Has compressed images.
+	bool is_compressed_;
+
   /// Parameter vector for the intrinsic parameters of the model.
   Eigen::VectorXd intrinsics_;
 

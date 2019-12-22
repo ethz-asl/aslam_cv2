@@ -158,8 +158,8 @@ void drawKeyPointsAndMatches(const cv::Mat& image_A,
   for (const cv::DMatch& match_A_B : matches_A_B) {
     const int idx_A = match_A_B.queryIdx;
     const int idx_B = match_A_B.trainIdx;
-    CHECK_LT(idx_A, key_points_A.size());
-    CHECK_LT(idx_B, key_points_B.size());
+    CHECK_LT(idx_A, static_cast<int>(key_points_A.size()));
+    CHECK_LT(idx_B, static_cast<int>(key_points_B.size()));
     const cv::KeyPoint& key_point_A = key_points_A[idx_A];
     const cv::KeyPoint& key_point_B = key_points_B[idx_B];
     matched_keypoint_A.emplace_back(key_point_A);

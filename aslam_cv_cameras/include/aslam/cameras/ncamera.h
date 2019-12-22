@@ -8,8 +8,8 @@
 
 #include <aslam/common/macros.h>
 #include <aslam/common/pose-types.h>
+#include <aslam/common/sensor.h>
 #include <aslam/common/unique-id.h>
-#include <aslam/common/yaml-serialization.h>
 #include <gtest/gtest_prod.h>
 
 namespace sm {
@@ -26,19 +26,19 @@ namespace aslam {
 ///
 /// Coordinate frames involved:
 /// - B  : The body frame of the camera rig
-/// - Ci : A coordinate frame attached to camera i. 
+/// - Ci : A coordinate frame attached to camera i.
 ///
-class NCamera {
+class NCamera : public Sensor {
  public:
   ASLAM_POINTER_TYPEDEFS(NCamera);
-  enum {CLASS_SERIALIZATION_VERSION = 1};
+  enum { CLASS_SERIALIZATION_VERSION = 1 };
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-protected:
+  // protected:
   /// Default constructor builds an empty camera rig.
-  NCamera() = default;
+  NCamera();
 
-public:
+  // public:
   /// \brief initialize from a list of transformations and a list of cameras
   ///
   /// The two lists must be parallel arrays (same size). The transformation
@@ -47,39 +47,59 @@ public:
   /// @param id unique id for this camera rig
   /// @param T_C_B a list of transformations that take points from B to Ci
   /// @param cameras a list cameras
-  /// @param label a human-readable name for this camera rig
-  NCamera(const NCameraId& id,
-      const TransformationVector& T_C_B,
+  /// @param description a human-readable description of this camera rig
+  NCamera(
+      const NCameraId& id, const TransformationVector& T_C_B,
       const std::vector<std::shared_ptr<Camera>>& cameras,
-      const std::string& label);
+      const std::string& description);
+
+  // public:
+  /// \brief initialize from a list of transformations and a list of cameras
+  ///
+  /// The two lists must be parallel arrays (same size). The transformation
+  /// at T_C_B[i] corresponds to the camera at cameras[i].
+  ///
+  /// @param id unique id for this camera rig
+  /// @param T_C_B a list of transformations that take points from B to Ci
+  /// @param T_G_B_fixed_localization_covariance a fixed covariance used for
+  ///        result of visual localizations of a vertex.
+  /// @param cameras a list cameras
+  /// @param description a human-readable description of this camera rig
+  NCamera(
+      const NCameraId& id, const TransformationVector& T_C_B,
+      const aslam::TransformationCovariance&
+          T_G_B_fixed_localization_covariance,
+      const std::vector<std::shared_ptr<Camera>>& cameras,
+      const std::string& description);
 
   /// Initialize from a property tree.
   NCamera(const sm::PropertyTree& propertyTree);
-  ~NCamera() {}
+  virtual ~NCamera() = default;
 
   /// Copy constructor for clone.
   NCamera(const NCamera&);
   void operator=(const NCamera&) = delete;
-  bool operator==(const NCamera& other) const;
 
   /// Methods to clone this instance. All contained camera objects are cloned.
-  /// (Make sure the Camera and NCamera ID's are set to your requirement after cloning!)
-  NCamera* clone() const {
-    return new NCamera(static_cast<NCamera const&>(*this));
-  };
+  NCamera* clone() const;
+  NCamera* cloneWithNewIds() const;
 
   NCamera::Ptr cloneToShared() const {
     return aligned_shared<NCamera>(*this);
   }
 
-  /// Load a camera rig form a yaml file. Returns a nullptr if the loading fails.
-  static NCamera::Ptr loadFromYaml(const std::string& yaml_file);
-  static NCamera::Ptr deserializeFromYaml(
-      const YAML::Node& yaml_node);
+  Sensor::Ptr cloneAsSensor() const override {
+    return std::dynamic_pointer_cast<Sensor>(cloneToShared());
+  }
 
-  /// Save this ncamera to a yaml file.
-  bool saveToYaml(const std::string& yaml_file) const;
-  void serializeToYaml(YAML::Node* yaml_node) const;
+  /// Get sensor type as an integer or as a string
+  uint8_t getSensorType() const override {
+    return SensorType::kNCamera;
+  }
+
+  std::string getSensorTypeString() const override {
+    return static_cast<std::string>(kNCameraIdentifier);
+  }
 
   /// Get the number of cameras.
   size_t getNumCameras() const;
@@ -131,40 +151,38 @@ public:
   /// Does this rig have a camera with this id.
   bool hasCameraWithId(const CameraId& id) const;
 
+  /// Whether the covariance matrix for visual localization has been set
+  bool has_T_G_B_fixed_localization_covariance() const;
+
+  // Get the 6DoF localization covariance matrix
+  bool get_T_G_B_fixed_localization_covariance(
+      aslam::TransformationCovariance* covariance) const;
+
+  // Set the 6Dof localization covariance matrix
+  void set_T_G_B_fixed_localization_covariance(
+      const aslam::TransformationCovariance& covariance);
+
   /// \brief Get the index of the camera with the id.
   /// @returns -1 if the rig doesn't have a camera with this id.
   int getCameraIndex(const CameraId& id) const;
 
-  /// Get the camera id.
-  inline const aslam::NCameraId& getId() const {return id_;}
-
-  /// Set the camera id.
-  inline void setId(const aslam::NCameraId& id) {id_ = id;}
-
-  /// Get a label for the camera.
-  inline const std::string& getLabel() const {return label_;}
-
-  /// Set a label for the camera.
-  inline void setLabel(const std::string& label) {label_ = label;}
-
-  /// Create a test NCamera object for unit testing.
-  static NCamera::Ptr createTestNCamera(size_t num_cameras);
-
-  /// Creates an artificial 4-camera rig in a plane with a camera pointing in
-  /// each direction. (similar to the V-Charge or JanETH camera system)
-  static aslam::NCamera::Ptr createSurroundViewTestNCamera();
-
-  /// Create a copy of this NCamera with all distortion models removed. All internal cameras
-  /// get cloned and new IDs will be assigned to the cloned NCamera and all contained cameras.
+  /// Create a copy of this NCamera with all distortion models removed. All
+  /// internal cameras get cloned and new IDs will be assigned to the cloned
+  /// NCamera and all contained cameras.
   aslam::NCamera::Ptr cloneRigWithoutDistortion() const;
 
-  std::string getComparisonString(const NCamera& other) const;
-private:
+ private:
+  bool isValidImpl() const override;
+
+  void setRandomImpl() override;
+
+  bool isEqualImpl(const Sensor& other, const bool verbose) const override;
+
+  bool loadFromYamlNodeImpl(const YAML::Node&) override;
+  void saveToYamlNodeImpl(YAML::Node*) const override;
+
   /// Internal consistency checks and initialization.
   void initInternal();
-
-  /// A unique id for this camera system.
-  NCameraId id_;
 
   /// The mounting transformations.
   TransformationVector T_C_B_;
@@ -175,10 +193,13 @@ private:
   /// Map from camera id to index.
   std::unordered_map<CameraId, size_t> id_to_index_;
 
-  /// A label for this camera rig, a name.
-  std::string label_;
+  /// This is a fixed parameter that can be passed in along with the camera
+  /// calibration and it represents the covariance of a visual localization based
+  /// on this camera.
+  TransformationCovariance T_G_B_fixed_localization_covariance_;
+  bool has_T_G_B_fixed_localization_covariance_;
 };
 
-} // namespace aslam
+}  // namespace aslam
 
 #endif /* ASLAM_NCAMERA_H_ */

@@ -127,7 +127,7 @@ void eraseIndicesFromContainer(
   CHECK_LE(erase_count, expected_initial_count);
 
   LOG_IF(WARNING, erase_count == expected_initial_count)
-  << "All items will be removed!";
+      << "All items will be removed!";
 
   const size_t remaining_count = expected_initial_count - erase_count;
   ContainerType result;
@@ -136,7 +136,7 @@ void eraseIndicesFromContainer(
   int result_fill_index = 0;
   int container_block_start = 0;
   for (size_t i = 0u; i < ordered_indices_to_erase.size(); ++i) {
-    CHECK_GE(ordered_indices_to_erase[i], container_block_start);
+    CHECK_GE(static_cast<int>(ordered_indices_to_erase[i]), container_block_start);
     const int block_size = ordered_indices_to_erase[i] - container_block_start;
 
     internal::copyMiddle(container_block_start, result_fill_index, block_size,

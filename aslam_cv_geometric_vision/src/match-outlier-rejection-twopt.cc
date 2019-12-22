@@ -1,5 +1,6 @@
+#include "aslam/geometric-vision/match-outlier-rejection-twopt.h"
+
 #include <memory>
-#include <vector>
 
 #include <aslam/common/pose-types.h>
 #include <aslam/frames/visual-frame.h>
@@ -20,36 +21,61 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
     bool fix_random_seed, double ransac_threshold, size_t ransac_max_iterations,
     aslam::FrameToFrameMatchesWithScore* inlier_matches_kp1_k,
     aslam::FrameToFrameMatchesWithScore* outlier_matches_kp1_k) {
-  CHECK_GT(ransac_threshold, 0.0);
-  CHECK_GT(ransac_max_iterations, 0u);
-  inlier_matches_kp1_k->clear();
-  outlier_matches_kp1_k->clear();
-
-  // Handle the case with too few matches to distinguish between out-/inliers.
-  static constexpr size_t kMinKeypointCorrespondences = 6u;
-  if (matches_kp1_k.size() < kMinKeypointCorrespondences) {
-    VLOG(1) << "Too few matches to run RANSAC; Got only "
-            << matches_kp1_k.size() << " matches.";
-    *outlier_matches_kp1_k = matches_kp1_k;
-    return false;
-  }
-
-  opengv::bearingVectors_t bearing_vectors_kp1;
-  opengv::bearingVectors_t bearing_vectors_k;
+    
+  BearingVectors bearing_vectors_kp1;
+  BearingVectors bearing_vectors_k;
 
   aslam::FrameToFrameMatches matches_without_score_kp1_k;
   aslam::convertMatchesWithScoreToMatches<aslam::FrameToFrameMatchWithScore,
-                                          aslam::FrameToFrameMatch>(
-      matches_kp1_k, &matches_without_score_kp1_k);
+      aslam::FrameToFrameMatch>(matches_kp1_k, &matches_without_score_kp1_k);
   aslam::getBearingVectorsFromMatches(frame_kp1, frame_k,
                                       matches_without_score_kp1_k,
                                       &bearing_vectors_kp1, &bearing_vectors_k);
+
+  std::unordered_set<int> inlier_indices;
+  const bool success = rejectOutlierFeatureMatchesTranslationRotationSAC(
+        bearing_vectors_kp1, bearing_vectors_k, q_Ckp1_Ck, fix_random_seed,
+        ransac_threshold, ransac_max_iterations, &inlier_indices);
+
+  // Remove the outliers from the matches list.
+  int match_index = 0;
+  for (const aslam::FrameToFrameMatchWithScore& match : matches_kp1_k) {
+    if (inlier_indices.count(match_index)) {
+      inlier_matches_kp1_k->emplace_back(match);
+    } else {
+      outlier_matches_kp1_k->emplace_back(match);
+    }
+    ++match_index;
+  }
+  CHECK_EQ(inlier_matches_kp1_k->size() + outlier_matches_kp1_k->size(),
+           matches_kp1_k.size());
+  return success;
+}
+
+bool rejectOutlierFeatureMatchesTranslationRotationSAC(
+    const BearingVectors& bearing_vectors_kp1,
+    const BearingVectors& bearing_vectors_k,
+    const aslam::Quaternion& q_Ckp1_Ck, bool fix_random_seed,
+    double ransac_threshold, size_t ransac_max_iterations,
+    std::unordered_set<int>* inlier_indices) {
+  CHECK_GT(ransac_threshold, 0.0);
+  CHECK_GT(ransac_max_iterations, 0u);
+  CHECK_NOTNULL(inlier_indices)->clear();
+  CHECK_EQ(bearing_vectors_kp1.size(), bearing_vectors_kp1.size());
+
+  // Handle the case with too few matches to distinguish between out-/inliers.
+  static constexpr size_t kMinKeypointCorrespondences = 6u;
+  if (bearing_vectors_kp1.size() < kMinKeypointCorrespondences) {
+    VLOG(1) << "Too few matches to run RANSAC.";
+    inlier_indices->clear();  // Treat all as outliers.
+    return false;
+  }
+
   using opengv::relative_pose::CentralRelativeAdapter;
   CentralRelativeAdapter adapter(bearing_vectors_kp1, bearing_vectors_k,
                                  q_Ckp1_Ck.getRotationMatrix());
 
-  typedef opengv::sac_problems::relative_pose::RotationOnlySacProblem
-      RotationOnlySacProblem;
+  typedef opengv::sac_problems::relative_pose::RotationOnlySacProblem RotationOnlySacProblem;
   std::shared_ptr<RotationOnlySacProblem> rotation_sac_problem(
       new RotationOnlySacProblem(adapter, !fix_random_seed));
 
@@ -59,8 +85,7 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
   rotation_ransac.max_iterations_ = ransac_max_iterations;
   rotation_ransac.computeModel();
 
-  typedef opengv::sac_problems::relative_pose::TranslationOnlySacProblem
-      TranslationOnlySacProblem;
+  typedef opengv::sac_problems::relative_pose::TranslationOnlySacProblem TranslationOnlySacProblem;
   std::shared_ptr<TranslationOnlySacProblem> translation_sac_problem(
       new TranslationOnlySacProblem(adapter, !fix_random_seed));
   opengv::sac::Ransac<TranslationOnlySacProblem> translation_ransac;
@@ -75,29 +100,17 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
   // closer to the boundary of the image. On the contrary, rotation only
   // ransac erroneously discards many matches close to the border of the image
   // but it correctly classifies matches in the center of the image.
-  std::unordered_set<int> inlier_indices(rotation_ransac.inliers_.begin(),
-                                         rotation_ransac.inliers_.end());
-  inlier_indices.insert(translation_ransac.inliers_.begin(),
-                        translation_ransac.inliers_.end());
+  inlier_indices->insert(rotation_ransac.inliers_.begin(),
+                         rotation_ransac.inliers_.end());
+  inlier_indices->insert(translation_ransac.inliers_.begin(),
+                         translation_ransac.inliers_.end());
 
-  if (inlier_indices.size() < kMinKeypointCorrespondences) {
+  if (inlier_indices->size() < kMinKeypointCorrespondences) {
     VLOG(1) << "Too few inliers to reliably classify outlier matches.";
-    *outlier_matches_kp1_k = matches_kp1_k;
+    inlier_indices->clear();  // Treat all as outliers.
     return false;
   }
 
-  // Remove the outliers from the matches list.
-  int match_index = 0;
-  for (const aslam::FrameToFrameMatchWithScore& match : matches_kp1_k) {
-    if (inlier_indices.count(match_index)) {
-      inlier_matches_kp1_k->emplace_back(match);
-    } else {
-      outlier_matches_kp1_k->emplace_back(match);
-    }
-    ++match_index;
-  }
-  CHECK_EQ(inlier_matches_kp1_k->size() + outlier_matches_kp1_k->size(),
-           matches_kp1_k.size());
   return true;
 }
 

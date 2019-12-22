@@ -32,10 +32,20 @@ void pickNRandomRigMatches(
 size_t extractMatchesFromTrackIdChannel(const VisualFrame& frame_kp1,
                                         const VisualFrame& frame_k,
                                         FrameToFrameMatches* matches_kp1_kp) {
-  CHECK_NOTNULL(matches_kp1_kp);
-  CHECK_EQ(frame_kp1.getRawCameraGeometry().get(), frame_k.getRawCameraGeometry().get());
+  CHECK_EQ(frame_kp1.getRawCameraGeometry().get(),
+           frame_k.getRawCameraGeometry().get());
   const Eigen::VectorXi& track_ids_kp1 = frame_kp1.getTrackIds();
   const Eigen::VectorXi& track_ids_k = frame_k.getTrackIds();
+
+  return extractMatchesFromTrackIdChannel(
+      track_ids_kp1, track_ids_k, matches_kp1_kp);
+}
+
+
+size_t extractMatchesFromTrackIdChannel(const Eigen::VectorXi& track_ids_kp1,
+                                        const Eigen::VectorXi& track_ids_k,
+                                        FrameToFrameMatches* matches_kp1_kp) {
+  CHECK_NOTNULL(matches_kp1_kp);
 
   // Build trackid <-> keypoint_idx lookup table.
   typedef std::unordered_map<int, size_t> TrackIdKeypointIdxMap;
@@ -47,7 +57,8 @@ size_t extractMatchesFromTrackIdChannel(const VisualFrame& frame_kp1,
       continue;
     track_id_kp1_keypoint_idx_kp1_map.insert(std::make_pair(track_id_kp1, keypoint_idx_kp1));
   }
-  CHECK_LE(track_id_kp1_keypoint_idx_kp1_map.size(), frame_kp1.getNumKeypointMeasurements());
+
+  CHECK_LE(static_cast<int>(track_id_kp1_keypoint_idx_kp1_map.size()), track_ids_kp1.rows());
 
   // Create indices matches vector using the lookup table.
   matches_kp1_kp->clear();
@@ -130,8 +141,9 @@ double getUnrotatedMatchPixelDisparityMedian(
       std::vector<size_t> keypoint_indices_k;
       keypoint_indices_k.reserve(matches_kp1_k[cam_idx].size());
       for (const FrameToFrameMatch& match_kp1_kp : matches_kp1_k[cam_idx]) {
-        CHECK_LT(static_cast<int>(match_kp1_kp.second),
-                 nframe_k.getFrame(cam_idx).getNumKeypointMeasurements());
+        CHECK_LT(
+          match_kp1_kp.second,
+          nframe_k.getFrame(cam_idx).getNumKeypointMeasurements());
         keypoint_indices_k.emplace_back(match_kp1_kp.second);
       }
 
@@ -206,6 +218,7 @@ void getBearingVectorsFromMatches(
             keypoint_indices_k, &success), bearing_vectors_k);
 }
 
+
 void predictKeypointsByRotation(const VisualFrame& frame_k,
                                 const aslam::Quaternion& q_Ckp1_Ck,
                                 Eigen::Matrix2Xd* predicted_keypoints_kp1,
@@ -213,28 +226,43 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
   CHECK_NOTNULL(predicted_keypoints_kp1);
   CHECK_NOTNULL(prediction_success)->clear();
   CHECK(frame_k.hasKeypointMeasurements());
-  if (frame_k.getNumKeypointMeasurements() == 0u) {
+
+  const aslam::Camera& camera =
+      *CHECK_NOTNULL(frame_k.getCameraGeometry().get());
+
+  predictKeypointsByRotation(camera, frame_k.getKeypointMeasurements(),
+                             q_Ckp1_Ck, predicted_keypoints_kp1,
+                             prediction_success);
+}
+
+void predictKeypointsByRotation(
+    const aslam::Camera& camera, const Eigen::Matrix2Xd keypoints_k,
+    const aslam::Quaternion& q_Ckp1_Ck,
+    Eigen::Matrix2Xd* predicted_keypoints_kp1,
+    std::vector<unsigned char>* prediction_success) {
+  CHECK_NOTNULL(predicted_keypoints_kp1);
+  CHECK_NOTNULL(prediction_success)->clear();
+  if (keypoints_k.cols() == 0u) {
     return;
   }
-  const aslam::Camera& camera = *CHECK_NOTNULL(frame_k.getCameraGeometry().get());
 
   // Early exit for identity rotation.
   if (std::abs(q_Ckp1_Ck.w() - 1.0) < 1e-8) {
-    *predicted_keypoints_kp1 = frame_k.getKeypointMeasurements();
+    *predicted_keypoints_kp1 = keypoints_k;
     prediction_success->resize(predicted_keypoints_kp1->size(), true);
   }
 
   // Backproject the keypoints to bearing vectors.
   Eigen::Matrix3Xd bearing_vectors_k;
-  camera.backProject3Vectorized(frame_k.getKeypointMeasurements(), &bearing_vectors_k,
+  camera.backProject3Vectorized(keypoints_k, &bearing_vectors_k,
                                 prediction_success);
   CHECK_EQ(static_cast<int>(prediction_success->size()), bearing_vectors_k.cols());
-  CHECK_EQ(static_cast<int>(frame_k.getNumKeypointMeasurements()), bearing_vectors_k.cols());
+  CHECK_EQ(keypoints_k.cols(), bearing_vectors_k.cols());
 
-  // Rotate the bearing vectors into the frame_kp1 coordinates.
+  // Rotate the bearing vectors into the keypoints_kp1 coordinates.
   const Eigen::Matrix3Xd bearing_vectors_kp1 = q_Ckp1_Ck.rotateVectorized(bearing_vectors_k);
 
-  // Project the bearing vectors to the frame_kp1.
+  // Project the bearing vectors to the keypoints_kp1.
   std::vector<ProjectionResult> projection_results;
   camera.project3Vectorized(bearing_vectors_kp1, predicted_keypoints_kp1, &projection_results);
   CHECK_EQ(predicted_keypoints_kp1->cols(), bearing_vectors_k.cols());
@@ -242,7 +270,6 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
 
   // Set the success based on the backprojection and projection results and output the initial
   // unrotated keypoint for failed predictions.
-  const Eigen::Matrix2Xd& keypoints_k = frame_k.getKeypointMeasurements();
   CHECK_EQ(keypoints_k.cols(), predicted_keypoints_kp1->cols());
 
   for (size_t idx = 0u; idx < projection_results.size(); ++idx) {

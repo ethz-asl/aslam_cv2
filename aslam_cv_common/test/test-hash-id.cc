@@ -5,6 +5,7 @@
 
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/hash-id.h>
+#include <aslam/common/unique-id.h>
 
 using namespace aslam;
 
@@ -18,7 +19,7 @@ TEST(HashIdTest, Validity) {
   EXPECT_FALSE(a.isValid());
   EXPECT_FALSE(b.isValid());
   EXPECT_EQ(a,b);
-  a.randomize();
+  generateId(&a);
   EXPECT_TRUE(a.isValid());
 }
 

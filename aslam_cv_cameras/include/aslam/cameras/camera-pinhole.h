@@ -4,13 +4,14 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/common/crtp-clone.h>
-#include <aslam/common/types.h>
 #include <aslam/common/macros.h>
+#include <aslam/common/types.h>
 
 namespace aslam {
 
 // Forward declarations.
 class MappedUndistorter;
+class NCamera;
 
 /// \class PinholeCamera
 /// \brief An implementation of the pinhole camera model with (optional) distortion.
@@ -24,7 +25,10 @@ class MappedUndistorter;
 ///  Intrinsic parameters ordering: fu, fv, cu, cv
 ///  Reference: http://en.wikipedia.org/wiki/Pinhole_camera_model
 class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
+  friend class NCamera;
+
   enum { kNumOfParams = 4 };
+
  public:
   ASLAM_POINTER_TYPEDEFS(PinholeCamera);
 
@@ -45,11 +49,10 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// \name Constructors/destructors and operators
   /// @{
 
- protected:
+ public:
   /// \brief Empty constructor for serialization interface.
   PinholeCamera();
 
- public:
   /// Copy constructor for clone operation.
   PinholeCamera(const PinholeCamera& other) = default;
   void operator=(const PinholeCamera&) = delete;
@@ -94,9 +97,6 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
                 uint32_t image_width, uint32_t image_height);
 
   virtual ~PinholeCamera() {};
-
-  /// \brief Compare this camera to another camera object.
-  virtual bool operator==(const Camera& other) const;
 
   /// \brief Convenience function to print the state using streams.
   friend std::ostream& operator<<(std::ostream& out, const PinholeCamera& camera);
@@ -187,37 +187,6 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// \brief Get a set of border rays
   void getBorderRays(Eigen::MatrixXd& rays) const;
 
-  /// \brief Create a test camera object for unit testing.
-  template<typename DistortionType>
-  static PinholeCamera::Ptr createTestCamera() {
-    aslam::Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
-    aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 300, 320, 240, 640, 480, distortion));
-    aslam::CameraId id;
-    id.randomize();
-    camera->setId(id);
-    return camera;
-  }
-
-  /// \brief Create a test camera object for intrinsics unit testing. (with null distortion)
-    template<typename DistortionType>
-    static PinholeCamera::Ptr createIntrinsicsTestCamera() {
-      aslam::Distortion::UniquePtr zeros = DistortionType::createZeroTestDistortion();
-      aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 400, 319.5, 239.5, 640, 480, zeros));
-      aslam::CameraId id;
-      id.randomize();
-      camera->setId(id);
-      return camera;
-    }
-
-  /// \brief Create a test camera object for unit testing. (without distortion)
-  static PinholeCamera::Ptr createTestCamera() {
-    aslam::PinholeCamera::Ptr camera(new PinholeCamera(400, 300, 320, 240, 640, 480));
-    aslam::CameraId id;
-    id.randomize();
-    camera->setId(id);
-    return camera;
-  }
-
   /// @}
 
  public:
@@ -256,8 +225,9 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   /// Static function that checks whether the given intrinsic parameters are valid for this model.
   static bool areParametersValid(const Eigen::VectorXd& parameters);
 
-  /// Function to check whether the given intrinsic parameters are valid for this model.
-  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics);
+  /// Function to check whether the given intrinsic parameters are valid for
+  /// this model.
+  virtual bool intrinsicsValid(const Eigen::VectorXd& intrinsics) const;
 
   /// Print the internal parameters of the camera in a human-readable form
   /// Print to the ostream that is passed in. The text is extra
@@ -266,9 +236,35 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
 
   /// @}
 
+  /// \brief Create a test camera object for unit testing.
+  template <typename DistortionType>
+  static PinholeCamera::Ptr createTestCamera() {
+    return PinholeCamera::Ptr(
+        std::move(createTestCameraUnique<DistortionType>()));
+  }
+
+  /// \brief Create a test camera object for unit testing.
+  template <typename DistortionType>
+  static PinholeCamera::UniquePtr createTestCameraUnique() {
+    Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
+    PinholeCamera::UniquePtr camera(
+        new PinholeCamera(400, 300, 320, 240, 640, 480, distortion));
+    CameraId id;
+    generateId(&id);
+    camera->setId(id);
+    return std::move(camera);
+  }
+
+  /// \brief Create a test camera object for unit testing. (without distortion)
+  static PinholeCamera::Ptr createTestCamera();
+
  private:
   /// \brief Minimal depth for a valid projection.
   static const double kMinimumDepth;
+
+  bool isValidImpl() const override;
+  void setRandomImpl() override;
+  bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 };
 
 }  // namespace aslam
