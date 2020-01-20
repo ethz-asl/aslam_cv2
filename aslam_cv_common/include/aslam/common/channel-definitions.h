@@ -37,4 +37,7 @@ DECLARE_CHANNEL(RAW_IMAGE, cv::Mat)
 
 DECLARE_CHANNEL(CV_MAT, cv::Mat)
 
+// 3D keypoint coordinates in Lidar Frame
+DECLARE_CHANNEL(KEYPOINT_VECTORS, Eigen::Matrix3Xd)
+
 #endif  // ASLAM_CV_COMMON_CHANNEL_DEFINITIONS_H_

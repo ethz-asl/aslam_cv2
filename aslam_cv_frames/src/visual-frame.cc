@@ -71,6 +71,9 @@ bool VisualFrame::hasTrackIds() const {
 bool VisualFrame::hasRawImage() const {
   return aslam::channels::has_RAW_IMAGE_Channel(channels_);
 }
+bool VisualFrame::hasKeypointVectors() const {
+  return aslam::channels::has_KEYPOINT_VECTORS_Channel(channels_);
+}
 
 const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
   return aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
@@ -95,6 +98,9 @@ const Eigen::VectorXi& VisualFrame::getTrackIds() const {
 }
 const cv::Mat& VisualFrame::getRawImage() const {
   return aslam::channels::get_RAW_IMAGE_Data(channels_);
+}
+const Eigen::Matrix3Xd& VisualFrame::getKeypointVectors() const {
+  return aslam::channels::get_KEYPOINT_VECTORS_Data(channels_);
 }
 
 void VisualFrame::releaseRawImage() {
@@ -140,6 +146,12 @@ cv::Mat* VisualFrame::getRawImageMutable() {
   cv::Mat& image =
       aslam::channels::get_RAW_IMAGE_Data(channels_);
   return &image;
+}
+
+Eigen::Matrix3Xd* VisualFrame::getKeypointVectorsMutable() {
+  Eigen::Matrix3Xd& vector =
+      aslam::channels::get_KEYPOINT_VECTORS_Data(channels_);
+  return &vector;
 }
 
 const Eigen::Block<Eigen::Matrix2Xd, 2, 1>
@@ -267,6 +279,16 @@ void VisualFrame::setRawImage(const cv::Mat& image_new) {
   image = image_new;
 }
 
+void VisualFrame::setKeypointVectors(const Eigen::Matrix3Xd& vectors_new) {
+  if (!aslam::channels::has_KEYPOINT_VECTORS_Channel(channels_)) {
+    aslam::channels::add_KEYPOINT_VECTORS_Channel(&channels_);
+  }
+  Eigen::Matrix3Xd vectors =
+      aslam::channels::get_KEYPOINT_VECTORS_Data(channels_);
+  vectors = vectors_new;
+}
+
+
 void VisualFrame::swapKeypointMeasurements(Eigen::Matrix2Xd* keypoints_new) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENTS_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_MEASUREMENTS_Channel(&channels_);
@@ -322,6 +344,14 @@ void VisualFrame::swapTrackIds(Eigen::VectorXi* track_ids_new) {
   }
   Eigen::VectorXi& track_ids = aslam::channels::get_TRACK_IDS_Data(channels_);
   track_ids.swap(*track_ids_new);
+}
+
+void VisualFrame::swapKeypointVectors(Eigen::Matrix3Xd* vectors_new) {
+  if (!aslam::channels::has_KEYPOINT_VECTORS_Channel(channels_)) {
+    aslam::channels::add_KEYPOINT_VECTORS_Channel(&channels_);
+  }
+  Eigen::Matrix3Xd& vectors = aslam::channels::get_KEYPOINT_VECTORS_Data(channels_);
+  vectors.swap(*vectors_new);
 }
 
 void VisualFrame::clearKeypointChannels() {
