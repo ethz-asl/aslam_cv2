@@ -202,6 +202,10 @@ class VisualFrame {
   /// Return the track id at index. (-1: not tracked)
   int getTrackId(size_t index) const;
 
+    /// Return block expression of the keypoint vector pointed to by index.
+  const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getKeypointVector(
+      size_t index) const;
+
   /// Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
 

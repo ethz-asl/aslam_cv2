@@ -198,6 +198,14 @@ int VisualFrame::getTrackId(size_t index) const {
   return track_ids.coeff(index, 0);
 }
 
+const Eigen::Block<Eigen::Matrix3Xd, 3, 1>
+VisualFrame::getKeypointVector(size_t index) const {
+  Eigen::Matrix3Xd& keypoints =
+      aslam::channels::get_KEYPOINT_VECTORS_Data(channels_);
+  CHECK_LT(static_cast<int>(index), keypoints.cols());
+  return keypoints.block<3, 1>(0, index);
+}
+
 void VisualFrame::setKeypointMeasurements(
     const Eigen::Matrix2Xd& keypoints_new) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENTS_Channel(channels_)) {
@@ -283,7 +291,7 @@ void VisualFrame::setKeypointVectors(const Eigen::Matrix3Xd& vectors_new) {
   if (!aslam::channels::has_KEYPOINT_VECTORS_Channel(channels_)) {
     aslam::channels::add_KEYPOINT_VECTORS_Channel(&channels_);
   }
-  Eigen::Matrix3Xd vectors =
+  Eigen::Matrix3Xd& vectors =
       aslam::channels::get_KEYPOINT_VECTORS_Data(channels_);
   vectors = vectors_new;
 }
