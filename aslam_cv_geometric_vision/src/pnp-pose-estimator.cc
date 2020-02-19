@@ -273,5 +273,91 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
   return ransac_success;
 }
 
+bool PnpPoseEstimator::absoluteMultiPoseRansacLidarFeatures(
+    const Eigen::Matrix3Xd& measurements,
+    const std::vector<int>& measurement_camera_indices,
+    const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
+    int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
+    aslam::Transformation* T_G_I, std::vector<int>* inliers,
+    std::vector<double>* inlier_distances_to_model, int* num_iters) {
+  CHECK_NOTNULL(T_G_I);
+  CHECK_NOTNULL(inliers);
+  CHECK_NOTNULL(inlier_distances_to_model);
+  CHECK_NOTNULL(num_iters);
+  CHECK_EQ(measurements.cols(), G_landmark_positions.cols());
+  CHECK_EQ(measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
+
+  // Fill in camera information from NCamera.
+  // Rotation matrix for each camera.
+  opengv::rotations_t cam_rotations;
+  opengv::translations_t cam_translations;
+
+  const int num_cameras = ncamera_ptr->getNumCameras();
+
+  cam_rotations.resize(num_cameras);
+  cam_translations.resize(num_cameras);
+
+  for (int camera_index = 0; camera_index < num_cameras; ++camera_index) {
+    const aslam::Transformation& T_C_B = ncamera_ptr->get_T_C_B(camera_index);
+    // OpenGV requires body frame -> camera transformation.
+    aslam::Transformation T_B_C = T_C_B.inverse();
+    cam_rotations[camera_index] = T_B_C.getRotationMatrix();
+    cam_translations[camera_index] = T_B_C.getPosition();
+  }
+  opengv::points_t points;
+  opengv::bearingVectors_t bearing_vectors;
+  points.resize(measurements.cols());
+  bearing_vectors.resize(measurements.cols());
+  for (int i = 0; i < measurements.cols(); ++i) {
+    // Figure out which camera this corresponds to, and reproject it in the
+    // correct camera.
+
+    bearing_vectors[i] = measurements.col(i);
+    bearing_vectors[i].normalize();
+    points[i] = G_landmark_positions.col(i);
+  }
+  // Basically same as the Central, except measurement_camera_indices, which
+  // assigns a camera index to each bearing_vector, and cam_offsets and
+  // cam_rotations, which describe the position and orientation of the cameras
+  // with respect to the body frame.
+  opengv::absolute_pose::NoncentralAbsoluteAdapter adapter(
+      bearing_vectors, measurement_camera_indices, points, cam_translations,
+      cam_rotations);
+  opengv::sac::Ransac<
+      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem> ransac;
+  std::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
+      absposeproblem_ptr(
+          new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(adapter,
+              opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem::GP3P,
+              random_seed_));
+  ransac.sac_model_ = absposeproblem_ptr;
+  ransac.threshold_ = ransac_threshold;
+  ransac.max_iterations_ = max_ransac_iters;
+  bool ransac_success = ransac.computeModel();
+  CHECK_EQ(ransac.inliers_.size(), ransac.inlier_distances_to_model_.size());
+
+  if (ransac_success) {
+    // Optional nonlinear model refinement over all inliers.
+    Eigen::Matrix<double, 3, 4> final_model = ransac.model_coefficients_;
+    if (run_nonlinear_refinement_) {
+      absposeproblem_ptr->optimizeModelCoefficients(ransac.inliers_,
+                                                    ransac.model_coefficients_,
+                                                    final_model);
+    }
+
+    // Set result.
+    T_G_I->getPosition() = final_model.rightCols(1);
+    Eigen::Matrix<double, 3, 3> R_G_I(final_model.leftCols(3));
+    T_G_I->getRotation() = aslam::Quaternion(R_G_I);
+  }
+
+  *inliers = ransac.inliers_;
+  *inlier_distances_to_model = ransac.inlier_distances_to_model_;
+  *num_iters = ransac.iterations_;
+
+  return ransac_success;
+}
+
+
 }  // namespace geometric_vision
 }  // namespace aslam
