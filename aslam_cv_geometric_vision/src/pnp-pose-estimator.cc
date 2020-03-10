@@ -50,13 +50,13 @@ bool PnpPoseEstimator::absolutePoseRansacPinholeCam(
     }
     default:
       LOG(FATAL) << "Unknown camera type. The given camera is neither of type "
-          "Pinhole nor UnifiedProjection.";
+                    "Pinhole nor UnifiedProjection.";
   }
 
   // Assuming the mean of lens focal lengths is the best estimate here.
-  return absolutePoseRansac(measurements, G_landmark_positions,
-                            ransac_threshold, max_ransac_iters, camera_ptr,
-                            T_G_C, inliers, num_iters);
+  return absolutePoseRansac(
+      measurements, G_landmark_positions, ransac_threshold, max_ransac_iters,
+      camera_ptr, T_G_C, inliers, num_iters);
 }
 
 bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
@@ -67,8 +67,9 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
     aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
   std::vector<double> inlier_distances_to_model;
   return absoluteMultiPoseRansacPinholeCam(
-      measurements, measurement_camera_indices, G_landmark_positions, pixel_sigma, max_ransac_iters,
-      ncamera_ptr, T_G_I, inliers, &inlier_distances_to_model, num_iters);
+      measurements, measurement_camera_indices, G_landmark_positions,
+      pixel_sigma, max_ransac_iters, ncamera_ptr, T_G_I, inliers,
+      &inlier_distances_to_model, num_iters);
 }
 
 bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
@@ -83,7 +84,8 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
   CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
   CHECK_EQ(measurements.cols(), G_landmark_positions.cols());
-  CHECK_EQ(measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
+  CHECK_EQ(
+      measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
 
   const size_t num_cameras = ncamera_ptr->getNumCameras();
   double focal_length = 0;
@@ -104,17 +106,17 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
         break;
       }
       case aslam::Camera::Type::kUnifiedProjection: {
-        const double fu =
-            camera_ptr->getParameters()(UnifiedProjectionCamera::Parameters::kFu);
-        const double fv =
-            camera_ptr->getParameters()(UnifiedProjectionCamera::Parameters::kFv);
+        const double fu = camera_ptr->getParameters()(
+            UnifiedProjectionCamera::Parameters::kFu);
+        const double fv = camera_ptr->getParameters()(
+            UnifiedProjectionCamera::Parameters::kFv);
 
         focal_length += (fu + fv);
         break;
       }
       default:
         LOG(FATAL) << "Unknown camera type.  The given camera is neither of "
-            "type Pinhole nor UnifiedProjection.";
+                      "type Pinhole nor UnifiedProjection.";
     }
   }
 
@@ -122,10 +124,10 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
 
   const double ransac_threshold = 1.0 - cos(atan(pixel_sigma / focal_length));
 
-  return absoluteMultiPoseRansac(measurements, measurement_camera_indices,
-                                 G_landmark_positions, ransac_threshold,
-                                 max_ransac_iters, ncamera_ptr, T_G_I, inliers,
-                                 inlier_distances_to_model, num_iters);
+  return absoluteMultiPoseRansac(
+      measurements, measurement_camera_indices, G_landmark_positions,
+      ransac_threshold, max_ransac_iters, ncamera_ptr, T_G_I, inliers,
+      inlier_distances_to_model, num_iters);
 }
 
 bool PnpPoseEstimator::absolutePoseRansac(
@@ -148,15 +150,17 @@ bool PnpPoseEstimator::absolutePoseRansac(
     points[i] = G_landmark_positions.col(i);
   }
 
-  opengv::absolute_pose::CentralAbsoluteAdapter adapter(bearing_vectors,
-                                                        points);
+  opengv::absolute_pose::CentralAbsoluteAdapter adapter(
+      bearing_vectors, points);
   opengv::sac::Ransac<
-      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem> ransac;
+      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
+      ransac;
   std::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
       absposeproblem_ptr(
           new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(
-              adapter, opengv::sac_problems::absolute_pose::
-                           AbsolutePoseSacProblem::KNEIP,
+              adapter,
+              opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem::
+                  KNEIP,
               random_seed_));
   ransac.sac_model_ = absposeproblem_ptr;
   ransac.threshold_ = ransac_threshold;
@@ -182,8 +186,9 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
     aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
   std::vector<double> inlier_distances_to_model;
   return absoluteMultiPoseRansac(
-      measurements, measurement_camera_indices, G_landmark_positions, ransac_threshold,
-      max_ransac_iters, ncamera_ptr, T_G_I, inliers, &inlier_distances_to_model, num_iters);
+      measurements, measurement_camera_indices, G_landmark_positions,
+      ransac_threshold, max_ransac_iters, ncamera_ptr, T_G_I, inliers,
+      &inlier_distances_to_model, num_iters);
 }
 
 bool PnpPoseEstimator::absoluteMultiPoseRansac(
@@ -198,7 +203,8 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
   CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
   CHECK_EQ(measurements.cols(), G_landmark_positions.cols());
-  CHECK_EQ(measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
+  CHECK_EQ(
+      measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
 
   // Fill in camera information from NCamera.
   // Rotation matrix for each camera.
@@ -239,10 +245,12 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
       bearing_vectors, measurement_camera_indices, points, cam_translations,
       cam_rotations);
   opengv::sac::Ransac<
-      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem> ransac;
+      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
+      ransac;
   std::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
       absposeproblem_ptr(
-          new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(adapter,
+          new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(
+              adapter,
               opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem::GP3P,
               random_seed_));
   ransac.sac_model_ = absposeproblem_ptr;
@@ -255,9 +263,8 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
     // Optional nonlinear model refinement over all inliers.
     Eigen::Matrix<double, 3, 4> final_model = ransac.model_coefficients_;
     if (run_nonlinear_refinement_) {
-      absposeproblem_ptr->optimizeModelCoefficients(ransac.inliers_,
-                                                    ransac.model_coefficients_,
-                                                    final_model);
+      absposeproblem_ptr->optimizeModelCoefficients(
+          ransac.inliers_, ransac.model_coefficients_, final_model);
     }
 
     // Set result.
@@ -284,80 +291,136 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacLidarFeatures(
   CHECK_NOTNULL(inliers);
   CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
-  CHECK_EQ(measurements.cols(), G_landmark_positions.cols());
-  CHECK_EQ(measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
-
-  // Fill in camera information from NCamera.
-  // Rotation matrix for each camera.
-  opengv::rotations_t cam_rotations;
-  opengv::translations_t cam_translations;
-
-  const int num_cameras = ncamera_ptr->getNumCameras();
-
-  cam_rotations.resize(num_cameras);
-  cam_translations.resize(num_cameras);
-
-  for (int camera_index = 0; camera_index < num_cameras; ++camera_index) {
-    const aslam::Transformation& T_C_B = ncamera_ptr->get_T_C_B(camera_index);
-    // OpenGV requires body frame -> camera transformation.
-    aslam::Transformation T_B_C = T_C_B.inverse();
-    cam_rotations[camera_index] = T_B_C.getRotationMatrix();
-    cam_translations[camera_index] = T_B_C.getPosition();
+  if (measurements.size() < 6) {
+    return false;
   }
-  opengv::points_t points;
-  opengv::bearingVectors_t bearing_vectors;
-  points.resize(measurements.cols());
-  bearing_vectors.resize(measurements.cols());
+
+  const aslam::Transformation& T_C_B = ncamera_ptr->get_T_C_B(0);
+  aslam::Transformation T_B_C = T_C_B.inverse();
+  Eigen::Matrix3d R_B_C = T_B_C.getRotationMatrix();
+  Eigen::Vector3d p_B_C = T_B_C.getPosition();
+
+  std::vector<Eigen::Vector3d> landmarks;
+  std::vector<Eigen::Vector3d> observations;
+
   for (int i = 0; i < measurements.cols(); ++i) {
-    // Figure out which camera this corresponds to, and reproject it in the
-    // correct camera.
-
-    bearing_vectors[i] = measurements.col(i);
-    bearing_vectors[i].normalize();
-    points[i] = G_landmark_positions.col(i);
+    landmarks.push_back(G_landmark_positions.col(i));
+    observations.push_back(R_B_C * measurements.col(i) + p_B_C);
   }
-  // Basically same as the Central, except measurement_camera_indices, which
-  // assigns a camera index to each bearing_vector, and cam_offsets and
-  // cam_rotations, which describe the position and orientation of the cameras
-  // with respect to the body frame.
-  opengv::absolute_pose::NoncentralAbsoluteAdapter adapter(
-      bearing_vectors, measurement_camera_indices, points, cam_translations,
-      cam_rotations);
-  opengv::sac::Ransac<
-      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem> ransac;
-  std::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
-      absposeproblem_ptr(
-          new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(adapter,
-              opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem::GP3P,
-              random_seed_));
-  ransac.sac_model_ = absposeproblem_ptr;
-  ransac.threshold_ = ransac_threshold;
-  ransac.max_iterations_ = max_ransac_iters;
-  bool ransac_success = ransac.computeModel();
-  CHECK_EQ(ransac.inliers_.size(), ransac.inlier_distances_to_model_.size());
+  VLOG(0) << "-----";
+  Eigen::Matrix3d ransac_rotation_matrix;
+  Eigen::Vector3d ransac_translation;
+  std::vector<size_t> ransac_outliers;
+  std::vector<size_t> ransac_inliers;
 
-  if (ransac_success) {
-    // Optional nonlinear model refinement over all inliers.
-    Eigen::Matrix<double, 3, 4> final_model = ransac.model_coefficients_;
-    if (run_nonlinear_refinement_) {
-      absposeproblem_ptr->optimizeModelCoefficients(ransac.inliers_,
-                                                    ransac.model_coefficients_,
-                                                    final_model);
+  RansacTransformationFor3DPoints(
+      landmarks, observations, &ransac_rotation_matrix, &ransac_translation,
+      &ransac_inliers, &ransac_outliers, ransac_threshold, max_ransac_iters);
+
+  // Set result.
+  T_G_I->getPosition() = ransac_translation;
+  T_G_I->getRotationMatrix() = ransac_rotation_matrix;
+  for (auto inlier : ransac_inliers) {
+    inliers->push_back(inlier);
+    inlier_distances_to_model->push_back(
+        (ransac_rotation_matrix * landmarks[inlier] + ransac_translation -
+         observations[inlier])
+            .norm());
+  }
+  *num_iters = max_ransac_iters;
+
+  return true;
+}
+void PnpPoseEstimator::RansacTransformationFor3DPoints(
+    std::vector<Eigen::Vector3d> point_set_1,
+    std::vector<Eigen::Vector3d> point_set_2,
+    Eigen::Matrix3d* best_rotation_matrix, Eigen::Vector3d* best_translation,
+    std::vector<size_t>* best_inliers, std::vector<size_t>* best_outliers,
+    double ransac_threshold, int ransac_max_iterations) {
+  CHECK_GT(ransac_threshold, 0.0);
+  CHECK_GT(ransac_max_iterations, 0u);
+  CHECK_EQ(point_set_1.size(), point_set_2.size());
+  CHECK_GT(point_set_2.size(), 6u);
+  for (int j = 0; j < ransac_max_iterations; ++j) {
+    // Generate 3 random indeces for Ransac
+    std::vector<int> ransac_indeces(6);
+
+    ransac_indeces[0] = rand() % point_set_2.size();
+    while (ransac_indeces[0] == ransac_indeces[1]) {
+      ransac_indeces[1] = rand() % point_set_2.size();
+    }
+    while (ransac_indeces[0] == ransac_indeces[2] ||
+           ransac_indeces[1] == ransac_indeces[2]) {
+      ransac_indeces[2] = rand() % point_set_2.size();
+    }
+    while (ransac_indeces[0] == ransac_indeces[3] ||
+           ransac_indeces[1] == ransac_indeces[3] ||
+           ransac_indeces[2] == ransac_indeces[3]) {
+      ransac_indeces[3] = rand() % point_set_2.size();
+    }
+    while (ransac_indeces[0] == ransac_indeces[4] ||
+           ransac_indeces[1] == ransac_indeces[4] ||
+           ransac_indeces[2] == ransac_indeces[4] ||
+           ransac_indeces[3] == ransac_indeces[4]) {
+      ransac_indeces[4] = rand() % point_set_2.size();
+    }
+    while (ransac_indeces[0] == ransac_indeces[5] ||
+           ransac_indeces[1] == ransac_indeces[5] ||
+           ransac_indeces[2] == ransac_indeces[5] ||
+           ransac_indeces[3] == ransac_indeces[5] ||
+           ransac_indeces[4] == ransac_indeces[5]) {
+      ransac_indeces[5] = rand() % point_set_2.size();
     }
 
-    // Set result.
-    T_G_I->getPosition() = final_model.rightCols(1);
-    Eigen::Matrix<double, 3, 3> R_G_I(final_model.leftCols(3));
-    T_G_I->getRotation() = aslam::Quaternion(R_G_I);
+    // Generate transformation matrix
+    // https://igl.ethz.ch/projects/ARAP/svd_rot.pdf
+    Eigen::Matrix3d X, Y;
+    X << point_set_1[ransac_indeces[0]], point_set_1[ransac_indeces[1]],
+        point_set_1[ransac_indeces[2]], point_set_1[ransac_indeces[3]],
+        point_set_1[ransac_indeces[4]], point_set_1[ransac_indeces[5]];
+    Y << point_set_2[ransac_indeces[0]], point_set_2[ransac_indeces[1]],
+        point_set_2[ransac_indeces[2]], point_set_2[ransac_indeces[3]],
+        point_set_2[ransac_indeces[4]], point_set_2[ransac_indeces[5]];
+
+    Eigen::VectorXd X_mean = X.rowwise().mean();
+    Eigen::VectorXd Y_mean = Y.rowwise().mean();
+
+    X.colwise() -= X_mean;
+    Y.colwise() -= Y_mean;
+
+    Eigen::Matrix3d S = X * Y.transpose();
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(
+        S, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Eigen::Matrix3d reflection_handler = Eigen::Matrix3d::Identity();
+    reflection_handler(2, 2) =
+        (svd.matrixV() * svd.matrixU().transpose()).determinant();
+    Eigen::Matrix3d R =
+        svd.matrixV() * reflection_handler * svd.matrixU().transpose();
+    Eigen::Vector3d t = Y_mean - R * X_mean;
+
+    // Calculate Outliers for Transformation
+    std::vector<size_t> outliers;
+    std::vector<size_t> inliers;
+
+    for (int i = 0; i < point_set_1.size(); ++i) {
+      Eigen::Vector3d transformation_error =
+          R * point_set_1[i] + t - point_set_2[i];
+      if (transformation_error.norm() / point_set_2[i].norm() >
+          ransac_threshold) {
+        outliers.push_back(i);
+      } else {
+        inliers.push_back(i);
+      }
+    }
+    // Compare results
+    if (inliers.size() > best_inliers->size()) {
+      *best_outliers = outliers;
+      *best_rotation_matrix = R;
+      *best_translation = t;
+      *best_inliers = inliers;
+    }
   }
-
-  *inliers = ransac.inliers_;
-  *inlier_distances_to_model = ransac.inlier_distances_to_model_;
-  *num_iters = ransac.iterations_;
-
-  return ransac_success;
 }
-
 
 }  // namespace geometric_vision
 }  // namespace aslam

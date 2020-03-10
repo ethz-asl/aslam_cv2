@@ -3,6 +3,7 @@ project(aslam_cv_geometric_vision)
 
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
+add_compile_options(-w)
 
 #############
 # LIBRARIES #
