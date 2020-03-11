@@ -274,14 +274,12 @@ TriangulationResult triangulateFeatureTrack(
 
   const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
   CHECK(camera);
-  const aslam::CameraId track_camera_id = camera->getId();
   aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverse();
 
   // Get the normalized measurements for all observations on the track.
   Aligned<std::vector, Eigen::Vector2d> normalized_measurements;
   normalized_measurements.reserve(track_length);
 
-  size_t index = 0u;
   for (const aslam::KeypointIdentifier& keypoint_on_track : track.getKeypointIdentifiers()) {
     const aslam::Camera::ConstPtr& camera = keypoint_on_track.getCamera();
     CHECK(camera) << "Missing camera for keypoint on track with frame index: "
@@ -325,7 +323,6 @@ TriangulationResult fastTriangulateFeatureTrack(
 
   const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
   CHECK(camera);
-  const aslam::CameraId track_camera_id = camera->getId();
   aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverse();
 
   Eigen::Matrix3Xd G_bearing_vectors;
@@ -364,4 +361,3 @@ TriangulationResult fastTriangulateFeatureTrack(
 }
 
 }  // namespace aslam
-
