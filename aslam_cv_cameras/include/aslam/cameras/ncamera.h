@@ -61,11 +61,14 @@ class NCamera : public Sensor {
   ///
   /// @param id unique id for this camera rig
   /// @param T_C_B a list of transformations that take points from B to Ci
+  /// @param T_G_B_fixed_localization_covariance a fixed covariance used for
+  ///        result of visual localizations of a vertex.
   /// @param cameras a list cameras
   /// @param description a human-readable description of this camera rig
   NCamera(
       const NCameraId& id, const TransformationVector& T_C_B,
-      const aslam::TransformationCovariance& localization_covariance,
+      const aslam::TransformationCovariance&
+          T_G_B_fixed_localization_covariance,
       const std::vector<std::shared_ptr<Camera>>& cameras,
       const std::string& description);
 
@@ -149,13 +152,15 @@ class NCamera : public Sensor {
   bool hasCameraWithId(const CameraId& id) const;
 
   /// Whether the covariance matrix for visual localization has been set
-  bool hasFixedLocalizationCovariance() const;
+  bool has_T_G_B_fixed_localization_covariance() const;
 
   // Get the 6DoF localization covariance matrix
-  bool getFixedLocalizationCovariance(aslam::TransformationCovariance *covariance) const;
+  bool get_T_G_B_fixed_localization_covariance(
+      aslam::TransformationCovariance* covariance) const;
 
   // Set the 6Dof localization covariance matrix
-  void setFixedLocalizationCovariance(const aslam::TransformationCovariance& covariance);
+  void set_T_G_B_fixed_localization_covariance(
+      const aslam::TransformationCovariance& covariance);
 
   /// \brief Get the index of the camera with the id.
   /// @returns -1 if the rig doesn't have a camera with this id.
@@ -176,10 +181,6 @@ class NCamera : public Sensor {
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;
 
-  aslam::TransformationCovariance fixed_localization_covariance_;
-
-  bool has_fixed_localization_covariance_;
-
   /// Internal consistency checks and initialization.
   void initInternal();
 
@@ -191,6 +192,12 @@ class NCamera : public Sensor {
 
   /// Map from camera id to index.
   std::unordered_map<CameraId, size_t> id_to_index_;
+
+  /// This is a fixed parameter that can be passed in along with the camera
+  /// calibration and it represents the covariance of a visual localization based
+  /// on this camera.
+  TransformationCovariance T_G_B_fixed_localization_covariance_;
+  bool has_T_G_B_fixed_localization_covariance_;
 };
 
 }  // namespace aslam

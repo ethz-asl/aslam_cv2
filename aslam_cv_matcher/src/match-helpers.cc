@@ -58,7 +58,7 @@ size_t extractMatchesFromTrackIdChannel(const Eigen::VectorXi& track_ids_kp1,
     track_id_kp1_keypoint_idx_kp1_map.insert(std::make_pair(track_id_kp1, keypoint_idx_kp1));
   }
 
-  CHECK_LE(track_id_kp1_keypoint_idx_kp1_map.size(), track_ids_kp1.rows());
+  CHECK_LE(static_cast<int>(track_id_kp1_keypoint_idx_kp1_map.size()), track_ids_kp1.rows());
 
   // Create indices matches vector using the lookup table.
   matches_kp1_kp->clear();
@@ -141,8 +141,9 @@ double getUnrotatedMatchPixelDisparityMedian(
       std::vector<size_t> keypoint_indices_k;
       keypoint_indices_k.reserve(matches_kp1_k[cam_idx].size());
       for (const FrameToFrameMatch& match_kp1_kp : matches_kp1_k[cam_idx]) {
-        CHECK_LT(static_cast<int>(match_kp1_kp.second),
-                 nframe_k.getFrame(cam_idx).getNumKeypointMeasurements());
+        CHECK_LT(
+          match_kp1_kp.second,
+          nframe_k.getFrame(cam_idx).getNumKeypointMeasurements());
         keypoint_indices_k.emplace_back(match_kp1_kp.second);
       }
 

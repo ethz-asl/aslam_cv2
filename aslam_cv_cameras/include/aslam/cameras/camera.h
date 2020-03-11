@@ -103,7 +103,8 @@ class Camera : public Sensor {
 
   enum class Type {
     kPinhole = 0,
-    kUnifiedProjection = 1
+    kUnifiedProjection = 1,
+    kLidar3D = 2,
   };
 
   //////////////////////////////////////////////////////////////
@@ -161,22 +162,28 @@ class Camera : public Sensor {
 
  protected:
   /// Copy constructor for clone operation.
-  Camera(const Camera& other) :
-    Sensor(other),
-    line_delay_nanoseconds_(other.line_delay_nanoseconds_),
-    image_width_(other.image_width_),
-    image_height_(other.image_height_),
-    intrinsics_(other.intrinsics_),
-    camera_type_(other.camera_type_), 
-    is_compressed_(other.is_compressed_) {
-      CHECK(other.distortion_);
-      distortion_.reset(other.distortion_->clone());
+  Camera(const Camera& other)
+      : Sensor(other),
+        line_delay_nanoseconds_(other.line_delay_nanoseconds_),
+        image_width_(other.image_width_),
+        image_height_(other.image_height_),
+        mask_(other.mask_.clone()),
+        is_compressed_(other.is_compressed_),
+        intrinsics_(other.intrinsics_),
+        camera_type_(other.camera_type_),
+        distortion_(nullptr) {
+    CHECK(other.distortion_);
+    distortion_.reset(other.distortion_->clone());
   };
 
   void operator=(const Camera&) = delete;
 
   /// \brief Compare only the parameters of Camera to the ones of another Camera
+<<<<<<< HEAD
   bool isEqualCameraImpl(const Camera& other, const bool verbose) const;
+=======
+  bool isEqualCameraImpl(const Camera& other, const bool verbose = false) const;
+>>>>>>> master
 
   /// @}
 
@@ -386,7 +393,7 @@ class Camera : public Sensor {
     return this->imageHeight() * line_delay_nanoseconds_;
   }
   /// @}
-	
+
   //////////////////////////////////////////////////////////////
   /// \name Methods to support compressed images.
   /// @{

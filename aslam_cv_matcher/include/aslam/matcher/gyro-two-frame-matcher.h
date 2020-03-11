@@ -214,8 +214,8 @@ CHECK_GT(window_half_side_length_px, 0);
   CHECK_LE(LUT_index_top, LUT_index_bottom);
   CHECK_GE(LUT_index_bottom, 0);
   CHECK_GE(LUT_index_top, 0);
-  CHECK_LT(LUT_index_top, kImageHeight);
-  CHECK_LT(LUT_index_bottom, kImageHeight);
+  CHECK_LT(LUT_index_top, static_cast<int>(kImageHeight));
+  CHECK_LT(LUT_index_bottom, static_cast<int>(kImageHeight));
 }
 
 inline int GyroTwoFrameMatcher::clamp(
