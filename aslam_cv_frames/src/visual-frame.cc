@@ -86,6 +86,9 @@ bool VisualFrame::hasSemanticObjectTrackIds() const {
 bool VisualFrame::hasRawImage() const {
   return aslam::channels::has_RAW_IMAGE_Channel(channels_);
 }
+bool VisualFrame::hasColorImage() const {
+  return aslam::channels::has_COLOR_IMAGE_Channel(channels_);
+}
 
 const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
   return aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
@@ -126,9 +129,15 @@ const Eigen::VectorXi& VisualFrame::getSemanticObjectTrackIds() const {
 const cv::Mat& VisualFrame::getRawImage() const {
   return aslam::channels::get_RAW_IMAGE_Data(channels_);
 }
+const cv::Mat& VisualFrame::getColorImage() const {
+  return aslam::channels::get_COLOR_IMAGE_Data(channels_);
+}
 
 void VisualFrame::releaseRawImage() {
   aslam::channels::remove_RAW_IMAGE_Channel(&channels_);
+}
+void VisualFrame::releaseColorImage() {
+  aslam::channels::remove_COLOR_IMAGE_Channel(&channels_);
 }
 
 Eigen::Matrix2Xd* VisualFrame::getKeypointMeasurementsMutable() {
@@ -194,6 +203,11 @@ Eigen::VectorXi* VisualFrame::getSemanticObjectTrackIdsMutable() {
 cv::Mat* VisualFrame::getRawImageMutable() {
   cv::Mat& image =
       aslam::channels::get_RAW_IMAGE_Data(channels_);
+  return &image;
+}
+cv::Mat* VisualFrame::getColorImageMutable() {
+  cv::Mat& image =
+      aslam::channels::get_COLOR_IMAGE_Data(channels_);
   return &image;
 }
 
@@ -407,6 +421,15 @@ void VisualFrame::setRawImage(const cv::Mat& image_new) {
       aslam::channels::get_RAW_IMAGE_Data(channels_);
   image = image_new;
 }
+void VisualFrame::setColorImage(const cv::Mat& image_new) {
+  if (!aslam::channels::has_COLOR_IMAGE_Channel(channels_)) {
+    aslam::channels::add_COLOR_IMAGE_Channel(&channels_);
+  }
+  cv::Mat& image =
+      aslam::channels::get_COLOR_IMAGE_Data(channels_);
+  image = image_new;
+}
+
 
 void VisualFrame::swapKeypointMeasurements(Eigen::Matrix2Xd* keypoints_new) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENTS_Channel(channels_)) {
@@ -651,7 +674,7 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   frame->swapSemanticObjectClassIds(&semantic_object_class_ids);
   aslam::VisualFrame::SemanticObjectDescriptorsT semantic_descriptors = aslam::VisualFrame::SemanticObjectDescriptorsT::Zero(4096, 0);
   frame->swapSemanticObjectDescriptors(&semantic_descriptors);
-  
+
   aslam::FrameId id;
   generateId(&id);
   frame->setId(id);

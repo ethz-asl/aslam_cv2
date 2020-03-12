@@ -166,6 +166,9 @@ class VisualFrame  {
   /// The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
 
+  /// The color image stored in a frame.
+  const cv::Mat& getColorImage() const;
+
   /// Release the raw image. Only if the cv::Mat reference count is 1 the memory will be freed.
   void releaseRawImage();
 
@@ -197,7 +200,7 @@ class VisualFrame  {
 
   /// A pointer to the semantic object measurements, can be used to swap in new data.
   Eigen::Matrix4Xd* getSemanticObjectMeasurementsMutable();
-  
+
   /// A pointer to the semantic object measurement uncertainties, can be used to swap in new data.
   Eigen::VectorXd* getSemanticObjectMeasurementUncertaintiesMutable();
 
@@ -212,6 +215,9 @@ class VisualFrame  {
 
   /// A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
+
+  /// A pointer to the color image, can be used to swap in new data.
+  cv::Mat* getColorImageMutable();
 
   template<typename CHANNEL_DATA_TYPE>
   CHANNEL_DATA_TYPE* getChannelDataMutable(const std::string& channel) const {
@@ -305,6 +311,11 @@ class VisualFrame  {
   ///        This is a shallow copy by default. Please clone the image if it
   ///        should be owned by the VisualFrame.
   void setRawImage(const cv::Mat& image);
+
+  /// Replace (copy) the internal color image by the passed ones.
+  ///        This is a shallow copy by default. Please clone the image if it
+  ///        should be owned by the VisualFrame.
+  void setColorImage(const cv::Mat& image);
 
   template<typename CHANNEL_DATA_TYPE>
   void setChannelData(const std::string& channel,

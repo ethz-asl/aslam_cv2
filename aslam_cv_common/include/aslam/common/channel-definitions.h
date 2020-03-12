@@ -38,8 +38,8 @@ DECLARE_CHANNEL(TRACK_IDS, Eigen::VectorXi)
 /// to access the semantic measurements with visual keypoints index.
 
 /// Parameters of bounding boxes from detectors in pixel coordinates
-/// This channel is organized as one col per box and the values 
-/// are in the order of centroid_col, centroid_row, bb width, bb height 
+/// This channel is organized as one col per box and the values
+/// are in the order of centroid_col, centroid_row, bb width, bb height
 DECLARE_CHANNEL(SEMANTIC_OBJECT_MEASUREMENTS, Eigen::Matrix4Xd)
 
 /// Semantic object measurement uncertainy from the detector
@@ -57,11 +57,14 @@ DECLARE_CHANNEL(SEMANTIC_OBJECT_DESCRIPTORS,
 
 /// Semantic object measurement track ids
 /// (cols are object track ids)
-/// The value of -1 is stored if not the measurement is not tracked 
+/// The value of -1 is stored if not the measurement is not tracked
 DECLARE_CHANNEL(SEMANTIC_OBJECT_TRACK_IDS, Eigen::VectorXi)
 
 /// The raw image.
 DECLARE_CHANNEL(RAW_IMAGE, cv::Mat)
+
+/// The color image.
+DECLARE_CHANNEL(COLOR_IMAGE, cv::Mat)
 
 DECLARE_CHANNEL(CV_MAT, cv::Mat)
 
