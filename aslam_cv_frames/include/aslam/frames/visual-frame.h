@@ -104,6 +104,9 @@ class VisualFrame  {
   /// Is there a raw image stored in this frame?
   bool hasRawImage() const;
 
+  /// Is there a raw image stored in this frame?
+  bool hasColorImage() const;
+
   /// Is a certain channel stored in this frame?
   bool hasChannel(const std::string& channel) const {
     return aslam::channels::hasChannel(channel, channels_);
@@ -171,6 +174,9 @@ class VisualFrame  {
 
   /// Release the raw image. Only if the cv::Mat reference count is 1 the memory will be freed.
   void releaseRawImage();
+
+  /// Release the raw image. Only if the cv::Mat reference count is 1 the memory will be freed.
+  void releaseColorImage();
 
   template<typename CHANNEL_DATA_TYPE>
   const CHANNEL_DATA_TYPE& getChannelData(const std::string& channel) const {

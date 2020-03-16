@@ -150,7 +150,7 @@ const aslam::VisualFrame::SemanticObjectDescriptorsT& data_2 =
 EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 0));
 EXPECT_EQ(&data_2, frame.getSemanticObjectDescriptorsMutable());
 for (int i = 0; i < data.cols(); ++i) {
-  const Eigen::MatrixXf::ColXpr data = frame.getSemanticObjectDescriptor(i);  
+  const Eigen::MatrixXf::ColXpr data = frame.getSemanticObjectDescriptor(i);
   EXPECT_EQ(data_2.col(i), data);
 }
 }
@@ -241,6 +241,10 @@ TEST(Frame, SetGetImage) {
   frame.setRawImage(data);
   const cv::Mat& data_2 = frame.getRawImage();
   EXPECT_TRUE(gtest_catkin::ImagesEqual(data, data_2));
+
+  frame.setColorImage(data);
+  const cv::Mat& data_2 = frame.getColorImage();
+  EXPECT_TRUE(gtest_catkin::ImagesEqual(data, data_2));
 }
 
 TEST(Frame, CopyConstructor) {
@@ -281,11 +285,16 @@ TEST(Frame, CopyConstructor) {
   frame.setSemanticObjectClassIds(sem_class_ids);
   Eigen::VectorXi sem_track_ids = Eigen::VectorXi::Random(1, 10);
   frame.setSemanticObjectTrackIds(sem_track_ids);
-  
+
   // Set image.
   cv::Mat image = cv::Mat(3, 2, CV_8UC1);
   cv::randu(image, cv::Scalar::all(0), cv::Scalar::all(255));
   frame.setRawImage(image);
+
+  // Set color image.
+  cv::Mat color_image = cv::Mat(3, 2, CV_8UC3);
+  cv::randu(color_image, cv::Scalar::all(0), cv::Scalar::all(255));
+  frame.setColorImage(color_image);
 
   // Clone and compare.
   aslam::VisualFrame frame_cloned(frame);
@@ -305,9 +314,10 @@ TEST(Frame, CopyConstructor) {
   EIGEN_MATRIX_EQUAL(sem_uncertainties, frame_cloned.getSemanticObjectMeasurementUncertainties());
   EIGEN_MATRIX_EQUAL(sem_descriptors, frame_cloned.getSemanticObjectDescriptors());
   EIGEN_MATRIX_EQUAL(sem_class_ids, frame_cloned.getSemanticObjectClassIds());
-  EIGEN_MATRIX_EQUAL(sem_track_ids, frame_cloned.getSemanticObjectTrackIds());  
+  EIGEN_MATRIX_EQUAL(sem_track_ids, frame_cloned.getSemanticObjectTrackIds());
 
   EXPECT_NEAR_OPENCV(image, frame_cloned.getRawImage(), 0);
+  EXPECT_NEAR_OPENCV(image, frame_cloned.getColorImage(), 0);
 
   EXPECT_TRUE(frame == frame_cloned);
 }
@@ -335,8 +345,8 @@ TEST(Frame, getNormalizedBearingVectors) {
   keypoint_indices.emplace_back(kNumKeypoints - 1);  // This is the invalid keypoint.
 
   std::vector<unsigned char> projection_success;
-  Eigen::Matrix3Xd bearing_vectors = frame->getNormalizedBearingVectors(keypoint_indices,
-                                                                        &projection_success);
+  Eigen::Matrix3Xd bearing_vectors =
+      frame->getNormalizedBearingVectors(keypoint_indices, &projection_success);
 
   // Check by manually calculating the normalized bearing vectors.
   const size_t num_bearing_vectors = static_cast<size_t>(bearing_vectors.cols());

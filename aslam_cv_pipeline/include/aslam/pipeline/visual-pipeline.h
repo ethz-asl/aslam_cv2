@@ -60,8 +60,9 @@ public:
   ///
   /// \param[in] image          The image data.
   /// \param[in] timestamp      The time in integer nanoseconds.
+  /// \param[in] encoding       The encoding of the input image.
   /// \returns                  The visual frame built from the image data.
-  VisualFrame::Ptr processImage(const cv::Mat& image, int64_t timestamp) const;
+  VisualFrame::Ptr processImage(const cv::Mat& image, int64_t timestamp, const std::string& encoding) const;
 
   /// \brief Get the input camera that corresponds to the image
   ///        passed in to processImage().

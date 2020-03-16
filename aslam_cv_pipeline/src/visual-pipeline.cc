@@ -5,6 +5,9 @@
 #include <aslam/pipeline/undistorter.h>
 
 #include <opencv2/core/core.hpp>
+#include <sensor_msgs/image_encodings.h>
+
+DECLARE_bool(map_builder_save_color_image_as_resources);
 
 namespace aslam {
 
@@ -26,7 +29,7 @@ VisualPipeline::VisualPipeline(std::unique_ptr<Undistorter>& preprocessing, bool
 }
 
 std::shared_ptr<VisualFrame> VisualPipeline::processImage(const cv::Mat& raw_image,
-                                                          int64_t timestamp) const {
+                                                          int64_t timestamp, const std::string& encoding) const {
   CHECK_EQ(input_camera_->imageWidth(), static_cast<size_t>(raw_image.cols));
   CHECK_EQ(input_camera_->imageHeight(), static_cast<size_t>(raw_image.rows));
 
@@ -38,6 +41,19 @@ std::shared_ptr<VisualFrame> VisualPipeline::processImage(const cv::Mat& raw_ima
   FrameId id;
   generateId(&id);
   frame->setId(id);
+
+  if(FLAGS_map_builder_save_color_image_as_resources) {
+    // Check if raw_image needs to be greyscaled and if color image is saved.
+    if(encoding != sensor_msgs::image_encodings::MONO8 && encoding != sensor_msgs::image_encodings::MONO16) {
+      VLOG(1) << "Recieved color image with encoding " << encoding;
+      cv::Mat color_image = raw_image.clone();
+      cv::cvtColor(raw_image, raw_image, cv::COLOR_BGR2GRAY);
+      // The setting copy_images_ has no effect as the images are always copied.
+      frame->setColorImage(color_image);
+    }
+  } else {
+    CHECK_EQ(encoding, sensor_msgs::image_encodings::MONO8);
+  }
   if(copy_images_) {
     frame->setRawImage(raw_image.clone());
   } else {

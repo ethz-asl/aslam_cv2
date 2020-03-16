@@ -61,7 +61,7 @@ void VisualNPipeline::shutdown() {
 
 bool VisualNPipeline::processImageBlockingIfFull(
     size_t camera_index, const cv::Mat& image, int64_t timestamp,
-    size_t max_queue_size) {
+    size_t max_queue_size, const std::string& encoding) {
   std::unique_lock<std::mutex> lock(mutex_);
   while (!shutdown_) {
     if (completed_.size() >= max_queue_size) {
@@ -70,7 +70,7 @@ bool VisualNPipeline::processImageBlockingIfFull(
         continue;
       }
     }
-    processImageImpl(camera_index, image, timestamp);
+    processImageImpl(camera_index, image, timestamp, encoding);
     return true;
   }
   return false;
@@ -78,7 +78,7 @@ bool VisualNPipeline::processImageBlockingIfFull(
 
 bool VisualNPipeline::processImageNonBlockingDroppingOldestNFrameIfFull(
     size_t camera_index, const cv::Mat &image, int64_t timestamp,
-    size_t max_output_queue_size) {
+    size_t max_output_queue_size, const std::string& encoding) {
   CHECK_GE(max_output_queue_size, 1u);
 
   bool oldest_dropped = false;
@@ -88,7 +88,7 @@ bool VisualNPipeline::processImageNonBlockingDroppingOldestNFrameIfFull(
     condition_not_full_.notify_all();
     oldest_dropped = true;
   }
-  processImageImpl(camera_index, image, timestamp);
+  processImageImpl(camera_index, image, timestamp, encoding);
   return oldest_dropped;
 }
 
@@ -112,9 +112,9 @@ bool VisualNPipeline::getNextBlocking(std::shared_ptr<VisualNFrame>* nframe) {
 }
 
 void VisualNPipeline::processImage(
-    size_t camera_index, const cv::Mat& image, int64_t timestamp) {
+    size_t camera_index, const cv::Mat& image, int64_t timestamp, const std::string& encoding) {
   thread_pool_->enqueue(&VisualNPipeline::work, this, camera_index, image,
-                        timestamp);
+                        timestamp, encoding);
 }
 
 size_t VisualNPipeline::getNumFramesComplete() const {
@@ -142,9 +142,9 @@ std::shared_ptr<VisualNFrame> VisualNPipeline::getNextImpl() {
 }
 
 void VisualNPipeline::processImageImpl(
-    size_t camera_index, const cv::Mat& image, int64_t timestamp) {
+    size_t camera_index, const cv::Mat& image, int64_t timestamp,  const std::string& encoding) {
   thread_pool_->enqueue(&VisualNPipeline::work, this, camera_index, image,
-                        timestamp);
+                        timestamp, encoding);
 }
 
 std::shared_ptr<VisualNFrame> VisualNPipeline::getLatestAndClear() {
@@ -213,10 +213,10 @@ size_t VisualNPipeline::getNumFramesProcessing() const {
 }
 
 void VisualNPipeline::work(size_t camera_index, const cv::Mat& image,
-                           int64_t timestamp_nanoseconds) {
+                           int64_t timestamp_nanoseconds, const std::string& encoding) {
   CHECK_LE(camera_index, pipelines_.size());
   std::shared_ptr<VisualFrame> frame;
-  frame = pipelines_[camera_index]->processImage(image, timestamp_nanoseconds);
+  frame = pipelines_[camera_index]->processImage(image, timestamp_nanoseconds, encoding);
 
   /// Create an iterator into the processing queue.
   std::map<int64_t, std::shared_ptr<VisualNFrame>>::iterator proc_it;
