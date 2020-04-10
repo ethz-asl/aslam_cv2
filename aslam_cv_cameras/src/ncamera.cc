@@ -419,7 +419,7 @@ bool NCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
           other_ncamera->T_C_B_[i].getTransformationMatrix())
              .cwiseAbs()
              .maxCoeff() < common::macros::kEpsilon);
-    if (verbose) {
+    if (verbose && !is_equal) {
       LOG(ERROR) << "Camera at idx " << i << " is not the same:"
                  << "\n\tsame camera object: " << is_same_camera
                  << "\n\tsame extrinsics:    " << has_same_camera_extrinsics;
