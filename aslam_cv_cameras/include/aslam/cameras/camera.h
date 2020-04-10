@@ -441,7 +441,8 @@ class Camera : public Sensor {
   /// @param[in] keypoint Keypoint to which the delay should be calculated.
   /// @return Time elapsed between the first row of the image and the
   ///         keypoint in nanoseconds.
-  virtual int64_t temporalOffsetNanoSeconds(const Eigen::Vector2d& keypoint) const {
+  virtual int64_t rollingShutterDelayNanoSeconds(
+      const Eigen::Vector2d& keypoint) const {
     // Don't check validity. This allows points to wander in and out
     // of the frame during optimization
     return static_cast<int64_t>(keypoint(1)) * line_delay_nanoseconds_;
@@ -451,7 +452,7 @@ class Camera : public Sensor {
   /// the
   ///        last row of the image. For a global shutter camera, this can return
   ///        0.
-  virtual int64_t maxTemporalOffsetNanoSeconds() const {
+  virtual int64_t maxRollingShutterDelayNanoSeconds() const {
     return this->imageHeight() * line_delay_nanoseconds_;
   }
 
@@ -464,10 +465,7 @@ class Camera : public Sensor {
     return 1u;
   }
 
-  enum class LineDelayMode: uint8_t {
-    kColumns = 0,
-    kRows = 1
-  };
+  enum class LineDelayMode : uint8_t { kColumns = 0, kRows = 1 };
 
   /// \brief Returns which orientation the rolling shutter effect is occuring.
   virtual LineDelayMode getLineDelayMode() const {

@@ -253,7 +253,8 @@ class Camera3DLidar : public aslam::Cloneable<Camera, Camera3DLidar> {
   /// @param[in] keypoint Keypoint to which the delay should be calculated.
   /// @return Time elapsed between the first row of the image and the
   ///         keypoint in nanoseconds.
-  int64_t temporalOffsetNanoSeconds(const Eigen::Vector2d& keypoint) const {
+  int64_t rollingShutterDelayNanoSeconds(
+      const Eigen::Vector2d& keypoint) const {
     // Don't check validity. This allows points to wander in and out
     // of the frame during optimization
     return static_cast<int64_t>(keypoint(0)) * line_delay_nanoseconds_;
@@ -262,7 +263,7 @@ class Camera3DLidar : public aslam::Cloneable<Camera, Camera3DLidar> {
   /// \brief The amount of time elapsed between the first row of the image and
   /// the last row of the image. For a global shutter camera, this can return
   /// 0.
-  int64_t maxTemporalOffsetNanoSeconds() const {
+  int64_t rollingShutterDelayNanoSeconds() const {
     return this->imageWidth() * line_delay_nanoseconds_;
   }
 
