@@ -248,6 +248,39 @@ class Camera3DLidar : public aslam::Cloneable<Camera, Camera3DLidar> {
     return std::move(camera);
   }
 
+  /// \brief The amount of time elapsed between the first row of the image and
+  /// the keypoint. For a global shutter camera, this can return Duration(0).
+  /// @param[in] keypoint Keypoint to which the delay should be calculated.
+  /// @return Time elapsed between the first row of the image and the
+  ///         keypoint in nanoseconds.
+  int64_t rollingShutterDelayNanoSeconds(
+      const Eigen::Vector2d& keypoint) const {
+    // Don't check validity. This allows points to wander in and out
+    // of the frame during optimization
+    return static_cast<int64_t>(keypoint(0)) * line_delay_nanoseconds_;
+  }
+
+  /// \brief The amount of time elapsed between the first row of the image and
+  /// the last row of the image. For a global shutter camera, this can return
+  /// 0.
+  int64_t rollingShutterDelayNanoSeconds() const {
+    return this->imageWidth() * line_delay_nanoseconds_;
+  }
+
+  /// \brief returns the number of lines, this is either the number of columns
+  /// or rows or 1 in case of a global shutter camera.
+  uint32_t getNumberOfLines() const {
+    if (line_delay_nanoseconds_ > 0) {
+      return this->imageWidth();
+    }
+    return 1u;
+  }
+
+  /// \brief Returns which orientation the rolling shutter effect is occuring.
+  LineDelayMode getLineDelayMode() const {
+    return LineDelayMode::kColumns;
+  }
+
  private:
   /// \brief Minimal depth for a valid projection.
   static const double kSquaredMinimumDepth;

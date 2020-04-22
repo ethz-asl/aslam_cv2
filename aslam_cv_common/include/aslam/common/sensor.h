@@ -52,6 +52,7 @@ class Sensor : public YamlFileSerializable {
   // Set and get the sensor id.
   void setId(const SensorId& id);
   const SensorId& getId() const {
+    CHECK(id_.isValid());
     return id_;
   }
 
