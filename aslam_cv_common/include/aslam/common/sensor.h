@@ -50,7 +50,10 @@ class Sensor : public YamlFileSerializable {
   virtual Sensor::Ptr cloneAsSensor() const = 0;
 
   // Set and get the sensor id.
-  void setId(const SensorId& id);
+  void setId(const SensorId& id) {
+    CHECK(id.isValid());
+    id_ = id;
+  }
   const SensorId& getId() const {
     CHECK(id_.isValid());
     return id_;
@@ -65,7 +68,9 @@ class Sensor : public YamlFileSerializable {
   }
 
   // Set and get the description
-  void setDescription(const std::string& description);
+  void setDescription(const std::string& description) {
+    description_ = description;
+  }
   const std::string& getDescription() const {
     return description_;
   }
