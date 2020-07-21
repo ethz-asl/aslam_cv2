@@ -220,6 +220,16 @@ class Camera : public Sensor {
     return image_height_;
   }
 
+  /// \brief Set the width of the image in pixels.
+  void setImageWidth(uint32_t image_width) {
+    image_width_ = image_width;
+  }
+
+  /// \brief Set the height of the image in pixels.
+  void setImageHeight(uint32_t image_height) {
+    image_height_ = image_height;
+  }
+
   /// \brief Print the internal parameters of the camera in a human-readable
   /// form Print to the ostream that is passed in. The text is extra text used
   /// by the calling function to distinguish cameras.

@@ -22,15 +22,6 @@ Sensor::Sensor(
   CHECK(id.isValid());
 }
 
-void Sensor::setId(const SensorId& id) {
-  CHECK(id.isValid());
-  id_ = id;
-}
-
-void Sensor::setDescription(const std::string& description) {
-  description_ = description;
-}
-
 bool Sensor::isValid() const {
   if (!id_.isValid()) {
     LOG(ERROR) << "Invalid sensor id.";
