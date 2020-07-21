@@ -42,26 +42,32 @@ NCamera* NCamera::cloneWithNewIds() const {
   return new_ncamera;
 }
 
-NCamera::NCamera() : has_fixed_localization_covariance_(false) {}
+NCamera::NCamera()
+    : T_G_B_fixed_localization_covariance_(TransformationCovariance::Zero()),
+      has_T_G_B_fixed_localization_covariance_(false) {}
 
 NCamera::NCamera(
     const NCameraId& id, const TransformationVector& T_C_B,
     const std::vector<Camera::Ptr>& cameras, const std::string& description)
-    : Sensor(id, std::string(), description), T_C_B_(T_C_B), cameras_(cameras), has_fixed_localization_covariance_(false) {
+    : Sensor(id, std::string(), description),
+      T_C_B_(T_C_B),
+      cameras_(cameras),
+      T_G_B_fixed_localization_covariance_(TransformationCovariance::Zero()),
+      has_T_G_B_fixed_localization_covariance_(false) {
   CHECK(id.isValid());
   initInternal();
 }
 
 NCamera::NCamera(
     const NCameraId& id, const TransformationVector& T_C_B,
-    const aslam::TransformationCovariance& localization_covariance,
+    const aslam::TransformationCovariance& T_G_B_fixed_localization_covariance,
     const std::vector<Camera::Ptr>& cameras, const std::string& description)
     : Sensor(id, std::string(), description),
       T_C_B_(T_C_B),
-      fixed_localization_covariance_(localization_covariance),
-      cameras_(cameras) {
+      cameras_(cameras),
+      T_G_B_fixed_localization_covariance_(T_G_B_fixed_localization_covariance),
+      has_T_G_B_fixed_localization_covariance_(true) {
   CHECK(id.isValid());
-  has_fixed_localization_covariance_ = true;
   initInternal();
 }
 
@@ -73,8 +79,10 @@ NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
 NCamera::NCamera(const NCamera& other)
     : Sensor(other),
       T_C_B_(other.T_C_B_),
-      has_fixed_localization_covariance_(other.has_fixed_localization_covariance_),
-      fixed_localization_covariance_(other.fixed_localization_covariance_) {
+      T_G_B_fixed_localization_covariance_(
+          other.T_G_B_fixed_localization_covariance_),
+      has_T_G_B_fixed_localization_covariance_(
+          other.has_T_G_B_fixed_localization_covariance_) {
   // Clone all contained cameras.
   for (size_t idx = 0u; idx < other.getNumCameras(); ++idx) {
     cameras_.emplace_back(other.getCamera(idx).clone());
@@ -91,8 +99,9 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
 
   if (yaml_node["T_G_B_fixed_covariance"]) {
     CHECK(YAML::safeGet(
-        yaml_node, "T_G_B_fixed_covariance", &fixed_localization_covariance_));
-    has_fixed_localization_covariance_ = true;
+        yaml_node, "T_G_B_fixed_covariance",
+        &T_G_B_fixed_localization_covariance_));
+    has_T_G_B_fixed_localization_covariance_ = true;
   }
 
   // Parse the cameras.
@@ -171,9 +180,8 @@ void NCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
 
   YAML::Node cameras_node;
 
-  if (has_fixed_localization_covariance_) {
-    YAML::Node localization_covariance_node;
-    node["T_G_B_fixed_covariance"] = fixed_localization_covariance_;
+  if (has_T_G_B_fixed_localization_covariance_) {
+    node["T_G_B_fixed_covariance"] = T_G_B_fixed_localization_covariance_;
   }
 
   size_t num_cameras = numCameras();
@@ -288,24 +296,24 @@ bool NCamera::hasCameraWithId(const CameraId& id) const {
   return id_to_index_.find(id) != id_to_index_.end();
 }
 
-bool NCamera::hasFixedLocalizationCovariance() const {
-  return has_fixed_localization_covariance_;
+bool NCamera::has_T_G_B_fixed_localization_covariance() const {
+  return has_T_G_B_fixed_localization_covariance_;
 }
 
-bool NCamera::getFixedLocalizationCovariance(
-    aslam::TransformationCovariance *covariance) const {
-  if (has_fixed_localization_covariance_) {
+bool NCamera::get_T_G_B_fixed_localization_covariance(
+    aslam::TransformationCovariance* covariance) const {
+  if (has_T_G_B_fixed_localization_covariance_) {
     CHECK(covariance);
-    *covariance = fixed_localization_covariance_;
+    *covariance = T_G_B_fixed_localization_covariance_;
     return true;
   }
   return false;
 }
 
-void NCamera::setFixedLocalizationCovariance(
-  const aslam::TransformationCovariance& covariance) {
-  fixed_localization_covariance_ = covariance;
-  has_fixed_localization_covariance_ = true;
+void NCamera::set_T_G_B_fixed_localization_covariance(
+    const aslam::TransformationCovariance& covariance) {
+  T_G_B_fixed_localization_covariance_ = covariance;
+  has_T_G_B_fixed_localization_covariance_ = true;
 }
 
 int NCamera::getCameraIndex(const CameraId& id) const {
@@ -387,22 +395,37 @@ void NCamera::setRandomImpl() {
 bool NCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   const NCamera* other_ncamera = dynamic_cast<const NCamera*>(&other);
   if (other_ncamera == nullptr) {
+    if (verbose) {
+      LOG(ERROR) << "Other ncamera is a nullptr!";
+    }
     return false;
   }
 
   const size_t num_cameras = cameras_.size();
   if (num_cameras != other_ncamera->cameras_.size()) {
+    if (verbose) {
+      LOG(ERROR)
+          << "The two NCameras have different number of cameras, ncamera A: "
+          << num_cameras << " ncamera B: " << other_ncamera->cameras_.size();
+    }
     return false;
   }
   bool is_equal = true;
   for (size_t i = 0u; i < num_cameras && is_equal; ++i) {
-    is_equal &=
+    const bool is_same_camera =
         aslam::checkSharedEqual(cameras_[i], other_ncamera->cameras_[i]);
-    is_equal &=
+    const bool has_same_camera_extrinsics =
         ((T_C_B_[i].getTransformationMatrix() -
           other_ncamera->T_C_B_[i].getTransformationMatrix())
              .cwiseAbs()
              .maxCoeff() < common::macros::kEpsilon);
+    if (verbose && !is_equal) {
+      LOG(ERROR) << "Camera at idx " << i << " is not the same:"
+                 << "\n\tsame camera object: " << is_same_camera
+                 << "\n\tsame extrinsics:    " << has_same_camera_extrinsics;
+    }
+
+    is_equal &= is_same_camera && has_same_camera_extrinsics;
   }
   return is_equal;
 }
