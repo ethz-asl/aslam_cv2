@@ -1,16 +1,15 @@
 #ifndef ASLAM_FRAMES_VISUAL_FRAME_H_
 #define ASLAM_FRAMES_VISUAL_FRAME_H_
 
-#include <cstdint>
-#include <memory>
-#include <unordered_map>
-
 #include <Eigen/Dense>
 #include <aslam/cameras/camera.h>
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/channel.h>
 #include <aslam/common/macros.h>
 #include <aslam/common/unique-id.h>
+#include <cstdint>
+#include <memory>
+#include <unordered_map>
 
 namespace aslam {
 class Camera;
@@ -131,7 +130,7 @@ class VisualFrame {
 
   /// The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
-  
+
   /// The keypoint vectors stored in a frame.
   const Eigen::Matrix3Xd& getKeypointVectors() const;
 
@@ -168,8 +167,8 @@ class VisualFrame {
   Eigen::VectorXi* getTrackIdsMutable();
 
   /// A pointer to the keypoint vectors, can be used to swap in new data.
-  Eigen::Matrix3Xd* getKeypointVectorsMutable();  
-  
+  Eigen::Matrix3Xd* getKeypointVectorsMutable();
+
   /// A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
 
@@ -202,7 +201,7 @@ class VisualFrame {
   /// Return the track id at index. (-1: not tracked)
   int getTrackId(size_t index) const;
 
-    /// Return block expression of the keypoint vector pointed to by index.
+  /// Return block expression of the keypoint vector pointed to by index.
   const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getKeypointVector(
       size_t index) const;
 
@@ -274,7 +273,7 @@ class VisualFrame {
   /// Replace (swap) the internal track ids by the passed ones.
   void swapTrackIds(Eigen::VectorXi* track_ids);
 
- /// Replace (swap) the internal keypoint vectors by the passed ones.
+  /// Replace (swap) the internal keypoint vectors by the passed ones.
   void swapKeypointVectors(Eigen::Matrix3Xd* vectors);
 
   /// Swap channel data with the data passed in. This will only work

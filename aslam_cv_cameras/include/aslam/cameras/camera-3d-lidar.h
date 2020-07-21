@@ -234,14 +234,14 @@ class Camera3DLidar : public aslam::Cloneable<Camera, Camera3DLidar> {
   template <typename DistortionType = NullDistortion>
   static Camera3DLidar::UniquePtr createTestCameraUnique() {
     Eigen::VectorXd intrinsics(4, 1);
-    intrinsics[Parameters::kHorizontalResolutionRad] = 2. * M_PI / 2024.;
+    intrinsics[Parameters::kHorizontalResolutionRad] = 2. * M_PI / 1024.;
     intrinsics[Parameters::kVerticalResolutionRad] =
-        0.0046018515;  // 0.527333333 / 2 deg
+        0.009203703;  // 0.527333333 deg
     intrinsics[Parameters::kVerticalCenterRad] = 0.289916642;  // 16.611 deg
     intrinsics[Parameters::kHorizontalCenterRad] = 0;
 
     Camera3DLidar::UniquePtr camera = aligned_unique<Camera3DLidar>(
-        intrinsics, 2048u /*width*/, 128u /*height*/);
+        intrinsics, 1024u /*width*/, 64u /*height*/);
     CameraId id;
     generateId(&id);
     camera->setId(id);
