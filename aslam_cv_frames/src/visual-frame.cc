@@ -482,8 +482,6 @@ VisualFrame::Ptr VisualFrame::createEmptyTestVisualFrame(const aslam::Camera::Co
   frame->setTimestampNanoseconds(timestamp_nanoseconds);
   Eigen::Matrix2Xd keypoint_measurements = Eigen::Matrix2Xd::Zero(2, 0);
   frame->swapKeypointMeasurements(&keypoint_measurements);
-  Eigen::Matrix3Xd keypoint_vectors = Eigen::Matrix3Xd::Zero(3, 0);
-  frame->swapKeypointVectors(&keypoint_vectors);
   Eigen::VectorXd keypoint_uncertainties = Eigen::VectorXd::Zero(0);
   frame->swapKeypointMeasurementUncertainties(&keypoint_uncertainties);
   aslam::VisualFrame::DescriptorsT descriptors = aslam::VisualFrame::DescriptorsT::Zero(48, 0);
