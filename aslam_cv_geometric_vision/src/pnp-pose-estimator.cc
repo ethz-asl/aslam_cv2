@@ -307,7 +307,6 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacLidarFeatures(
     landmarks.push_back(G_landmark_positions.col(i));
     observations.push_back(R_B_C * measurements.col(i) + p_B_C);
   }
-  VLOG(0) << "-----";
   Eigen::Matrix3d ransac_rotation_matrix;
   Eigen::Vector3d ransac_translation;
   std::vector<size_t> ransac_outliers;
