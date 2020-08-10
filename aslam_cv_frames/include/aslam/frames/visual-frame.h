@@ -324,7 +324,7 @@ class VisualFrame  {
   /// \param[out] results               One result for each keypoint.
   void toRawImageCoordinatesVectorized(const Eigen::Matrix2Xd& keypoints,
                                        Eigen::Matrix2Xd* out_image_coordinates,
-      std::vector<aslam::ProjectionResult>* results) const;
+                                       std::vector<aslam::ProjectionResult>* results) const;
 
   /// Return a list of normalized bearing vectors for the specified keypoint indices.
   Eigen::Matrix3Xd getNormalizedBearingVectors(
@@ -349,13 +349,13 @@ class VisualFrame  {
   size_t getDescriptorSizeBytes() const;
 
   /// Set the validity flag to true.
-  void validate() {is_valid_ = true; }
+  void validate() { is_valid_ = true; }
   /// Set the validity flag to false.
-  void invalidate() {is_valid_ = false; }
+  void invalidate() { is_valid_ = false; }
   /// Check the validity flag.
-  bool isValid() const {return is_valid_; }
+  bool isValid() const { return is_valid_; }
   /// Set the validity flag.
-  void setValid(bool is_valid) {is_valid_ = is_valid; }
+  void setValid(bool is_valid) { is_valid_ = is_valid; }
 
   /// Print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
