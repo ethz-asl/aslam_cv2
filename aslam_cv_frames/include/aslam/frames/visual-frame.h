@@ -1,16 +1,16 @@
 #ifndef ASLAM_FRAMES_VISUAL_FRAME_H_
 #define ASLAM_FRAMES_VISUAL_FRAME_H_
 
-#include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <cstdint>
 
-#include <Eigen/Dense>
 #include <aslam/cameras/camera.h>
-#include <aslam/common/channel-declaration.h>
 #include <aslam/common/channel.h>
+#include <aslam/common/channel-declaration.h>
 #include <aslam/common/macros.h>
 #include <aslam/common/unique-id.h>
+#include <Eigen/Dense>
 
 namespace aslam {
 class Camera;
@@ -25,22 +25,19 @@ class Camera;
 /// The class also stores a ChannelGroup object that can be used to hold
 /// keypoint data, the raw image, and other associated information.
 ///
-/// The camera geometry stored in the frame and accessible by
-/// getCameraGeometry() may refer to a transformed geometry that includes
-/// downsampling and undistortion. However, we recommend to always store the raw
-/// image with the frame so that no information is lost. In order to be able to
-/// plot on these raw images, we must also store the original camera geometry
-/// object (accessible with getRawCameraGeometry()). To plot transformed
-/// keypoints on the raw image, one may use toRawImageCoordinates() or
-/// toRawImageCoordinatesVectorized() to recover the raw image coordinates of
-/// any keypoint.
-class VisualFrame {
+/// The camera geometry stored in the frame and accessible by getCameraGeometry()
+/// may refer to a transformed geometry that includes downsampling and undistortion.
+/// However, we recommend to always store the raw image with the frame so that
+/// no information is lost. In order to be able to plot on these raw images, we must
+/// also store the original camera geometry object (accessible with
+/// getRawCameraGeometry()). To plot transformed keypoints on the raw image, one
+/// may use toRawImageCoordinates() or toRawImageCoordinatesVectorized() to recover
+/// the raw image coordinates of any keypoint.
+class VisualFrame  {
  public:
-  /// \brief The descriptor matrix stores descriptors in columns, i.e. the
-  /// descriptor matrix
+  /// \brief The descriptor matrix stores descriptors in columns, i.e. the descriptor matrix
   ///        has num_bytes_per_descriptor rows and num_descriptors columns.
-  typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>
-      DescriptorsT;
+  typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
   typedef Eigen::VectorXd KeypointScoresT;
 
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
@@ -50,7 +47,7 @@ class VisualFrame {
   /// \name Constructors/destructors and operators
   /// @{
   VisualFrame();
-  virtual ~VisualFrame(){};
+  virtual ~VisualFrame() {};
 
   /// Copy constructor for clone operation. (Cameras are not cloned!)
   VisualFrame(const VisualFrame& other);
@@ -61,7 +58,7 @@ class VisualFrame {
 
   virtual bool compareWithoutCameraGeometry(const VisualFrame& other) const;
 
-  template <typename CHANNEL_DATA_TYPE>
+  template<typename CHANNEL_DATA_TYPE>
   void addChannel(const std::string& channel) {
     aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
   }
@@ -98,9 +95,8 @@ class VisualFrame {
     return aslam::channels::hasChannel(channel, channels_);
   }
 
-  /// Clears the following channels: KeypointMeasurements,
-  /// KeypointMeasurementUncertainties, KeypointOrientations, KeypointScores,
-  /// KeypointScales, Descriptors, TrackIds
+  /// Clears the following channels: KeypointMeasurements, KeypointMeasurementUncertainties,
+  /// KeypointOrientations, KeypointScores, KeypointScales, Descriptors, TrackIds
   void clearKeypointChannels();
 
   /// The keypoint measurements stored in a frame.
@@ -131,25 +127,22 @@ class VisualFrame {
 
   /// The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
-  
+
   /// The keypoint vectors stored in a frame.
   const Eigen::Matrix3Xd& getKeypointVectors() const;
 
-  /// Release the raw image. Only if the cv::Mat reference count is 1 the memory
-  /// will be freed.
+  /// Release the raw image. Only if the cv::Mat reference count is 1 the memory will be freed.
   void releaseRawImage();
 
-  template <typename CHANNEL_DATA_TYPE>
+  template<typename CHANNEL_DATA_TYPE>
   const CHANNEL_DATA_TYPE& getChannelData(const std::string& channel) const {
-    return aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(
-        channel, channels_);
+    return aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);
   }
 
   /// A pointer to the keypoint measurements, can be used to swap in new data.
   Eigen::Matrix2Xd* getKeypointMeasurementsMutable();
 
-  /// A pointer to the keypoint measurement uncertainties, can be used to swap
-  /// in new data.
+  /// A pointer to the keypoint measurement uncertainties, can be used to swap in new data.
   Eigen::VectorXd* getKeypointMeasurementUncertaintiesMutable();
 
   /// A pointer to the keypoint orientations, can be used to swap in new data.
@@ -168,21 +161,21 @@ class VisualFrame {
   Eigen::VectorXi* getTrackIdsMutable();
 
   /// A pointer to the keypoint vectors, can be used to swap in new data.
-  Eigen::Matrix3Xd* getKeypointVectorsMutable();  
-  
+  Eigen::Matrix3Xd* getKeypointVectorsMutable();
+
   /// A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
 
-  template <typename CHANNEL_DATA_TYPE>
+  template<typename CHANNEL_DATA_TYPE>
   CHANNEL_DATA_TYPE* getChannelDataMutable(const std::string& channel) const {
     CHANNEL_DATA_TYPE& data =
-        aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);
+        aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel,
+                                                           channels_);
     return &data;
   }
 
   /// Return block expression of the keypoint measurement pointed to by index.
-  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(
-      size_t index) const;
+  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(size_t index) const;
 
   /// Return the keypoint measurement uncertainty at index.
   double getKeypointMeasurementUncertainty(size_t index) const;
@@ -202,7 +195,7 @@ class VisualFrame {
   /// Return the track id at index. (-1: not tracked)
   int getTrackId(size_t index) const;
 
-    /// Return block expression of the keypoint vector pointed to by index.
+  /// Return block expression of the keypoint vector pointed to by index.
   const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getKeypointVector(
       size_t index) const;
 
@@ -211,8 +204,7 @@ class VisualFrame {
 
   /// Replace (copy) the internal keypoint measurement uncertainties
   ///        by the passed ones.
-  void setKeypointMeasurementUncertainties(
-      const Eigen::VectorXd& uncertainties);
+  void setKeypointMeasurementUncertainties(const Eigen::VectorXd& uncertainties);
 
   /// Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointOrientations(const Eigen::VectorXd& orientations);
@@ -241,8 +233,8 @@ class VisualFrame {
   void setKeypointVectors(const Eigen::Matrix3Xd& keypoint_vectors);
 
   template <typename CHANNEL_DATA_TYPE>
-  void setChannelData(
-      const std::string& channel, const CHANNEL_DATA_TYPE& data_new) {
+  void setChannelData(const std::string& channel,
+                      const CHANNEL_DATA_TYPE& data_new) {
     if (!aslam::channels::hasChannel(channel, channels_)) {
       aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
     }
@@ -274,14 +266,14 @@ class VisualFrame {
   /// Replace (swap) the internal track ids by the passed ones.
   void swapTrackIds(Eigen::VectorXi* track_ids);
 
- /// Replace (swap) the internal keypoint vectors by the passed ones.
+  /// Replace (swap) the internal keypoint vectors by the passed ones.
   void swapKeypointVectors(Eigen::Matrix3Xd* vectors);
 
   /// Swap channel data with the data passed in. This will only work
   /// if the channel data type has a swap() method.
-  template <typename CHANNEL_DATA_TYPE>
-  void swapChannelData(
-      const std::string& channel, CHANNEL_DATA_TYPE* data_new) {
+  template<typename CHANNEL_DATA_TYPE>
+  void swapChannelData(const std::string& channel,
+                       CHANNEL_DATA_TYPE* data_new) {
     CHECK_NOTNULL(data_new);
     if (!aslam::channels::hasChannel(channel, channels_)) {
       aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
@@ -303,61 +295,50 @@ class VisualFrame {
   /// Set the camera geometry.
   void setRawCameraGeometry(const Camera::ConstPtr& camera);
 
-  /// \brief Return keypoint measurement pointed to by index in raw image
-  /// coordinates. \param[in] keypoint_idx              Index of the keypoint.
-  /// \param[out] keypoint_raw_coordinates The keypoint in raw image
-  /// coordinates. \return Was the projection successful?
-  aslam::ProjectionResult getKeypointInRawImageCoordinates(
-      size_t keypoint_idx, Eigen::Vector2d* keypoint_raw_coordinates) const;
+  /// \brief Return keypoint measurement pointed to by index in raw image coordinates.
+  /// \param[in] keypoint_idx              Index of the keypoint.
+  /// \param[out] keypoint_raw_coordinates The keypoint in raw image coordinates.
+  /// \return Was the projection successful?
+  aslam::ProjectionResult getKeypointInRawImageCoordinates(size_t keypoint_idx,
+      Eigen::Vector2d* keypoint_raw_coordinates) const;
 
   /// \brief Convert keypoint coordinates to raw image coordinates.
   ///
   /// \param[in] keypoint               The keypoint coordinates with respect to
   ///                                   the camera calibration available from
   ///                                   getCameraGeometry().
-  /// \param[out] out_image_coordinates The image coordinates with respect to
-  /// the
+  /// \param[out] out_image_coordinates The image coordinates with respect to the
   ///                                   camera calibration available from
   ///                                   getRawCameraGeometry().
-  aslam::ProjectionResult toRawImageCoordinates(
-      const Eigen::Vector2d& keypoint,
-      Eigen::Vector2d* out_image_coordinates) const;
+  aslam::ProjectionResult toRawImageCoordinates(const Eigen::Vector2d& keypoint,
+                                                Eigen::Vector2d* out_image_coordinates) const;
 
   /// \brief Convert keypoint coordinates to raw image coordinates.
   ///
   /// \param[in] keypoints              The keypoint coordinates with respect to
   ///                                   the camera calibration available from
   ///                                   getCameraGeometry().
-  /// \param[out] out_image_coordinates The image coordinates with respect to
-  /// the
+  /// \param[out] out_image_coordinates The image coordinates with respect to the
   ///                                   camera calibration available from
   ///                                   getRawCameraGeometry().
   /// \param[out] results               One result for each keypoint.
-  void toRawImageCoordinatesVectorized(
-      const Eigen::Matrix2Xd& keypoints,
-      Eigen::Matrix2Xd* out_image_coordinates,
-      std::vector<aslam::ProjectionResult>* results) const;
+  void toRawImageCoordinatesVectorized(const Eigen::Matrix2Xd& keypoints,
+                                       Eigen::Matrix2Xd* out_image_coordinates,
+                                       std::vector<aslam::ProjectionResult>* results) const;
 
-  /// Return a list of normalized bearing vectors for the specified keypoint
-  /// indices.
+  /// Return a list of normalized bearing vectors for the specified keypoint indices.
   Eigen::Matrix3Xd getNormalizedBearingVectors(
       const std::vector<size_t>& keypoint_indices,
       std::vector<unsigned char>* backprojection_success) const;
 
   /// Get the frame id.
-  inline const aslam::FrameId& getId() const {
-    return id_;
-  }
+  inline const aslam::FrameId& getId() const { return id_; }
 
   /// Set the frame id.
-  inline void setId(const aslam::FrameId& id) {
-    id_ = id;
-  }
+  inline void setId(const aslam::FrameId& id) { id_ = id; }
 
   /// Get the timestamp.
-  inline int64_t getTimestampNanoseconds() const {
-    return timestamp_nanoseconds_;
-  }
+  inline int64_t getTimestampNanoseconds() const { return timestamp_nanoseconds_; }
 
   /// Set the timestamp.
   inline void setTimestampNanoseconds(int64_t timestamp_nanoseconds) {
@@ -368,35 +349,24 @@ class VisualFrame {
   size_t getDescriptorSizeBytes() const;
 
   /// Set the validity flag to true.
-  void validate() {
-    is_valid_ = true;
-  }
+  void validate() { is_valid_ = true; }
   /// Set the validity flag to false.
-  void invalidate() {
-    is_valid_ = false;
-  }
+  void invalidate(){ is_valid_ = false; }
   /// Check the validity flag.
-  bool isValid() const {
-    return is_valid_;
-  }
+  bool isValid() const { return is_valid_; }
   /// Set the validity flag.
-  void setValid(bool is_valid) {
-    is_valid_ = is_valid;
-  }
+  void setValid(bool is_valid) { is_valid_ = is_valid; }
 
   /// Print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
 
-  /// \brief Creates an empty frame. The following channels are added without
-  /// any data attached:
-  ///        {KeypointMeasurements, KeypointMeasurementUncertainties,
-  ///        Descriptors}
-  /// @param[in]  camera                  Camera which will be assigned to the
-  /// frame.
+  /// \brief Creates an empty frame. The following channels are added without any data attached:
+  ///        {KeypointMeasurements, KeypointMeasurementUncertainties, Descriptors}
+  /// @param[in]  camera                  Camera which will be assigned to the frame.
   /// @param[in]  timestamp_nanoseconds   Timestamp of the frame. [ns]
   /// @return Pointer to the created frame.
-  static VisualFrame::Ptr createEmptyTestVisualFrame(
-      const aslam::Camera::ConstPtr& camera, int64_t timestamp_nanoseconds);
+  static VisualFrame::Ptr createEmptyTestVisualFrame(const aslam::Camera::ConstPtr& camera,
+                                                     int64_t timestamp_nanoseconds);
 
   void discardUntrackedObservations(std::vector<size_t>* discarded_indices);
 
@@ -409,9 +379,9 @@ class VisualFrame {
   Camera::ConstPtr camera_geometry_;
   Camera::ConstPtr raw_camera_geometry_;
 
-  /// Validity flag: can be used by an external algorithm to flag frames that
-  /// should be excluded/included when processing a list of frames. Does not
-  /// have any internal effect on the frame.
+  /// Validity flag: can be used by an external algorithm to flag frames that should
+  /// be excluded/included when processing a list of frames. Does not have any internal
+  /// effect on the frame.
   bool is_valid_;
 };
 
