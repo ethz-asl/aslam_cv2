@@ -33,7 +33,7 @@ class Camera;
 /// getRawCameraGeometry()). To plot transformed keypoints on the raw image, one
 /// may use toRawImageCoordinates() or toRawImageCoordinatesVectorized() to recover
 /// the raw image coordinates of any keypoint.
-class VisualFrame {
+class VisualFrame  {
  public:
   /// \brief The descriptor matrix stores descriptors in columns, i.e. the descriptor matrix
   ///        has num_bytes_per_descriptor rows and num_descriptors columns.
@@ -58,7 +58,7 @@ class VisualFrame {
 
   virtual bool compareWithoutCameraGeometry(const VisualFrame& other) const;
 
-  template <typename CHANNEL_DATA_TYPE>
+  template<typename CHANNEL_DATA_TYPE>
   void addChannel(const std::string& channel) {
     aslam::channels::addChannel<CHANNEL_DATA_TYPE>(channel, &channels_);
   }
@@ -95,9 +95,8 @@ class VisualFrame {
     return aslam::channels::hasChannel(channel, channels_);
   }
 
-  /// Clears the following channels: KeypointMeasurements,
-  /// KeypointMeasurementUncertainties, KeypointOrientations, KeypointScores,
-  /// KeypointScales, Descriptors, TrackIds
+  /// Clears the following channels: KeypointMeasurements, KeypointMeasurementUncertainties,
+  /// KeypointOrientations, KeypointScores, KeypointScales, Descriptors, TrackIds
   void clearKeypointChannels();
 
   /// The keypoint measurements stored in a frame.
@@ -137,7 +136,7 @@ class VisualFrame {
 
   template<typename CHANNEL_DATA_TYPE>
   const CHANNEL_DATA_TYPE& getChannelData(const std::string& channel) const {
-    return aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);        
+    return aslam::channels::getChannelData<CHANNEL_DATA_TYPE>(channel, channels_);
   }
 
   /// A pointer to the keypoint measurements, can be used to swap in new data.
@@ -272,8 +271,8 @@ class VisualFrame {
 
   /// Swap channel data with the data passed in. This will only work
   /// if the channel data type has a swap() method.
-  template <typename CHANNEL_DATA_TYPE>
-  void swapChannelData(const std::string& channel, 
+  template<typename CHANNEL_DATA_TYPE>
+  void swapChannelData(const std::string& channel,
                        CHANNEL_DATA_TYPE* data_new) {
     CHECK_NOTNULL(data_new);
     if (!aslam::channels::hasChannel(channel, channels_)) {
@@ -319,8 +318,7 @@ class VisualFrame {
   /// \param[in] keypoints              The keypoint coordinates with respect to
   ///                                   the camera calibration available from
   ///                                   getCameraGeometry().
-  /// \param[out] out_image_coordinates The image coordinates with respect to
-  /// the
+  /// \param[out] out_image_coordinates The image coordinates with respect to the
   ///                                   camera calibration available from
   ///                                   getRawCameraGeometry().
   /// \param[out] results               One result for each keypoint.
@@ -334,13 +332,13 @@ class VisualFrame {
       std::vector<unsigned char>* backprojection_success) const;
 
   /// Get the frame id.
-  inline const aslam::FrameId& getId() const { return id_;}
+  inline const aslam::FrameId& getId() const { return id_; }
 
   /// Set the frame id.
-  inline void setId(const aslam::FrameId& id) { id_ = id;}
+  inline void setId(const aslam::FrameId& id) { id_ = id; }
 
   /// Get the timestamp.
-  inline int64_t getTimestampNanoseconds() const { return timestamp_nanoseconds_;}
+  inline int64_t getTimestampNanoseconds() const { return timestamp_nanoseconds_; }
 
   /// Set the timestamp.
   inline void setTimestampNanoseconds(int64_t timestamp_nanoseconds) {
@@ -351,13 +349,13 @@ class VisualFrame {
   size_t getDescriptorSizeBytes() const;
 
   /// Set the validity flag to true.
-  void validate() {is_valid_ = true;}
+  void validate() {is_valid_ = true; }
   /// Set the validity flag to false.
-  void invalidate() {is_valid_ = false;}
+  void invalidate() {is_valid_ = false; }
   /// Check the validity flag.
-  bool isValid() const {return is_valid_;}
+  bool isValid() const {return is_valid_; }
   /// Set the validity flag.
-  void setValid(bool is_valid) {is_valid_ = is_valid;}
+  void setValid(bool is_valid) {is_valid_ = is_valid; }
 
   /// Print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
