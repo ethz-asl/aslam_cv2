@@ -87,8 +87,6 @@ class VisualFrame  {
   /// Is there a raw image stored in this frame?
   bool hasRawImage() const;
 
-
-
   /// Is a certain channel stored in this frame?
   bool hasChannel(const std::string& channel) const {
     return aslam::channels::hasChannel(channel, channels_);
@@ -218,7 +216,7 @@ class VisualFrame  {
   ///        should be owned by the VisualFrame.
   void setRawImage(const cv::Mat& image);
 
-  template <typename CHANNEL_DATA_TYPE>
+  template<typename CHANNEL_DATA_TYPE>
   void setChannelData(const std::string& channel,
                       const CHANNEL_DATA_TYPE& data_new) {
     if (!aslam::channels::hasChannel(channel, channels_)) {
@@ -356,22 +354,22 @@ class VisualFrame  {
   /// Information about the LiDAR features
 
   /// Are there keypoint vectors in this frame?
-  bool hasLidarKeypointPositions() const;
+  bool hasLidarKeypoint3DMeasurements() const;
 
   /// The keypoint vectors stored in a frame.
-  const Eigen::Matrix3Xd& getKeypointVectors() const;
+  const Eigen::Matrix3Xd& getLidarKeypoint3DMeasurements() const;
 
   /// A pointer to the keypoint vectors, can be used to swap in new data.
-  Eigen::Matrix3Xd* getKeypointVectorsMutable();
+  Eigen::Matrix3Xd* getLidarKeypoint3DMeasurementsMutable();
 
   /// Return block expression of the keypoint vector pointed to by index.
-  const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getKeypointVector(size_t index) const;
+  const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getLidarKeypoint3DMeasurement(size_t index) const;
 
   /// Replace (copy) the internal keypoint vectors by the passed ones.
-  void setKeypointVectors(const Eigen::Matrix3Xd& keypoint_vectors);
+  void setLidarKeypoint3DMeasurements(const Eigen::Matrix3Xd& keypoint_vectors);
 
   /// Replace (swap) the internal keypoint vectors by the passed ones.
-  void swapKeypointVectors(Eigen::Matrix3Xd* vectors);
+  void swapLidarKeypoint3DMeasurements(Eigen::Matrix3Xd* vectors);
 
  private:
   /// Timestamp in nanoseconds.

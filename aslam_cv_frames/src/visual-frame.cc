@@ -71,6 +71,7 @@ bool VisualFrame::hasTrackIds() const {
 bool VisualFrame::hasRawImage() const {
   return aslam::channels::has_RAW_IMAGE_Channel(channels_);
 }
+
 const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
   return aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
 }
@@ -95,6 +96,7 @@ const Eigen::VectorXi& VisualFrame::getTrackIds() const {
 const cv::Mat& VisualFrame::getRawImage() const {
   return aslam::channels::get_RAW_IMAGE_Data(channels_);
 }
+
 void VisualFrame::releaseRawImage() {
   aslam::channels::remove_RAW_IMAGE_Channel(&channels_);
 }
