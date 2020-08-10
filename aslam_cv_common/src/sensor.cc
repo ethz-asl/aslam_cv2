@@ -22,15 +22,6 @@ Sensor::Sensor(
   CHECK(id.isValid());
 }
 
-void Sensor::setId(const SensorId& id) {
-  CHECK(id.isValid());
-  id_ = id;
-}
-
-void Sensor::setDescription(const std::string& description) {
-  description_ = description;
-}
-
 bool Sensor::isValid() const {
   if (!id_.isValid()) {
     LOG(ERROR) << "Invalid sensor id.";
@@ -97,11 +88,11 @@ void Sensor::serialize(YAML::Node* sensor_node_ptr) const {
 }
 
 bool Sensor::operator==(const Sensor& other) const {
-  return isEqual(other);
+  return isEqual(other, true /*verbose*/);
 }
 
 bool Sensor::operator!=(const Sensor& other) const {
-  return !isEqual(other);
+  return !isEqual(other, true /*verbose*/);
 }
 
 bool Sensor::isEqual(const Sensor& other, const bool verbose) const {
@@ -115,11 +106,12 @@ bool Sensor::isEqual(const Sensor& other, const bool verbose) const {
     LOG_IF(WARNING, verbose) << "this sensor: "
                              << "\n id: " << id_ << "\n topic: " << topic_
                              << "\n description: " << description_
-                             << "\n sensor_type: " << getSensorType();
-    LOG_IF(WARNING, verbose) << "other sensor: "
-                             << "\n id: " << id_ << "\n topic: " << other.topic_
-                             << "\n description: " << other.description_
-                             << "\n sensor_type: " << other.getSensorType();
+                             << "\n sensor_type: " << getSensorTypeString();
+    LOG_IF(WARNING, verbose)
+        << "other sensor: "
+        << "\n id: " << id_ << "\n topic: " << other.topic_
+        << "\n description: " << other.description_
+        << "\n sensor_type: " << other.getSensorTypeString();
   }
 
   // optimize to avoid unncessary comparisons

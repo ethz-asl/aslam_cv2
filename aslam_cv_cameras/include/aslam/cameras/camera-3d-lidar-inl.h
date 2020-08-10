@@ -11,7 +11,7 @@ template <
 const ProjectionResult Camera3DLidar::project3Functional(
     const Eigen::Matrix<ScalarType, 3, 1>& point_3d,
     const Eigen::MatrixBase<MIntrinsics>& intrinsics_external,
-    const Eigen::MatrixBase<MDistortion>& distortion_coefficients_external,
+    const Eigen::MatrixBase<MDistortion>& /*distortion_coefficients_external*/,
     Eigen::Matrix<ScalarType, 2, 1>* out_keypoint) const {
   CHECK_NOTNULL(out_keypoint);
   CHECK_EQ(intrinsics_external.size(), kNumOfParams)
