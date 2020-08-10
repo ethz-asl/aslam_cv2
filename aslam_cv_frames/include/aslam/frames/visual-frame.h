@@ -351,7 +351,7 @@ class VisualFrame  {
   /// Set the validity flag to true.
   void validate() { is_valid_ = true; }
   /// Set the validity flag to false.
-  void invalidate() { is_valid_ = false; }
+  void invalidate(){ is_valid_ = false; }
   /// Check the validity flag.
   bool isValid() const { return is_valid_; }
   /// Set the validity flag.
