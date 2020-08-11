@@ -353,23 +353,59 @@ class VisualFrame  {
 
   /// Information about the LiDAR features
 
-  /// Are there keypoint vectors in this frame?
+  /// Are there 2D measurementsin this frame?
   bool hasLidarKeypoint3DMeasurements() const;
 
-  /// The keypoint vectors stored in a frame.
-  const Eigen::Matrix3Xd& getLidarKeypoint3DMeasurements() const;
+  /// Are there 2D measurements in this frame?
+  bool hasLidarKeypoint2DMeasurements() const;
+  
+  /// Are there descriptors in this frame?
+  bool hasLidarDescriptors() const;
 
-  /// A pointer to the keypoint vectors, can be used to swap in new data.
+    /// The 3D measurements stored in a lidar frame.
+  const Eigen::Matrix3Xd& getLidarKeypoint3DMeasurements() const;
+  
+  /// The 2D measurements stored in a frame.
+  const Eigen::Matrix2Xd& getLidarKeypoint2DMeasurements() const;
+  
+  /// The descriptors stored in a frame.
+  const DescriptorsT&  getLidarDescriptors() const;
+
+  /// A pointer to the 3D measurements, can be used to swap in new data.
   Eigen::Matrix3Xd* getLidarKeypoint3DMeasurementsMutable();
 
-  /// Return block expression of the keypoint vector pointed to by index.
+  /// A pointer to the 2D measurements, can be used to swap in new data.
+  Eigen::Matrix2Xd* getLidarKeypoint2DMeasurementsMutable();
+
+  /// A pointer to the descriptors, can be used to swap in new data.
+  DescriptorsT*  getLidarDescriptorsMutable();
+
+  /// Return block expression of the 3D measurement pointed to by index.
   const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getLidarKeypoint3DMeasurement(size_t index) const;
 
-  /// Replace (copy) the internal keypoint vectors by the passed ones.
+  /// Return block expression of the 2D measurement pointed to by index.
+  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getLidarKeypoint2DMeasurement(size_t index) const;
+
+  /// Return pointer location of the descriptor pointed to by index.
+  const unsigned char* getLidarDescriptor(size_t index) const;
+
+  /// Replace (copy) the internal 3D measurements by the passed ones.
   void setLidarKeypoint3DMeasurements(const Eigen::Matrix3Xd& keypoint_vectors);
 
-  /// Replace (swap) the internal keypoint vectors by the passed ones.
+  /// Replace (copy) the internal 2D measurments by the passed ones.
+  void setLidarKeypoint2DMeasurements(const Eigen::Matrix2Xd& keypoint_vectors);
+
+  /// Replace (copy) the internal descriptors by the passed ones.
+  void setLidarDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+
+  /// Replace (swap) the internal 3D measurements by the passed ones.
   void swapLidarKeypoint3DMeasurements(Eigen::Matrix3Xd* vectors);
+  
+  /// Replace (swap) the internal 2D measurements by the passed ones.
+  void swapLidarKeypoint2DMeasurements(Eigen::Matrix2Xd* vectors);
+
+  /// Replace (swap) the internal descriptors by the passed ones.
+  void swapLidarDescriptors(DescriptorsT* descriptors);
 
  private:
   /// Timestamp in nanoseconds.
