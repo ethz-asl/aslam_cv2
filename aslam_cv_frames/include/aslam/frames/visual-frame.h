@@ -396,6 +396,9 @@ class VisualFrame  {
   void setLidarKeypoint2DMeasurements(const Eigen::Matrix2Xd& keypoint_vectors);
 
   /// Replace (copy) the internal descriptors by the passed ones.
+  void setLidarDescriptors(const DescriptorsT& descriptors);
+
+  /// Replace (copy) the internal descriptors by the passed ones.
   void setLidarDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
 
   /// Replace (swap) the internal 3D measurements by the passed ones.

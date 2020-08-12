@@ -93,6 +93,16 @@ void VisualFrame::setLidarKeypoint2DMeasurements(
 }
 
 void VisualFrame::setLidarDescriptors(
+    const DescriptorsT& descriptors_new) {
+  if (!aslam::channels::has_LIDAR_DESCRIPTORS_Channel(channels_)) {
+    aslam::channels::add_LIDAR_DESCRIPTORS_Channel(&channels_);
+  }
+  VisualFrame::DescriptorsT& descriptors =
+      aslam::channels::get_LIDAR_DESCRIPTORS_Data(channels_);
+  descriptors = descriptors_new;
+}
+
+void VisualFrame::setLidarDescriptors(
     const Eigen::Map<const DescriptorsT>& descriptors_new) {
   if (!aslam::channels::has_LIDAR_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_LIDAR_DESCRIPTORS_Channel(&channels_);
