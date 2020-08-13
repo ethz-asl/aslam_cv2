@@ -1,15 +1,13 @@
 #ifndef GEOMETRIC_VISION_PNP_POSE_ESTIMATOR_H_
 #define GEOMETRIC_VISION_PNP_POSE_ESTIMATOR_H_
 
-#include <memory>
-#include <vector>
-
 #include <Eigen/Core>
-#include <glog/logging.h>
-
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncamera.h>
 #include <aslam/common/pose-types.h>
+#include <glog/logging.h>
+#include <memory>
+#include <vector>
 
 namespace aslam {
 namespace geometric_vision {
@@ -74,8 +72,14 @@ class PnpPoseEstimator {
       aslam::Transformation* T_G_I, std::vector<int>* inliers,
       std::vector<double>* inlier_distances_to_model, int* num_iters);
 
+  bool absoluteMultiPoseRansacLidarFeatures(
+      const Eigen::Matrix3Xd& measurements,
+      const std::vector<int>& measurement_camera_indices,
+      const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
+      int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
+      aslam::Transformation* T_G_I, std::vector<int>* inliers,
+      std::vector<double>* inlier_distances_to_model, int* num_iters);
 
-  // TODO(mariusbr) get this from feature_tracking_pipelines
   void RansacTransformationFor3DPoints(
       std::vector<Eigen::Vector3d> point_set_1,
       std::vector<Eigen::Vector3d> point_set_2,
