@@ -87,9 +87,6 @@ class VisualFrame  {
   /// Is there a raw image stored in this frame?
   bool hasRawImage() const;
 
-  /// Are there keypoint vectors in this frame?
-  bool hasKeypointVectors() const;
-
   /// Is a certain channel stored in this frame?
   bool hasChannel(const std::string& channel) const {
     return aslam::channels::hasChannel(channel, channels_);
@@ -128,9 +125,6 @@ class VisualFrame  {
   /// The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
 
-  /// The keypoint vectors stored in a frame.
-  const Eigen::Matrix3Xd& getKeypointVectors() const;
-
   /// Release the raw image. Only if the cv::Mat reference count is 1 the memory will be freed.
   void releaseRawImage();
 
@@ -159,9 +153,6 @@ class VisualFrame  {
 
   /// A pointer to the track ids, can be used to swap in new data.
   Eigen::VectorXi* getTrackIdsMutable();
-
-  /// A pointer to the keypoint vectors, can be used to swap in new data.
-  Eigen::Matrix3Xd* getKeypointVectorsMutable();
 
   /// A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
@@ -195,10 +186,6 @@ class VisualFrame  {
   /// Return the track id at index. (-1: not tracked)
   int getTrackId(size_t index) const;
 
-  /// Return block expression of the keypoint vector pointed to by index.
-  const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getKeypointVector(
-      size_t index) const;
-
   /// Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
 
@@ -229,10 +216,7 @@ class VisualFrame  {
   ///        should be owned by the VisualFrame.
   void setRawImage(const cv::Mat& image);
 
-  /// Replace (copy) the internal keypoint vectors by the passed ones.
-  void setKeypointVectors(const Eigen::Matrix3Xd& keypoint_vectors);
-
-  template <typename CHANNEL_DATA_TYPE>
+  template<typename CHANNEL_DATA_TYPE>
   void setChannelData(const std::string& channel,
                       const CHANNEL_DATA_TYPE& data_new) {
     if (!aslam::channels::hasChannel(channel, channels_)) {
@@ -265,9 +249,6 @@ class VisualFrame  {
 
   /// Replace (swap) the internal track ids by the passed ones.
   void swapTrackIds(Eigen::VectorXi* track_ids);
-
-  /// Replace (swap) the internal keypoint vectors by the passed ones.
-  void swapKeypointVectors(Eigen::Matrix3Xd* vectors);
 
   /// Swap channel data with the data passed in. This will only work
   /// if the channel data type has a swap() method.
@@ -369,6 +350,65 @@ class VisualFrame  {
                                                      int64_t timestamp_nanoseconds);
 
   void discardUntrackedObservations(std::vector<size_t>* discarded_indices);
+
+  /// Information about the LiDAR features
+
+  /// Are there 2D measurementsin this frame?
+  bool hasLidarKeypoint3DMeasurements() const;
+
+  /// Are there 2D measurements in this frame?
+  bool hasLidarKeypoint2DMeasurements() const;
+  
+  /// Are there descriptors in this frame?
+  bool hasLidarDescriptors() const;
+
+    /// The 3D measurements stored in a lidar frame.
+  const Eigen::Matrix3Xd& getLidarKeypoint3DMeasurements() const;
+  
+  /// The 2D measurements stored in a frame.
+  const Eigen::Matrix2Xd& getLidarKeypoint2DMeasurements() const;
+  
+  /// The descriptors stored in a frame.
+  const DescriptorsT&  getLidarDescriptors() const;
+
+  /// A pointer to the 3D measurements, can be used to swap in new data.
+  Eigen::Matrix3Xd* getLidarKeypoint3DMeasurementsMutable();
+
+  /// A pointer to the 2D measurements, can be used to swap in new data.
+  Eigen::Matrix2Xd* getLidarKeypoint2DMeasurementsMutable();
+
+  /// A pointer to the descriptors, can be used to swap in new data.
+  DescriptorsT*  getLidarDescriptorsMutable();
+
+  /// Return block expression of the 3D measurement pointed to by index.
+  const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getLidarKeypoint3DMeasurement(size_t index) const;
+
+  /// Return block expression of the 2D measurement pointed to by index.
+  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getLidarKeypoint2DMeasurement(size_t index) const;
+
+  /// Return pointer location of the descriptor pointed to by index.
+  const unsigned char* getLidarDescriptor(size_t index) const;
+
+  /// Replace (copy) the internal 3D measurements by the passed ones.
+  void setLidarKeypoint3DMeasurements(const Eigen::Matrix3Xd& keypoint_vectors);
+
+  /// Replace (copy) the internal 2D measurments by the passed ones.
+  void setLidarKeypoint2DMeasurements(const Eigen::Matrix2Xd& keypoint_vectors);
+
+  /// Replace (copy) the internal descriptors by the passed ones.
+  void setLidarDescriptors(const DescriptorsT& descriptors);
+
+  /// Replace (copy) the internal descriptors by the passed ones.
+  void setLidarDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+
+  /// Replace (swap) the internal 3D measurements by the passed ones.
+  void swapLidarKeypoint3DMeasurements(Eigen::Matrix3Xd* vectors);
+  
+  /// Replace (swap) the internal 2D measurements by the passed ones.
+  void swapLidarKeypoint2DMeasurements(Eigen::Matrix2Xd* vectors);
+
+  /// Replace (swap) the internal descriptors by the passed ones.
+  void swapLidarDescriptors(DescriptorsT* descriptors);
 
  private:
   /// Timestamp in nanoseconds.

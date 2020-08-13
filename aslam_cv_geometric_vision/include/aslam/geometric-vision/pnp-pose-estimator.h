@@ -48,15 +48,16 @@ class PnpPoseEstimator {
       aslam::Transformation* T_G_I, std::vector<int>* inliers,
       std::vector<double>* inlier_distances_to_model, int* num_iters);
 
-  bool absolutePoseRansac(
-      const Eigen::Matrix2Xd& measurements,
-      const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
-      int max_ransac_iters, aslam::Camera::ConstPtr camera_ptr,
-      aslam::Transformation* T_G_C, std::vector<int>* inliers, int* num_iters);
+  bool absolutePoseRansac(const Eigen::Matrix2Xd& measurements,
+                          const Eigen::Matrix3Xd& G_landmark_positions,
+                          double pixel_sigma, int max_ransac_iters,
+                          aslam::Camera::ConstPtr camera_ptr,
+                          aslam::Transformation* T_G_C,
+                          std::vector<int>* inliers, int* num_iters);
 
-  /// Same as the above functions, but supports multiple cameras. Only
-  /// additional information is the NCamera (instead of Camera) pointer and a
-  /// vector, measurement_camera_indices, of the same length as measurements
+  /// Same as the above functions, but supports multiple cameras. Only additional
+  /// information is the NCamera (instead of Camera) pointer and a vector,
+  /// measurement_camera_indices, of the same length as measurements
   /// that maps each measurement to a camera index (corresponding to the index
   /// in NCamera).
   bool absoluteMultiPoseRansac(
@@ -73,13 +74,6 @@ class PnpPoseEstimator {
       aslam::Transformation* T_G_I, std::vector<int>* inliers,
       std::vector<double>* inlier_distances_to_model, int* num_iters);
 
-  bool absoluteMultiPoseRansacLidarFeatures(
-      const Eigen::Matrix3Xd& measurements,
-      const std::vector<int>& measurement_camera_indices,
-      const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
-      int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
-      aslam::Transformation* T_G_I, std::vector<int>* inliers,
-      std::vector<double>* inlier_distances_to_model, int* num_iters);
 
   // TODO(mariusbr) get this from feature_tracking_pipelines
   void RansacTransformationFor3DPoints(
