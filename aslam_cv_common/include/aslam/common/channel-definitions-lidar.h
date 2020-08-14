@@ -5,7 +5,7 @@
 #include <aslam/common/channel-declaration.h>
 
 // 3D keypoint coordinates in Lidar Frame
-DECLARE_CHANNEL(KEYPOINT_VECTORS, Eigen::Matrix3Xd)
+DECLARE_CHANNEL(LIDAR_3D_MEASUREMENTS, Eigen::Matrix3Xd)
 
 // 2D pixel coordinates in the Lidar Image
 DECLARE_CHANNEL(LIDAR_2D_MEASUREMENTS, Eigen::Matrix2Xd)
