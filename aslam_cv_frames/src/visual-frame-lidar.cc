@@ -124,8 +124,8 @@ void VisualFrame::swapLidarKeypoint3DMeasurements(
 
 void VisualFrame::swapLidarKeypoint2DMeasurements(
     Eigen::Matrix2Xd* vectors_new) {
-  if (!aslam::channels::has_LIDAR_3D_MEASUREMENTS_Channel(channels_)) {
-    aslam::channels::add_LIDAR_3D_MEASUREMENTS_Channel(&channels_);
+  if (!aslam::channels::has_LIDAR_2D_MEASUREMENTS_Channel(channels_)) {
+    aslam::channels::add_LIDAR_2D_MEASUREMENTS_Channel(&channels_);
   }
   Eigen::Matrix2Xd& vectors =
       aslam::channels::get_LIDAR_2D_MEASUREMENTS_Data(channels_);
