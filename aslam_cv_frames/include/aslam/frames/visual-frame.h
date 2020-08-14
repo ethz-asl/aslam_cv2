@@ -390,10 +390,10 @@ class VisualFrame  {
   const unsigned char* getLidarDescriptor(size_t index) const;
 
   /// Replace (copy) the internal 3D measurements by the passed ones.
-  void setLidarKeypoint3DMeasurements(const Eigen::Matrix3Xd& keypoint_vectors);
+  void setLidarKeypoint3DMeasurements(const Eigen::Matrix3Xd& lidar_3d_measurements);
 
   /// Replace (copy) the internal 2D measurments by the passed ones.
-  void setLidarKeypoint2DMeasurements(const Eigen::Matrix2Xd& keypoint_vectors);
+  void setLidarKeypoint2DMeasurements(const Eigen::Matrix2Xd& lidar_2d_measurements);
 
   /// Replace (copy) the internal descriptors by the passed ones.
   void setLidarDescriptors(const DescriptorsT& descriptors);
