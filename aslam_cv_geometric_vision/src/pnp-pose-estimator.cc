@@ -342,44 +342,44 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
   CHECK_GT(point_set_2.size(), 6u);
   for (int j = 0; j < ransac_max_iterations; ++j) {
     // Generate 3 random indeces for Ransac
-    std::vector<int> ransac_indeces(6);
+    std::vector<int> ransac_indices(6);
 
-    ransac_indeces[0] = rand() % point_set_2.size();
-    while (ransac_indeces[0] == ransac_indeces[1]) {
-      ransac_indeces[1] = rand() % point_set_2.size();
+    ransac_indices[0] = rand() % point_set_2.size();
+    while (ransac_indices[0] == ransac_indices[1]) {
+      ransac_indices[1] = rand() % point_set_2.size();
     }
-    while (ransac_indeces[0] == ransac_indeces[2] ||
-           ransac_indeces[1] == ransac_indeces[2]) {
-      ransac_indeces[2] = rand() % point_set_2.size();
+    while (ransac_indices[0] == ransac_indices[2] ||
+           ransac_indices[1] == ransac_indices[2]) {
+      ransac_indices[2] = rand() % point_set_2.size();
     }
-    while (ransac_indeces[0] == ransac_indeces[3] ||
-           ransac_indeces[1] == ransac_indeces[3] ||
-           ransac_indeces[2] == ransac_indeces[3]) {
-      ransac_indeces[3] = rand() % point_set_2.size();
+    while (ransac_indices[0] == ransac_indices[3] ||
+           ransac_indices[1] == ransac_indices[3] ||
+           ransac_ind1eces[2] == ransac_indices[3]) {
+      ransac_indices[3] = rand() % point_set_2.size();
     }
-    while (ransac_indeces[0] == ransac_indeces[4] ||
-           ransac_indeces[1] == ransac_indeces[4] ||
-           ransac_indeces[2] == ransac_indeces[4] ||
-           ransac_indeces[3] == ransac_indeces[4]) {
-      ransac_indeces[4] = rand() % point_set_2.size();
+    while (ransac_indices[0] == ransac_indices[4] ||
+           ransac_indices[1] == ransac_indices[4] ||
+           ransac_indices[2] == ransac_indices[4] ||
+           ransac_indices[3] == ransac_indices[4]) {
+      ransac_indices[4] = rand() % point_set_2.size();
     }
-    while (ransac_indeces[0] == ransac_indeces[5] ||
-           ransac_indeces[1] == ransac_indeces[5] ||
-           ransac_indeces[2] == ransac_indeces[5] ||
-           ransac_indeces[3] == ransac_indeces[5] ||
-           ransac_indeces[4] == ransac_indeces[5]) {
-      ransac_indeces[5] = rand() % point_set_2.size();
+    while (ransac_indices[0] == ransac_indices[5] ||
+           ransac_indices[1] == ransac_indices[5] ||
+           ransac_indices[2] == ransac_indices[5] ||
+           ransac_indices[3] == ransac_indices[5] ||
+           ransac_indices[4] == ransac_indices[5]) {
+      ransac_indices[5] = rand() % point_set_2.size();
     }
 
-    // Generate transformation matrix
+    // Generate transformation matrix.
     // https://igl.ethz.ch/projects/ARAP/svd_rot.pdf
     Eigen::Matrix3d X, Y;
-    X << point_set_1[ransac_indeces[0]], point_set_1[ransac_indeces[1]],
-        point_set_1[ransac_indeces[2]], point_set_1[ransac_indeces[3]],
-        point_set_1[ransac_indeces[4]], point_set_1[ransac_indeces[5]];
-    Y << point_set_2[ransac_indeces[0]], point_set_2[ransac_indeces[1]],
-        point_set_2[ransac_indeces[2]], point_set_2[ransac_indeces[3]],
-        point_set_2[ransac_indeces[4]], point_set_2[ransac_indeces[5]];
+    X << point_set_1[ransac_indices[0]], point_set_1[ransac_indices[1]],
+        point_set_1[ransac_indices[2]], point_set_1[ransac_indices[3]],
+        point_set_1[ransac_indices[4]], point_set_1[ransac_indices[5]];
+    Y << point_set_2[ransac_indices[0]], point_set_2[ransac_indices[1]],
+        point_set_2[ransac_indices[2]], point_set_2[ransac_indices[3]],
+        point_set_2[ransac_indices[4]], point_set_2[ransac_indices[5]];
 
     Eigen::VectorXd X_mean = X.rowwise().mean();
     Eigen::VectorXd Y_mean = Y.rowwise().mean();
