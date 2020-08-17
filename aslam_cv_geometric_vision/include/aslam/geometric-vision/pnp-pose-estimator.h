@@ -72,7 +72,7 @@ class PnpPoseEstimator {
       aslam::Transformation* T_G_I, std::vector<int>* inliers,
       std::vector<double>* inlier_distances_to_model, int* num_iters);
 
-  bool absoluteMultiPoseRansacLidarFeatures(
+  bool absoluteMultiPoseRansac3DFeatures(
       const Eigen::Matrix3Xd& measurements,
       const std::vector<int>& measurement_camera_indices,
       const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
