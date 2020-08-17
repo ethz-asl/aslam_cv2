@@ -341,7 +341,7 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
   CHECK_EQ(point_set_1.size(), point_set_2.size());
   CHECK_GT(point_set_2.size(), 6u);
   for (int j = 0; j < ransac_max_iterations; ++j) {
-    // Generate 3 random indeces for Ransac
+    // Generate 6 unique random indices for Ransac.
     std::vector<int> ransac_indices(6);
 
     ransac_indices[0] = rand() % point_set_2.size();
