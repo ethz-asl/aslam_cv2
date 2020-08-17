@@ -273,7 +273,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
   return ransac_success;
 }
 
-bool PnpPoseEstimator::absoluteMultiPoseRansacLidarFeatures(
+bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
     const Eigen::Matrix3Xd& measurements,
     const std::vector<int>& measurement_camera_indices,
     const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,

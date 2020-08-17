@@ -74,7 +74,7 @@ class PnpPoseEstimator {
       aslam::Transformation* T_G_I, std::vector<int>* inliers,
       std::vector<double>* inlier_distances_to_model, int* num_iters);
 
-  bool absoluteMultiPoseRansacLidarFeatures(
+  bool absoluteMultiPoseRansac3DFeatures(
       const Eigen::Matrix3Xd& measurements,
       const std::vector<int>& measurement_camera_indices,
       const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
@@ -82,14 +82,13 @@ class PnpPoseEstimator {
       aslam::Transformation* T_G_I, std::vector<int>* inliers,
       std::vector<double>* inlier_distances_to_model, int* num_iters);
 
+ private:
   void RansacTransformationFor3DPoints(
       std::vector<Eigen::Vector3d> point_set_1,
       std::vector<Eigen::Vector3d> point_set_2,
       Eigen::Matrix3d* rotation_matrix, Eigen::Vector3d* translation,
       std::vector<size_t>* best_inliers, std::vector<size_t>* best_outliers,
       double ransac_threshold, int ransac_max_iterations);
-
- private:
   /// Whether to let RANSAC pick a timestamp-based random seed or not. If false,
   /// a seed can be set with srand().
   const bool random_seed_;
