@@ -1,13 +1,15 @@
 #ifndef GEOMETRIC_VISION_PNP_POSE_ESTIMATOR_H_
 #define GEOMETRIC_VISION_PNP_POSE_ESTIMATOR_H_
 
+#include <memory>
+#include <vector>
+
 #include <Eigen/Core>
+#include <glog/logging.h>
+
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncamera.h>
 #include <aslam/common/pose-types.h>
-#include <glog/logging.h>
-#include <memory>
-#include <vector>
 
 namespace aslam {
 namespace geometric_vision {

@@ -50,13 +50,13 @@ bool PnpPoseEstimator::absolutePoseRansacPinholeCam(
     }
     default:
       LOG(FATAL) << "Unknown camera type. The given camera is neither of type "
-                    "Pinhole nor UnifiedProjection.";
+      "Pinhole nor UnifiedProjection.";
   }
 
   // Assuming the mean of lens focal lengths is the best estimate here.
-  return absolutePoseRansac(
-      measurements, G_landmark_positions, ransac_threshold, max_ransac_iters,
-      camera_ptr, T_G_C, inliers, num_iters);
+  return absolutePoseRansac(measurements, G_landmark_positions,
+                            ransac_threshold, max_ransac_iters,camera_ptr,
+                            T_G_C, inliers, num_iters);
 }
 
 bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
@@ -66,9 +66,8 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
     int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
     aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
   std::vector<double> inlier_distances_to_model;
-  return absoluteMultiPoseRansacPinholeCam(
-      measurements, measurement_camera_indices, G_landmark_positions,
-      pixel_sigma, max_ransac_iters, ncamera_ptr, T_G_I, inliers,
+  return absoluteMultiPoseRansacPinholeCam(measurements, measurement_camera_indices, G_landmark_positions, pixel_sigma, max_ransac_iters,
+      ncamera_ptr, T_G_I, inliers,
       &inlier_distances_to_model, num_iters);
 }
 
@@ -84,8 +83,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
   CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
   CHECK_EQ(measurements.cols(), G_landmark_positions.cols());
-  CHECK_EQ(
-      measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
+  CHECK_EQ(measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
 
   const size_t num_cameras = ncamera_ptr->getNumCameras();
   double focal_length = 0;
@@ -106,17 +104,17 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
         break;
       }
       case aslam::Camera::Type::kUnifiedProjection: {
-        const double fu = camera_ptr->getParameters()(
-            UnifiedProjectionCamera::Parameters::kFu);
-        const double fv = camera_ptr->getParameters()(
-            UnifiedProjectionCamera::Parameters::kFv);
+        const double fu =
+        camera_ptr->getParameters()(UnifiedProjectionCamera::Parameters::kFu);
+        const double fv =
+        camera_ptr->getParameters()(UnifiedProjectionCamera::Parameters::kFv);
 
         focal_length += (fu + fv);
         break;
       }
       default:
         LOG(FATAL) << "Unknown camera type.  The given camera is neither of "
-                      "type Pinhole nor UnifiedProjection.";
+        "type Pinhole nor UnifiedProjection.";
     }
   }
 
@@ -124,10 +122,10 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
 
   const double ransac_threshold = 1.0 - cos(atan(pixel_sigma / focal_length));
 
-  return absoluteMultiPoseRansac(
-      measurements, measurement_camera_indices, G_landmark_positions,
-      ransac_threshold, max_ransac_iters, ncamera_ptr, T_G_I, inliers,
-      inlier_distances_to_model, num_iters);
+  return absoluteMultiPoseRansac(measurements, measurement_camera_indices,
+                                 G_landmark_positions, ransac_threshold,
+                                 max_ransac_iters, ncamera_ptr, T_G_I, inliers,
+                                 inlier_distances_to_model, num_iters);
 }
 
 bool PnpPoseEstimator::absolutePoseRansac(
@@ -150,17 +148,15 @@ bool PnpPoseEstimator::absolutePoseRansac(
     points[i] = G_landmark_positions.col(i);
   }
 
-  opengv::absolute_pose::CentralAbsoluteAdapter adapter(
-      bearing_vectors, points);
+  opengv::absolute_pose::CentralAbsoluteAdapter adapter(bearing_vectors,
+                                                        points);
   opengv::sac::Ransac<
-      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
-      ransac;
+      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem> ransac;
   std::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
       absposeproblem_ptr(
           new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(
-              adapter,
-              opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem::
-                  KNEIP,
+              adapter, opengv::sac_problems::absolute_pose::
+                           AbsolutePoseSacProblem::KNEIP,
               random_seed_));
   ransac.sac_model_ = absposeproblem_ptr;
   ransac.threshold_ = ransac_threshold;
@@ -186,9 +182,8 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
     aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
   std::vector<double> inlier_distances_to_model;
   return absoluteMultiPoseRansac(
-      measurements, measurement_camera_indices, G_landmark_positions,
-      ransac_threshold, max_ransac_iters, ncamera_ptr, T_G_I, inliers,
-      &inlier_distances_to_model, num_iters);
+      measurements, measurement_camera_indices, G_landmark_positions,ransac_threshold,
+      max_ransac_iters, ncamera_ptr, T_G_I, inliers, &inlier_distances_to_model, num_iters);
 }
 
 bool PnpPoseEstimator::absoluteMultiPoseRansac(
@@ -203,8 +198,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
   CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
   CHECK_EQ(measurements.cols(), G_landmark_positions.cols());
-  CHECK_EQ(
-      measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
+  CHECK_EQ(measurements.cols(), static_cast<int>(measurement_camera_indices.size()));
 
   // Fill in camera information from NCamera.
   // Rotation matrix for each camera.
@@ -245,12 +239,10 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
       bearing_vectors, measurement_camera_indices, points, cam_translations,
       cam_rotations);
   opengv::sac::Ransac<
-      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
-      ransac;
+      opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem> ransac;
   std::shared_ptr<opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem>
       absposeproblem_ptr(
-          new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(
-              adapter,
+          new opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem(adapter,
               opengv::sac_problems::absolute_pose::AbsolutePoseSacProblem::GP3P,
               random_seed_));
   ransac.sac_model_ = absposeproblem_ptr;
@@ -263,8 +255,9 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
     // Optional nonlinear model refinement over all inliers.
     Eigen::Matrix<double, 3, 4> final_model = ransac.model_coefficients_;
     if (run_nonlinear_refinement_) {
-      absposeproblem_ptr->optimizeModelCoefficients(
-          ransac.inliers_, ransac.model_coefficients_, final_model);
+      absposeproblem_ptr->optimizeModelCoefficients(ransac.inliers_,
+                                                    ransac.model_coefficients_,
+                                                    final_model);
     }
 
     // Set result.
