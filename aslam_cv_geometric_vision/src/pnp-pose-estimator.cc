@@ -347,7 +347,7 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
     }
     while (ransac_indices[0] == ransac_indices[3] ||
            ransac_indices[1] == ransac_indices[3] ||
-           ransac_ind1eces[2] == ransac_indices[3]) {
+           ransac_indices[2] == ransac_indices[3]) {
       ransac_indices[3] = rand() % point_set_2.size();
     }
     while (ransac_indices[0] == ransac_indices[4] ||
