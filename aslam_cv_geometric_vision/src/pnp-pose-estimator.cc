@@ -339,6 +339,9 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
 
   for (int j = 0; j < ransac_max_iterations; ++j) {
     // Generate 6 unique random indices for Ransac.
+    if (!random_seed_){
+      std::srand(time(0));
+    }
     std::vector<unsigned int> ransac_indices(point_set_1.size());
     std::iota(ransac_indices.begin(), ransac_indices.end(), 0);
     std::random_shuffle(ransac_indices.begin(), ransac_indices.end());
