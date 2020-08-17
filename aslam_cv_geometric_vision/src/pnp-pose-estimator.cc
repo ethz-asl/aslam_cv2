@@ -50,12 +50,12 @@ bool PnpPoseEstimator::absolutePoseRansacPinholeCam(
     }
     default:
       LOG(FATAL) << "Unknown camera type. The given camera is neither of type "
-      "Pinhole nor UnifiedProjection.";
+          "Pinhole nor UnifiedProjection.";
   }
 
   // Assuming the mean of lens focal lengths is the best estimate here.
   return absolutePoseRansac(measurements, G_landmark_positions,
-                            ransac_threshold, max_ransac_iters,camera_ptr,
+                            ransac_threshold, max_ransac_iters, camera_ptr,
                             T_G_C, inliers, num_iters);
 }
 
@@ -66,9 +66,9 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
     int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
     aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
   std::vector<double> inlier_distances_to_model;
-  return absoluteMultiPoseRansacPinholeCam(measurements, measurement_camera_indices, G_landmark_positions, pixel_sigma, max_ransac_iters,
-      ncamera_ptr, T_G_I, inliers,
-      &inlier_distances_to_model, num_iters);
+  return absoluteMultiPoseRansacPinholeCam(
+      measurements, measurement_camera_indices, G_landmark_positions, pixel_sigma, max_ransac_iters,
+      ncamera_ptr, T_G_I, inliers, &inlier_distances_to_model, num_iters);
 }
 
 bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
@@ -105,16 +105,16 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
       }
       case aslam::Camera::Type::kUnifiedProjection: {
         const double fu =
-        camera_ptr->getParameters()(UnifiedProjectionCamera::Parameters::kFu);
+            camera_ptr->getParameters()(UnifiedProjectionCamera::Parameters::kFu);
         const double fv =
-        camera_ptr->getParameters()(UnifiedProjectionCamera::Parameters::kFv);
+            camera_ptr->getParameters()(UnifiedProjectionCamera::Parameters::kFv);
 
         focal_length += (fu + fv);
         break;
       }
       default:
         LOG(FATAL) << "Unknown camera type.  The given camera is neither of "
-        "type Pinhole nor UnifiedProjection.";
+            "type Pinhole nor UnifiedProjection.";
     }
   }
 
@@ -182,7 +182,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
     aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
   std::vector<double> inlier_distances_to_model;
   return absoluteMultiPoseRansac(
-      measurements, measurement_camera_indices, G_landmark_positions,ransac_threshold,
+      measurements, measurement_camera_indices, G_landmark_positions, ransac_threshold,
       max_ransac_iters, ncamera_ptr, T_G_I, inliers, &inlier_distances_to_model, num_iters);
 }
 
@@ -284,6 +284,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
   CHECK_NOTNULL(inliers);
   CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
+  CHECK_EQ(measurements.cols(),measurements.cols());
   if (measurements.size() < 6) {
     return false;
   }
@@ -333,36 +334,14 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
   CHECK_GT(ransac_max_iterations, 0u);
   CHECK_EQ(point_set_1.size(), point_set_2.size());
   CHECK_GT(point_set_2.size(), 6u);
+
+  const double ransac_stopping_ration = 0.5;
+
   for (int j = 0; j < ransac_max_iterations; ++j) {
     // Generate 6 unique random indices for Ransac.
-    std::vector<int> ransac_indices(6);
-
-    ransac_indices[0] = rand() % point_set_2.size();
-    while (ransac_indices[0] == ransac_indices[1]) {
-      ransac_indices[1] = rand() % point_set_2.size();
-    }
-    while (ransac_indices[0] == ransac_indices[2] ||
-           ransac_indices[1] == ransac_indices[2]) {
-      ransac_indices[2] = rand() % point_set_2.size();
-    }
-    while (ransac_indices[0] == ransac_indices[3] ||
-           ransac_indices[1] == ransac_indices[3] ||
-           ransac_indices[2] == ransac_indices[3]) {
-      ransac_indices[3] = rand() % point_set_2.size();
-    }
-    while (ransac_indices[0] == ransac_indices[4] ||
-           ransac_indices[1] == ransac_indices[4] ||
-           ransac_indices[2] == ransac_indices[4] ||
-           ransac_indices[3] == ransac_indices[4]) {
-      ransac_indices[4] = rand() % point_set_2.size();
-    }
-    while (ransac_indices[0] == ransac_indices[5] ||
-           ransac_indices[1] == ransac_indices[5] ||
-           ransac_indices[2] == ransac_indices[5] ||
-           ransac_indices[3] == ransac_indices[5] ||
-           ransac_indices[4] == ransac_indices[5]) {
-      ransac_indices[5] = rand() % point_set_2.size();
-    }
+    std::vector<unsigned int> ransac_indices(point_set_1.size());
+    std::iota(ransac_indices.begin(), ransac_indices.end(), 0);
+    std::random_shuffle(ransac_indices.begin(), ransac_indices.end());
 
     // Generate transformation matrix.
     // https://igl.ethz.ch/projects/ARAP/svd_rot.pdf
@@ -410,6 +389,10 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
       *best_rotation_matrix = R;
       *best_translation = t;
       *best_inliers = inliers;
+    }
+    double inlier_ratio = inliers.size() / (inliers.size() + outliers.size());
+    if( inlier_ratio> ransac_stopping_ration){
+      break;
     }
   }
 }
