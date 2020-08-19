@@ -101,7 +101,16 @@ class VisualFrame  {
 
   /// Get the number of keypoints measurements stored in this frame.
   inline size_t getNumKeypointMeasurements() const {
-    return static_cast<size_t>(getKeypointMeasurements().cols());
+    size_t num_measurements = 0;
+    if (hasKeypointMeasurements()) {
+      num_measurements += getKeypointMeasurements().cols();
+    }
+    VLOG(0) << "2D num_measurements: " << num_measurements;
+    if (hasLidarKeypoint3DMeasurements()) {
+      num_measurements += getLidarKeypoint3DMeasurements().cols();
+    }
+    VLOG(0) << "3D num_measurements: " << num_measurements;
+    return num_measurements;
   }
 
   /// The keypoint measurement uncertainties stored in a frame.
