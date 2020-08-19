@@ -105,11 +105,9 @@ class VisualFrame  {
     if (hasKeypointMeasurements()) {
       num_measurements += getKeypointMeasurements().cols();
     }
-    VLOG(0) << "2D num_measurements: " << num_measurements;
     if (hasLidarKeypoint3DMeasurements()) {
       num_measurements += getLidarKeypoint3DMeasurements().cols();
     }
-    VLOG(0) << "3D num_measurements: " << num_measurements;
     return num_measurements;
   }
 
