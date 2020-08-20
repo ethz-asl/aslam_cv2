@@ -24,6 +24,9 @@ EXPECT_DEATH(frame.getKeypointMeasurement(0), "^");
 EXPECT_DEATH(frame.getKeypointMeasurementUncertainty(0), "^");
 EXPECT_DEATH(frame.getKeypointScale(0), "^");
 EXPECT_DEATH(frame.getKeypointOrientation(0), "^");
+EXPECT_DEATH(frame.getLidarKeypoint3DMeasurement(0), "^");
+EXPECT_DEATH(frame.getLidarKeypoint2DMeasurement(0), "^");
+EXPECT_DEATH(frame.getLidarDescriptor(0), "^");
 }
 
 TEST(Frame, DeathOnGetUnsetData) {
@@ -34,6 +37,9 @@ EXPECT_DEATH(frame.getKeypointMeasurementUncertainties(), "^");
 EXPECT_DEATH(frame.getKeypointScales(), "^");
 EXPECT_DEATH(frame.getKeypointOrientations(), "^");
 EXPECT_DEATH(frame.getRawImage(), "^");
+EXPECT_DEATH(frame.getLidarKeypoint3DMeasurements(), "^");
+EXPECT_DEATH(frame.getLidarKeypoint2DMeasurements(), "^");
+EXPECT_DEATH(frame.getLidarDescriptors(), "^");
 }
 
 TEST(Frame, DeathOnGetMutableUnsetData) {
@@ -44,6 +50,9 @@ EXPECT_DEATH(frame.getKeypointMeasurementUncertaintiesMutable(), "^");
 EXPECT_DEATH(frame.getKeypointScalesMutable(), "^");
 EXPECT_DEATH(frame.getKeypointOrientationsMutable(), "^");
 EXPECT_DEATH(frame.getRawImageMutable(), "^");
+EXPECT_DEATH(frame.getLidarKeypoint3DMeasurementsMutable(), "^");
+EXPECT_DEATH(frame.getLidarKeypoint2DMeasurementsMutable(), "^");
+EXPECT_DEATH(frame.getLidarDescriptorsMutable(), "^");
 }
 
 TEST(Frame, SetGetDescriptors) {
@@ -74,6 +83,22 @@ EXPECT_EQ(&data_2, frame.getKeypointMeasurementsMutable());
 for (int i = 0; i < data.cols(); ++i) {
   const Eigen::Vector2d& ref = frame.getKeypointMeasurement(i);
   const Eigen::Vector2d& should = data.block<2, 1>(0, i);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(should, ref, 1e-6));
+}
+}
+
+TEST(Frame, SetGetLidar3DKeypointMeasurements) {
+aslam::VisualFrame frame;
+Eigen::Matrix3Xd data;
+data.resize(Eigen::NoChange, 10);
+data.setRandom();
+frame.setLidarKeypoint3DMeasurements(data);
+const Eigen::Matrix3Xd& data_2 = frame.getLidarKeypoint3DMeasurements();
+EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
+EXPECT_EQ(&data_2, frame.getLidarKeypoint3DMeasurementsMutable());
+for (int i = 0; i < data.cols(); ++i) {
+  const Eigen::Vector3d& ref = frame.getLidarKeypoint3DMeasurement(i);
+  const Eigen::Vector3d& should = data.block<3, 1>(0, i);
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(should, ref, 1e-6));
 }
 }
@@ -176,6 +201,8 @@ TEST(Frame, CopyConstructor) {
   frame.setDescriptors(descriptors);
   Eigen::VectorXi track_ids = Eigen::VectorXi::Random(1, 10);
   frame.setTrackIds(track_ids);
+  Eigen::Matrix3Xd lidar_keypoints = Eigen::Matrix3Xd::Random(3, kNumRandomValues);
+  frame.setLidarKeypoint3DMeasurements(lidar_keypoints);
 
   // Set image.
   cv::Mat image = cv::Mat(3, 2, CV_8UC1);
@@ -195,6 +222,7 @@ TEST(Frame, CopyConstructor) {
   EIGEN_MATRIX_EQUAL(scales, frame_cloned.getKeypointScales());
   EIGEN_MATRIX_EQUAL(descriptors, frame_cloned.getDescriptors());
   EIGEN_MATRIX_EQUAL(track_ids, frame_cloned.getTrackIds());
+  EIGEN_MATRIX_EQUAL(lidar_keypoints, frame_cloned.getLidarKeypoint3DMeasurements());
 
   EXPECT_NEAR_OPENCV(image, frame_cloned.getRawImage(), 0);
 

@@ -38,6 +38,7 @@ class VisualFrame  {
   /// \brief The descriptor matrix stores descriptors in columns, i.e. the descriptor matrix
   ///        has num_bytes_per_descriptor rows and num_descriptors columns.
   typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
+  typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> LidarDescriptorsT;
   typedef Eigen::VectorXd KeypointScoresT;
 
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
@@ -376,7 +377,7 @@ class VisualFrame  {
   const Eigen::Matrix2Xd& getLidarKeypoint2DMeasurements() const;
   
   /// The descriptors stored in a frame.
-  const DescriptorsT&  getLidarDescriptors() const;
+  const LidarDescriptorsT&  getLidarDescriptors() const;
 
   /// A pointer to the 3D measurements, can be used to swap in new data.
   Eigen::Matrix3Xd* getLidarKeypoint3DMeasurementsMutable();
@@ -385,7 +386,7 @@ class VisualFrame  {
   Eigen::Matrix2Xd* getLidarKeypoint2DMeasurementsMutable();
 
   /// A pointer to the descriptors, can be used to swap in new data.
-  DescriptorsT*  getLidarDescriptorsMutable();
+  LidarDescriptorsT*  getLidarDescriptorsMutable();
 
   /// Return block expression of the 3D measurement pointed to by index.
   const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getLidarKeypoint3DMeasurement(size_t index) const;
@@ -403,10 +404,10 @@ class VisualFrame  {
   void setLidarKeypoint2DMeasurements(const Eigen::Matrix2Xd& lidar_2d_measurements);
 
   /// Replace (copy) the internal descriptors by the passed ones.
-  void setLidarDescriptors(const DescriptorsT& descriptors);
+  void setLidarDescriptors(const LidarDescriptorsT& descriptors);
 
   /// Replace (copy) the internal descriptors by the passed ones.
-  void setLidarDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+  void setLidarDescriptors(const Eigen::Map<const LidarDescriptorsT>& descriptors);
 
   /// Replace (swap) the internal 3D measurements by the passed ones.
   void swapLidarKeypoint3DMeasurements(Eigen::Matrix3Xd* vectors);
@@ -415,7 +416,7 @@ class VisualFrame  {
   void swapLidarKeypoint2DMeasurements(Eigen::Matrix2Xd* vectors);
 
   /// Replace (swap) the internal descriptors by the passed ones.
-  void swapLidarDescriptors(DescriptorsT* descriptors);
+  void swapLidarDescriptors(LidarDescriptorsT* descriptors);
 
  private:
   /// Timestamp in nanoseconds.
