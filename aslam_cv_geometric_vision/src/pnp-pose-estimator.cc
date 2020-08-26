@@ -284,7 +284,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
   CHECK_NOTNULL(inliers);
   CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
-  CHECK_EQ(measurements.cols(),measurements.cols());
+  CHECK_EQ(measurements.cols(), G_landmark_positions.cols()) << "Measurements and landmarks are not in pairs.";
   if (measurements.size() < 6) {
     return false;
   }
