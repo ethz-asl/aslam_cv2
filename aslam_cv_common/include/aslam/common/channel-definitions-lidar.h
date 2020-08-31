@@ -4,6 +4,9 @@
 #include <Eigen/Dense>
 #include <aslam/common/channel-declaration.h>
 
+/// Track ID's for tracked features. (-1 if not tracked); (feature tracker output)
+DECLARE_CHANNEL(LIDAR_TRACK_IDS, Eigen::VectorXi)
+
 // 3D keypoint coordinates in Lidar Frame
 DECLARE_CHANNEL(LIDAR_3D_MEASUREMENTS, Eigen::Matrix3Xd)
 

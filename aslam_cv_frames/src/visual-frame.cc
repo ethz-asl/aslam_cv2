@@ -497,23 +497,6 @@ void VisualFrame::discardUntrackedObservations(
     common::stl_helpers::eraseIndicesFromContainer(
         *discarded_indices, original_count, &adapter);
   }
-  if (hasLidarKeypoint3DMeasurements()) {
-    common::stl_helpers::eraseIndicesFromContainer(
-        *discarded_indices, original_count,
-        getLidarKeypoint3DMeasurementsMutable());
-  }
-  if (hasLidarKeypoint2DMeasurements()) {
-    common::stl_helpers::eraseIndicesFromContainer(
-        *discarded_indices, original_count,
-        getLidarKeypoint2DMeasurementsMutable());
-  }
-  if (hasLidarDescriptors()) {
-    common::stl_helpers::OneDimensionAdapter<
-        unsigned char, common::stl_helpers::kColumns>
-        adapter(getLidarDescriptorsMutable());
-    common::stl_helpers::eraseIndicesFromContainer(
-        *discarded_indices, original_count, &adapter);
-  }
   common::stl_helpers::eraseIndicesFromContainer(
       *discarded_indices, original_count, getTrackIdsMutable());
 }
