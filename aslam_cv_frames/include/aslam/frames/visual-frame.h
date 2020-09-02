@@ -373,6 +373,9 @@ class VisualFrame  {
   /// Are there descriptors in this frame?
   bool hasLidarDescriptors() const;
 
+  /// Are there keypoint measurement uncertainties stored in this frame?
+  bool hasLidarKeypoint2DMeasurementUncertainties() const;
+
   /// The track ids stored in this frame.
   const Eigen::VectorXi& getLidarTrackIds() const;
 
@@ -384,6 +387,9 @@ class VisualFrame  {
 
   /// The descriptors stored in a frame.
   const LidarDescriptorsT& getLidarDescriptors() const;
+
+  /// The keypoint measurement uncertainties stored in a frame.
+  const Eigen::VectorXd& getLidarKeypoint2DMeasurementUncertainties() const;
 
   /// A pointer to the track ids, can be used to swap in new data.
   Eigen::VectorXi* getLidarTrackIdsMutable();
@@ -397,6 +403,9 @@ class VisualFrame  {
   /// A pointer to the descriptors, can be used to swap in new data.
   LidarDescriptorsT* getLidarDescriptorsMutable();
 
+  /// A pointer to the keypoint measurement uncertainties, can be used to swap in new data.
+  Eigen::VectorXd* getLidarKeypoint2DMeasurementUncertaintiesMutable();
+
   /// Return block expression of the 3D measurement pointed to by index.
   const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getLidarKeypoint3DMeasurement(
       size_t index) const;
@@ -407,6 +416,9 @@ class VisualFrame  {
 
   /// Return pointer location of the descriptor pointed to by index.
   const unsigned char* getLidarDescriptor(size_t index) const;
+
+  /// Return the keypoint measurement uncertainty at index.
+  double getLidarKeypoint2DMeasurementUncertainty(size_t index) const;
 
   /// Replace (copy) the internal track ids by the passed ones.
   void setLidarTrackIds(const Eigen::VectorXi& track_ids);
@@ -426,6 +438,11 @@ class VisualFrame  {
   void setLidarDescriptors(
       const Eigen::Map<const LidarDescriptorsT>& descriptors);
 
+  /// Replace (copy) the internal keypoint measurement uncertainties
+  ///        by the passed ones.
+  void setLidarKeypoint2DMeasurementUncertainties(
+      const Eigen::VectorXd& uncertainties);
+
   /// Replace (swap) the internal track ids by the passed ones.
   void swapLidarTrackIds(Eigen::VectorXi* track_ids);
 
@@ -437,6 +454,11 @@ class VisualFrame  {
 
   /// Replace (swap) the internal descriptors by the passed ones.
   void swapLidarDescriptors(LidarDescriptorsT* descriptors);
+
+  /// Replace (swap) the internal keypoint measurement uncertainties
+  /// by the passed ones.
+  void swapLidarKeypoint2DMeasurementUncertainties(
+      Eigen::VectorXd* uncertainties);
 
   void discardUntrackedLidarObservations(
       std::vector<size_t>* discarded_indices);

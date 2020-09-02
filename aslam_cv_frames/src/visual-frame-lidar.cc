@@ -22,6 +22,11 @@ bool VisualFrame::hasLidarDescriptors() const {
   return aslam::channels::has_LIDAR_DESCRIPTORS_Channel(channels_);
 }
 
+bool VisualFrame::hasLidarKeypoint2DMeasurementUncertainties() const {
+  return aslam::channels::has_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Channel(
+      channels_);
+}
+
 const Eigen::VectorXi& VisualFrame::getLidarTrackIds() const {
   return aslam::channels::get_LIDAR_TRACK_IDS_Data(channels_);
 }
@@ -36,6 +41,12 @@ const Eigen::Matrix2Xd& VisualFrame::getLidarKeypoint2DMeasurements() const {
 
 const VisualFrame::DescriptorsT& VisualFrame::getLidarDescriptors() const {
   return aslam::channels::get_LIDAR_DESCRIPTORS_Data(channels_);
+}
+
+const Eigen::VectorXd& VisualFrame::getLidarKeypoint2DMeasurementUncertainties()
+    const {
+  return aslam::channels::get_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Data(
+      channels_);
 }
 
 Eigen::VectorXi* VisualFrame::getLidarTrackIdsMutable() {
@@ -62,6 +73,14 @@ VisualFrame::DescriptorsT* VisualFrame::getLidarDescriptorsMutable() {
   return &descriptors;
 }
 
+Eigen::VectorXd*
+VisualFrame::getLidarKeypoint2DMeasurementUncertaintiesMutable() {
+  Eigen::VectorXd& uncertainties =
+      aslam::channels::get_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Data(
+          channels_);
+  return &uncertainties;
+}
+
 const Eigen::Block<Eigen::Matrix3Xd, 3, 1>
 VisualFrame::getLidarKeypoint3DMeasurement(size_t index) const {
   Eigen::Matrix3Xd& keypoints =
@@ -83,6 +102,14 @@ const unsigned char* VisualFrame::getLidarDescriptor(size_t index) const {
       aslam::channels::get_LIDAR_DESCRIPTORS_Data(channels_);
   CHECK_LT(static_cast<int>(index), descriptors.cols());
   return &descriptors.coeffRef(0, index);
+}
+
+double VisualFrame::getLidarKeypoint2DMeasurementUncertainty(size_t index) const {
+  Eigen::VectorXd& data =
+      aslam::channels::get_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Data(
+          channels_);
+  CHECK_LT(static_cast<int>(index), data.rows());
+  return data.coeff(index, 0);
 }
 
 void VisualFrame::setLidarTrackIds(const Eigen::VectorXi& track_ids_new) {
@@ -132,6 +159,19 @@ void VisualFrame::setLidarDescriptors(
   descriptors = descriptors_new;
 }
 
+void VisualFrame::setLidarKeypoint2DMeasurementUncertainties(
+    const Eigen::VectorXd& uncertainties_new) {
+  if (!aslam::channels::has_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Channel(
+          channels_)) {
+    aslam::channels::add_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Channel(
+        &channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Data(
+          channels_);
+  data = uncertainties_new;
+}
+
 void VisualFrame::swapLidarTrackIds(Eigen::VectorXi* track_ids_new) {
   if (!aslam::channels::has_LIDAR_TRACK_IDS_Channel(channels_)) {
     aslam::channels::add_LIDAR_TRACK_IDS_Channel(&channels_);
@@ -170,6 +210,19 @@ void VisualFrame::swapLidarDescriptors(DescriptorsT* descriptors_new) {
   descriptors.swap(*descriptors_new);
 }
 
+void VisualFrame::swapLidarKeypoint2DMeasurementUncertainties(
+    Eigen::VectorXd* uncertainties_new) {
+  if (!aslam::channels::has_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Channel(
+          channels_)) {
+    aslam::channels::add_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Channel(
+        &channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Data(
+          channels_);
+  data.swap(*uncertainties_new);
+}
+
 void VisualFrame::discardUntrackedLidarObservations(
     std::vector<size_t>* discarded_indices) {
   CHECK_NOTNULL(discarded_indices)->clear();
@@ -201,6 +254,11 @@ void VisualFrame::discardUntrackedLidarObservations(
         adapter(getLidarDescriptorsMutable());
     common::stl_helpers::eraseIndicesFromContainer(
         *discarded_indices, original_count, &adapter);
+  }
+  if (hasLidarKeypoint2DMeasurementUncertainties()) {
+    common::stl_helpers::eraseIndicesFromContainer(
+        *discarded_indices, original_count,
+        getLidarKeypoint2DMeasurementUncertaintiesMutable());
   }
   common::stl_helpers::eraseIndicesFromContainer(
       *discarded_indices, original_count, getLidarTrackIdsMutable());
