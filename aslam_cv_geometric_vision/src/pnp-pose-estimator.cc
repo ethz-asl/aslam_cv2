@@ -277,9 +277,10 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
     const Eigen::Matrix3Xd& measurements,
     const std::vector<int>& measurement_camera_indices,
     const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
-    int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
-    aslam::Transformation* T_G_I, std::vector<int>* inliers,
-    std::vector<double>* inlier_distances_to_model, int* num_iters) {
+    int max_ransac_iters, double pnp_3d_ransac_stopping_ratio,
+    aslam::NCamera::ConstPtr ncamera_ptr, aslam::Transformation* T_G_I,
+    std::vector<int>* inliers, std::vector<double>* inlier_distances_to_model,
+    int* num_iters) {
   CHECK_NOTNULL(T_G_I);
   CHECK_NOTNULL(inliers);
   CHECK_NOTNULL(inlier_distances_to_model);
@@ -308,7 +309,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
 
   RansacTransformationFor3DPoints(
       landmarks, observations, &ransac_rotation_matrix, &ransac_translation,
-      &ransac_inliers, &ransac_outliers, ransac_threshold, max_ransac_iters);
+      &ransac_inliers, &ransac_outliers, ransac_threshold, max_ransac_iters,pnp_3d_ransac_stopping_ratio);
 
   // Set result.
   T_G_I->getPosition() = ransac_translation;
@@ -329,13 +330,12 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
     std::vector<Eigen::Vector3d> point_set_2,
     Eigen::Matrix3d* best_rotation_matrix, Eigen::Vector3d* best_translation,
     std::vector<size_t>* best_inliers, std::vector<size_t>* best_outliers,
-    double ransac_threshold, int ransac_max_iterations) {
+    double ransac_threshold, int ransac_max_iterations,
+    double pnp_3d_ransac_stopping_ratio) {
   CHECK_GT(ransac_threshold, 0.0);
   CHECK_GT(ransac_max_iterations, 0u);
   CHECK_EQ(point_set_1.size(), point_set_2.size());
   CHECK_GT(point_set_2.size(), 6u);
-
-  const double pnp_3d_ransac_stopping_ratio = 0.5;
 
   for (int j = 0; j < ransac_max_iterations; ++j) {
     // Generate 6 unique random indices for Ransac.
