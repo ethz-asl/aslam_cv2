@@ -335,7 +335,7 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
   CHECK_EQ(point_set_1.size(), point_set_2.size());
   CHECK_GT(point_set_2.size(), 6u);
 
-  const double ransac_stopping_ration = 0.5;
+  const double pnp_3d_ransac_stopping_ratio = 0.5;
 
   for (int j = 0; j < ransac_max_iterations; ++j) {
     // Generate 6 unique random indices for Ransac.
