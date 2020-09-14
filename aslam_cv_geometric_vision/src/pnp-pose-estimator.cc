@@ -394,7 +394,7 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
       *best_inliers = inliers;
     }
     double inlier_ratio = inliers.size() / (inliers.size() + outliers.size());
-    if( inlier_ratio> ransac_stopping_ration){
+    if (inlier_ratio > pnp_3d_ransac_stopping_ratio) {
       break;
     }
   }
