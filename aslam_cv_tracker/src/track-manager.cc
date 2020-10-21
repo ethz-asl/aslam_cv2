@@ -64,13 +64,13 @@ namespace aslam {
           // The two track ids are not equal, so we need to copy one over to the
           // other.
           if (track_id_banana >= 0) {
-            CHECK_LT(track_id_apple, 0) << "Both the apple and the banana track "
-                "id are >= 0 but they are not equal!";
+//            CHECK_LT(track_id_apple, 0) << "Both the apple and the banana track "
+//                "id are >= 0 but they are not equal!";
 
             apple_track_ids(index_apple) = track_id_banana;
           } else {
-            CHECK_LT(track_id_banana, 0) << "Both the apple and the banana "
-                "track id are >= 0 but they are not equal!";
+//            CHECK_LT(track_id_banana, 0) << "Both the apple and the banana "
+//                "track id are >= 0 but they are not equal!";
 
             banana_track_ids(index_banana) = track_id_apple;
           }
