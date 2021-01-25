@@ -28,8 +28,9 @@ VisualPipeline::VisualPipeline(std::unique_ptr<Undistorter>& preprocessing, bool
   output_camera_ = preprocessing_->getOutputCameraShared();
 }
 
-std::shared_ptr<VisualFrame> VisualPipeline::processImage(const cv::Mat& raw_image,
-                                                          int64_t timestamp, const std::string& encoding) const {
+std::shared_ptr<VisualFrame> VisualPipeline::processImage(
+      const cv::Mat& raw_image, const std::string& encoding, int64_t timestamp)
+      const {
   CHECK_EQ(input_camera_->imageWidth(), static_cast<size_t>(raw_image.cols));
   CHECK_EQ(input_camera_->imageHeight(), static_cast<size_t>(raw_image.rows));
 
