@@ -204,6 +204,10 @@ class VisualNPipeline final {
 
   /// The tolerance for associating host timestamps as being captured at the same time
   int64_t timestamp_tolerance_ns_;
+
+  // The minimum number of consecutive complete nframes required for dropping older incomplete
+  // nframes.
+  const size_t min_num_consecutive_complete_nframes_threshold_;
 };
 }  // namespace aslam
 #endif // VISUAL_NPIPELINE_H_
