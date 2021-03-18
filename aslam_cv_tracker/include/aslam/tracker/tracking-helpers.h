@@ -24,20 +24,6 @@ void convertCvPointListToKeypointVector(const std::vector<cv::Point2f>& keypoint
 void insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(
     const std::vector<cv::KeyPoint>& new_cv_keypoints, const cv::Mat& new_cv_descriptors,
     const double fixed_keypoint_uncertainty_px, aslam::VisualFrame* frame);
-
-/// Append a list of OpenCV kepoints and descriptors to a VisualFrame.
-void insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
-    const std::vector<cv::KeyPoint>& new_cv_keypoints, const cv::Mat& new_cv_descriptors,
-    const double fixed_keypoint_uncertainty_px, aslam::VisualFrame* frame);
-
-/// Append a list of kepoints to a VisualFrame.
-void insertAdditionalKeypointsToVisualFrame(const Eigen::Matrix2Xd& new_keypoints,
-                                            const double fixed_keypoint_uncertainty_px,
-                                            aslam::VisualFrame* frame);
-void insertAdditionalKeypointsToVisualFrame(const Verctor2dList& keypoints,
-                                            const double fixed_keypoint_uncertainty_px,
-                                            aslam::VisualFrame* frame);
-
 }  // namespace aslam
 
 #endif  // ASLAM_TRACKING_HELPERS_H_
