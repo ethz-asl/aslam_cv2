@@ -53,6 +53,9 @@ target_link_libraries(test_eigen-yaml-serialization ${PROJECT_NAME})
 catkin_add_gtest(test_hash_id test/test-hash-id.cc)
 target_link_libraries(test_hash_id ${PROJECT_NAME})
 
+catkin_add_gtest(test_statistics test/test-statistics.cc)
+target_link_libraries(test_statistics ${PROJECT_NAME})
+
 catkin_add_gtest(test_stl_helpers test/test-stl-helpers.cc)
 target_link_libraries(test_stl_helpers ${PROJECT_NAME})
 
