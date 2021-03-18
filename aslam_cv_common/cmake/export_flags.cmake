@@ -11,7 +11,11 @@ elseif(COMPILER_SUPPORTS_CXX11)
 else()
   message(FATAL_ERROR "Compiler does not support C++11 nor C++14!")
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fext-numeric-literals")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
+endif()
 
 set(ENABLE_TIMING FALSE CACHE BOOL "Set to TRUE to enable timing")
 message(STATUS "Timers enabled? ${ENABLE_TIMING}")
