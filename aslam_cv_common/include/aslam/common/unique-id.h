@@ -18,23 +18,23 @@ template <typename IdType>
 class UniqueId;
 }
 
-#define UNIQUE_ID_DEFINE_ID(TypeName)                           \
+#define UNIQUE_ID_DEFINE_ID(TypeName)                          \
   class TypeName : public aslam::UniqueId<TypeName> {          \
-   public: /* NOLINT */                                         \
-    TypeName() = default;                                       \
+   public: /* NOLINT */                                        \
+    TypeName() = default;                                      \
     explicit inline TypeName(const aslam::proto::Id& id_field) \
         : aslam::UniqueId<TypeName>(id_field) {}               \
-  };                                                            \
-  typedef std::vector<TypeName> TypeName##List;                 \
-  typedef std::unordered_set<TypeName> TypeName##Set;           \
+  };                                                           \
+  typedef std::vector<TypeName> TypeName##List;                \
+  typedef std::unordered_set<TypeName> TypeName##Set;          \
+  typedef std::set<TypeName> TypeName##OrderedSet;             \
   extern void defineId##__FILE__##__LINE__(void)
-
 #define UNIQUE_ID_DEFINE_IMMUTABLE_ID(TypeName, BaseTypeName)         \
-  class TypeName : public aslam::UniqueId<TypeName> {                \
+  class TypeName : public aslam::UniqueId<TypeName> {                 \
    public: /* NOLINT */                                               \
     TypeName() = default;                                             \
-    explicit inline TypeName(const aslam::proto::Id& id_field)       \
-        : aslam::UniqueId<TypeName>(id_field) {}                     \
+    explicit inline TypeName(const aslam::proto::Id& id_field)        \
+        : aslam::UniqueId<TypeName>(id_field) {}                      \
     inline void from##BaseTypeName(const BaseTypeName& landmark_id) { \
       aslam::HashId hash_id;                                          \
       landmark_id.toHashId(&hash_id);                                 \
@@ -70,9 +70,9 @@ class UniqueId;
   }                                                                          \
   extern void defineId##__FILE__##__LINE__(void)
 
-#define ALIAS_UNIQUE_ID(BaseIdType, AliasedIdType)  \
-  typedef BaseIdType AliasedIdType;                       \
-  typedef BaseIdType##List AliasedIdType##List;           \
+#define ALIAS_UNIQUE_ID(BaseIdType, AliasedIdType) \
+  typedef BaseIdType AliasedIdType;                \
+  typedef BaseIdType##List AliasedIdType##List;    \
   typedef BaseIdType##Set AliasedIdType##Set
 
 template <typename ContainerType>
@@ -176,9 +176,9 @@ class UniqueId : private Id {
   UniqueId() = default;
   explicit inline UniqueId(const aslam::proto::Id& id_field) : Id(id_field) {}
 
-  using aslam::HashId::hexString;
   using aslam::HashId::fromHexString;
   using aslam::HashId::hashToSizeT;
+  using aslam::HashId::hexString;
   using aslam::HashId::isValid;
   using aslam::HashId::setInvalid;
   using aslam::HashId::shortHex;
