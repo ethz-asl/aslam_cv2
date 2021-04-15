@@ -82,7 +82,7 @@ VisualFrame::getLidarKeypoint2DMeasurementUncertaintiesMutable() {
 }
 
 const Eigen::Block<Eigen::Matrix3Xd, 3, 1>
-VisualFrame::getLidarKeypoint3DMeasurement(size_t index) const {
+VisualFrame::getLidarKeypoint3DMeasurement(const std::size_t index) const {
   Eigen::Matrix3Xd& keypoints =
       aslam::channels::get_LIDAR_3D_MEASUREMENTS_Data(channels_);
   CHECK_LT(static_cast<int>(index), keypoints.cols());
@@ -90,21 +90,21 @@ VisualFrame::getLidarKeypoint3DMeasurement(size_t index) const {
 }
 
 const Eigen::Block<Eigen::Matrix2Xd, 2, 1>
-VisualFrame::getLidarKeypoint2DMeasurement(size_t index) const {
+VisualFrame::getLidarKeypoint2DMeasurement(const std::size_t index) const {
   Eigen::Matrix2Xd& keypoints =
       aslam::channels::get_LIDAR_2D_MEASUREMENTS_Data(channels_);
   CHECK_LT(static_cast<int>(index), keypoints.cols());
   return keypoints.block<2, 1>(0, index);
 }
 
-const unsigned char* VisualFrame::getLidarDescriptor(size_t index) const {
+const unsigned char* VisualFrame::getLidarDescriptor(const std::size_t index) const {
   VisualFrame::DescriptorsT& descriptors =
       aslam::channels::get_LIDAR_DESCRIPTORS_Data(channels_);
   CHECK_LT(static_cast<int>(index), descriptors.cols());
   return &descriptors.coeffRef(0, index);
 }
 
-double VisualFrame::getLidarKeypoint2DMeasurementUncertainty(size_t index) const {
+double VisualFrame::getLidarKeypoint2DMeasurementUncertainty(const std::size_t index) const {
   Eigen::VectorXd& data =
       aslam::channels::get_LIDAR_KEYPOINT_2D_MEASUREMENT_UNCERTAINTIES_Data(
           channels_);
@@ -228,9 +228,10 @@ void VisualFrame::discardUntrackedLidarObservations(
   CHECK_NOTNULL(discarded_indices)->clear();
   CHECK(hasLidarTrackIds());
   const Eigen::VectorXi& track_ids = getLidarTrackIds();
-  const int original_count = track_ids.rows();
+  const std::size_t original_count = track_ids.rows();
   discarded_indices->reserve(original_count);
-  for (int i = 0; i < original_count; ++i) {
+
+  for (std::size_t i = 0u; i < original_count; ++i) {
     if (track_ids(i) < 0) {
       discarded_indices->emplace_back(i);
     }

@@ -281,31 +281,34 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
     aslam::NCamera::ConstPtr ncamera_ptr, aslam::Transformation* T_G_I,
     std::vector<int>* inliers, std::vector<double>* inlier_distances_to_model,
     int* num_iters) {
+  CHECK_NOTNULL(ncamera_ptr);
   CHECK_NOTNULL(T_G_I);
   CHECK_NOTNULL(inliers);
   CHECK_NOTNULL(inlier_distances_to_model);
   CHECK_NOTNULL(num_iters);
-  CHECK_EQ(measurements.cols(), G_landmark_positions.cols()) << "Measurements and landmarks are not in pairs.";
+
+  const std::size_t n_measurements = measurements.cols();
+  CHECK_EQ(n_measurements, G_landmark_positions.cols()) << "Measurements and landmarks are not in pairs.";
   if (measurements.size() < 6) {
     return false;
   }
 
   const aslam::Transformation& T_C_B = ncamera_ptr->get_T_C_B(0);
-  aslam::Transformation T_B_C = T_C_B.inverse();
-  Eigen::Matrix3d R_B_C = T_B_C.getRotationMatrix();
-  Eigen::Vector3d p_B_C = T_B_C.getPosition();
+  const aslam::Transformation T_B_C = T_C_B.inverse();
+  const Eigen::Matrix3d R_B_C = T_B_C.getRotationMatrix();
+  const Eigen::Vector3d p_B_C = T_B_C.getPosition();
 
   std::vector<Eigen::Vector3d> landmarks;
   std::vector<Eigen::Vector3d> observations;
 
-  for (int i = 0; i < measurements.cols(); ++i) {
-    landmarks.push_back(G_landmark_positions.col(i));
-    observations.push_back(R_B_C * measurements.col(i) + p_B_C);
+  for (std::size_t i = 0u; i < n_measurements; ++i) {
+    landmarks.emplace_back(G_landmark_positions.col(i));
+    observations.emplace_back(R_B_C * measurements.col(i) + p_B_C);
   }
   Eigen::Matrix3d ransac_rotation_matrix;
   Eigen::Vector3d ransac_translation;
-  std::vector<size_t> ransac_outliers;
-  std::vector<size_t> ransac_inliers;
+  std::vector<std::size_t> ransac_outliers;
+  std::vector<std::size_t> ransac_inliers;
 
   RansacTransformationFor3DPoints(
       landmarks, observations, &ransac_rotation_matrix, &ransac_translation,
@@ -314,12 +317,11 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
   // Set result.
   T_G_I->getPosition() = ransac_translation;
   T_G_I->getRotationMatrix() = ransac_rotation_matrix;
-  for (auto inlier : ransac_inliers) {
-    inliers->push_back(inlier);
-    inlier_distances_to_model->push_back(
+  for (const std::size_t& inlier : ransac_inliers) {
+    inliers->emplace_back(inlier);
+    inlier_distances_to_model->emplace_back(
         (ransac_rotation_matrix * landmarks[inlier] + ransac_translation -
-         observations[inlier])
-            .norm());
+         observations[inlier]).norm());
   }
   *num_iters = max_ransac_iters;
 
@@ -330,19 +332,26 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
     std::vector<Eigen::Vector3d> point_set_2,
     Eigen::Matrix3d* best_rotation_matrix, Eigen::Vector3d* best_translation,
     std::vector<size_t>* best_inliers, std::vector<size_t>* best_outliers,
-    double ransac_threshold, int ransac_max_iterations,
-    double pnp_3d_ransac_stopping_ratio) {
+    const double ransac_threshold, const std::size_t ransac_max_iterations,
+    const double pnp_3d_ransac_stopping_ratio) {
+  CHECK_NOTNULL(best_rotation_matrix);
+  CHECK_NOTNULL(best_translation);
+  CHECK_NOTNULL(best_inliers);
+  CHECK_NOTNULL(best_outliers);
   CHECK_GT(ransac_threshold, 0.0);
   CHECK_GT(ransac_max_iterations, 0u);
-  CHECK_EQ(point_set_1.size(), point_set_2.size());
-  CHECK_GT(point_set_2.size(), 6u);
+  
+  const std::size_t n_point_set_1 = point_set_1.size();
+  const std::size_t n_point_set_2 = point_set_2.size();
+  CHECK_EQ(n_point_set_1, n_point_set_2);
+  CHECK_GT(n_point_set_2, 6u);
 
-  for (int j = 0; j < ransac_max_iterations; ++j) {
+  for (std::size_t j = 0u; j < ransac_max_iterations; ++j) {
     // Generate 6 unique random indices for Ransac.
     if (!random_seed_){
       std::srand(time(0));
     }
-    std::vector<unsigned int> ransac_indices(point_set_1.size());
+    std::vector<std::size_t> ransac_indices(n_point_set_1);
     std::iota(ransac_indices.begin(), ransac_indices.end(), 0);
     std::random_shuffle(ransac_indices.begin(), ransac_indices.end());
 
@@ -356,44 +365,41 @@ void PnpPoseEstimator::RansacTransformationFor3DPoints(
         point_set_2[ransac_indices[2]], point_set_2[ransac_indices[3]],
         point_set_2[ransac_indices[4]], point_set_2[ransac_indices[5]];
 
-    Eigen::VectorXd X_mean = X.rowwise().mean();
-    Eigen::VectorXd Y_mean = Y.rowwise().mean();
+    const Eigen::VectorXd X_mean = X.rowwise().mean();
+    const Eigen::VectorXd Y_mean = Y.rowwise().mean();
 
     X.colwise() -= X_mean;
     Y.colwise() -= Y_mean;
 
-    Eigen::Matrix3d S = X * Y.transpose();
-    Eigen::JacobiSVD<Eigen::Matrix3d> svd(
-        S, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    const Eigen::Matrix3d S = X * Y.transpose();
+    const Eigen::JacobiSVD<Eigen::Matrix3d> svd(S, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
     Eigen::Matrix3d reflection_handler = Eigen::Matrix3d::Identity();
-    reflection_handler(2, 2) =
-        (svd.matrixV() * svd.matrixU().transpose()).determinant();
-    Eigen::Matrix3d R =
-        svd.matrixV() * reflection_handler * svd.matrixU().transpose();
-    Eigen::Vector3d t = Y_mean - R * X_mean;
+    reflection_handler(2, 2) = (svd.matrixV() * svd.matrixU().transpose()).determinant();
+    const Eigen::Matrix3d R = svd.matrixV() * reflection_handler * svd.matrixU().transpose();
+    const Eigen::Vector3d t = Y_mean - R * X_mean;
 
     // Calculate Outliers for Transformation
-    std::vector<size_t> outliers;
-    std::vector<size_t> inliers;
+    std::vector<std::size_t> outliers;
+    std::vector<std::size_t> inliers;
 
-    for (int i = 0; i < point_set_1.size(); ++i) {
-      Eigen::Vector3d transformation_error =
-          R * point_set_1[i] + t - point_set_2[i];
-      if (transformation_error.norm() / point_set_2[i].norm() >
-          ransac_threshold) {
-        outliers.push_back(i);
+    for (std::size_t i = 0u; i < n_point_set_1; ++i) {
+      const Eigen::Vector3d transformation_error = R * point_set_1[i] + t - point_set_2[i];
+      if (transformation_error.norm() / point_set_2[i].norm() > ransac_threshold) {
+        outliers.emplace_back(i);
       } else {
-        inliers.push_back(i);
+        inliers.emplace_back(i);
       }
     }
     // Compare results
-    if (inliers.size() > best_inliers->size()) {
+    const std::size_t n_inliers = inliers.size();
+    if (n_inliers > best_inliers->size()) {
       *best_outliers = outliers;
       *best_rotation_matrix = R;
       *best_translation = t;
       *best_inliers = inliers;
     }
-    double inlier_ratio = inliers.size() / (inliers.size() + outliers.size());
+    const double inlier_ratio = n_inliers / (n_inliers + outliers.size());
     if (inlier_ratio > pnp_3d_ransac_stopping_ratio) {
       break;
     }

@@ -89,8 +89,8 @@ class PnpPoseEstimator {
       std::vector<Eigen::Vector3d> point_set_2,
       Eigen::Matrix3d* rotation_matrix, Eigen::Vector3d* translation,
       std::vector<size_t>* best_inliers, std::vector<size_t>* best_outliers,
-      double ransac_threshold, int ransac_max_iterations,
-      double pnp_3d_ransac_stopping_ratio);
+      const double ransac_threshold, const std::size_t ransac_max_iterations,
+      const double pnp_3d_ransac_stopping_ratio);
   /// Whether to let RANSAC pick a timestamp-based random seed or not. If false,
   /// a seed can be set with srand().
   const bool random_seed_;

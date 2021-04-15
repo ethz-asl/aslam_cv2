@@ -408,17 +408,17 @@ class VisualFrame  {
 
   /// Return block expression of the 3D measurement pointed to by index.
   const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getLidarKeypoint3DMeasurement(
-      size_t index) const;
+      const std::size_t index) const;
 
   /// Return block expression of the 2D measurement pointed to by index.
   const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getLidarKeypoint2DMeasurement(
-      size_t index) const;
+      const std::size_t index) const;
 
   /// Return pointer location of the descriptor pointed to by index.
-  const unsigned char* getLidarDescriptor(size_t index) const;
+  const unsigned char* getLidarDescriptor(const std::size_t index) const;
 
   /// Return the keypoint measurement uncertainty at index.
-  double getLidarKeypoint2DMeasurementUncertainty(size_t index) const;
+  double getLidarKeypoint2DMeasurementUncertainty(const std::size_t index) const;
 
   /// Replace (copy) the internal track ids by the passed ones.
   void setLidarTrackIds(const Eigen::VectorXi& track_ids);
