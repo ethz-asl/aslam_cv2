@@ -100,16 +100,19 @@ class VisualFrame  {
   /// The keypoint measurements stored in a frame.
   const Eigen::Matrix2Xd& getKeypointMeasurements() const;
 
-  /// Get the number of keypoints measurements stored in this frame.
+  /// Get the number of keypoint measurements stored in this frame.
   inline size_t getNumKeypointMeasurements() const {
-    size_t num_measurements = 0;
-    if (hasKeypointMeasurements()) {
-      num_measurements += getKeypointMeasurements().cols();
-    }
-    if (hasLidarKeypoint3DMeasurements()) {
-      num_measurements += getLidarKeypoint3DMeasurements().cols();
-    }
-    return num_measurements;
+    return hasKeypointMeasurements() ? getKeypointMeasurements().cols() : 0u;
+  }
+
+  /// Get the number of LiDAR keypoint measurements stored in this frame.
+  inline size_t getNumLidarKeypointMeasurements() const {
+    return hasLidarKeypoint3DMeasurements() ? getLidarKeypoint3DMeasurements().cols() : 0u;
+  }
+
+  /// Get the total number of keypoint measurements stored in this frame.
+  inline size_t getTotalNumKeypointMeasurements() const {
+    return getNumKeypointMeasurements() + getNumLidarKeypointMeasurements();
   }
 
   /// The keypoint measurement uncertainties stored in a frame.
