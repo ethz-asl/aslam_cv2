@@ -14,6 +14,7 @@
 namespace aslam_cv_visualization {
 
 // Colors are in BGR8.
+#if !defined(DOXYGEN_SHOULD_SKIP_THIS)
 const cv::Scalar kBlue(255, 0, 0);
 const cv::Scalar kGreen(0, 255, 0);
 const cv::Scalar kBrightGreen(110, 255, 110);
@@ -22,6 +23,7 @@ const cv::Scalar kYellow(0, 255, 255);
 const cv::Scalar kTurquoise(180, 180, 0);
 const cv::Scalar kBlack(0, 0, 0);
 const cv::Scalar kWhite(255, 255, 255);
+#endif // DOXYGEN_SHOULD_SKIP_THIS
 
 struct ImagePositionOffset {
   size_t width;
