@@ -96,7 +96,7 @@ TEST(Frame, SetGetLidar3DKeypointMeasurements) {
   const Eigen::Matrix3Xd& data_2 = frame.getLidarKeypoint3DMeasurements();
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
   EXPECT_EQ(&data_2, frame.getLidarKeypoint3DMeasurementsMutable());
-  const std::size_t n_cols = data.cols()
+  const std::size_t n_cols = data.cols();
   for (std::size_t i = 0u; i < n_cols; ++i) {
     const Eigen::Vector3d& ref = frame.getLidarKeypoint3DMeasurement(i);
     const Eigen::Vector3d& should = data.block<3, 1>(0, i);
