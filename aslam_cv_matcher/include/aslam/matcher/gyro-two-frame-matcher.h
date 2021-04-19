@@ -53,6 +53,7 @@ class GyroTwoFrameMatcher {
   GyroTwoFrameMatcher(const Quaternion& q_Ckp1_Ck,
                       const VisualFrame& frame_kp1,
                       const VisualFrame& frame_k,
+                      const int descriptor_type,
                       const uint32_t image_height,
                       const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
                       const std::vector<unsigned char>& prediction_success,
@@ -132,6 +133,9 @@ class GyroTwoFrameMatcher {
   // Rotation matrix that describes the camera rotation between the
   // two frames that are matched.
   const Quaternion& q_Ckp1_Ck_;
+  // Descriptor type to match, used to support multiple different types
+  // Of descriptors to co-exist in the aslam visual frame
+  const int descriptor_type_;
   // Predicted locations of the keypoints in frame k
   // in frame (k+1) based on camera rotation.
   const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1_;

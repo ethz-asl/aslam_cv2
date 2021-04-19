@@ -51,7 +51,7 @@ class KeypointIdentifier {
   inline const aslam::VisualFrame& getFrame() const { return nframe_->getFrame(frame_index_); }
   inline const aslam::VisualNFrame& getNFrame() const { return *nframe_; }
 
-  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement() const {
+  const Eigen::Block<const Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement() const {
     return nframe_->getFrame(frame_index_).getKeypointMeasurement(keypoint_index_);
   }
 

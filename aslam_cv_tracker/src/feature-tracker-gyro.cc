@@ -64,11 +64,13 @@ GyroTrackerSettings::GyroTrackerSettings()
 
 GyroTracker::GyroTracker(const Camera& camera,
                          const size_t min_distance_to_image_border,
-                         const cv::Ptr<cv::DescriptorExtractor>& extractor_ptr)
+                         const cv::Ptr<cv::DescriptorExtractor>& extractor_ptr,
+                         int descriptor_type)
     : camera_(camera) ,
       kMinDistanceToImageBorderPx(min_distance_to_image_border),
       extractor_(extractor_ptr),
-      initialized_(false) {
+      initialized_(false),
+      descriptor_type_(descriptor_type) {
 }
 
 void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
@@ -82,6 +84,7 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   CHECK(frame_k.hasKeypointScores());
   CHECK(frame_k.hasTrackIds());
   CHECK(frame_k.hasDescriptors());
+  CHECK(frame_k.hasDescriptorType(descriptor_type_));
   CHECK(frame_k.hasRawImage());
   CHECK(CHECK_NOTNULL(frame_kp1)->isValid());
   CHECK(frame_kp1->hasKeypointMeasurements());
@@ -90,12 +93,12 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   CHECK(frame_kp1->hasKeypointScores());
   CHECK(frame_kp1->hasTrackIds());
   CHECK(frame_kp1->hasDescriptors());
+  CHECK(frame_kp1->hasDescriptorType(descriptor_type_));
   CHECK(frame_kp1->hasRawImage());
-  CHECK_EQ(
-      frame_kp1->getDescriptors().rows(),
-      static_cast<int>(frame_kp1->getDescriptorSizeBytes()));
-  CHECK_EQ(frame_kp1->getKeypointMeasurements().cols(),
-           frame_kp1->getDescriptors().cols());
+  CHECK_EQ(frame_k.getKeypointMeasurementsOfType(descriptor_type_).cols(),
+           frame_k.getDescriptorsOfType(descriptor_type_).cols());
+  CHECK_EQ(frame_kp1->getKeypointMeasurementsOfType(descriptor_type_).cols(),
+           frame_kp1->getDescriptorsOfType(descriptor_type_).cols());
   CHECK_EQ(camera_.getId(), CHECK_NOTNULL(
       frame_k.getCameraGeometry().get())->getId());
   CHECK_EQ(camera_.getId(), CHECK_NOTNULL(
@@ -119,16 +122,15 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   std::vector<unsigned char> prediction_success;
   predictKeypointsByRotation(frame_k, q_Ckp1_Ck,
                              &predicted_keypoint_positions_kp1,
-                             &prediction_success);
+                             &prediction_success, descriptor_type_);
   CHECK_EQ(
     static_cast<int>(prediction_success.size()),
     predicted_keypoint_positions_kp1.cols());
 
   // Match descriptors of frame k with those of frame (k+1).
   GyroTwoFrameMatcher matcher(
-      q_Ckp1_Ck, *frame_kp1, frame_k, camera_.imageHeight(),
-      predicted_keypoint_positions_kp1,
-      prediction_success, matches_kp1_k);
+      q_Ckp1_Ck, *frame_kp1, frame_k, descriptor_type_, camera_.imageHeight(),
+      predicted_keypoint_positions_kp1, prediction_success, matches_kp1_k);
   matcher.match();
 
   if (settings_.lk_max_num_candidates_ratio_kp1 > 0.0) {
@@ -163,7 +165,7 @@ void GyroTracker::lkTracking(
     predicted_keypoint_positions_kp1.cols());
   CHECK_LE(lk_candidate_indices_k.size(), prediction_success.size());
 
-  const int kInitialSizeKp1 = frame_kp1->getTrackIds().size();
+  const int kInitialSizeKp1 = frame_kp1->getTrackIdsOfType(descriptor_type_).size();
 
   // Definite lk indices are the subset of lk candidate indices with
   // successfully predicted keypoint locations in frame (k+1).
@@ -195,7 +197,7 @@ void GyroTracker::lkTracking(
   for (const int lk_definite_index_k: lk_definite_indices_k) {
     // Compute Cv points in frame k.
     const Eigen::Vector2d& lk_keypoint_location_k =
-        frame_k.getKeypointMeasurement(lk_definite_index_k);
+        frame_k.getKeypointMeasurementOfType(lk_definite_index_k, descriptor_type_);
     lk_cv_points_k.emplace_back(
         static_cast<float>(lk_keypoint_location_k(0,0)),
         static_cast<float>(lk_keypoint_location_k(1,0)));
@@ -249,9 +251,10 @@ void GyroTracker::lkTracking(
     const size_t channel_idx = lk_definite_indices_k[i];
     const int class_id = static_cast<int>(i);
     lk_cv_keypoints_kp1.emplace_back(
-        lk_cv_points_kp1[i], frame_k.getKeypointScale(channel_idx),
-        frame_k.getKeypointOrientation(channel_idx),
-        frame_k.getKeypointScore(channel_idx),
+        lk_cv_points_kp1[i],
+        frame_k.getKeypointScaleOfType(channel_idx, descriptor_type_),
+        frame_k.getKeypointOrientationOfType(channel_idx, descriptor_type_),
+        frame_k.getKeypointScoreOfType(channel_idx, descriptor_type_),
         0 /* Octave info not used by extractor */, class_id);
   }
 
@@ -283,6 +286,9 @@ void GyroTracker::lkTracking(
   CHECK(lk_descriptors_kp1.isContinuous());
 
   // Add keypoints and descriptors to frame (k+1).
+  // TODO(smauq): For now this works because the visual frame does not yet have
+  // any other keypoint sets inside, but should be adapted to the new extend
+  // functions to enable extending an existing descriptor type
   insertAdditionalCvKeypointsAndDescriptorsToVisualFrame(
       lk_cv_keypoints_kp1, lk_descriptors_kp1,
       GyroTrackerSettings::kKeypointUncertaintyPx, frame_kp1);
@@ -366,8 +372,10 @@ void GyroTracker::computeLKCandidates(
     }
   }
 
-  const size_t kNumPointsKp1 = frame_kp1.getTrackIds().size();
-  CHECK_EQ(static_cast<int>(kNumPointsKp1), frame_kp1.getDescriptors().cols());
+  const size_t kNumPointsKp1 = frame_kp1.getTrackIdsOfType(descriptor_type_).size();
+  CHECK_EQ(
+      static_cast<int>(kNumPointsKp1),
+      frame_kp1.getDescriptorsOfType(descriptor_type_).cols());
   const size_t kLkNumCandidatesBeforeCutoff =
       indices_detected_and_tracked.size() + indices_lktracked.size();
   const size_t kLkNumMaxCandidates = static_cast<size_t>(
@@ -490,7 +498,7 @@ void GyroTracker::updateFeatureStatusDeque(
 
 void GyroTracker::updateTrackIdDeque(
     const VisualFrame& new_frame_k) {
-  const Eigen::VectorXi& track_ids_k = new_frame_k.getTrackIds();
+  const Eigen::VectorXi& track_ids_k = new_frame_k.getTrackIdsOfType(descriptor_type_);
 
   track_ids_k_km1_.push_front(track_ids_k);
   if (track_ids_k_km1_.size() == 3u) {

@@ -37,6 +37,34 @@ NAME##_ChannelValueType& get_##NAME##_Data(                                \
   return derived->value_;                                                  \
 }                                                                          \
                                                                            \
+void serialize_##NAME##_Channel(                                           \
+    const ChannelGroup& channel_group, std::string* data) {                \
+  std::lock_guard<std::mutex> lock(channel_group.m_channels_);             \
+  const ChannelMap& channels = channel_group.channels_;                    \
+  ChannelMap::const_iterator it = channels.find(NAME##_CHANNEL);           \
+  CHECK(it != channels.end()) << "Channelgroup does not "                  \
+      "contain channel " << NAME##_CHANNEL;                                \
+  std::shared_ptr<NAME##_ChannelType> derived =                            \
+     std::dynamic_pointer_cast<NAME##_ChannelType>(it->second);            \
+  CHECK(derived) << "Channel cast to derived failed " <<                   \
+     "channel: " << NAME##_CHANNEL;                                        \
+  derived->serializeToString(data);                                        \
+}                                                                          \
+                                                                           \
+void deserialize_##NAME##_Channel(                                         \
+    const ChannelGroup& channel_group, const std::string& data) {          \
+  std::lock_guard<std::mutex> lock(channel_group.m_channels_);             \
+  const ChannelMap& channels = channel_group.channels_;                    \
+  ChannelMap::const_iterator it = channels.find(NAME##_CHANNEL);           \
+  CHECK(it != channels.end()) << "Channelgroup does not "                  \
+      "contain channel " << NAME##_CHANNEL;                                \
+  std::shared_ptr<NAME##_ChannelType> derived =                            \
+     std::dynamic_pointer_cast<NAME##_ChannelType>(it->second);            \
+  CHECK(derived) << "Channel cast to derived failed " <<                   \
+     "channel: " << NAME##_CHANNEL;                                        \
+  derived->deSerializeFromString(data);                                    \
+}                                                                          \
+                                                                           \
 NAME##_ChannelValueType& add_##NAME##_Channel(                             \
     ChannelGroup* channel_group) {                                         \
   CHECK_NOTNULL(channel_group);                                            \

@@ -21,7 +21,7 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
     bool fix_random_seed, double ransac_threshold, size_t ransac_max_iterations,
     aslam::FrameToFrameMatchesWithScore* inlier_matches_kp1_k,
     aslam::FrameToFrameMatchesWithScore* outlier_matches_kp1_k) {
-    
+
   BearingVectors bearing_vectors_kp1;
   BearingVectors bearing_vectors_k;
 
