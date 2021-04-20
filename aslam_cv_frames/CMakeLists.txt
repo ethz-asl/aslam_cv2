@@ -9,6 +9,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 set(SOURCES
   src/visual-frame.cc
+  src/visual-frame-lidar.cc
   src/visual-nframe.cc
 )
 cs_add_library(${PROJECT_NAME} ${SOURCES})

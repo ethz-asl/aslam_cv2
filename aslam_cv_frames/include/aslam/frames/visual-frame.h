@@ -38,6 +38,7 @@ class VisualFrame  {
   /// \brief The descriptor matrix stores descriptors in columns, i.e. the descriptor matrix
   ///        has num_bytes_per_descriptor rows and num_descriptors columns.
   typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
+  typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> LidarDescriptorsT;
   typedef Eigen::VectorXd KeypointScoresT;
 
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
@@ -99,9 +100,19 @@ class VisualFrame  {
   /// The keypoint measurements stored in a frame.
   const Eigen::Matrix2Xd& getKeypointMeasurements() const;
 
-  /// Get the number of keypoints measurements stored in this frame.
+  /// Get the number of keypoint measurements stored in this frame.
   inline size_t getNumKeypointMeasurements() const {
-    return static_cast<size_t>(getKeypointMeasurements().cols());
+    return hasKeypointMeasurements() ? getKeypointMeasurements().cols() : 0u;
+  }
+
+  /// Get the number of LiDAR keypoint measurements stored in this frame.
+  inline size_t getNumLidarKeypointMeasurements() const {
+    return hasLidarKeypoint3DMeasurements() ? getLidarKeypoint3DMeasurements().cols() : 0u;
+  }
+
+  /// Get the total number of keypoint measurements stored in this frame.
+  inline size_t getTotalNumKeypointMeasurements() const {
+    return getNumKeypointMeasurements() + getNumLidarKeypointMeasurements();
   }
 
   /// The keypoint measurement uncertainties stored in a frame.
@@ -350,6 +361,110 @@ class VisualFrame  {
                                                      int64_t timestamp_nanoseconds);
 
   void discardUntrackedObservations(std::vector<size_t>* discarded_indices);
+
+  /// Information about the LiDAR features
+
+  /// Are there TrackIds this frame?
+  bool hasLidarTrackIds() const;
+
+  /// Are there 2D measurements in this frame?
+  bool hasLidarKeypoint3DMeasurements() const;
+
+  /// Are there 2D measurements in this frame?
+  bool hasLidarKeypoint2DMeasurements() const;
+
+  /// Are there descriptors in this frame?
+  bool hasLidarDescriptors() const;
+
+  /// Are there keypoint measurement uncertainties stored in this frame?
+  bool hasLidarKeypoint2DMeasurementUncertainties() const;
+
+  /// The track ids stored in this frame.
+  const Eigen::VectorXi& getLidarTrackIds() const;
+
+  /// The 3D measurements stored in a lidar frame.
+  const Eigen::Matrix3Xd& getLidarKeypoint3DMeasurements() const;
+
+  /// The 2D measurements stored in a frame.
+  const Eigen::Matrix2Xd& getLidarKeypoint2DMeasurements() const;
+
+  /// The descriptors stored in a frame.
+  const LidarDescriptorsT& getLidarDescriptors() const;
+
+  /// The keypoint measurement uncertainties stored in a frame.
+  const Eigen::VectorXd& getLidarKeypoint2DMeasurementUncertainties() const;
+
+  /// A pointer to the track ids, can be used to swap in new data.
+  Eigen::VectorXi* getLidarTrackIdsMutable();
+
+  /// A pointer to the 3D measurements, can be used to swap in new data.
+  Eigen::Matrix3Xd* getLidarKeypoint3DMeasurementsMutable();
+
+  /// A pointer to the 2D measurements, can be used to swap in new data.
+  Eigen::Matrix2Xd* getLidarKeypoint2DMeasurementsMutable();
+
+  /// A pointer to the descriptors, can be used to swap in new data.
+  LidarDescriptorsT* getLidarDescriptorsMutable();
+
+  /// A pointer to the keypoint measurement uncertainties, can be used to swap in new data.
+  Eigen::VectorXd* getLidarKeypoint2DMeasurementUncertaintiesMutable();
+
+  /// Return block expression of the 3D measurement pointed to by index.
+  const Eigen::Block<Eigen::Matrix3Xd, 3, 1> getLidarKeypoint3DMeasurement(
+      const std::size_t index) const;
+
+  /// Return block expression of the 2D measurement pointed to by index.
+  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getLidarKeypoint2DMeasurement(
+      const std::size_t index) const;
+
+  /// Return pointer location of the descriptor pointed to by index.
+  const unsigned char* getLidarDescriptor(const std::size_t index) const;
+
+  /// Return the keypoint measurement uncertainty at index.
+  double getLidarKeypoint2DMeasurementUncertainty(const std::size_t index) const;
+
+  /// Replace (copy) the internal track ids by the passed ones.
+  void setLidarTrackIds(const Eigen::VectorXi& track_ids);
+
+  /// Replace (copy) the internal 3D measurements by the passed ones.
+  void setLidarKeypoint3DMeasurements(
+      const Eigen::Matrix3Xd& lidar_3d_measurements);
+
+  /// Replace (copy) the internal 2D measurments by the passed ones.
+  void setLidarKeypoint2DMeasurements(
+      const Eigen::Matrix2Xd& lidar_2d_measurements);
+
+  /// Replace (copy) the internal descriptors by the passed ones.
+  void setLidarDescriptors(const LidarDescriptorsT& descriptors);
+
+  /// Replace (copy) the internal descriptors by the passed ones.
+  void setLidarDescriptors(
+      const Eigen::Map<const LidarDescriptorsT>& descriptors);
+
+  /// Replace (copy) the internal keypoint measurement uncertainties
+  ///        by the passed ones.
+  void setLidarKeypoint2DMeasurementUncertainties(
+      const Eigen::VectorXd& uncertainties);
+
+  /// Replace (swap) the internal track ids by the passed ones.
+  void swapLidarTrackIds(Eigen::VectorXi* track_ids);
+
+  /// Replace (swap) the internal 3D measurements by the passed ones.
+  void swapLidarKeypoint3DMeasurements(Eigen::Matrix3Xd* vectors);
+
+  /// Replace (swap) the internal 2D measurements by the passed ones.
+  void swapLidarKeypoint2DMeasurements(Eigen::Matrix2Xd* vectors);
+
+  /// Replace (swap) the internal descriptors by the passed ones.
+  void swapLidarDescriptors(LidarDescriptorsT* descriptors);
+
+  /// Replace (swap) the internal keypoint measurement uncertainties
+  /// by the passed ones.
+  void swapLidarKeypoint2DMeasurementUncertainties(
+      Eigen::VectorXd* uncertainties);
+
+  void discardUntrackedLidarObservations(
+      std::vector<size_t>* discarded_indices);
 
  private:
   /// Timestamp in nanoseconds.
