@@ -391,7 +391,7 @@ void PnpPoseEstimator::ransacTransformationFor3DPoints(
     const Eigen::Vector3d t = Y_mean - R * X_mean;
 
     // Calculate Outliers for Transformation
-    outliers->clear();
+    outliers.clear();
     best_inliers->clear();
 
     for (std::size_t i = 0u; i < n_point_set_1; ++i) {
