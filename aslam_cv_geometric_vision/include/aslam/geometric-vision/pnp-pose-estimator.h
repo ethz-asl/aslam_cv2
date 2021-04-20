@@ -48,16 +48,15 @@ class PnpPoseEstimator {
       aslam::Transformation* T_G_I, std::vector<int>* inliers,
       std::vector<double>* inlier_distances_to_model, int* num_iters);
 
-  bool absolutePoseRansac(const Eigen::Matrix2Xd& measurements,
-                          const Eigen::Matrix3Xd& G_landmark_positions,
-                          double pixel_sigma, int max_ransac_iters,
-                          aslam::Camera::ConstPtr camera_ptr,
-                          aslam::Transformation* T_G_C,
-                          std::vector<int>* inliers, int* num_iters);
+  bool absolutePoseRansac(
+      const Eigen::Matrix2Xd& measurements,
+      const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
+      int max_ransac_iters, aslam::Camera::ConstPtr camera_ptr,
+      aslam::Transformation* T_G_C, std::vector<int>* inliers, int* num_iters);
 
-  /// Same as the above functions, but supports multiple cameras. Only additional
-  /// information is the NCamera (instead of Camera) pointer and a vector,
-  /// measurement_camera_indices, of the same length as measurements
+  /// Same as the above functions, but supports multiple cameras. Only
+  /// additional information is the NCamera (instead of Camera) pointer and a
+  /// vector, measurement_camera_indices, of the same length as measurements
   /// that maps each measurement to a camera index (corresponding to the index
   /// in NCamera).
   bool absoluteMultiPoseRansac(
@@ -77,20 +76,23 @@ class PnpPoseEstimator {
   bool absoluteMultiPoseRansac3DFeatures(
       const Eigen::Matrix3Xd& measurements,
       const std::vector<int>& measurement_camera_indices,
-      const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
-      int max_ransac_iters, double pnp_3d_ransac_stopping_ratio,
+      const Eigen::Matrix3Xd& G_landmark_positions,
+      const double ransac_threshold, const std::size_t max_ransac_iters,
+      const double pnp_3d_ransac_stopping_ratio,
       aslam::NCamera::ConstPtr ncamera_ptr, aslam::Transformation* T_G_I,
       std::vector<int>* inliers, std::vector<double>* inlier_distances_to_model,
       int* num_iters);
 
  private:
-  void RansacTransformationFor3DPoints(
-      std::vector<Eigen::Vector3d> point_set_1,
-      std::vector<Eigen::Vector3d> point_set_2,
-      Eigen::Matrix3d* rotation_matrix, Eigen::Vector3d* translation,
-      std::vector<size_t>* best_inliers, std::vector<size_t>* best_outliers,
+  void ransacTransformationFor3DPoints(
+      const std::vector<Eigen::Vector3d>& point_set_1,
+      const std::vector<Eigen::Vector3d>& point_set_2,
       const double ransac_threshold, const std::size_t ransac_max_iterations,
-      const double pnp_3d_ransac_stopping_ratio);
+      const double pnp_3d_ransac_stopping_ratio,
+      Eigen::Matrix3d* rotation_matrix, Eigen::Vector3d* translation,
+      std::vector<int>* best_inliers,
+      std::vector<std::size_t>* best_outliers) const;
+
   /// Whether to let RANSAC pick a timestamp-based random seed or not. If false,
   /// a seed can be set with srand().
   const bool random_seed_;
