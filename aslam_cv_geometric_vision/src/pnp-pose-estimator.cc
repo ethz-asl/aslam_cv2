@@ -18,7 +18,7 @@ bool PnpPoseEstimator::absolutePoseRansacPinholeCam(
     const Eigen::Matrix2Xd& measurements,
     const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
     int max_ransac_iters, aslam::Camera::ConstPtr camera_ptr,
-    aslam::Transformation* T_G_C, std::vector<int>* inliers, int* num_iters) {
+    aslam::Transformation* T_G_C, std::vector<int>* inliers, int* num_iters) const {
   CHECK_NOTNULL(T_G_C);
   CHECK_NOTNULL(inliers);
   CHECK_NOTNULL(num_iters);
@@ -64,7 +64,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
     const std::vector<int>& measurement_camera_indices,
     const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
     int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
-    aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
+    aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) const {
   std::vector<double> inlier_distances_to_model;
   return absoluteMultiPoseRansacPinholeCam(
       measurements, measurement_camera_indices, G_landmark_positions,
@@ -78,7 +78,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
     const Eigen::Matrix3Xd& G_landmark_positions, double pixel_sigma,
     int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
     aslam::Transformation* T_G_I, std::vector<int>* inliers,
-    std::vector<double>* inlier_distances_to_model, int* num_iters) {
+    std::vector<double>* inlier_distances_to_model, int* num_iters) const {
   CHECK_NOTNULL(T_G_I);
   CHECK_NOTNULL(inliers);
   CHECK_NOTNULL(inlier_distances_to_model);
@@ -134,7 +134,7 @@ bool PnpPoseEstimator::absolutePoseRansac(
     const Eigen::Matrix2Xd& measurements,
     const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
     int max_ransac_iters, aslam::Camera::ConstPtr camera_ptr,
-    aslam::Transformation* T_G_C, std::vector<int>* inliers, int* num_iters) {
+    aslam::Transformation* T_G_C, std::vector<int>* inliers, int* num_iters) const {
   CHECK_NOTNULL(T_G_C);
   CHECK_NOTNULL(inliers);
   CHECK_NOTNULL(num_iters);
@@ -183,7 +183,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
     const std::vector<int>& measurement_camera_indices,
     const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
     int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
-    aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) {
+    aslam::Transformation* T_G_I, std::vector<int>* inliers, int* num_iters) const {
   std::vector<double> inlier_distances_to_model;
   return absoluteMultiPoseRansac(
       measurements, measurement_camera_indices, G_landmark_positions,
@@ -197,7 +197,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
     const Eigen::Matrix3Xd& G_landmark_positions, double ransac_threshold,
     int max_ransac_iters, aslam::NCamera::ConstPtr ncamera_ptr,
     aslam::Transformation* T_G_I, std::vector<int>* inliers,
-    std::vector<double>* inlier_distances_to_model, int* num_iters) {
+    std::vector<double>* inlier_distances_to_model, int* num_iters) const {
   CHECK_NOTNULL(T_G_I);
   CHECK_NOTNULL(inliers);
   CHECK_NOTNULL(inlier_distances_to_model);
@@ -284,11 +284,10 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
     const Eigen::Matrix3Xd& measurements,
     const std::vector<int>& measurement_camera_indices,
     const Eigen::Matrix3Xd& G_landmark_positions, const double ransac_threshold,
-    const std::size_t max_ransac_iters,
-    const double pnp_3d_ransac_stopping_ratio,
+    const int max_ransac_iters, const double pnp_3d_ransac_stopping_ratio,
     aslam::NCamera::ConstPtr ncamera_ptr, aslam::Transformation* T_G_I,
     std::vector<int>* inliers, std::vector<double>* inlier_distances_to_model,
-    int* num_iters) {
+    int* num_iters) const {
   CHECK_NOTNULL(ncamera_ptr);
   CHECK_NOTNULL(T_G_I);
   CHECK_NOTNULL(inliers)->clear();
@@ -319,9 +318,8 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
   std::vector<std::size_t> ransac_outliers;
 
   ransacTransformationFor3DPoints(
-      landmarks, observations, ransac_threshold, max_ransac_iters,
-      pnp_3d_ransac_stopping_ratio, &ransac_rotation_matrix,
-      &ransac_translation, inliers, &ransac_outliers);
+      landmarks, observations, ransac_threshold, max_ransac_iters,pnp_3d_ransac_stopping_ratio,
+      &ransac_rotation_matrix, &ransac_translation, inliers, &ransac_outliers);
 
   // Set result.
   T_G_I->getPosition() = ransac_translation;
@@ -338,12 +336,11 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
 
 void PnpPoseEstimator::ransacTransformationFor3DPoints(
     const std::vector<Eigen::Vector3d>& point_set_1,
-    const std::vector<Eigen::Vector3d>& point_set_2,
-    const double ransac_threshold, const std::size_t ransac_max_iterations,
+    const std::vector<Eigen::Vector3d>& point_set_2, const double ransac_threshold,
+    const std::size_t ransac_max_iterations,
     const double pnp_3d_ransac_stopping_ratio,
     Eigen::Matrix3d* best_rotation_matrix, Eigen::Vector3d* best_translation,
-    std::vector<int>* best_inliers,
-    std::vector<std::size_t>* best_outliers) const {
+    std::vector<int>* best_inliers, std::vector<size_t>* best_outliers) const {
   CHECK_NOTNULL(best_rotation_matrix);
   CHECK_NOTNULL(best_translation);
   CHECK_NOTNULL(best_inliers);
@@ -356,6 +353,7 @@ void PnpPoseEstimator::ransacTransformationFor3DPoints(
   CHECK_EQ(n_point_set_1, n_point_set_2);
   CHECK_GT(n_point_set_2, 6u);
 
+  std::vector<std::size_t> outliers;
   for (std::size_t j = 0u; j < ransac_max_iterations; ++j) {
     // Generate 6 unique random indices for Ransac.
     if (!random_seed_) {
@@ -393,8 +391,8 @@ void PnpPoseEstimator::ransacTransformationFor3DPoints(
     const Eigen::Vector3d t = Y_mean - R * X_mean;
 
     // Calculate Outliers for Transformation
-    std::vector<std::size_t> outliers;
-    std::vector<int> inliers;
+    outliers->clear();
+    best_inliers->clear();
 
     for (std::size_t i = 0u; i < n_point_set_1; ++i) {
       const Eigen::Vector3d transformation_error =
@@ -403,16 +401,15 @@ void PnpPoseEstimator::ransacTransformationFor3DPoints(
           ransac_threshold) {
         outliers.emplace_back(i);
       } else {
-        inliers.emplace_back(i);
+        best_inliers->emplace_back(i);
       }
     }
     // Compare results
-    const std::size_t n_inliers = inliers.size();
+    const std::size_t n_inliers = best_inliers->size();
     if (n_inliers > best_inliers->size()) {
       *best_outliers = outliers;
       *best_rotation_matrix = R;
       *best_translation = t;
-      *best_inliers = inliers;
     }
     const double inlier_ratio = n_inliers / (n_inliers + outliers.size());
     if (inlier_ratio > pnp_3d_ransac_stopping_ratio) {
