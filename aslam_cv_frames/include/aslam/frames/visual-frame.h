@@ -110,9 +110,15 @@ class VisualFrame  {
     return hasLidarKeypoint3DMeasurements() ? getLidarKeypoint3DMeasurements().cols() : 0u;
   }
 
+  /// Get the number of external keypoint measurements stored in this frame.
+  inline size_t getNumExternalKeypointMeasurements() const {
+    return hasExternalKeypointMeasurements() ? getExternalKeypointMeasurements().cols() : 0u;
+  }
+
   /// Get the total number of keypoint measurements stored in this frame.
   inline size_t getTotalNumKeypointMeasurements() const {
-    return getNumKeypointMeasurements() + getNumLidarKeypointMeasurements();
+    return getNumKeypointMeasurements() + getNumLidarKeypointMeasurements()
+        + getNumExternalKeypointMeasurements();
   }
 
   /// The keypoint measurement uncertainties stored in a frame.
