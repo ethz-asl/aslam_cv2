@@ -57,24 +57,48 @@ TEST(Frame, DeathOnGetMutableUnsetData) {
 
 TEST(Frame, SetGetDescriptors) {
   aslam::VisualFrame frame;
-  aslam::VisualFrame::DescriptorsT data;
-  data.resize(48, 10);
+  aslam::VisualFrame::DescriptorsT data(48, 10);
   data.setRandom();
   frame.setDescriptors(data);
-  const aslam::VisualFrame::DescriptorsT& data_2 =
-      frame.getDescriptors();
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 0));
-  EXPECT_EQ(&data_2, frame.getDescriptorsMutable());
-  for (int i = 0; i < data.cols(); ++i) {
-    const unsigned char* data_ptr = frame.getDescriptor(i);
-    EXPECT_EQ(&data_2.coeffRef(0, i), data_ptr);
+  {
+    const aslam::VisualFrame::DescriptorsT& data_2 =
+        frame.getDescriptors();
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 0));
+    EXPECT_EQ(&data_2, frame.getDescriptorsMutable());
+    for (int i = 0; i < data.cols(); ++i) {
+      const unsigned char* data_ptr = frame.getDescriptor(i);
+      EXPECT_EQ(&data_2.coeffRef(0, i), data_ptr);
+    }
+  }
+
+  // Test extending
+  aslam::VisualFrame::DescriptorsT data_ext(64, 12);
+  data_ext.setRandom();
+  frame.extendDescriptors(data_ext);
+  {
+    const aslam::VisualFrame::DescriptorsT& data_2 =
+        frame.getDescriptors(0);
+    const aslam::VisualFrame::DescriptorsT& data_3 =
+        frame.getDescriptors(1);
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 0));
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3, 0));
+    EXPECT_EQ(&data_2, frame.getDescriptorsMutable(0));
+    EXPECT_EQ(&data_3, frame.getDescriptorsMutable(1));
+    for (int i = 0; i < data.cols(); ++i) {
+      const unsigned char* data_ptr = frame.getDescriptor(i);
+      EXPECT_EQ(&data_2.coeffRef(0, i), data_ptr);
+    }
+    for (int i = 0; i < data_ext.cols(); ++i) {
+      const size_t index = data.cols() + i;
+      const unsigned char* data_ptr = frame.getDescriptor(index);
+      EXPECT_EQ(&data_3.coeffRef(0, i), data_ptr);
+    }
   }
 }
 
 TEST(Frame, SetGetKeypointMeasurements) {
   aslam::VisualFrame frame;
-  Eigen::Matrix2Xd data;
-  data.resize(Eigen::NoChange, 10);
+  Eigen::Matrix2Xd data(2, 10);
   data.setRandom();
   frame.setKeypointMeasurements(data);
   const Eigen::Matrix2Xd& data_2 = frame.getKeypointMeasurements();
@@ -85,12 +109,19 @@ TEST(Frame, SetGetKeypointMeasurements) {
     const Eigen::Vector2d& should = data.block<2, 1>(0, i);
     EXPECT_TRUE(EIGEN_MATRIX_NEAR(should, ref, 1e-6));
   }
+
+  // Test extending
+  Eigen::Matrix2Xd data_ext(2, 20);
+  data_ext.setRandom();
+  frame.extendKeypointMeasurements(data_ext);
+  const Eigen::Matrix2Xd& data_3 = frame.getKeypointMeasurements();
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.block(0, 0, 2, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.block(0, 10, 2, 20), 1e-6));
 }
 
 TEST(Frame, SetGetLidar3DKeypointMeasurements) {
   aslam::VisualFrame frame;
-  Eigen::Matrix3Xd data;
-  data.resize(Eigen::NoChange, 10);
+  Eigen::Matrix3Xd data(3, 10);
   data.setRandom();
   frame.setLidarKeypoint3DMeasurements(data);
   const Eigen::Matrix3Xd& data_2 = frame.getLidarKeypoint3DMeasurements();
@@ -106,8 +137,7 @@ TEST(Frame, SetGetLidar3DKeypointMeasurements) {
 
 TEST(Frame, SetGetKeypointMeasurementUncertainties) {
   aslam::VisualFrame frame;
-  Eigen::VectorXd data;
-  data.resize(10);
+  Eigen::VectorXd data(10);
   data.setRandom();
   frame.setKeypointMeasurementUncertainties(data);
   const Eigen::VectorXd& data_2 = frame.getKeypointMeasurementUncertainties();
@@ -117,12 +147,27 @@ TEST(Frame, SetGetKeypointMeasurementUncertainties) {
     double ref = frame.getKeypointMeasurementUncertainty(i);
     EXPECT_NEAR(data(i), ref, 1e-6);
   }
+
+  // Test extending as well as the default padding
+  Eigen::Matrix2Xd keypoints(2, 20);
+  keypoints.setRandom();
+  frame.setKeypointMeasurements(keypoints);
+
+  Eigen::VectorXd data_ext(20);
+  data_ext.setRandom();
+  frame.extendKeypointMeasurementUncertainties(data_ext, 0.0);
+  const Eigen::VectorXd& data_3 = frame.getKeypointMeasurementUncertainties();
+
+  Eigen::VectorXd data_zero(10);
+  data_zero.setConstant(0.0);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
 }
 
 TEST(Frame, SetGetKeypointOrientations) {
   aslam::VisualFrame frame;
-  Eigen::VectorXd data;
-  data.resize(10);
+  Eigen::VectorXd data(10);
   data.setRandom();
   frame.setKeypointOrientations(data);
   const Eigen::VectorXd& data_2 = frame.getKeypointOrientations();
@@ -132,6 +177,22 @@ TEST(Frame, SetGetKeypointOrientations) {
     double ref = frame.getKeypointOrientation(i);
     EXPECT_NEAR(data(i), ref, 1e-6);
   }
+
+  // Test extending as well as the default padding
+  Eigen::Matrix2Xd keypoints(2, 20);
+  keypoints.setRandom();
+  frame.setKeypointMeasurements(keypoints);
+
+  Eigen::VectorXd data_ext(20);
+  data_ext.setRandom();
+  frame.extendKeypointOrientations(data_ext, 0.0);
+  const Eigen::VectorXd& data_3 = frame.getKeypointOrientations();
+
+  Eigen::VectorXd data_zero(10);
+  data_zero.setConstant(0.0);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
 }
 
 TEST(Frame, SetGetKeypointScales) {
@@ -147,6 +208,84 @@ TEST(Frame, SetGetKeypointScales) {
     double ref = frame.getKeypointScale(i);
     EXPECT_NEAR(data(i), ref, 1e-6);
   }
+
+  // Test extending as well as the default padding
+  Eigen::Matrix2Xd keypoints(2, 20);
+  keypoints.setRandom();
+  frame.setKeypointMeasurements(keypoints);
+
+  Eigen::VectorXd data_ext(20);
+  data_ext.setRandom();
+  frame.extendKeypointScales(data_ext, 0.0);
+  const Eigen::VectorXd& data_3 = frame.getKeypointScales();
+
+  Eigen::VectorXd data_zero(10);
+  data_zero.setConstant(0.0);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
+}
+
+TEST(Frame, SetGetKeypointScores) {
+  aslam::VisualFrame frame;
+  Eigen::VectorXd data;
+  data.resize(10);
+  data.setRandom();
+  frame.setKeypointScores(data);
+  const Eigen::VectorXd& data_2 = frame.getKeypointScores();
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
+  EXPECT_EQ(&data_2, frame.getKeypointScoresMutable());
+  for (int i = 0; i < data.cols(); ++i) {
+    double ref = frame.getKeypointScore(i);
+    EXPECT_NEAR(data(i), ref, 1e-6);
+  }
+
+  // Test extending as well as the default padding
+  Eigen::Matrix2Xd keypoints(2, 20);
+  keypoints.setRandom();
+  frame.setKeypointMeasurements(keypoints);
+
+  Eigen::VectorXd data_ext(20);
+  data_ext.setRandom();
+  frame.extendKeypointScores(data_ext, 0.0);
+  const Eigen::VectorXd& data_3 = frame.getKeypointScores();
+
+  Eigen::VectorXd data_zero(10);
+  data_zero.setConstant(0.0);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
+}
+
+TEST(Frame, SetGetTrackIds) {
+  aslam::VisualFrame frame;
+  Eigen::VectorXi data;
+  data.resize(10);
+  data.setRandom();
+  frame.setTrackIds(data);
+  const Eigen::VectorXi& data_2 = frame.getTrackIds();
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
+  EXPECT_EQ(&data_2, frame.getTrackIdsMutable());
+  for (int i = 0; i < data.cols(); ++i) {
+    double ref = frame.getTrackId(i);
+    EXPECT_NEAR(data(i), ref, 1e-6);
+  }
+
+  // Test extending as well as the default padding
+  Eigen::Matrix2Xd keypoints(2, 20);
+  keypoints.setRandom();
+  frame.setKeypointMeasurements(keypoints);
+
+  Eigen::VectorXi data_ext(20);
+  data_ext.setRandom();
+  frame.extendTrackIds(data_ext, -1);
+  const Eigen::VectorXi& data_3 = frame.getTrackIds();
+
+  Eigen::VectorXi data_zero(10);
+  data_zero.setConstant(-1);
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
 }
 
 TEST(Frame, NamedChannel) {

@@ -27,14 +27,14 @@ DECLARE_CHANNEL(VISUAL_KEYPOINT_SCORES, Eigen::VectorXd)
 /// The keypoint descriptors. (extractor output)
 /// (cols are descriptors)
 DECLARE_CHANNEL(DESCRIPTORS,
-                Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>)
+                std::vector<Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>>)
+//DECLARE_CHANNEL(DESCRIPTOR_TYPE, std::vector<int>)
 
 /// Track ID's for tracked features. (-1 if not tracked); (feature tracker output)
 DECLARE_CHANNEL(TRACK_IDS, Eigen::VectorXi)
 
 /// The raw image.
 DECLARE_CHANNEL(RAW_IMAGE, cv::Mat)
-
 DECLARE_CHANNEL(CV_MAT, cv::Mat)
 
 #endif  // ASLAM_CV_COMMON_CHANNEL_DEFINITIONS_H_

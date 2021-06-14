@@ -102,6 +102,101 @@ bool serializeToString(const Eigen::Matrix<Scalar, ROWS, COLS>& matrix,
 }
 
 template<typename Scalar, int ROWS, int COLS>
+bool serializeToBuffer(const std::vector<Eigen::Matrix<Scalar, ROWS, COLS>>& matrices,
+                       char** buffer, size_t* size) {
+  CHECK_NOTNULL(size);
+  CHECK_NOTNULL(buffer);
+
+  // Eigen matrices have only one channel
+  constexpr int channels = 1;
+
+  // Calculate total size
+  const size_t repeat = matrices.size();
+  *size = sizeof(repeat);
+
+  HeaderInformation header;
+  for (size_t i = 0; i < matrices.size(); i++) {
+    const int rows = matrices[i].rows();
+    const int cols = matrices[i].cols();
+    const size_t matrixSize = sizeof(Scalar) * rows * cols * channels;
+    *size += matrixSize + header.size();
+  }
+
+  *buffer = new char[*size];
+
+  memcpy(*buffer, &repeat, sizeof(repeat));
+  size_t offset = sizeof(repeat);
+
+  for (size_t i = 0; i < matrices.size(); i++) {
+    const int rows = matrices[i].rows();
+    const int cols = matrices[i].cols();
+
+    makeHeaderInformation<Scalar>(rows, cols, channels, &header);
+    bool success = header.serializeToBuffer(*buffer, offset);
+    if (!success) {
+      delete[] *buffer;
+      *buffer = nullptr;
+      return false;
+    }
+    offset += header.size();
+
+    size_t matrixSize = sizeof(Scalar) * rows * cols * channels;
+    const char* const matrixData = reinterpret_cast<const char*>(matrices[i].data());
+    memcpy(*buffer + offset, matrixData, matrixSize);
+    offset += matrixSize;
+  }
+
+  return true;
+}
+
+template<typename Scalar, int ROWS, int COLS>
+bool serializeToString(const std::vector<Eigen::Matrix<Scalar, ROWS, COLS>>& matrices,
+                       std::string* string) {
+  CHECK_NOTNULL(string);
+
+  // Eigen matrices have only one channel
+  constexpr int channels = 1;
+
+  // Calculate total size
+  const size_t repeat = matrices.size();
+  size_t size = sizeof(repeat);
+
+  HeaderInformation header;
+  for (size_t i = 0; i < matrices.size(); i++) {
+    const int rows = matrices[i].rows();
+    const int cols = matrices[i].cols();
+    const size_t matrixSize = sizeof(Scalar) * rows * cols * channels;
+    size += matrixSize + header.size();
+  }
+
+  string->resize(size);
+  char* buffer = &(*string)[0];
+
+  memcpy(buffer, &repeat, sizeof(repeat));
+  size_t offset = sizeof(repeat);
+
+  for (size_t i = 0; i < matrices.size(); i++) {
+    const int rows = matrices[i].rows();
+    const int cols = matrices[i].cols();
+
+    makeHeaderInformation<Scalar>(rows, cols, channels, &header);
+    bool success = header.serializeToBuffer(buffer, offset);
+    if (!success) {
+      LOG(ERROR) << "Failed to serialize header";
+      return false;
+    }
+    offset += header.size();
+
+    size_t matrixSize = sizeof(Scalar) * rows * cols * channels;
+    const char* const matrixData = reinterpret_cast<const char*>(matrices[i].data());
+    memcpy(buffer + offset, matrixData, matrixSize);
+    offset += matrixSize;
+  }
+
+  return true;
+}
+
+template<typename Scalar, int ROWS, int COLS>
 bool deSerializeFromBuffer(const char* const buffer, size_t size,
                            Eigen::Matrix<Scalar, ROWS, COLS>* matrix) {
   CHECK_NOTNULL(matrix);
@@ -142,6 +237,58 @@ bool deSerializeFromString(const std::string& string,
                            Eigen::Matrix<Scalar, ROWS, COLS>* matrix) {
   CHECK_NOTNULL(matrix);
   return deSerializeFromBuffer(string.data(), string.size(), matrix);
+}
+
+template<typename Scalar, int ROWS, int COLS>
+bool deSerializeFromBuffer(const char* const buffer, size_t size,
+                           std::vector<Eigen::Matrix<Scalar, ROWS, COLS>>* matrices) {
+  CHECK_NOTNULL(matrices);
+
+  size_t repeat;
+  memcpy(&repeat, buffer, sizeof(repeat));
+  size_t offset = sizeof(repeat);
+
+  matrices->resize(repeat);
+  for (size_t i = 0; i < repeat; i++) {
+    HeaderInformation header;
+    bool success = header.deSerializeFromBuffer(buffer, offset);
+    if (!success) {
+      LOG(ERROR) << "Failed to deserialize header from string: " <<
+          std::string(buffer, size);
+      return false;
+    }
+    offset += header.size();
+
+    if (ROWS != Eigen::Dynamic) {
+      CHECK_EQ(header.rows, static_cast<uint32_t>(ROWS));
+    }
+    if (COLS != Eigen::Dynamic) {
+      CHECK_EQ(header.cols, static_cast<uint32_t>(COLS));
+    }
+    CHECK_EQ(header.depth, cv::DataType<Scalar>::depth);
+    CHECK_EQ(1u, header.channels) << "Eigen matrices must have one channel.";
+
+    if (ROWS == Eigen::Dynamic && COLS == Eigen::Dynamic) {
+      (*matrices)[i].resize(header.rows, header.cols);
+    } else if (ROWS == Eigen::Dynamic && COLS != Eigen::Dynamic) {
+      (*matrices)[i].resize(header.rows, Eigen::NoChange);
+    } else if (ROWS != Eigen::Dynamic && COLS == Eigen::Dynamic) {
+      (*matrices)[i].resize(Eigen::NoChange, header.cols);
+    }
+
+    size_t matrix_size = sizeof(Scalar) * (*matrices)[i].rows() * (*matrices)[i].cols();
+    memcpy((*matrices)[i].data(), buffer + offset, matrix_size);
+    offset += matrix_size;
+  }
+
+  return true;
+}
+
+template<typename Scalar, int ROWS, int COLS>
+bool deSerializeFromString(const std::string& string,
+                           std::vector<Eigen::Matrix<Scalar, ROWS, COLS>>* matrices) {
+  CHECK_NOTNULL(matrices);
+  return deSerializeFromBuffer(string.data(), string.size(), matrices);
 }
 
 bool serializeToString(const cv::Mat& image,

@@ -110,15 +110,9 @@ class VisualFrame  {
     return hasLidarKeypoint3DMeasurements() ? getLidarKeypoint3DMeasurements().cols() : 0u;
   }
 
-  /// Get the number of external keypoint measurements stored in this frame.
-  inline size_t getNumExternalKeypointMeasurements() const {
-    return hasExternalKeypointMeasurements() ? getExternalKeypointMeasurements().cols() : 0u;
-  }
-
   /// Get the total number of keypoint measurements stored in this frame.
   inline size_t getTotalNumKeypointMeasurements() const {
-    return getNumKeypointMeasurements() + getNumLidarKeypointMeasurements()
-        + getNumExternalKeypointMeasurements();
+    return getNumKeypointMeasurements() + getNumLidarKeypointMeasurements();
   }
 
   /// The keypoint measurement uncertainties stored in a frame.
@@ -134,7 +128,7 @@ class VisualFrame  {
   const Eigen::VectorXd& getKeypointScales() const;
 
   /// The descriptors stored in a frame.
-  const DescriptorsT& getDescriptors() const;
+  const DescriptorsT& getDescriptors(const size_t index = 0) const;
 
   /// The track ids stored in this frame.
   const Eigen::VectorXi& getTrackIds() const;
@@ -166,7 +160,7 @@ class VisualFrame  {
   Eigen::VectorXd* getKeypointScalesMutable();
 
   /// A pointer to the descriptors, can be used to swap in new data.
-  DescriptorsT* getDescriptorsMutable();
+  DescriptorsT* getDescriptorsMutable(const size_t index = 0);
 
   /// A pointer to the track ids, can be used to swap in new data.
   Eigen::VectorXi* getTrackIdsMutable();
@@ -220,10 +214,9 @@ class VisualFrame  {
   void setKeypointScales(const Eigen::VectorXd& scales);
 
   /// Replace (copy) the internal descriptors by the passed ones.
-  void setDescriptors(const DescriptorsT& descriptors);
-
-  /// Replace (copy) the internal descriptors by the passed ones.
-  void setDescriptors(const Eigen::Map<const DescriptorsT>& descriptors);
+  template <typename Derived>
+  void setDescriptors(const Derived& descriptors, const size_t index = 0,
+                      const int descriptor_type = 0);
 
   /// Replace (copy) the internal track ids by the passed ones.
   void setTrackIds(const Eigen::VectorXi& track_ids);
@@ -262,7 +255,8 @@ class VisualFrame  {
   void swapKeypointScales(Eigen::VectorXd* scales);
 
   /// Replace (swap) the internal descriptors by the passed ones.
-  void swapDescriptors(DescriptorsT* descriptors);
+  void swapDescriptors(DescriptorsT* descriptors, const size_t index = 0,
+                       const int descriptor_type = 0);
 
   /// Replace (swap) the internal track ids by the passed ones.
   void swapTrackIds(Eigen::VectorXi* track_ids);
@@ -368,6 +362,22 @@ class VisualFrame  {
 
   void discardUntrackedObservations(std::vector<size_t>* discarded_indices);
 
+  /* Experimental functions for dealing with multiple types of different
+     features in the same channel, including different feature sizes */
+  void extendKeypointMeasurements(const Eigen::Matrix2Xd& keypoints_new);
+  void extendKeypointMeasurementUncertainties(const Eigen::VectorXd& uncertainties_new,
+                                              const double default_value = 0.0);
+  void extendKeypointScales(const Eigen::VectorXd& scales_new,
+                            const double default_value = 0.0);
+  void extendKeypointOrientations(const Eigen::VectorXd& orientations_new,
+                                  const double default_value = 0.0);
+  void extendKeypointScores(const Eigen::VectorXd& scores_new,
+                            const double default_value = 0.0);
+  template <typename Derived>
+  void extendDescriptors(const Derived& descriptors_new);
+  void extendTrackIds(const Eigen::VectorXi& track_ids_new,
+                      const int default_value = -1);
+
   /* Lidar feature point channels and operations. */
 
   /// Are there Lidar track ids in this frame?
@@ -471,61 +481,6 @@ class VisualFrame  {
 
   void discardUntrackedLidarObservations(
       std::vector<size_t>* discarded_indices);
-
-  /* External feature point channels and operations.
-     The functionalities mirror the standard visual keypoint functions with a
-     few exceptions to be able to handle floating point based descriptors. */
-
-  bool hasExternalKeypointMeasurements() const;
-  bool hasExternalKeypointMeasurementUncertainties() const;
-  bool hasExternalKeypointOrientations() const;
-  bool hasExternalKeypointScores() const;
-  bool hasExternalKeypointScales() const;
-  bool hasExternalDescriptors() const;
-  bool hasExternalTrackIds() const;
-
-  const Eigen::Matrix2Xd& getExternalKeypointMeasurements() const;
-  const Eigen::VectorXd& getExternalKeypointMeasurementUncertainties() const;
-  const Eigen::VectorXd& getExternalKeypointScales() const;
-  const Eigen::VectorXd& getExternalKeypointOrientations() const;
-  const Eigen::VectorXd& getExternalKeypointScores() const;
-  const DescriptorsT& getExternalDescriptors() const;
-  const Eigen::VectorXi& getExternalTrackIds() const;
-
-  Eigen::Matrix2Xd* getExternalKeypointMeasurementsMutable();
-  Eigen::VectorXd* getExternalKeypointMeasurementUncertaintiesMutable();
-  Eigen::VectorXd* getExternalKeypointScalesMutable();
-  Eigen::VectorXd* getExternalKeypointOrientationsMutable();
-  Eigen::VectorXd* getExternalKeypointScoresMutable();
-  DescriptorsT* getExternalDescriptorsMutable();
-  Eigen::VectorXi* getExternalTrackIdsMutable();
-
-  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getExternalKeypointMeasurement(size_t index) const;
-  double getExternalKeypointMeasurementUncertainty(size_t index) const;
-  double getExternalKeypointScale(size_t index) const;
-  double getExternalKeypointOrientation(size_t index) const;
-  double getExternalKeypointScore(size_t index) const;
-  // const unsigned char* getExternalDescriptor(size_t index) const;
-  int getExternalTrackId(size_t index) const;
-
-  void setExternalKeypointMeasurements(const Eigen::Matrix2Xd& keypoints_new);
-  void setExternalKeypointMeasurementUncertainties(const Eigen::VectorXd& uncertainties_new);
-  void setExternalKeypointScales(const Eigen::VectorXd& scales_new);
-  void setExternalKeypointOrientations(const Eigen::VectorXd& orientations_new);
-  void setExternalKeypointScores(const Eigen::VectorXd& scores_new);
-  void setExternalDescriptors(const DescriptorsT& descriptors_new);
-  void setExternalDescriptors(const Eigen::Map<const DescriptorsT>& descriptors_new);
-  void setExternalTrackIds(const Eigen::VectorXi& track_ids_new);
-
-  void swapExternalKeypointMeasurements(Eigen::Matrix2Xd* keypoints_new);
-  void swapExternalKeypointMeasurementUncertainties(Eigen::VectorXd* uncertainties_new);
-  void swapExternalKeypointScales(Eigen::VectorXd* scales_new);
-  void swapExternalKeypointOrientations(Eigen::VectorXd* orientations_new);
-  void swapExternalKeypointScores(Eigen::VectorXd* scores_new);
-  void swapExternalDescriptors(DescriptorsT* descriptors_new);
-  void swapExternalTrackIds(Eigen::VectorXi* track_ids_new);
-
-  void clearExternalKeypointChannels();
 
  private:
   /// Timestamp in nanoseconds.

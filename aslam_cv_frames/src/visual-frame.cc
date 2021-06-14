@@ -87,8 +87,12 @@ const Eigen::VectorXd& VisualFrame::getKeypointOrientations() const {
 const Eigen::VectorXd& VisualFrame::getKeypointScores() const {
   return aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
 }
-const VisualFrame::DescriptorsT& VisualFrame::getDescriptors() const {
-  return aslam::channels::get_DESCRIPTORS_Data(channels_);
+const VisualFrame::DescriptorsT& VisualFrame::getDescriptors(
+    const size_t index) const {
+  const std::vector<VisualFrame::DescriptorsT>& data =
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
+  CHECK_LT(index, data.size());
+  return data[index];
 }
 const Eigen::VectorXi& VisualFrame::getTrackIds() const {
   return aslam::channels::get_TRACK_IDS_Data(channels_);
@@ -126,10 +130,12 @@ Eigen::VectorXd* VisualFrame::getKeypointScoresMutable() {
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
     return &scores;
 }
-VisualFrame::DescriptorsT* VisualFrame::getDescriptorsMutable() {
-  VisualFrame::DescriptorsT& descriptors =
+VisualFrame::DescriptorsT* VisualFrame::getDescriptorsMutable(
+    const size_t index) {
+  std::vector<VisualFrame::DescriptorsT>& data =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
-  return &descriptors;
+  CHECK_LT(index, data.size());
+  return &data[index];
 }
 Eigen::VectorXi* VisualFrame::getTrackIdsMutable() {
   Eigen::VectorXi& track_ids =
@@ -174,10 +180,21 @@ double VisualFrame::getKeypointScore(size_t index) const {
   return data.coeff(index, 0);
 }
 const unsigned char* VisualFrame::getDescriptor(size_t index) const {
-  VisualFrame::DescriptorsT& descriptors =
+  std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
-  CHECK_LT(static_cast<int>(index), descriptors.cols());
-  return &descriptors.coeffRef(0, index);
+
+  size_t subset;
+  for (subset = 0u; subset < descriptors.size(); subset++) {
+    const size_t num_descriptors = static_cast<int>(descriptors[subset].cols());
+    if (index < num_descriptors) {
+      break;
+    }
+    index -= num_descriptors;
+  }
+
+  // Check the target index wasn't greater than the sum of all descriptors
+  CHECK_LT(subset, descriptors.size());
+  return &descriptors[subset].coeffRef(0, index);
 }
 int VisualFrame::getTrackId(size_t index) const {
   Eigen::VectorXi& track_ids =
@@ -231,24 +248,28 @@ void VisualFrame::setKeypointScores(
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
   data = scores_new;
 }
+template <typename Derived>
 void VisualFrame::setDescriptors(
-    const DescriptorsT& descriptors_new) {
+    const Derived& descriptors_new, const size_t index,
+    const int descriptor_type) {
   if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_DESCRIPTORS_Channel(&channels_);
   }
-  VisualFrame::DescriptorsT& descriptors =
+  std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
-  descriptors = descriptors_new;
-}
-void VisualFrame::setDescriptors(
-    const Eigen::Map<const DescriptorsT>& descriptors_new) {
-  if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
-    aslam::channels::add_DESCRIPTORS_Channel(&channels_);
+
+  if (descriptors.size() == 0u) {
+    descriptors.emplace_back();
   }
-  VisualFrame::DescriptorsT& descriptors =
-      aslam::channels::get_DESCRIPTORS_Data(channels_);
-  descriptors = descriptors_new;
+  CHECK(index < descriptors.size());
+  descriptors[index] = descriptors_new;
 }
+template void VisualFrame::setDescriptors(
+    const DescriptorsT& descriptors_new, const size_t index,
+    const int descriptor_type);
+template void VisualFrame::setDescriptors(
+    const Eigen::Map<const DescriptorsT>& descriptors_new,
+    const size_t index, const int descriptor_type);
 void VisualFrame::setTrackIds(const Eigen::VectorXi& track_ids_new) {
   if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
     aslam::channels::add_TRACK_IDS_Channel(&channels_);
@@ -307,13 +328,20 @@ void VisualFrame::swapKeypointScores(Eigen::VectorXd* scores_new) {
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
   data.swap(*scores_new);
 }
-void VisualFrame::swapDescriptors(DescriptorsT* descriptors_new) {
+void VisualFrame::swapDescriptors(
+    DescriptorsT* descriptors_new, const size_t index,
+    const int descriptor_type) {
   if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_DESCRIPTORS_Channel(&channels_);
   }
-  VisualFrame::DescriptorsT& descriptors =
+  std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
-  descriptors.swap(*descriptors_new);
+
+  if (descriptors.size() == 0u) {
+    descriptors.emplace_back();
+  }
+  CHECK(index < descriptors.size());
+  descriptors[index].swap(*descriptors_new);
 }
 
 void VisualFrame::swapTrackIds(Eigen::VectorXi* track_ids_new) {
@@ -501,4 +529,103 @@ void VisualFrame::discardUntrackedObservations(
       *discarded_indices, original_count, getTrackIdsMutable());
 }
 
+void VisualFrame::extendKeypointMeasurements(
+    const Eigen::Matrix2Xd& keypoints_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENTS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_MEASUREMENTS_Channel(&channels_);
+  }
+  Eigen::Matrix2Xd& keypoints =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
+
+  size_t num_keypoints = keypoints.cols();
+  keypoints.conservativeResize(Eigen::NoChange, num_keypoints + keypoints_new.cols());
+  keypoints.block(0, num_keypoints, 2, keypoints_new.cols()) = keypoints_new;
+}
+
+template <typename Derived>
+void extendDataVector(
+    Eigen::Matrix<Derived, Eigen::Dynamic, 1>* data,
+    const Eigen::Matrix<Derived, Eigen::Dynamic, 1>& data_new,
+    const size_t num_keypoints, const Derived default_value) {
+  size_t num_padding = num_keypoints - data->size();
+  data->conservativeResize(num_keypoints + data_new.size());
+
+  // Check if we have to pad with the default value in case the previous set
+  // of keypoints are missing this property
+  if (num_padding > 0) {
+    data->segment(num_keypoints - num_padding, num_padding).setConstant(default_value);
+  }
+
+  data->segment(num_keypoints, data_new.size()) = data_new;
+}
+
+void VisualFrame::extendKeypointMeasurementUncertainties(
+    const Eigen::VectorXd& uncertainties_new, const double default_value) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
+  extendDataVector<double>(
+      &data, uncertainties_new, getNumKeypointMeasurements(), default_value);
+}
+
+void VisualFrame::extendKeypointScales(
+    const Eigen::VectorXd& scales_new, const double default_value) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  extendDataVector<double>(
+      &data, scales_new, getNumKeypointMeasurements(), default_value);
+}
+
+void VisualFrame::extendKeypointOrientations(
+    const Eigen::VectorXd& orientations_new, const double default_value) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_ORIENTATIONS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_ORIENTATIONS_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
+  extendDataVector<double>(
+      &data, orientations_new, getNumKeypointMeasurements(), default_value);
+}
+
+void VisualFrame::extendKeypointScores(
+    const Eigen::VectorXd& scores_new, const double default_value) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_SCORES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_SCORES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+  extendDataVector<double>(
+      &data, scores_new, getNumKeypointMeasurements(), default_value);
+}
+
+template <typename Derived>
+void VisualFrame::extendDescriptors(
+    const Derived& descriptors_new) {
+  if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
+    aslam::channels::add_DESCRIPTORS_Channel(&channels_);
+  }
+  std::vector<VisualFrame::DescriptorsT>& descriptors =
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
+  descriptors.emplace_back(descriptors_new);
+}
+template void VisualFrame::extendDescriptors(
+    const DescriptorsT& descriptors_new);
+template void VisualFrame::extendDescriptors(
+    const Eigen::Map<const DescriptorsT>& descriptors_new);
+
+void VisualFrame::extendTrackIds(
+    const Eigen::VectorXi& track_ids_new, const int default_value) {
+  if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
+    aslam::channels::add_TRACK_IDS_Channel(&channels_);
+  }
+  Eigen::VectorXi& data =
+      aslam::channels::get_TRACK_IDS_Data(channels_);
+  extendDataVector<int>(
+      &data, track_ids_new, getNumKeypointMeasurements(), default_value);
+}
 }  // namespace aslam
