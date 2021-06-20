@@ -547,16 +547,19 @@ void extendDataVector(
     Eigen::Matrix<Derived, Eigen::Dynamic, 1>* data,
     const Eigen::Matrix<Derived, Eigen::Dynamic, 1>& data_new,
     const size_t num_keypoints, const Derived default_value) {
-  size_t num_padding = num_keypoints - data->size();
-  data->conservativeResize(num_keypoints + data_new.size());
+  const size_t num_data = static_cast<size_t>(data->size() + data_new.size());
+  CHECK_GE(num_keypoints, num_data);
+  const size_t num_padding = num_keypoints - num_data;
+  const size_t original_size = data->size();
+  data->conservativeResize(num_keypoints);
 
   // Check if we have to pad with the default value in case the previous set
   // of keypoints are missing this property
   if (num_padding > 0) {
-    data->segment(num_keypoints - num_padding, num_padding).setConstant(default_value);
+    data->segment(original_size, num_padding).setConstant(default_value);
   }
 
-  data->segment(num_keypoints, data_new.size()) = data_new;
+  data->segment(original_size + num_padding, data_new.size()) = data_new;
 }
 
 void VisualFrame::extendKeypointMeasurementUncertainties(
@@ -627,5 +630,32 @@ void VisualFrame::extendTrackIds(
       aslam::channels::get_TRACK_IDS_Data(channels_);
   extendDataVector<int>(
       &data, track_ids_new, getNumKeypointMeasurements(), default_value);
+}
+
+size_t VisualFrame::getNumDescriptors() const {
+  if (!hasDescriptors()) {
+    return 0;
+  }
+
+  size_t num_descriptors = 0;
+  const std::vector<VisualFrame::DescriptorsT>& descriptors =
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
+  for (size_t i = 0; i < descriptors.size(); ++i) {
+    num_descriptors += static_cast<size_t>(descriptors[i].cols());
+  }
+
+  return num_descriptors;
+}
+
+void VisualFrame::serializeDescriptorsToString(std::string* descriptors_string) const {
+  CHECK(aslam::channels::has_DESCRIPTORS_Channel(channels_));
+  aslam::channels::serialize_DESCRIPTORS_Channel(channels_, descriptors_string);
+}
+
+void VisualFrame::deserializeDescriptorsFromString(const std::string& descriptors_string) {
+  if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
+    aslam::channels::add_DESCRIPTORS_Channel(&channels_);
+  }
+  aslam::channels::deserialize_DESCRIPTORS_Channel(channels_, descriptors_string);
 }
 }  // namespace aslam

@@ -105,6 +105,8 @@ class VisualFrame  {
     return hasKeypointMeasurements() ? getKeypointMeasurements().cols() : 0u;
   }
 
+  size_t getNumDescriptors() const;
+
   /// Get the number of LiDAR keypoint measurements stored in this frame.
   inline size_t getNumLidarKeypointMeasurements() const {
     return hasLidarKeypoint3DMeasurements() ? getLidarKeypoint3DMeasurements().cols() : 0u;
@@ -377,6 +379,9 @@ class VisualFrame  {
   void extendDescriptors(const Derived& descriptors_new);
   void extendTrackIds(const Eigen::VectorXi& track_ids_new,
                       const int default_value = -1);
+
+  void serializeDescriptorsToString(std::string* descriptors_string) const;
+  void deserializeDescriptorsFromString(const std::string& descriptors_string);
 
   /* Lidar feature point channels and operations. */
 

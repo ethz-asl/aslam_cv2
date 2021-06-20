@@ -149,7 +149,7 @@ TEST(Frame, SetGetKeypointMeasurementUncertainties) {
   }
 
   // Test extending as well as the default padding
-  Eigen::Matrix2Xd keypoints(2, 20);
+  Eigen::Matrix2Xd keypoints(2, 40);
   keypoints.setRandom();
   frame.setKeypointMeasurements(keypoints);
 
@@ -157,6 +157,7 @@ TEST(Frame, SetGetKeypointMeasurementUncertainties) {
   data_ext.setRandom();
   frame.extendKeypointMeasurementUncertainties(data_ext, 0.0);
   const Eigen::VectorXd& data_3 = frame.getKeypointMeasurementUncertainties();
+  EXPECT_EQ(data_3.size(), keypoints.cols());
 
   Eigen::VectorXd data_zero(10);
   data_zero.setConstant(0.0);
@@ -179,7 +180,7 @@ TEST(Frame, SetGetKeypointOrientations) {
   }
 
   // Test extending as well as the default padding
-  Eigen::Matrix2Xd keypoints(2, 20);
+  Eigen::Matrix2Xd keypoints(2, 40);
   keypoints.setRandom();
   frame.setKeypointMeasurements(keypoints);
 
@@ -187,6 +188,7 @@ TEST(Frame, SetGetKeypointOrientations) {
   data_ext.setRandom();
   frame.extendKeypointOrientations(data_ext, 0.0);
   const Eigen::VectorXd& data_3 = frame.getKeypointOrientations();
+  EXPECT_EQ(data_3.size(), keypoints.cols());
 
   Eigen::VectorXd data_zero(10);
   data_zero.setConstant(0.0);
@@ -210,7 +212,7 @@ TEST(Frame, SetGetKeypointScales) {
   }
 
   // Test extending as well as the default padding
-  Eigen::Matrix2Xd keypoints(2, 20);
+  Eigen::Matrix2Xd keypoints(2, 40);
   keypoints.setRandom();
   frame.setKeypointMeasurements(keypoints);
 
@@ -218,6 +220,7 @@ TEST(Frame, SetGetKeypointScales) {
   data_ext.setRandom();
   frame.extendKeypointScales(data_ext, 0.0);
   const Eigen::VectorXd& data_3 = frame.getKeypointScales();
+  EXPECT_EQ(data_3.size(), keypoints.cols());
 
   Eigen::VectorXd data_zero(10);
   data_zero.setConstant(0.0);
@@ -241,7 +244,7 @@ TEST(Frame, SetGetKeypointScores) {
   }
 
   // Test extending as well as the default padding
-  Eigen::Matrix2Xd keypoints(2, 20);
+  Eigen::Matrix2Xd keypoints(2, 40);
   keypoints.setRandom();
   frame.setKeypointMeasurements(keypoints);
 
@@ -249,6 +252,7 @@ TEST(Frame, SetGetKeypointScores) {
   data_ext.setRandom();
   frame.extendKeypointScores(data_ext, 0.0);
   const Eigen::VectorXd& data_3 = frame.getKeypointScores();
+  EXPECT_EQ(data_3.size(), keypoints.cols());
 
   Eigen::VectorXd data_zero(10);
   data_zero.setConstant(0.0);
@@ -272,7 +276,7 @@ TEST(Frame, SetGetTrackIds) {
   }
 
   // Test extending as well as the default padding
-  Eigen::Matrix2Xd keypoints(2, 20);
+  Eigen::Matrix2Xd keypoints(2, 40);
   keypoints.setRandom();
   frame.setKeypointMeasurements(keypoints);
 
@@ -280,6 +284,7 @@ TEST(Frame, SetGetTrackIds) {
   data_ext.setRandom();
   frame.extendTrackIds(data_ext, -1);
   const Eigen::VectorXi& data_3 = frame.getTrackIds();
+  EXPECT_EQ(data_3.size(), keypoints.cols());
 
   Eigen::VectorXi data_zero(10);
   data_zero.setConstant(-1);
