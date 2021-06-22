@@ -179,23 +179,27 @@ double VisualFrame::getKeypointScore(size_t index) const {
   CHECK_LT(static_cast<int>(index), data.rows());
   return data.coeff(index, 0);
 }
+
+size_t getDescriptorSubsetIndex(
+    const std::vector<VisualFrame::DescriptorsT>& descriptors, size_t *index) {
+  for (size_t subset = 0u; subset < descriptors.size(); subset++) {
+    const size_t num_descriptors = static_cast<int>(descriptors[subset].cols());
+    if (*index < num_descriptors) {
+      return subset;
+    }
+    *index -= num_descriptors;
+  }
+
+  LOG(FATAL) << "Descriptor index out of range";
+}
+
 const unsigned char* VisualFrame::getDescriptor(size_t index) const {
   std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
-
-  size_t subset;
-  for (subset = 0u; subset < descriptors.size(); subset++) {
-    const size_t num_descriptors = static_cast<int>(descriptors[subset].cols());
-    if (index < num_descriptors) {
-      break;
-    }
-    index -= num_descriptors;
-  }
-
-  // Check the target index wasn't greater than the sum of all descriptors
-  CHECK_LT(subset, descriptors.size());
+  size_t subset = getDescriptorSubsetIndex(descriptors, &index);
   return &descriptors[subset].coeffRef(0, index);
 }
+
 int VisualFrame::getTrackId(size_t index) const {
   Eigen::VectorXi& track_ids =
       aslam::channels::get_TRACK_IDS_Data(channels_);
@@ -248,21 +252,29 @@ void VisualFrame::setKeypointScores(
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
   data = scores_new;
 }
+
 template <typename Derived>
 void VisualFrame::setDescriptors(
     const Derived& descriptors_new, const size_t index,
     const int descriptor_type) {
   if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_DESCRIPTORS_Channel(&channels_);
+    aslam::channels::add_DESCRIPTOR_TYPES_Channel(&channels_);
   }
   std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
+  Eigen::VectorXi& descriptor_types =
+      aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
 
   if (descriptors.size() == 0u) {
-    descriptors.emplace_back();
+    descriptors.emplace_back(descriptors_new);
+    descriptor_types.resize(1);
+    descriptor_types(0) = descriptor_type;
+  } else {
+    CHECK_LT(index, descriptors.size());
+    descriptors[index] = descriptors_new;
+    descriptor_types(index) = descriptor_type;
   }
-  CHECK(index < descriptors.size());
-  descriptors[index] = descriptors_new;
 }
 template void VisualFrame::setDescriptors(
     const DescriptorsT& descriptors_new, const size_t index,
@@ -270,6 +282,7 @@ template void VisualFrame::setDescriptors(
 template void VisualFrame::setDescriptors(
     const Eigen::Map<const DescriptorsT>& descriptors_new,
     const size_t index, const int descriptor_type);
+
 void VisualFrame::setTrackIds(const Eigen::VectorXi& track_ids_new) {
   if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
     aslam::channels::add_TRACK_IDS_Channel(&channels_);
@@ -331,6 +344,8 @@ void VisualFrame::swapKeypointScores(Eigen::VectorXd* scores_new) {
 void VisualFrame::swapDescriptors(
     DescriptorsT* descriptors_new, const size_t index,
     const int descriptor_type) {
+  // TODO(smauq): implement descriptor type handling for this function
+  // or remove or change it completely
   if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_DESCRIPTORS_Channel(&channels_);
   }
@@ -608,18 +623,25 @@ void VisualFrame::extendKeypointScores(
 
 template <typename Derived>
 void VisualFrame::extendDescriptors(
-    const Derived& descriptors_new) {
+    const Derived& descriptors_new, const int descriptor_type) {
   if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_DESCRIPTORS_Channel(&channels_);
+    aslam::channels::add_DESCRIPTOR_TYPES_Channel(&channels_);
   }
   std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
+  Eigen::VectorXi& descriptor_types =
+      aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+
   descriptors.emplace_back(descriptors_new);
+  const size_t num_descriptor_types = descriptor_types.size();
+  descriptor_types.conservativeResize(num_descriptor_types + 1);
+  descriptor_types(num_descriptor_types) = descriptor_type;
 }
 template void VisualFrame::extendDescriptors(
-    const DescriptorsT& descriptors_new);
+    const DescriptorsT& descriptors_new, const int descriptor_type);
 template void VisualFrame::extendDescriptors(
-    const Eigen::Map<const DescriptorsT>& descriptors_new);
+    const Eigen::Map<const DescriptorsT>& descriptors_new, const int descriptor_type);
 
 void VisualFrame::extendTrackIds(
     const Eigen::VectorXi& track_ids_new, const int default_value) {
@@ -657,5 +679,14 @@ void VisualFrame::deserializeDescriptorsFromString(const std::string& descriptor
     aslam::channels::add_DESCRIPTORS_Channel(&channels_);
   }
   aslam::channels::deserialize_DESCRIPTORS_Channel(channels_, descriptors_string);
+}
+
+int VisualFrame::getDescriptorType(size_t index) const {
+  std::vector<VisualFrame::DescriptorsT>& descriptors =
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
+  Eigen::VectorXi& descriptor_types =
+      aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+  size_t subset = getDescriptorSubsetIndex(descriptors, &index);
+  return descriptor_types.coeff(subset);
 }
 }  // namespace aslam

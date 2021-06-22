@@ -28,7 +28,7 @@ DECLARE_CHANNEL(VISUAL_KEYPOINT_SCORES, Eigen::VectorXd)
 /// (cols are descriptors)
 DECLARE_CHANNEL(DESCRIPTORS,
                 std::vector<Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>>)
-//DECLARE_CHANNEL(DESCRIPTOR_TYPE, std::vector<int>)
+DECLARE_CHANNEL(DESCRIPTOR_TYPES, Eigen::VectorXi)
 
 /// Track ID's for tracked features. (-1 if not tracked); (feature tracker output)
 DECLARE_CHANNEL(TRACK_IDS, Eigen::VectorXi)

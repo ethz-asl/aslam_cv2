@@ -376,12 +376,13 @@ class VisualFrame  {
   void extendKeypointScores(const Eigen::VectorXd& scores_new,
                             const double default_value = 0.0);
   template <typename Derived>
-  void extendDescriptors(const Derived& descriptors_new);
-  void extendTrackIds(const Eigen::VectorXi& track_ids_new,
-                      const int default_value = -1);
+  void extendDescriptors(const Derived& descriptors_new, const int descriptor_type = 0);
+  void extendTrackIds(const Eigen::VectorXi& track_ids_new, const int default_value = -1);
 
   void serializeDescriptorsToString(std::string* descriptors_string) const;
   void deserializeDescriptorsFromString(const std::string& descriptors_string);
+
+  int getDescriptorType(size_t index) const;
 
   /* Lidar feature point channels and operations. */
 
