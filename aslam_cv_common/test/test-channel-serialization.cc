@@ -144,6 +144,47 @@ TYPED_TEST(ChannelSerializationTest, SerializeDeserializeBuffer) {
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(this->value_a.value_, this->value_b.value_, static_cast<Scalar>(1e-4)));
 }
 
+TEST(MatrixVectorChannelSerialization, SerializeDeserializeString) {
+  typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
+  aslam::channels::Channel<std::vector<DescriptorsT>> value_a;
+  aslam::channels::Channel<std::vector<DescriptorsT>> value_b;
+
+  for (size_t i = 0; i < 5; i++) {
+    value_a.value_.emplace_back(i*2+10, i*3+5);
+    value_a.value_[i].setRandom();
+  }
+
+  char* buffer;
+  size_t size;
+  EXPECT_TRUE(value_a.serializeToBuffer(&buffer, &size));
+  EXPECT_TRUE(value_b.deSerializeFromBuffer(buffer, size));
+  ASSERT_EQ(value_a.value_.size(), value_b.value_.size());
+  for (size_t i = 0; i < value_a.value_.size(); i++) {
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(
+        value_a.value_[i], value_b.value_[i], static_cast<unsigned char>(1e-4)));
+  }
+}
+
+TEST(MatrixVectorChannelSerialization, SerializeDeserializeBuffer) {
+  typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
+  aslam::channels::Channel<std::vector<DescriptorsT>> value_a;
+  aslam::channels::Channel<std::vector<DescriptorsT>> value_b;
+
+  for (size_t i = 0; i < 5; i++) {
+    value_a.value_.emplace_back(i*2+10, i*3+5);
+    value_a.value_[i].setRandom();
+  }
+
+  std::string serialized_value;
+  EXPECT_TRUE(value_a.serializeToString(&serialized_value));
+  EXPECT_TRUE(value_b.deSerializeFromString(serialized_value));
+  ASSERT_EQ(value_a.value_.size(), value_b.value_.size());
+  for (size_t i = 0; i < value_a.value_.size(); i++) {
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(
+        value_a.value_[i], value_b.value_[i], static_cast<unsigned char>(1e-4)));
+  }
+}
+
 TEST(ChannelSerialization, HeaderInfoSize) {
   aslam::internal::HeaderInformation header_info;
   header_info.cols = 12;

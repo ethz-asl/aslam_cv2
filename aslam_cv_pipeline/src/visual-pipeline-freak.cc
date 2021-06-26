@@ -82,9 +82,9 @@ void FreakVisualPipeline::processFrameImpl(const cv::Mat& image, VisualFrame* fr
   CHECK(descriptors.isContinuous());
   frame->setDescriptors(
       // Switch cols/rows as Eigen is col-major and cv::Mat is row-major
-      Eigen::Map<VisualFrame::DescriptorsT>(descriptors.data,
-                                            descriptors.cols,
-                                            descriptors.rows)
+      Eigen::Map<const VisualFrame::DescriptorsT>(descriptors.data,
+                                                  descriptors.cols,
+                                                  descriptors.rows)
   );
 
   // The keypoint uncertainty is set to a constant value.
