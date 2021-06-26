@@ -382,7 +382,11 @@ class VisualFrame  {
   void serializeDescriptorsToString(std::string* descriptors_string) const;
   void deserializeDescriptorsFromString(const std::string& descriptors_string);
 
+  void setDescriptorTypes(const Eigen::VectorXi& descriptor_types);
+  const Eigen::VectorXi& getDescriptorTypes() const;
   int getDescriptorType(size_t index) const;
+
+  size_t getNumDescriptorsOfType(int descriptor_type) const;
 
   /* Lidar feature point channels and operations. */
 

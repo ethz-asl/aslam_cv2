@@ -265,6 +265,7 @@ void VisualFrame::setDescriptors(
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   Eigen::VectorXi& descriptor_types =
       aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+  CHECK_EQ(descriptors.size(), static_cast<size_t>(descriptor_types.size()));
 
   if (descriptors.size() == 0u) {
     descriptors.emplace_back(descriptors_new);
@@ -632,6 +633,7 @@ void VisualFrame::extendDescriptors(
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   Eigen::VectorXi& descriptor_types =
       aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+  CHECK_EQ(descriptors.size(), static_cast<size_t>(descriptor_types.size()));
 
   descriptors.emplace_back(descriptors_new);
   const size_t num_descriptor_types = descriptor_types.size();
@@ -681,12 +683,47 @@ void VisualFrame::deserializeDescriptorsFromString(const std::string& descriptor
   aslam::channels::deserialize_DESCRIPTORS_Channel(channels_, descriptors_string);
 }
 
+void VisualFrame::setDescriptorTypes(const Eigen::VectorXi& descriptor_types) {
+  const std::vector<VisualFrame::DescriptorsT>& descriptors =
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
+  CHECK_EQ(descriptors.size(), static_cast<size_t>(descriptor_types.size()));
+
+  if (!aslam::channels::has_DESCRIPTOR_TYPES_Channel(channels_)) {
+    aslam::channels::add_DESCRIPTOR_TYPES_Channel(&channels_);
+  }
+  Eigen::VectorXi& data =
+      aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+  data = descriptor_types;
+}
+
+const Eigen::VectorXi& VisualFrame::getDescriptorTypes() const {
+  return aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+}
+
 int VisualFrame::getDescriptorType(size_t index) const {
   std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   Eigen::VectorXi& descriptor_types =
       aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+  CHECK_EQ(descriptors.size(), static_cast<size_t>(descriptor_types.size()));
   size_t subset = getDescriptorSubsetIndex(descriptors, &index);
   return descriptor_types.coeff(subset);
+}
+
+size_t VisualFrame::getNumDescriptorsOfType(int descriptor_type) const {
+  const std::vector<VisualFrame::DescriptorsT>& descriptors =
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
+  const Eigen::VectorXi& descriptor_types =
+      aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+  CHECK_EQ(descriptors.size(), static_cast<size_t>(descriptor_types.size()));
+
+  size_t count = 0u;
+  for (size_t i = 0u; i < descriptors.size(); ++i) {
+    if (descriptor_types.coeff(i) == descriptor_type) {
+      count += descriptors[i].cols();
+    }
+  }
+
+  return count;
 }
 }  // namespace aslam
