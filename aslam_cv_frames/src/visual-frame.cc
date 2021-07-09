@@ -87,8 +87,7 @@ const Eigen::VectorXd& VisualFrame::getKeypointOrientations() const {
 const Eigen::VectorXd& VisualFrame::getKeypointScores() const {
   return aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
 }
-const VisualFrame::DescriptorsT& VisualFrame::getDescriptors(
-    const size_t index) const {
+const VisualFrame::DescriptorsT& VisualFrame::getDescriptors(size_t index) const {
   const std::vector<VisualFrame::DescriptorsT>& data =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   CHECK_LT(index, data.size());
@@ -130,8 +129,7 @@ Eigen::VectorXd* VisualFrame::getKeypointScoresMutable() {
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
     return &scores;
 }
-VisualFrame::DescriptorsT* VisualFrame::getDescriptorsMutable(
-    const size_t index) {
+VisualFrame::DescriptorsT* VisualFrame::getDescriptorsMutable(size_t index) {
   std::vector<VisualFrame::DescriptorsT>& data =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   CHECK_LT(index, data.size());
@@ -255,8 +253,7 @@ void VisualFrame::setKeypointScores(
 
 template <typename Derived>
 void VisualFrame::setDescriptors(
-    const Derived& descriptors_new, const size_t index,
-    const int descriptor_type) {
+    const Derived& descriptors_new, size_t index, int descriptor_type) {
   if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_DESCRIPTORS_Channel(&channels_);
     aslam::channels::add_DESCRIPTOR_TYPES_Channel(&channels_);
@@ -278,11 +275,10 @@ void VisualFrame::setDescriptors(
   }
 }
 template void VisualFrame::setDescriptors(
-    const DescriptorsT& descriptors_new, const size_t index,
-    const int descriptor_type);
+    const DescriptorsT& descriptors_new, size_t index, int descriptor_type);
 template void VisualFrame::setDescriptors(
-    const Eigen::Map<const DescriptorsT>& descriptors_new,
-    const size_t index, const int descriptor_type);
+    const Eigen::Map<const DescriptorsT>& descriptors_new, size_t index,
+    int descriptor_type);
 
 void VisualFrame::setTrackIds(const Eigen::VectorXi& track_ids_new) {
   if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
@@ -343,8 +339,7 @@ void VisualFrame::swapKeypointScores(Eigen::VectorXd* scores_new) {
   data.swap(*scores_new);
 }
 void VisualFrame::swapDescriptors(
-    DescriptorsT* descriptors_new, const size_t index,
-    const int descriptor_type) {
+    DescriptorsT* descriptors_new, size_t index, int descriptor_type) {
   // TODO(smauq): implement descriptor type handling for this function
   // or remove or change it completely
   if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
@@ -450,8 +445,8 @@ void VisualFrame::toRawImageCoordinatesVectorized(
   }
 }
 
-size_t VisualFrame::getDescriptorSizeBytes() const {
-  return getDescriptors().rows() * sizeof(DescriptorsT::Scalar);
+size_t VisualFrame::getDescriptorSizeBytes(size_t index) const {
+  return getDescriptors(index).rows() * sizeof(DescriptorsT::Scalar);
 }
 
 Eigen::Matrix3Xd VisualFrame::getNormalizedBearingVectors(
@@ -562,7 +557,7 @@ template <typename Derived>
 void extendDataVector(
     Eigen::Matrix<Derived, Eigen::Dynamic, 1>* data,
     const Eigen::Matrix<Derived, Eigen::Dynamic, 1>& data_new,
-    const size_t num_keypoints, const Derived default_value) {
+    size_t num_keypoints, Derived default_value) {
   const size_t num_data = static_cast<size_t>(data->size() + data_new.size());
   CHECK_GE(num_keypoints, num_data);
   const size_t num_padding = num_keypoints - num_data;
@@ -579,7 +574,7 @@ void extendDataVector(
 }
 
 void VisualFrame::extendKeypointMeasurementUncertainties(
-    const Eigen::VectorXd& uncertainties_new, const double default_value) {
+    const Eigen::VectorXd& uncertainties_new, double default_value) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Channel(&channels_);
   }
@@ -590,7 +585,7 @@ void VisualFrame::extendKeypointMeasurementUncertainties(
 }
 
 void VisualFrame::extendKeypointScales(
-    const Eigen::VectorXd& scales_new, const double default_value) {
+    const Eigen::VectorXd& scales_new, double default_value) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
   }
@@ -601,7 +596,7 @@ void VisualFrame::extendKeypointScales(
 }
 
 void VisualFrame::extendKeypointOrientations(
-    const Eigen::VectorXd& orientations_new, const double default_value) {
+    const Eigen::VectorXd& orientations_new, double default_value) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_ORIENTATIONS_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_ORIENTATIONS_Channel(&channels_);
   }
@@ -612,7 +607,7 @@ void VisualFrame::extendKeypointOrientations(
 }
 
 void VisualFrame::extendKeypointScores(
-    const Eigen::VectorXd& scores_new, const double default_value) {
+    const Eigen::VectorXd& scores_new, double default_value) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_SCORES_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_SCORES_Channel(&channels_);
   }
@@ -624,7 +619,7 @@ void VisualFrame::extendKeypointScores(
 
 template <typename Derived>
 void VisualFrame::extendDescriptors(
-    const Derived& descriptors_new, const int descriptor_type) {
+    const Derived& descriptors_new, int descriptor_type) {
   if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_DESCRIPTORS_Channel(&channels_);
     aslam::channels::add_DESCRIPTOR_TYPES_Channel(&channels_);
@@ -641,12 +636,12 @@ void VisualFrame::extendDescriptors(
   descriptor_types(num_descriptor_types) = descriptor_type;
 }
 template void VisualFrame::extendDescriptors(
-    const DescriptorsT& descriptors_new, const int descriptor_type);
+    const DescriptorsT& descriptors_new, int descriptor_type);
 template void VisualFrame::extendDescriptors(
-    const Eigen::Map<const DescriptorsT>& descriptors_new, const int descriptor_type);
+    const Eigen::Map<const DescriptorsT>& descriptors_new, int descriptor_type);
 
 void VisualFrame::extendTrackIds(
-    const Eigen::VectorXi& track_ids_new, const int default_value) {
+    const Eigen::VectorXi& track_ids_new, int default_value) {
   if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
     aslam::channels::add_TRACK_IDS_Channel(&channels_);
   }

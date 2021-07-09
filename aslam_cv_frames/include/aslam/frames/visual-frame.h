@@ -130,7 +130,7 @@ class VisualFrame  {
   const Eigen::VectorXd& getKeypointScales() const;
 
   /// The descriptors stored in a frame.
-  const DescriptorsT& getDescriptors(const size_t index = 0) const;
+  const DescriptorsT& getDescriptors(size_t index = 0) const;
 
   /// The track ids stored in this frame.
   const Eigen::VectorXi& getTrackIds() const;
@@ -162,7 +162,7 @@ class VisualFrame  {
   Eigen::VectorXd* getKeypointScalesMutable();
 
   /// A pointer to the descriptors, can be used to swap in new data.
-  DescriptorsT* getDescriptorsMutable(const size_t index = 0);
+  DescriptorsT* getDescriptorsMutable(size_t index = 0);
 
   /// A pointer to the track ids, can be used to swap in new data.
   Eigen::VectorXi* getTrackIdsMutable();
@@ -217,8 +217,8 @@ class VisualFrame  {
 
   /// Replace (copy) the internal descriptors by the passed ones.
   template <typename Derived>
-  void setDescriptors(const Derived& descriptors, const size_t index = 0,
-                      const int descriptor_type = 0);
+  void setDescriptors(const Derived& descriptors, size_t index = 0,
+                      int descriptor_type = 0);
 
   /// Replace (copy) the internal track ids by the passed ones.
   void setTrackIds(const Eigen::VectorXi& track_ids);
@@ -257,8 +257,8 @@ class VisualFrame  {
   void swapKeypointScales(Eigen::VectorXd* scales);
 
   /// Replace (swap) the internal descriptors by the passed ones.
-  void swapDescriptors(DescriptorsT* descriptors, const size_t index = 0,
-                       const int descriptor_type = 0);
+  void swapDescriptors(DescriptorsT* descriptors, size_t index = 0,
+                       int descriptor_type = 0);
 
   /// Replace (swap) the internal track ids by the passed ones.
   void swapTrackIds(Eigen::VectorXi* track_ids);
@@ -340,7 +340,7 @@ class VisualFrame  {
   }
 
   /// Set the size of the descriptor in bytes.
-  size_t getDescriptorSizeBytes() const;
+  size_t getDescriptorSizeBytes(size_t index = 0) const;
 
   /// Set the validity flag to true.
   void validate() { is_valid_ = true; }
@@ -368,16 +368,16 @@ class VisualFrame  {
      features in the same channel, including different feature sizes */
   void extendKeypointMeasurements(const Eigen::Matrix2Xd& keypoints_new);
   void extendKeypointMeasurementUncertainties(const Eigen::VectorXd& uncertainties_new,
-                                              const double default_value = 0.0);
+                                              double default_value = 0.0);
   void extendKeypointScales(const Eigen::VectorXd& scales_new,
-                            const double default_value = 0.0);
+                            double default_value = 0.0);
   void extendKeypointOrientations(const Eigen::VectorXd& orientations_new,
-                                  const double default_value = 0.0);
+                                  double default_value = 0.0);
   void extendKeypointScores(const Eigen::VectorXd& scores_new,
-                            const double default_value = 0.0);
+                            double default_value = 0.0);
   template <typename Derived>
-  void extendDescriptors(const Derived& descriptors_new, const int descriptor_type = 0);
-  void extendTrackIds(const Eigen::VectorXi& track_ids_new, const int default_value = -1);
+  void extendDescriptors(const Derived& descriptors_new, int descriptor_type = 0);
+  void extendTrackIds(const Eigen::VectorXi& track_ids_new, int default_value = -1);
 
   void serializeDescriptorsToString(std::string* descriptors_string) const;
   void deserializeDescriptorsFromString(const std::string& descriptors_string);
