@@ -146,44 +146,44 @@ cv::Mat* VisualFrame::getRawImageMutable() {
   return &image;
 }
 
-const Eigen::Block<Eigen::Matrix2Xd, 2, 1>
+const Eigen::Block<const Eigen::Matrix2Xd, 2, 1>
 VisualFrame::getKeypointMeasurement(size_t index) const {
-  Eigen::Matrix2Xd& keypoints =
+  const Eigen::Matrix2Xd& keypoints =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
   CHECK_LT(static_cast<int>(index), keypoints.cols());
   return keypoints.block<2, 1>(0, index);
 }
 double VisualFrame::getKeypointMeasurementUncertainty(size_t index) const {
-  Eigen::VectorXd& data =
+  const Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
   CHECK_LT(static_cast<int>(index), data.rows());
   return data.coeff(index, 0);
 }
 double VisualFrame::getKeypointScale(size_t index) const {
-  Eigen::VectorXd& data =
+  const Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
   CHECK_LT(static_cast<int>(index), data.rows());
   return data.coeff(index, 0);
 }
 double VisualFrame::getKeypointOrientation(size_t index) const {
-  Eigen::VectorXd& data =
+  const Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
   CHECK_LT(static_cast<int>(index), data.rows());
   return data.coeff(index, 0);
 }
 double VisualFrame::getKeypointScore(size_t index) const {
-  Eigen::VectorXd& data =
+  const Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
   CHECK_LT(static_cast<int>(index), data.rows());
   return data.coeff(index, 0);
 }
 
-size_t getDescriptorSubsetIndex(
+size_t getDescriptorBlockForIndex(
     const std::vector<VisualFrame::DescriptorsT>& descriptors, size_t *index) {
-  for (size_t subset = 0u; subset < descriptors.size(); subset++) {
-    const size_t num_descriptors = static_cast<int>(descriptors[subset].cols());
+  for (size_t block = 0u; block < descriptors.size(); ++block) {
+    const size_t num_descriptors = static_cast<int>(descriptors[block].cols());
     if (*index < num_descriptors) {
-      return subset;
+      return block;
     }
     *index -= num_descriptors;
   }
@@ -192,14 +192,14 @@ size_t getDescriptorSubsetIndex(
 }
 
 const unsigned char* VisualFrame::getDescriptor(size_t index) const {
-  std::vector<VisualFrame::DescriptorsT>& descriptors =
+  const std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
-  size_t subset = getDescriptorSubsetIndex(descriptors, &index);
-  return &descriptors[subset].coeffRef(0, index);
+  size_t block = getDescriptorBlockForIndex(descriptors, &index);
+  return &descriptors[block].coeffRef(0, index);
 }
 
 int VisualFrame::getTrackId(size_t index) const {
-  Eigen::VectorXi& track_ids =
+  const Eigen::VectorXi& track_ids =
       aslam::channels::get_TRACK_IDS_Data(channels_);
   CHECK_LT(static_cast<int>(index), track_ids.rows());
   return track_ids.coeff(index, 0);
@@ -698,27 +698,174 @@ const Eigen::VectorXi& VisualFrame::getDescriptorTypes() const {
 int VisualFrame::getDescriptorType(size_t index) const {
   std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
+  size_t block = getDescriptorBlockForIndex(descriptors, &index);
+  return getDescriptorBlockType(block);
+}
+
+int VisualFrame::getDescriptorBlockType(size_t block) const {
   Eigen::VectorXi& descriptor_types =
       aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
-  CHECK_EQ(descriptors.size(), static_cast<size_t>(descriptor_types.size()));
-  size_t subset = getDescriptorSubsetIndex(descriptors, &index);
-  return descriptor_types.coeff(subset);
+  CHECK_LT(block, static_cast<size_t>(descriptor_types.size()));
+  return descriptor_types.coeff(block);
 }
 
-size_t VisualFrame::getNumDescriptorsOfType(int descriptor_type) const {
-  const std::vector<VisualFrame::DescriptorsT>& descriptors =
-      aslam::channels::get_DESCRIPTORS_Data(channels_);
+size_t VisualFrame::getDescriptorTypeBlock(int descriptor_type) const {
   const Eigen::VectorXi& descriptor_types =
       aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
-  CHECK_EQ(descriptors.size(), static_cast<size_t>(descriptor_types.size()));
-
-  size_t count = 0u;
-  for (size_t i = 0u; i < descriptors.size(); ++i) {
-    if (descriptor_types.coeff(i) == descriptor_type) {
-      count += descriptors[i].cols();
+  for (int block = 0; block < descriptor_types.size(); ++block) {
+    if (descriptor_types.coeff(block) == descriptor_type) {
+      return block;
     }
   }
-
-  return count;
+  LOG(FATAL)
+      << "Descriptor type " << descriptor_type << " does not exist in frame "
+      << " id " << id_ << " at timestamp " << timestamp_nanoseconds_ << " ns.";
 }
+
+size_t VisualFrame::getNumKeypointMeasurementsOfType(int descriptor_type) const {
+  const std::vector<VisualFrame::DescriptorsT>& descriptors =
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
+  const size_t block = getDescriptorTypeBlock(descriptor_type);
+  CHECK_LT(block, descriptors.size());
+  return descriptors[block].cols();
+}
+
+void VisualFrame::getDescriptorBlockTypeStartAndSize(
+  int descriptor_type, size_t *start, size_t *size) const {
+  CHECK_NOTNULL(start);
+  CHECK_NOTNULL(size);
+
+  const std::vector<VisualFrame::DescriptorsT>& descriptors =
+      aslam::channels::get_DESCRIPTORS_Data(channels_);
+  const size_t block = getDescriptorTypeBlock(descriptor_type);
+
+  *start = 0;
+  for (size_t i = 0u; i < block; i++) {
+    *start += descriptors[i].cols();
+  }
+  *size = descriptors[block].cols();
+}
+
+const Eigen::Block<const Eigen::Matrix2Xd> VisualFrame::getKeypointMeasurementsOfType(
+    int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  const Eigen::Matrix2Xd& keypoints =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(keypoints.cols()));
+  return keypoints.block(0, start, 2, size);
+}
+const Eigen::VectorBlock<const Eigen::VectorXd>
+VisualFrame::getKeypointMeasurementUncertaintiesOfType(int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.segment(start, size);
+}
+const Eigen::VectorBlock<const Eigen::VectorXd> VisualFrame::getKeypointScalesOfType(
+    int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.segment(start, size);
+}
+const Eigen::VectorBlock<const Eigen::VectorXd>
+VisualFrame::getKeypointOrientationsOfType(int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.segment(start, size);
+}
+const Eigen::VectorBlock<const Eigen::VectorXd> VisualFrame::getKeypointScoresOfType(
+    int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.segment(start, size);
+}
+const VisualFrame::DescriptorsT& VisualFrame::getDescriptorsOfType(int descriptor_type) const {
+  const size_t block = getDescriptorTypeBlock(descriptor_type);
+  return getDescriptors(block);
+}
+const Eigen::VectorBlock<const Eigen::VectorXi> VisualFrame::getTrackIdsOfType(
+    int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  const Eigen::VectorXi& data =
+      aslam::channels::get_TRACK_IDS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.segment(start, size);
+}
+
+
+const Eigen::Block<const Eigen::Matrix2Xd, 2, 1> VisualFrame::getKeypointMeasurementOfType(
+    size_t index, int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  CHECK_LT(index, size);
+  const Eigen::Matrix2Xd& keypoints =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(keypoints.cols()));
+  return keypoints.block<2, 1>(0, start + index);
+}
+double VisualFrame::getKeypointMeasurementUncertaintyOfType(
+    size_t index, int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  CHECK_LT(index, size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.coeff(start + index);
+}
+double VisualFrame::getKeypointScaleOfType(size_t index, int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  CHECK_LT(index, size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.coeff(start + index);
+}
+double VisualFrame::getKeypointOrientationOfType(size_t index, int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  CHECK_LT(index, size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.coeff(start + index);
+}
+double VisualFrame::getKeypointScoreOfType(size_t index, int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  CHECK_LT(index, size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.coeff(start + index);
+}
+int VisualFrame::getTrackIdOfType(size_t index, int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  CHECK_LT(index, size);
+  const Eigen::VectorXi& track_ids =
+      aslam::channels::get_TRACK_IDS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(track_ids.size()));
+  return track_ids.coeff(start + index);
+}
+
+size_t VisualFrame::getDescriptorTypeSizeBytes(int descriptor_type) const {
+  const size_t block = getDescriptorTypeBlock(descriptor_type);
+  return getDescriptors(block).rows() * sizeof(DescriptorsT::Scalar);
+}
+
 }  // namespace aslam

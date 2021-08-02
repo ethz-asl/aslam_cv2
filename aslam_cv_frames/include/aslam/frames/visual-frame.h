@@ -179,7 +179,7 @@ class VisualFrame  {
   }
 
   /// Return block expression of the keypoint measurement pointed to by index.
-  const Eigen::Block<Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(size_t index) const;
+  const Eigen::Block<const Eigen::Matrix2Xd, 2, 1> getKeypointMeasurement(size_t index) const;
 
   /// Return the keypoint measurement uncertainty at index.
   double getKeypointMeasurementUncertainty(size_t index) const;
@@ -354,6 +354,11 @@ class VisualFrame  {
   /// Print out a human-readable version of this frame
   void print(std::ostream& out, const std::string& label) const;
 
+  /// Lock frame for processing, a matching call to unlock() must exist
+  void lock() { m_frame_lock_.lock(); }
+  /// Unlock a locked frame, must be called after lock
+  void unlock() { m_frame_lock_.unlock(); }
+
   /// \brief Creates an empty frame. The following channels are added without any data attached:
   ///        {KeypointMeasurements, KeypointMeasurementUncertainties, Descriptors}
   /// @param[in]  camera                  Camera which will be assigned to the frame.
@@ -385,8 +390,34 @@ class VisualFrame  {
   void setDescriptorTypes(const Eigen::VectorXi& descriptor_types);
   const Eigen::VectorXi& getDescriptorTypes() const;
   int getDescriptorType(size_t index) const;
+  int getDescriptorBlockType(size_t block) const;
+  void getDescriptorBlockTypeStartAndSize(
+      int descriptor_type, size_t *start, size_t *size) const;
+  size_t getDescriptorTypeBlock(int descriptor_type) const;
+  size_t getDescriptorTypeSizeBytes(int descriptor_type) const;
 
-  size_t getNumDescriptorsOfType(int descriptor_type) const;
+  size_t getNumKeypointMeasurementsOfType(int descriptor_type) const;
+  const Eigen::Block<const Eigen::Matrix2Xd> getKeypointMeasurementsOfType(
+      int descriptor_type) const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointMeasurementUncertaintiesOfType(
+      int descriptor_type) const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointScalesOfType(
+      int descriptor_type) const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointOrientationsOfType(
+      int descriptor_type) const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointScoresOfType(
+      int descriptor_type) const;
+  const DescriptorsT& getDescriptorsOfType(int descriptor_type) const;
+  const Eigen::VectorBlock<const Eigen::VectorXi> getTrackIdsOfType(
+      int descriptor_type) const;
+
+  const Eigen::Block<const Eigen::Matrix2Xd, 2, 1> getKeypointMeasurementOfType(
+      size_t index, int descriptor_type) const;
+  double getKeypointMeasurementUncertaintyOfType(size_t index, int descriptor_type) const;
+  double getKeypointScaleOfType(size_t index, int descriptor_type) const;
+  double getKeypointOrientationOfType(size_t index, int descriptor_type) const;
+  double getKeypointScoreOfType(size_t index, int descriptor_type) const;
+  int getTrackIdOfType(size_t index, int descriptor_type) const;
 
   /* Lidar feature point channels and operations. */
 
@@ -500,6 +531,9 @@ class VisualFrame  {
   aslam::channels::ChannelGroup channels_;
   Camera::ConstPtr camera_geometry_;
   Camera::ConstPtr raw_camera_geometry_;
+
+  // Provides capability to lock frame for processing in parallelized system
+  std::mutex m_frame_lock_;
 
   /// Validity flag: can be used by an external algorithm to flag frames that should
   /// be excluded/included when processing a list of frames. Does not have any internal

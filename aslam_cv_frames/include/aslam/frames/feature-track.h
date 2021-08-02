@@ -30,7 +30,7 @@ class FeatureTrack {
     double v_max = std::numeric_limits<double>::min();
 
     for (const KeypointIdentifier& kid : getKeypointIdentifiers()) {
-      const Eigen::Block<Eigen::Matrix2Xd, 2, 1> keypoint = kid.getKeypointMeasurement();
+      const Eigen::Block<const Eigen::Matrix2Xd, 2, 1> keypoint = kid.getKeypointMeasurement();
       u_min = std::min(u_min, keypoint(0));
       u_max = std::max(u_max, keypoint(0));
       v_min = std::min(v_min, keypoint(1));

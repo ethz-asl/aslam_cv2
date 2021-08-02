@@ -74,7 +74,7 @@ TEST(Frame, SetGetDescriptors) {
   // Test extending
   aslam::VisualFrame::DescriptorsT data_ext(64, 12);
   data_ext.setRandom();
-  frame.extendDescriptors(data_ext);
+  frame.extendDescriptors(data_ext, 1);
   {
     const aslam::VisualFrame::DescriptorsT& data_2 =
         frame.getDescriptors(0);
@@ -93,6 +93,9 @@ TEST(Frame, SetGetDescriptors) {
       const unsigned char* data_ptr = frame.getDescriptor(index);
       EXPECT_EQ(&data_3.coeffRef(0, i), data_ptr);
     }
+
+    EXPECT_EQ(data_2, frame.getDescriptorsOfType(0));
+    EXPECT_EQ(data_3, frame.getDescriptorsOfType(1));
   }
 }
 
@@ -117,6 +120,39 @@ TEST(Frame, SetGetKeypointMeasurements) {
   const Eigen::Matrix2Xd& data_3 = frame.getKeypointMeasurements();
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.block(0, 0, 2, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.block(0, 10, 2, 20), 1e-6));
+
+  // Some descriptors are necessary in the frame since the keypoint type
+  // is defined by the descriptor type
+  aslam::VisualFrame::DescriptorsT desc_1(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_2(8, 20);
+  desc_1.setRandom();
+  desc_2.setRandom();
+  frame.setDescriptors(desc_1, 0);
+  frame.extendDescriptors(desc_2, 1);
+
+  const Eigen::Block<const Eigen::Matrix2Xd> data_subset_1 =
+      frame.getKeypointMeasurementsOfType(0);
+  const Eigen::Block<const Eigen::Matrix2Xd> data_subset_2 =
+      frame.getKeypointMeasurementsOfType(1);
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_subset_1, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_subset_2, 1e-6));
+
+  for (int i = 0; i < 10; i++) {
+    const Eigen::Vector2d& ref = frame.getKeypointMeasurementOfType(i, 0);
+    const Eigen::Vector2d& should = data.block<2, 1>(0, i);
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(should, ref, 1e-6));
+  }
+
+  for (int i = 0; i < 20; i++) {
+    const Eigen::Vector2d& ref = frame.getKeypointMeasurementOfType(i, 1);
+    const Eigen::Vector2d& should = data_ext.block<2, 1>(0, i);
+    EXPECT_TRUE(EIGEN_MATRIX_NEAR(should, ref, 1e-6));
+  }
+
+  // Check memory addresses again and that no copy operations happened
+  CHECK_EQ(&(data_3.coeff(0,0)), &(data_subset_1.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(0,10)), &(data_subset_2.coeff(0,0)));
 }
 
 TEST(Frame, SetGetLidar3DKeypointMeasurements) {
@@ -164,6 +200,49 @@ TEST(Frame, SetGetKeypointMeasurementUncertainties) {
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
+
+  // Some descriptors are necessary in the frame since the keypoint type
+  // is defined by the descriptor type
+  aslam::VisualFrame::DescriptorsT desc_1(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_2(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_3(8, 20);
+  desc_1.setRandom();
+  desc_2.setRandom();
+  desc_3.setRandom();
+  frame.setDescriptors(desc_1, 0);
+  frame.extendDescriptors(desc_2, 1);
+  frame.extendDescriptors(desc_3, 2);
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_1 =
+      frame.getKeypointMeasurementUncertaintiesOfType(0);
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_2 =
+      frame.getKeypointMeasurementUncertaintiesOfType(1);
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_3 =
+      frame.getKeypointMeasurementUncertaintiesOfType(2);
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_subset_1, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_subset_2, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_subset_3, 1e-6));
+
+  for (int i = 0; i < 10; i++) {
+    const double ref = frame.getKeypointMeasurementUncertaintyOfType(i, 0);
+    EXPECT_EQ(data(i), ref);
+  }
+
+  for (int i = 0; i < 10; i++) {
+    const double ref = frame.getKeypointMeasurementUncertaintyOfType(i, 1);
+    EXPECT_EQ(data_zero(i), ref);
+  }
+
+  for (int i = 0; i < 20; i++) {
+    const double ref = frame.getKeypointMeasurementUncertaintyOfType(i, 2);
+    EXPECT_EQ(data_ext(i), ref);
+  }
+
+  // Check memory addresses again and that no copy operations happened
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
 }
 
 TEST(Frame, SetGetKeypointOrientations) {
@@ -195,6 +274,49 @@ TEST(Frame, SetGetKeypointOrientations) {
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
+
+  // Some descriptors are necessary in the frame since the keypoint type
+  // is defined by the descriptor type
+  aslam::VisualFrame::DescriptorsT desc_1(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_2(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_3(8, 20);
+  desc_1.setRandom();
+  desc_2.setRandom();
+  desc_3.setRandom();
+  frame.setDescriptors(desc_1, 0);
+  frame.extendDescriptors(desc_2, 1);
+  frame.extendDescriptors(desc_3, 2);
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_1 =
+      frame.getKeypointOrientationsOfType(0);
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_2 =
+      frame.getKeypointOrientationsOfType(1);
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_3 =
+      frame.getKeypointOrientationsOfType(2);
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_subset_1, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_subset_2, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_subset_3, 1e-6));
+
+  for (int i = 0; i < 10; i++) {
+    const double ref = frame.getKeypointOrientationOfType(i, 0);
+    EXPECT_EQ(data(i), ref);
+  }
+
+  for (int i = 0; i < 10; i++) {
+    const double ref = frame.getKeypointOrientationOfType(i, 1);
+    EXPECT_EQ(data_zero(i), ref);
+  }
+
+  for (int i = 0; i < 20; i++) {
+    const double ref = frame.getKeypointOrientationOfType(i, 2);
+    EXPECT_EQ(data_ext(i), ref);
+  }
+
+  // Check memory addresses again and that no copy operations happened
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
 }
 
 TEST(Frame, SetGetKeypointScales) {
@@ -227,6 +349,49 @@ TEST(Frame, SetGetKeypointScales) {
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
+
+  // Some descriptors are necessary in the frame since the keypoint type
+  // is defined by the descriptor type
+  aslam::VisualFrame::DescriptorsT desc_1(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_2(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_3(8, 20);
+  desc_1.setRandom();
+  desc_2.setRandom();
+  desc_3.setRandom();
+  frame.setDescriptors(desc_1, 0);
+  frame.extendDescriptors(desc_2, 1);
+  frame.extendDescriptors(desc_3, 2);
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_1 =
+      frame.getKeypointScalesOfType(0);
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_2 =
+      frame.getKeypointScalesOfType(1);
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_3 =
+      frame.getKeypointScalesOfType(2);
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_subset_1, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_subset_2, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_subset_3, 1e-6));
+
+  for (int i = 0; i < 10; i++) {
+    const double ref = frame.getKeypointScaleOfType(i, 0);
+    EXPECT_EQ(data(i), ref);
+  }
+
+  for (int i = 0; i < 10; i++) {
+    const double ref = frame.getKeypointScaleOfType(i, 1);
+    EXPECT_EQ(data_zero(i), ref);
+  }
+
+  for (int i = 0; i < 20; i++) {
+    const double ref = frame.getKeypointScaleOfType(i, 2);
+    EXPECT_EQ(data_ext(i), ref);
+  }
+
+  // Check memory addresses again and that no copy operations happened
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
 }
 
 TEST(Frame, SetGetKeypointScores) {
@@ -259,6 +424,49 @@ TEST(Frame, SetGetKeypointScores) {
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
+
+  // Some descriptors are necessary in the frame since the keypoint type
+  // is defined by the descriptor type
+  aslam::VisualFrame::DescriptorsT desc_1(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_2(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_3(8, 20);
+  desc_1.setRandom();
+  desc_2.setRandom();
+  desc_3.setRandom();
+  frame.setDescriptors(desc_1, 0);
+  frame.extendDescriptors(desc_2, 1);
+  frame.extendDescriptors(desc_3, 2);
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_1 =
+      frame.getKeypointScoresOfType(0);
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_2 =
+      frame.getKeypointScoresOfType(1);
+  const Eigen::VectorBlock<const Eigen::VectorXd> data_subset_3 =
+      frame.getKeypointScoresOfType(2);
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_subset_1, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_subset_2, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_subset_3, 1e-6));
+
+  for (int i = 0; i < 10; i++) {
+    const double ref = frame.getKeypointScoreOfType(i, 0);
+    EXPECT_EQ(data(i), ref);
+  }
+
+  for (int i = 0; i < 10; i++) {
+    const double ref = frame.getKeypointScoreOfType(i, 1);
+    EXPECT_EQ(data_zero(i), ref);
+  }
+
+  for (int i = 0; i < 20; i++) {
+    const double ref = frame.getKeypointScoreOfType(i, 2);
+    EXPECT_EQ(data_ext(i), ref);
+  }
+
+  // Check memory addresses again and that no copy operations happened
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
 }
 
 TEST(Frame, SetGetTrackIds) {
@@ -271,8 +479,8 @@ TEST(Frame, SetGetTrackIds) {
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
   EXPECT_EQ(&data_2, frame.getTrackIdsMutable());
   for (int i = 0; i < data.cols(); ++i) {
-    double ref = frame.getTrackId(i);
-    EXPECT_NEAR(data(i), ref, 1e-6);
+    int ref = frame.getTrackId(i);
+    EXPECT_EQ(data(i), ref);
   }
 
   // Test extending as well as the default padding
@@ -291,6 +499,49 @@ TEST(Frame, SetGetTrackIds) {
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
+
+  // Some descriptors are necessary in the frame since the keypoint type
+  // is defined by the descriptor type
+  aslam::VisualFrame::DescriptorsT desc_1(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_2(8, 10);
+  aslam::VisualFrame::DescriptorsT desc_3(8, 20);
+  desc_1.setRandom();
+  desc_2.setRandom();
+  desc_3.setRandom();
+  frame.setDescriptors(desc_1, 0);
+  frame.extendDescriptors(desc_2, 1);
+  frame.extendDescriptors(desc_3, 2);
+
+  const Eigen::VectorBlock<const Eigen::VectorXi> data_subset_1 =
+      frame.getTrackIdsOfType(0);
+  const Eigen::VectorBlock<const Eigen::VectorXi> data_subset_2 =
+      frame.getTrackIdsOfType(1);
+  const Eigen::VectorBlock<const Eigen::VectorXi> data_subset_3 =
+      frame.getTrackIdsOfType(2);
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_subset_1, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_subset_2, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_subset_3, 1e-6));
+
+  for (int i = 0; i < 10; i++) {
+    const int ref = frame.getTrackIdOfType(i, 0);
+    EXPECT_EQ(data(i), ref);
+  }
+
+  for (int i = 0; i < 10; i++) {
+    const int ref = frame.getTrackIdOfType(i, 1);
+    EXPECT_EQ(data_zero(i), ref);
+  }
+
+  for (int i = 0; i < 20; i++) {
+    const int ref = frame.getTrackIdOfType(i, 2);
+    EXPECT_EQ(data_ext(i), ref);
+  }
+
+  // Check memory addresses again and that no copy operations happened
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
 }
 
 TEST(Frame, NamedChannel) {
