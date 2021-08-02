@@ -257,7 +257,8 @@ class VisualFrame  {
   void swapKeypointScales(Eigen::VectorXd* scales);
 
   /// Replace (swap) the internal descriptors by the passed ones.
-  void swapDescriptors(DescriptorsT* descriptors, size_t index = 0,
+  /// Returns the type of the swapped out descriptor
+  int swapDescriptors(DescriptorsT* descriptors, size_t index = 0,
                        int descriptor_type = 0);
 
   /// Replace (swap) the internal track ids by the passed ones.

@@ -338,24 +338,31 @@ void VisualFrame::swapKeypointScores(Eigen::VectorXd* scores_new) {
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
   data.swap(*scores_new);
 }
-void VisualFrame::swapDescriptors(
+int VisualFrame::swapDescriptors(
     DescriptorsT* descriptors_new, size_t index, int descriptor_type) {
-  // TODO(smauq): implement descriptor type handling for this function
-  // or remove or change it completely
+  CHECK_NOTNULL(descriptors_new);
   if (!aslam::channels::has_DESCRIPTORS_Channel(channels_)) {
     aslam::channels::add_DESCRIPTORS_Channel(&channels_);
+    aslam::channels::add_DESCRIPTOR_TYPES_Channel(&channels_);
   }
   std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
+  Eigen::VectorXi& descriptor_types =
+      aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+  CHECK_EQ(descriptors.size(), static_cast<size_t>(descriptor_types.size()));
 
   if (descriptors.size() == 0u) {
     descriptors.emplace_back();
+    descriptor_types.resize(1);
   }
   CHECK(index < descriptors.size());
   descriptors[index].swap(*descriptors_new);
+  std::swap(descriptor_type, descriptor_types(index));
+  return descriptor_type;
 }
 
 void VisualFrame::swapTrackIds(Eigen::VectorXi* track_ids_new) {
+  CHECK_NOTNULL(track_ids_new);
   if (!aslam::channels::has_TRACK_IDS_Channel(channels_)) {
     aslam::channels::add_TRACK_IDS_Channel(&channels_);
   }
