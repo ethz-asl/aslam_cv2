@@ -53,7 +53,8 @@ class GyroTracker : public FeatureTracker{
   ///                          compute descriptors for optical flow tracked keypoints.
   explicit GyroTracker(const Camera& camera,
                        const size_t min_distance_to_image_border,
-                       const cv::Ptr<cv::DescriptorExtractor>& extractor_ptr);
+                       const cv::Ptr<cv::DescriptorExtractor>& extractor_ptr,
+                       int descriptor_type = 0);
   virtual ~GyroTracker() {}
 
   /// \brief Track features between the current and the previous frames using a given interframe
@@ -152,6 +153,11 @@ class GyroTracker : public FeatureTracker{
   /// Status track length refers to the track length
   /// since the status of the feature has changed.
   FrameStatusTrackLength status_track_length_km1_;
+  /// Feature type to track, used to support multiple feature types in
+  /// frames. The returned matches will be with respect to the indices
+  /// of the descriptor type. To obtain the index offset with respect to the
+  /// entire keypoint block use VisualFrame::getDescriptorBlockTypeStartAndSize
+  int descriptor_type_;
 
   const GyroTrackerSettings settings_;
 };

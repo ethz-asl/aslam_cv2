@@ -75,7 +75,6 @@ struct MatchWithScore {
            (this->score == other.score);
   }
 
- protected:
   /// \brief Get the index into list A.
   int getIndexApple() const {
     return correspondence[0];
