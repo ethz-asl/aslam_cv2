@@ -685,6 +685,17 @@ void VisualFrame::deserializeDescriptorsFromString(const std::string& descriptor
   aslam::channels::deserialize_DESCRIPTORS_Channel(channels_, descriptors_string);
 }
 
+bool VisualFrame::hasDescriptorType(int descriptor_type) const {
+  const Eigen::VectorXi& descriptor_types =
+      aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
+  for (int block = 0; block < descriptor_types.size(); ++block) {
+    if (descriptor_types.coeff(block) == descriptor_type) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void VisualFrame::setDescriptorTypes(const Eigen::VectorXi& descriptor_types) {
   const std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
@@ -732,6 +743,9 @@ size_t VisualFrame::getDescriptorTypeBlock(int descriptor_type) const {
 size_t VisualFrame::getNumKeypointMeasurementsOfType(int descriptor_type) const {
   const std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
+  if (!hasDescriptorType(descriptor_type)) {
+    return 0u;
+  }
   const size_t block = getDescriptorTypeBlock(descriptor_type);
   CHECK_LT(block, descriptors.size());
   return descriptors[block].cols();

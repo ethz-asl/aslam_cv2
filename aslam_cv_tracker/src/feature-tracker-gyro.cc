@@ -84,6 +84,7 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   CHECK(frame_k.hasKeypointScores());
   CHECK(frame_k.hasTrackIds());
   CHECK(frame_k.hasDescriptors());
+  CHECK(frame_k.hasDescriptorType(descriptor_type_));
   CHECK(frame_k.hasRawImage());
   CHECK(CHECK_NOTNULL(frame_kp1)->isValid());
   CHECK(frame_kp1->hasKeypointMeasurements());
@@ -92,6 +93,7 @@ void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
   CHECK(frame_kp1->hasKeypointScores());
   CHECK(frame_kp1->hasTrackIds());
   CHECK(frame_kp1->hasDescriptors());
+  CHECK(frame_kp1->hasDescriptorType(descriptor_type_));
   CHECK(frame_kp1->hasRawImage());
   CHECK_EQ(frame_k.getKeypointMeasurementsOfType(descriptor_type_).cols(),
            frame_k.getDescriptorsOfType(descriptor_type_).cols());

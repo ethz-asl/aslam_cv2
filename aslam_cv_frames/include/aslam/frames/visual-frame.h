@@ -388,6 +388,7 @@ class VisualFrame  {
   void serializeDescriptorsToString(std::string* descriptors_string) const;
   void deserializeDescriptorsFromString(const std::string& descriptors_string);
 
+  bool hasDescriptorType(int descriptor_type) const;
   void setDescriptorTypes(const Eigen::VectorXi& descriptor_types);
   const Eigen::VectorXi& getDescriptorTypes() const;
   int getDescriptorType(size_t index) const;
