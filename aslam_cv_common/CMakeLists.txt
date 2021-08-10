@@ -81,3 +81,4 @@ target_link_libraries(test_descriptor_utils ${catkin_LIBRARIES})
 ##########
 cs_install()
 cs_export(CFG_EXTRAS detect_simd.cmake export_flags.cmake setup_openmp.cmake)
+cs_export(INCLUDE_DIRS ${CATKIN_DEVEL_PREFIX}/include)
