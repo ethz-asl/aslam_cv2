@@ -59,9 +59,10 @@ public:
   /// This method constructs a basic frame and passes it on to processFrame().
   ///
   /// \param[in] image          The image data.
+  /// \param[in] encoding       The encoding of the input image.
   /// \param[in] timestamp      The time in integer nanoseconds.
   /// \returns                  The visual frame built from the image data.
-  VisualFrame::Ptr processImage(const cv::Mat& image, int64_t timestamp) const;
+  VisualFrame::Ptr processImage(const cv::Mat& image, const std::string& encoding, int64_t timestamp) const;
 
   /// \brief Get the input camera that corresponds to the image
   ///        passed in to processImage().

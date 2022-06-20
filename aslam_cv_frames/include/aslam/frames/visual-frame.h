@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <vector>
 #include <cstdint>
 
 #include <aslam/cameras/camera.h>
@@ -38,6 +39,7 @@ class VisualFrame  {
   /// \brief The descriptor matrix stores descriptors in columns, i.e. the descriptor matrix
   ///        has num_bytes_per_descriptor rows and num_descriptors columns.
   typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> DescriptorsT;
+  typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> SemanticObjectDescriptorsT;
   typedef Eigen::VectorXd KeypointScoresT;
 
   ASLAM_POINTER_TYPEDEFS(VisualFrame);
@@ -84,8 +86,26 @@ class VisualFrame  {
   /// Are there track ids stored in this frame?
   bool hasTrackIds() const;
 
+  /// Are there semantic object measurements stored in this frame?
+  bool hasSemanticObjectMeasurements() const;
+
+  /// Are there semantic object measurements uncertainties stored in this frame?
+  bool hasSemanticObjectMeasurementUncertainties() const;
+
+  /// Are there semantic object class ids stored in this frame?
+  bool hasSemanticObjectClassIds() const;
+
+  /// Are there semantic object descriptors stored in this frame?
+  bool hasSemanticObjectDescriptors() const;
+
+  /// Are there semantic object track ids stored in this frame?
+  bool hasSemanticObjectTrackIds() const;
+
   /// Is there a raw image stored in this frame?
   bool hasRawImage() const;
+
+  /// Is there a raw image stored in this frame?
+  bool hasColorImage() const;
 
   /// Is a certain channel stored in this frame?
   bool hasChannel(const std::string& channel) const {
@@ -96,12 +116,21 @@ class VisualFrame  {
   /// KeypointOrientations, KeypointScores, KeypointScales, Descriptors, TrackIds
   void clearKeypointChannels();
 
+  /// Clears the following channels: SemanticObjectMeasurements,
+  /// SemanticObjectMeasurementUncertainties, SemanticObjectDescriptors, SemanticObjectTrackIds
+  void clearSemanticObjectChannels();
+
   /// The keypoint measurements stored in a frame.
   const Eigen::Matrix2Xd& getKeypointMeasurements() const;
 
   /// Get the number of keypoints measurements stored in this frame.
   inline size_t getNumKeypointMeasurements() const {
     return static_cast<size_t>(getKeypointMeasurements().cols());
+  }
+
+  /// Get the number of keypoints measurements stored in this frame.
+  inline size_t getNumSemanticObjectMeasurements() const {
+    return static_cast<size_t>(getSemanticObjectMeasurements().cols());
   }
 
   /// The keypoint measurement uncertainties stored in a frame.
@@ -122,11 +151,32 @@ class VisualFrame  {
   /// The track ids stored in this frame.
   const Eigen::VectorXi& getTrackIds() const;
 
+  /// The semantic object measurements stored in this frame.
+  const Eigen::Matrix4Xd& getSemanticObjectMeasurements() const;
+
+  /// The semantic object measurement uncertainties stored in this frame.
+  const Eigen::VectorXd& getSemanticObjectMeasurementUncertainties() const;
+
+  /// The semantic object measurement uncertainties stored in this frame.
+  const Eigen::VectorXi& getSemanticObjectClassIds() const;
+
+  /// The semantic object descriptors stored in this frame.
+  const SemanticObjectDescriptorsT& getSemanticObjectDescriptors() const;
+
+  /// The semantic object track ids stored in this frame.
+  const Eigen::VectorXi& getSemanticObjectTrackIds() const;
+
   /// The raw image stored in a frame.
   const cv::Mat& getRawImage() const;
 
+  /// The color image stored in a frame.
+  const cv::Mat& getColorImage() const;
+
   /// Release the raw image. Only if the cv::Mat reference count is 1 the memory will be freed.
   void releaseRawImage();
+
+  /// Release the raw image. Only if the cv::Mat reference count is 1 the memory will be freed.
+  void releaseColorImage();
 
   template<typename CHANNEL_DATA_TYPE>
   const CHANNEL_DATA_TYPE& getChannelData(const std::string& channel) const {
@@ -154,8 +204,26 @@ class VisualFrame  {
   /// A pointer to the track ids, can be used to swap in new data.
   Eigen::VectorXi* getTrackIdsMutable();
 
+  /// A pointer to the semantic object measurements, can be used to swap in new data.
+  Eigen::Matrix4Xd* getSemanticObjectMeasurementsMutable();
+
+  /// A pointer to the semantic object measurement uncertainties, can be used to swap in new data.
+  Eigen::VectorXd* getSemanticObjectMeasurementUncertaintiesMutable();
+
+  /// A pointer to the semantic object class ids, can be used to swap in new data.
+  Eigen::VectorXi* getSemanticObjectClassIdsMutable();
+
+  /// A pointer to the semantic object descriptors, can be used to swap in new data.
+  SemanticObjectDescriptorsT* getSemanticObjectDescriptorsMutable();
+
+  /// A pointer to the semeantic object track ids, can be used to swap in new data.
+  Eigen::VectorXi* getSemanticObjectTrackIdsMutable();
+
   /// A pointer to the raw image, can be used to swap in new data.
   cv::Mat* getRawImageMutable();
+
+  /// A pointer to the color image, can be used to swap in new data.
+  cv::Mat* getColorImageMutable();
 
   template<typename CHANNEL_DATA_TYPE>
   CHANNEL_DATA_TYPE* getChannelDataMutable(const std::string& channel) const {
@@ -186,6 +254,21 @@ class VisualFrame  {
   /// Return the track id at index. (-1: not tracked)
   int getTrackId(size_t index) const;
 
+  /// Return block expression of the semantic object measurement pointed to by index.
+  const Eigen::Block<Eigen::Matrix4Xd, 4, 1> getSemanticObjectMeasurement(size_t index) const;
+
+  /// Return the semantic object measurement uncertainty at index.
+  double getSemanticObjectMeasurementUncertainty(size_t index) const;
+
+  /// Return the semantic object class id at index.
+  int getSemanticObjectClassId(size_t index) const;
+
+  /// Return pointer location of the descriptor pointed to by index.
+  const Eigen::MatrixXf::ColXpr getSemanticObjectDescriptor(size_t index) const;
+
+  /// Return the semantic object track id at index. (-1: not tracked)
+  int getSemanticObjectTrackId(size_t index) const;
+
   /// Replace (copy) the internal keypoint measurements by the passed ones.
   void setKeypointMeasurements(const Eigen::Matrix2Xd& keypoints);
 
@@ -211,10 +294,34 @@ class VisualFrame  {
   /// Replace (copy) the internal track ids by the passed ones.
   void setTrackIds(const Eigen::VectorXi& track_ids);
 
+  /// Replace (copy) the internal semantic object measurements by the passed ones.
+  void setSemanticObjectMeasurements(const Eigen::Matrix4Xd& boxes);
+
+  /// Replace (copy) the internal semantic object measurement uncertainties
+  ///        by the passed ones.
+  void setSemanticObjectMeasurementUncertainties(const Eigen::VectorXd& uncertainties);
+
+  /// Replace (copy) the internal semantic object class ids by the passed ones.
+  void setSemanticObjectClassIds(const Eigen::VectorXi& ids);
+
+  /// Replace (copy) the internal semantic object descriptors by the passed ones.
+  void setSemanticObjectDescriptors(const SemanticObjectDescriptorsT& descriptors);
+
+  /// Replace (copy) the internal semantic object descriptors by the passed ones.
+  void setSemanticObjectDescriptors(const Eigen::Map<const SemanticObjectDescriptorsT>& descriptors);
+
+  /// Replace (copy) the internal semantic object track ids by the passed ones.
+  void setSemanticObjectTrackIds(const Eigen::VectorXi& track_ids);
+
   /// Replace (copy) the internal raw image by the passed ones.
   ///        This is a shallow copy by default. Please clone the image if it
   ///        should be owned by the VisualFrame.
   void setRawImage(const cv::Mat& image);
+
+  /// Replace (copy) the internal color image by the passed ones.
+  ///        This is a shallow copy by default. Please clone the image if it
+  ///        should be owned by the VisualFrame.
+  void setColorImage(const cv::Mat& image);
 
   template<typename CHANNEL_DATA_TYPE>
   void setChannelData(const std::string& channel,
@@ -249,6 +356,23 @@ class VisualFrame  {
 
   /// Replace (swap) the internal track ids by the passed ones.
   void swapTrackIds(Eigen::VectorXi* track_ids);
+
+  /// Replace (swap) the internal semantic object measurements by the passed ones.
+  /// This method creates the channel if it doesn't exist
+  void swapSemanticObjectMeasurements(Eigen::Matrix4Xd* boxes);
+
+  /// Replace (swap) the internal semantic object measurement uncertainties
+  /// by the passed ones.
+  void swapSemanticObjectMeasurementUncertainties(Eigen::VectorXd* uncertainties);
+
+  /// Replace (swap) the internal semantic object class ids by the passed ones.
+  void swapSemanticObjectClassIds(Eigen::VectorXi* ids);
+
+  /// Replace (swap) the internal semantic object descriptors by the passed ones.
+  void swapSemanticObjectDescriptors(SemanticObjectDescriptorsT* descriptors);
+
+  /// Replace (swap) the internal semantic object track ids by the passed ones.
+  void swapSemanticObjectTrackIds(Eigen::VectorXi* track_ids);
 
   /// Swap channel data with the data passed in. This will only work
   /// if the channel data type has a swap() method.

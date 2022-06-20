@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <opencv2/core/core.hpp>
+#include <sensor_msgs/image_encodings.h>
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>

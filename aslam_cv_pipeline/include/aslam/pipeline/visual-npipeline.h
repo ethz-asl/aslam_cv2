@@ -78,7 +78,8 @@ class VisualNPipeline final {
   /// \param[in] camera_index The index of the camera that this image corresponds to
   /// \param[in] image the image data
   /// \param[in] timestamp the time in integer nanoseconds.
-  void processImage(size_t camera_index, const cv::Mat& image, int64_t timestamp);
+  void processImage(size_t camera_index, const cv::Mat& image,
+      const std::string& encodeing, int64_t timestamp);
 
   /// \brief Same as \ref processImage with the difference that the function call blocks if the
   ///        output queue exceeds the specified limit.
@@ -91,8 +92,8 @@ class VisualNPipeline final {
   ///            pool it is possible that the real queue size will exceed the defined size by the
   ///            number of currently processed nframes.
   /// @return    Returns false if the queue is shut down.
-  bool processImageBlockingIfFull(size_t camera_index, const cv::Mat& image, int64_t timestamp,
-                                  size_t max_output_queue_size);
+  bool processImageBlockingIfFull(size_t camera_index, const cv::Mat& image,
+      int64_t timestamp, const std::string& encoding, size_t max_output_queue_size);
 
   /// \brief Same as \ref processImage with the difference that the function
   ///        call erases the oldest element of the queue if it exceeds the maximum size.
@@ -109,7 +110,7 @@ class VisualNPipeline final {
   /// @return    Returns true if oldest nframe has been dropped.
   bool processImageNonBlockingDroppingOldestNFrameIfFull(
       size_t camera_index, const cv::Mat &image, int64_t timestamp,
-      size_t max_output_queue_size);
+      const std::string& enconding, size_t max_output_queue_size);
 
   /// How many completed VisualNFrames are waiting to be retrieved?
   size_t getNumFramesComplete() const;
@@ -169,12 +170,13 @@ class VisualNPipeline final {
   /// \param[in] camera_index The index of the camera that this image corresponds to.
   /// \param[in] image The image data.
   /// \param[in] timestamp_nanoseconds The time in integer nanoseconds.
-  void work(size_t camera_index, const cv::Mat& image, int64_t timestamp_nanoseconds);
+  void work(size_t camera_index, const cv::Mat& image,
+      const std::string& encoding, int64_t timestamp_nanoseconds);
 
   std::shared_ptr<VisualNFrame> getNextImpl();
 
   void processImageImpl(size_t camera_index, const cv::Mat& image,
-                        int64_t timestamp);
+      const std::string& encoding, int64_t timestamp);
 
   /// One visual pipeline for each camera.
   std::vector<std::shared_ptr<VisualPipeline>> pipelines_;

@@ -50,6 +50,9 @@ TEST(NFrame, CopyConstructor) {
   cv::Mat image = cv::Mat(3, 2, CV_8UC1);
   cv::randu(image, cv::Scalar::all(0), cv::Scalar::all(255));
   frame_1->setRawImage(image);
+  cv::Mat color_image = cv::Mat(3, 2, CV_8UC3);
+  cv::randu(color_image, cv::Scalar::all(0), cv::Scalar::all(255));
+  frame_1->setColorImage(color_image);
   aslam::NFramesId nframe_id;
   generateId(&nframe_id);
   aslam::VisualNFrame nframe(nframe_id, 2);
