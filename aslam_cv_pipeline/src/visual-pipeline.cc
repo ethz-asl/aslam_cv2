@@ -3,7 +3,7 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/frames/visual-frame.h>
 #include <aslam/pipeline/undistorter.h>
-
+#include <gflags/gflags.h>
 #include <opencv2/core/core.hpp>
 #include <sensor_msgs/image_encodings.h>
 
