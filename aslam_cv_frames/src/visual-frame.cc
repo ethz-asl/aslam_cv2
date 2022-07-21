@@ -62,6 +62,12 @@ bool VisualFrame::hasKeypointScores() const {
 bool VisualFrame::hasKeypointScales() const{
   return aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_);
 }
+bool VisualFrame::hasKeypoint3DPositions() const{
+  return aslam::channels::has_VISUAL_KEYPOINT_3D_POSITIONS_Channel(channels_);
+}
+bool VisualFrame::hasKeypointTimeOffsets() const{
+  return aslam::channels::has_VISUAL_KEYPOINT_TIME_OFFSETS_Channel(channels_);
+}
 bool VisualFrame::hasDescriptors() const{
   return aslam::channels::has_DESCRIPTORS_Channel(channels_);
 }
@@ -78,14 +84,20 @@ const Eigen::Matrix2Xd& VisualFrame::getKeypointMeasurements() const {
 const Eigen::VectorXd& VisualFrame::getKeypointMeasurementUncertainties() const {
   return aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
 }
-const Eigen::VectorXd& VisualFrame::getKeypointScales() const {
-  return aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-}
 const Eigen::VectorXd& VisualFrame::getKeypointOrientations() const {
   return aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
 }
 const Eigen::VectorXd& VisualFrame::getKeypointScores() const {
   return aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+}
+const Eigen::VectorXd& VisualFrame::getKeypointScales() const {
+  return aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+}
+const Eigen::Matrix3Xd& VisualFrame::getKeypoint3DPositions() const {
+  return aslam::channels::get_VISUAL_KEYPOINT_3D_POSITIONS_Data(channels_);
+}
+const Eigen::VectorXi& VisualFrame::getKeypointTimeOffsets() const {
+  return aslam::channels::get_VISUAL_KEYPOINT_TIME_OFFSETS_Data(channels_);
 }
 const VisualFrame::DescriptorsT& VisualFrame::getDescriptors(size_t index) const {
   const std::vector<VisualFrame::DescriptorsT>& data =
@@ -107,27 +119,37 @@ void VisualFrame::releaseRawImage() {
 Eigen::Matrix2Xd* VisualFrame::getKeypointMeasurementsMutable() {
   Eigen::Matrix2Xd& keypoints =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENTS_Data(channels_);
-    return &keypoints;
+  return &keypoints;
 }
 Eigen::VectorXd* VisualFrame::getKeypointMeasurementUncertaintiesMutable() {
   Eigen::VectorXd& uncertainties =
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
-    return &uncertainties;
+  return &uncertainties;
 }
 Eigen::VectorXd* VisualFrame::getKeypointScalesMutable() {
   Eigen::VectorXd& scales =
       aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-    return &scales;
+  return &scales;
 }
 Eigen::VectorXd* VisualFrame::getKeypointOrientationsMutable() {
   Eigen::VectorXd& orientations =
       aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
-    return &orientations;
+  return &orientations;
 }
 Eigen::VectorXd* VisualFrame::getKeypointScoresMutable() {
   Eigen::VectorXd& scores =
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
-    return &scores;
+  return &scores;
+}
+Eigen::Matrix3Xd* VisualFrame::getKeypoint3DPositionsMutable() {
+  Eigen::Matrix3Xd& positions =
+      aslam::channels::get_VISUAL_KEYPOINT_3D_POSITIONS_Data(channels_);
+  return &positions;
+}
+Eigen::VectorXi* VisualFrame::getKeypointTimeOffsetsMutable() {
+  Eigen::VectorXi& time_offsets =
+      aslam::channels::get_VISUAL_KEYPOINT_TIME_OFFSETS_Data(channels_);
+  return &time_offsets;
 }
 VisualFrame::DescriptorsT* VisualFrame::getDescriptorsMutable(size_t index) {
   std::vector<VisualFrame::DescriptorsT>& data =
@@ -159,12 +181,6 @@ double VisualFrame::getKeypointMeasurementUncertainty(size_t index) const {
   CHECK_LT(static_cast<int>(index), data.rows());
   return data.coeff(index, 0);
 }
-double VisualFrame::getKeypointScale(size_t index) const {
-  const Eigen::VectorXd& data =
-      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-  CHECK_LT(static_cast<int>(index), data.rows());
-  return data.coeff(index, 0);
-}
 double VisualFrame::getKeypointOrientation(size_t index) const {
   const Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_ORIENTATIONS_Data(channels_);
@@ -174,6 +190,25 @@ double VisualFrame::getKeypointOrientation(size_t index) const {
 double VisualFrame::getKeypointScore(size_t index) const {
   const Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+  CHECK_LT(static_cast<int>(index), data.rows());
+  return data.coeff(index, 0);
+}
+double VisualFrame::getKeypointScale(size_t index) const {
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  CHECK_LT(static_cast<int>(index), data.rows());
+  return data.coeff(index, 0);
+}
+const Eigen::Block<const Eigen::Matrix3Xd, 3, 1>
+VisualFrame::getKeypoint3DPosition(size_t index) const {
+  const Eigen::Matrix3Xd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_3D_POSITIONS_Data(channels_);
+  CHECK_LT(static_cast<int>(index), data.cols());
+  return data.block<3, 1>(0, index);
+}
+int VisualFrame::getKeypointTimeOffset(size_t index) const {
+  const Eigen::VectorXi& data =
+      aslam::channels::get_VISUAL_KEYPOINT_TIME_OFFSETS_Data(channels_);
   CHECK_LT(static_cast<int>(index), data.rows());
   return data.coeff(index, 0);
 }
@@ -223,15 +258,6 @@ void VisualFrame::setKeypointMeasurementUncertainties(
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
   data = uncertainties_new;
 }
-void VisualFrame::setKeypointScales(
-    const Eigen::VectorXd& scales_new) {
-  if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
-    aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
-  }
-  Eigen::VectorXd& data =
-      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-  data = scales_new;
-}
 void VisualFrame::setKeypointOrientations(
     const Eigen::VectorXd& orientations_new) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_ORIENTATIONS_Channel(channels_)) {
@@ -249,6 +275,32 @@ void VisualFrame::setKeypointScores(
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
   data = scores_new;
+}
+void VisualFrame::setKeypointScales(
+    const Eigen::VectorXd& scales_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  data = scales_new;
+}
+void VisualFrame::setKeypoint3DPositions(
+    const Eigen::Matrix3Xd& positions_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_3D_POSITIONS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_3D_POSITIONS_Channel(&channels_);
+  }
+  Eigen::Matrix3Xd& positions =
+      aslam::channels::get_VISUAL_KEYPOINT_3D_POSITIONS_Data(channels_);
+  positions = positions_new;
+}
+void VisualFrame::setKeypointTimeOffsets(const Eigen::VectorXi& offsets_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_TIME_OFFSETS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_TIME_OFFSETS_Channel(&channels_);
+  }
+  Eigen::VectorXi& offsets =
+      aslam::channels::get_VISUAL_KEYPOINT_TIME_OFFSETS_Data(channels_);
+  offsets = offsets_new;
 }
 
 template <typename Derived>
@@ -314,14 +366,6 @@ void VisualFrame::swapKeypointMeasurementUncertainties(Eigen::VectorXd* uncertai
       aslam::channels::get_VISUAL_KEYPOINT_MEASUREMENT_UNCERTAINTIES_Data(channels_);
   data.swap(*uncertainties_new);
 }
-void VisualFrame::swapKeypointScales(Eigen::VectorXd* scales_new) {
-  if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
-    aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
-  }
-  Eigen::VectorXd& data =
-      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-  data.swap(*scales_new);
-}
 void VisualFrame::swapKeypointOrientations(Eigen::VectorXd* orientations_new) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_ORIENTATIONS_Channel(channels_)) {
     aslam::channels::add_VISUAL_KEYPOINT_ORIENTATIONS_Channel(&channels_);
@@ -337,6 +381,30 @@ void VisualFrame::swapKeypointScores(Eigen::VectorXd* scores_new) {
   Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
   data.swap(*scores_new);
+}
+void VisualFrame::swapKeypointScales(Eigen::VectorXd* scales_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  data.swap(*scales_new);
+}
+void VisualFrame::swapKeypoint3DPositions(Eigen::Matrix3Xd* positions_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_3D_POSITIONS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_3D_POSITIONS_Channel(&channels_);
+  }
+  Eigen::Matrix3Xd& positions =
+      aslam::channels::get_VISUAL_KEYPOINT_3D_POSITIONS_Data(channels_);
+  positions.swap(*positions_new);
+}
+void VisualFrame::swapKeypointTimeOffsets(Eigen::VectorXi* offsets_new) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_TIME_OFFSETS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_TIME_OFFSETS_Channel(&channels_);
+  }
+  Eigen::VectorXi& offsets =
+      aslam::channels::get_VISUAL_KEYPOINT_TIME_OFFSETS_Data(channels_);
+  offsets.swap(*offsets_new);
 }
 int VisualFrame::swapDescriptors(
     DescriptorsT* descriptors_new, size_t index, int descriptor_type) {
@@ -591,17 +659,6 @@ void VisualFrame::extendKeypointMeasurementUncertainties(
       &data, uncertainties_new, getNumKeypointMeasurements(), default_value);
 }
 
-void VisualFrame::extendKeypointScales(
-    const Eigen::VectorXd& scales_new, double default_value) {
-  if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
-    aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
-  }
-  Eigen::VectorXd& data =
-      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-  extendDataVector<double>(
-      &data, scales_new, getNumKeypointMeasurements(), default_value);
-}
-
 void VisualFrame::extendKeypointOrientations(
     const Eigen::VectorXd& orientations_new, double default_value) {
   if (!aslam::channels::has_VISUAL_KEYPOINT_ORIENTATIONS_Channel(channels_)) {
@@ -622,6 +679,54 @@ void VisualFrame::extendKeypointScores(
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
   extendDataVector<double>(
       &data, scores_new, getNumKeypointMeasurements(), default_value);
+}
+
+void VisualFrame::extendKeypointScales(
+    const Eigen::VectorXd& scales_new, double default_value) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_SCALES_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_SCALES_Channel(&channels_);
+  }
+  Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  extendDataVector<double>(
+      &data, scales_new, getNumKeypointMeasurements(), default_value);
+}
+
+void VisualFrame::extendKeypoint3DPositions(
+    const Eigen::Matrix3Xd& positions_new, double default_value) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_3D_POSITIONS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_3D_POSITIONS_Channel(&channels_);
+  }
+  Eigen::Matrix3Xd& positions =
+      aslam::channels::get_VISUAL_KEYPOINT_3D_POSITIONS_Data(channels_);
+
+  // TODO(smauq): Template this nicely
+  size_t num_keypoints = getNumKeypointMeasurements();
+  const size_t num_positions =
+    static_cast<size_t>(positions.cols() + positions_new.cols());
+  CHECK_GE(num_keypoints, num_positions);
+  const size_t num_padding = num_keypoints - num_positions;
+  const size_t original_size = positions.cols();
+  positions.conservativeResize(Eigen::NoChange, num_keypoints);
+
+  // Check if we have to pad with the default value in case the previous set
+  // of keypoints are missing this property
+  if (num_padding > 0) {
+    positions.block(0, original_size, 3, num_padding).setConstant(default_value);
+  }
+
+  positions.block(0, original_size + num_padding, 3, positions_new.size()) = positions_new;
+}
+
+void VisualFrame::extendKeypointTimeOffsets(
+    const Eigen::VectorXi& offsets_new, int default_value) {
+  if (!aslam::channels::has_VISUAL_KEYPOINT_TIME_OFFSETS_Channel(channels_)) {
+    aslam::channels::add_VISUAL_KEYPOINT_TIME_OFFSETS_Channel(&channels_);
+  }
+  Eigen::VectorXi& data =
+      aslam::channels::get_VISUAL_KEYPOINT_TIME_OFFSETS_Data(channels_);
+  extendDataVector<int>(
+      &data, offsets_new, getNumKeypointMeasurements(), default_value);
 }
 
 template <typename Derived>
@@ -785,15 +890,6 @@ VisualFrame::getKeypointMeasurementUncertaintiesOfType(int descriptor_type) cons
   CHECK_LE(start + size, static_cast<size_t>(data.size()));
   return data.segment(start, size);
 }
-const Eigen::VectorBlock<const Eigen::VectorXd> VisualFrame::getKeypointScalesOfType(
-    int descriptor_type) const {
-  size_t start, size;
-  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
-  const Eigen::VectorXd& data =
-      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-  CHECK_LE(start + size, static_cast<size_t>(data.size()));
-  return data.segment(start, size);
-}
 const Eigen::VectorBlock<const Eigen::VectorXd>
 VisualFrame::getKeypointOrientationsOfType(int descriptor_type) const {
   size_t start, size;
@@ -812,6 +908,33 @@ const Eigen::VectorBlock<const Eigen::VectorXd> VisualFrame::getKeypointScoresOf
   CHECK_LE(start + size, static_cast<size_t>(data.size()));
   return data.segment(start, size);
 }
+const Eigen::VectorBlock<const Eigen::VectorXd> VisualFrame::getKeypointScalesOfType(
+    int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.segment(start, size);
+}
+const Eigen::Block<const Eigen::Matrix3Xd> VisualFrame::getKeypoint3DPositionsOfType(
+    int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  const Eigen::Matrix3Xd& positions =
+      aslam::channels::get_VISUAL_KEYPOINT_3D_POSITIONS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(positions.cols()));
+  return positions.block(0, start, 3, size);
+}
+const Eigen::VectorBlock<const Eigen::VectorXi> VisualFrame::getKeypointTimeOffsetsOfType(
+    int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  const Eigen::VectorXi& data =
+      aslam::channels::get_VISUAL_KEYPOINT_TIME_OFFSETS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.segment(start, size);
+}
 const VisualFrame::DescriptorsT& VisualFrame::getDescriptorsOfType(int descriptor_type) const {
   const size_t block = getDescriptorTypeBlock(descriptor_type);
   return getDescriptors(block);
@@ -825,7 +948,6 @@ const Eigen::VectorBlock<const Eigen::VectorXi> VisualFrame::getTrackIdsOfType(
   CHECK_LE(start + size, static_cast<size_t>(data.size()));
   return data.segment(start, size);
 }
-
 
 const Eigen::Block<const Eigen::Matrix2Xd, 2, 1> VisualFrame::getKeypointMeasurementOfType(
     size_t index, int descriptor_type) const {
@@ -847,15 +969,6 @@ double VisualFrame::getKeypointMeasurementUncertaintyOfType(
   CHECK_LE(start + size, static_cast<size_t>(data.size()));
   return data.coeff(start + index);
 }
-double VisualFrame::getKeypointScaleOfType(size_t index, int descriptor_type) const {
-  size_t start, size;
-  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
-  CHECK_LT(index, size);
-  const Eigen::VectorXd& data =
-      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
-  CHECK_LE(start + size, static_cast<size_t>(data.size()));
-  return data.coeff(start + index);
-}
 double VisualFrame::getKeypointOrientationOfType(size_t index, int descriptor_type) const {
   size_t start, size;
   getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
@@ -871,6 +984,34 @@ double VisualFrame::getKeypointScoreOfType(size_t index, int descriptor_type) co
   CHECK_LT(index, size);
   const Eigen::VectorXd& data =
       aslam::channels::get_VISUAL_KEYPOINT_SCORES_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.coeff(start + index);
+}
+double VisualFrame::getKeypointScaleOfType(size_t index, int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  CHECK_LT(index, size);
+  const Eigen::VectorXd& data =
+      aslam::channels::get_VISUAL_KEYPOINT_SCALES_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.coeff(start + index);
+}
+const Eigen::Block<const Eigen::Matrix3Xd, 3, 1> VisualFrame::getKeypoint3DPositionOfType(
+    size_t index, int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  CHECK_LT(index, size);
+  const Eigen::Matrix3Xd& positions =
+      aslam::channels::get_VISUAL_KEYPOINT_3D_POSITIONS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(positions.cols()));
+  return positions.block<3, 1>(0, start + index);
+}
+int VisualFrame::getKeypointTimeOffsetOfType(size_t index, int descriptor_type) const {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  CHECK_LT(index, size);
+  const Eigen::VectorXi& data =
+      aslam::channels::get_VISUAL_KEYPOINT_TIME_OFFSETS_Data(channels_);
   CHECK_LE(start + size, static_cast<size_t>(data.size()));
   return data.coeff(start + index);
 }

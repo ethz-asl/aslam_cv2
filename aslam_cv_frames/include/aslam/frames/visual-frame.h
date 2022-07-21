@@ -78,6 +78,12 @@ class VisualFrame  {
   /// Are there keypoint scales stored in this frame?
   bool hasKeypointScales() const;
 
+  /// Are there any 3D measurements stored in this frame?
+  bool hasKeypoint3DPositions() const;
+
+  /// Are there any time offsets stored in this frame?
+  bool hasKeypointTimeOffsets() const;
+
   /// Are there descriptors stored in this frame?
   bool hasDescriptors() const;
 
@@ -118,6 +124,12 @@ class VisualFrame  {
   /// The keypoint scales stored in a frame.
   const Eigen::VectorXd& getKeypointScales() const;
 
+  /// The keypoint 3D measurements stored in a frame.
+  const Eigen::Matrix3Xd& getKeypoint3DPositions() const;
+
+  /// The keypoint time offsets stored in a frame.
+  const Eigen::VectorXi& getKeypointTimeOffsets() const;
+
   /// The descriptors stored in a frame.
   const DescriptorsT& getDescriptors(size_t index = 0) const;
 
@@ -149,6 +161,12 @@ class VisualFrame  {
 
   /// A pointer to the keypoint scales, can be used to swap in new data.
   Eigen::VectorXd* getKeypointScalesMutable();
+
+  /// A pointer to the keypoint 3D positions, can be used to swap in new data.
+  Eigen::Matrix3Xd* getKeypoint3DPositionsMutable();
+
+  /// A pointer to the keypoint time offsets, can be used to swap in new data.
+  Eigen::VectorXi* getKeypointTimeOffsetsMutable();
 
   /// A pointer to the descriptors, can be used to swap in new data.
   DescriptorsT* getDescriptorsMutable(size_t index = 0);
@@ -182,6 +200,12 @@ class VisualFrame  {
   /// Return the keypoint scale at index.
   double getKeypointScale(size_t index) const;
 
+  /// Return block expression of the keypoint 3D position pointed to by index.
+  const Eigen::Block<const Eigen::Matrix3Xd, 3, 1> getKeypoint3DPosition(size_t index) const;
+
+  /// Return the keypoint timeoffset at index.
+  int getKeypointTimeOffset(size_t index) const;
+
   /// Return pointer location of the descriptor pointed to by index.
   const unsigned char* getDescriptor(size_t index) const;
 
@@ -203,6 +227,12 @@ class VisualFrame  {
 
   /// Replace (copy) the internal keypoint orientations by the passed ones.
   void setKeypointScales(const Eigen::VectorXd& scales);
+
+  /// Replace (copy) the internal keypoint 3D positions by the passed ones.
+  void setKeypoint3DPositions(const Eigen::Matrix3Xd& positions);
+
+  /// Replace (copy) the internal track ids by the passed ones.
+  void setKeypointTimeOffsets(const Eigen::VectorXi& offsets);
 
   /// Replace (copy) the internal descriptors by the passed ones.
   template <typename Derived>
@@ -244,6 +274,13 @@ class VisualFrame  {
 
   /// Replace (swap) the internal keypoint orientations by the passed ones.
   void swapKeypointScales(Eigen::VectorXd* scales);
+
+  /// Replace (swap) the internal keypoint 3D positions by the passed ones.
+  /// This method creates the channel if it doesn't exist
+  void swapKeypoint3DPositions(Eigen::Matrix3Xd* positions);
+
+  /// Replace (swap) the internal keypoint timeoffsets by the passed ones.
+  void swapKeypointTimeOffsets(Eigen::VectorXi* offsets);
 
   /// Replace (swap) the internal descriptors by the passed ones.
   /// Returns the type of the swapped out descriptor
@@ -362,14 +399,18 @@ class VisualFrame  {
   /* Experimental functions for dealing with multiple types of different
      features in the same channel, including different feature sizes */
   void extendKeypointMeasurements(const Eigen::Matrix2Xd& keypoints_new);
-  void extendKeypointMeasurementUncertainties(const Eigen::VectorXd& uncertainties_new,
-                                              double default_value = 0.0);
-  void extendKeypointScales(const Eigen::VectorXd& scales_new,
-                            double default_value = 0.0);
-  void extendKeypointOrientations(const Eigen::VectorXd& orientations_new,
-                                  double default_value = 0.0);
-  void extendKeypointScores(const Eigen::VectorXd& scores_new,
-                            double default_value = 0.0);
+  void extendKeypointMeasurementUncertainties(
+      const Eigen::VectorXd& uncertainties_new, double default_value = 0.0);
+  void extendKeypointOrientations(
+      const Eigen::VectorXd& orientations_new, double default_value = 0.0);
+  void extendKeypointScores(
+      const Eigen::VectorXd& scores_new, double default_value = 0.0);
+  void extendKeypointScales(
+      const Eigen::VectorXd& scales_new, double default_value = 0.0);
+  void extendKeypoint3DPositions(
+      const Eigen::Matrix3Xd& positions_new, double default_value = 0.0);
+  void extendKeypointTimeOffsets(
+      const Eigen::VectorXi& offsets_new, int default_value = -1);
   template <typename Derived>
   void extendDescriptors(const Derived& descriptors_new, int descriptor_type = 0);
   void extendTrackIds(const Eigen::VectorXi& track_ids_new, int default_value = -1);
@@ -392,11 +433,15 @@ class VisualFrame  {
       int descriptor_type) const;
   const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointMeasurementUncertaintiesOfType(
       int descriptor_type) const;
-  const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointScalesOfType(
-      int descriptor_type) const;
   const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointOrientationsOfType(
       int descriptor_type) const;
   const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointScoresOfType(
+      int descriptor_type) const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointScalesOfType(
+      int descriptor_type) const;
+  const Eigen::Block<const Eigen::Matrix3Xd> getKeypoint3DPositionsOfType(
+      int descriptor_type) const;
+  const Eigen::VectorBlock<const Eigen::VectorXi> getKeypointTimeOffsetsOfType(
       int descriptor_type) const;
   const DescriptorsT& getDescriptorsOfType(int descriptor_type) const;
   const Eigen::VectorBlock<const Eigen::VectorXi> getTrackIdsOfType(
@@ -405,9 +450,12 @@ class VisualFrame  {
   const Eigen::Block<const Eigen::Matrix2Xd, 2, 1> getKeypointMeasurementOfType(
       size_t index, int descriptor_type) const;
   double getKeypointMeasurementUncertaintyOfType(size_t index, int descriptor_type) const;
-  double getKeypointScaleOfType(size_t index, int descriptor_type) const;
   double getKeypointOrientationOfType(size_t index, int descriptor_type) const;
+  double getKeypointScaleOfType(size_t index, int descriptor_type) const;
   double getKeypointScoreOfType(size_t index, int descriptor_type) const;
+  const Eigen::Block<const Eigen::Matrix3Xd, 3, 1> getKeypoint3DPositionOfType(
+      size_t index, int descriptor_type) const;
+  int getKeypointTimeOffsetOfType(size_t index, int descriptor_type) const;
   int getTrackIdOfType(size_t index, int descriptor_type) const;
 
  private:
