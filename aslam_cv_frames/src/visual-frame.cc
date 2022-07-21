@@ -715,7 +715,7 @@ void VisualFrame::extendKeypoint3DPositions(
     positions.block(0, original_size, 3, num_padding).setConstant(default_value);
   }
 
-  positions.block(0, original_size + num_padding, 3, positions_new.size()) = positions_new;
+  positions.block(0, original_size + num_padding, 3, positions_new.cols()) = positions_new;
 }
 
 void VisualFrame::extendKeypointTimeOffsets(
