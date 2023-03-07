@@ -11,6 +11,7 @@ set(SOURCES
   src/camera-3d-lidar.cc
   src/camera-factory.cc
   src/camera-pinhole.cc
+  src/camera-generic.cc
   src/camera-unified-projection.cc
   src/camera.cc
   src/distortion-equidistant.cc
@@ -39,6 +40,9 @@ target_link_libraries(test_distortions ${PROJECT_NAME})
 
 catkin_add_gtest(test_ncamera test/test-ncamera.cc)
 target_link_libraries(test_ncamera ${PROJECT_NAME})
+
+catkin_add_gtest(test_camera_generic test/test-camera-generic.cc)
+target_link_libraries(test_camera_generic ${PROJECT_NAME})
 
 ##########
 # EXPORT #

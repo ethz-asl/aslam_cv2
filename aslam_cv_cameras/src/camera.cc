@@ -210,9 +210,11 @@ bool Camera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     camera_type_ = Type::kUnifiedProjection;
   } else if (camera_type == "camera-3d-lidar") {
     camera_type_ = Type::kLidar3D;
+  } else   if (camera_type == "generic") {
+    camera_type_ = Type::kGeneric;
   } else {
     LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
-               << "Valid values are {pinhole, unified-projection}.";
+               << "Valid values are {pinhole, unified-projection, camera-3d-lidar, generic}.";
     return false;
   }
 
@@ -264,6 +266,9 @@ void Camera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
       break;
     case aslam::Camera::Type::kLidar3D:
       node["type"] = "camera-3d-lidar";
+      break;
+    case aslam::Camera::Type::kGeneric:
+      node["type"] = "generic";
       break;
     default:
       LOG(ERROR)
