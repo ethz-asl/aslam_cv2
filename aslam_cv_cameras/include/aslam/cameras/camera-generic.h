@@ -119,6 +119,9 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   virtual bool backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                             Eigen::Vector3d* out_point_3d) const;
 
+  bool backProject3WithJacobian(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
+                                 Eigen::Vector3d* out_point_3d, Eigen::Matrix<double, 3, 2>* out_jacobian_pixel) const; 
+
   /// \brief Checks the success of a projection operation and returns the result in a
   ///        ProjectionResult object.
   /// @param[in] keypoint Keypoint in image coordinates.
@@ -174,6 +177,11 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const;
 
+  const ProjectionResult project3Functional(
+    const Eigen::Ref<const Eigen::Vector3d>& point_3d,
+    Eigen::Vector2d* out_keypoint,
+    Eigen::Matrix<double, 2, 3>* out_jacobian_point) const;
+
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -208,6 +216,13 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   double gridHeight() const { return intrinsics_[Parameters::kGridHeight]; };
   /// \brief The total size of the grid.
   double gridSize() const { return gridWidth() * gridHeight(); };
+  /// \brief The centerpoint of the calibrated area.
+  Eigen::Vector2d centerOfCalibratedArea() const {
+    return Eigen::Vector2d(
+      0.5 * (calibrationMinX() + calibrationMaxX() + 1.),
+      0.5 * (calibrationMinY() + calibrationMaxY() + 1.)
+    );
+  };
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
   inline static constexpr int parameterCount() {
@@ -264,6 +279,9 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   Eigen::Vector2d transformImagePixelToGridPoint(const Eigen::Ref<const Eigen::Vector2d>& keypoint) const;
   Eigen::Vector2d transformGridPointToImagePixel(const Eigen::Vector2d& gridpoint) const; // <- inverse of transformImagePixelToGridPoint
 
+  double pixelScaleToGridScaleX(double length) const;
+  double pixelScaleToGridScaleY(double length) const;
+
   // mainly for testing
   Eigen::Vector3d valueAtGridpoint(const Eigen::Vector2d gridpoint) const;
 
@@ -283,6 +301,8 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
 
   bool loadFromYamlNodeImpl(const YAML::Node&) override;
   void saveToYamlNodeImpl(YAML::Node*) const override;
+
+  void CentralGenericBSpline_Unproject_ComputeResidualAndJacobian(double frac_x, double frac_y, Eigen::Matrix<double, 3, 1> p[4][4], Eigen::Matrix<double, 3, 1>* result, Eigen::Matrix<double, 3, 2>* dresult_dxy) const;
 
     /// Vector containing the grid of the model.
   std::vector<std::vector<Eigen::Matrix<double, 3, 1>>> grid_; // TODO(beni) double to template?

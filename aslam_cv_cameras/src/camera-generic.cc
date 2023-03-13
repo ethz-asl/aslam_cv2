@@ -66,6 +66,48 @@ bool GenericCamera::backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoi
   return true;
 }
 
+bool GenericCamera::backProject3WithJacobian(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
+                                 Eigen::Vector3d* out_point_3d, Eigen::Matrix<double, 3, 2>* out_jacobian_pixel) const {
+  CHECK_NOTNULL(out_point_3d);
+  CHECK_NOTNULL(out_jacobian_pixel);
+  if(!isInCalibratedArea(keypoint)){
+    return false;
+  }
+
+  Eigen::Vector2d grid_point = transformImagePixelToGridPoint(keypoint);
+
+  double x = grid_point.x();
+  double y = grid_point.y();
+
+  // start at bottom right grid corner
+  x += 2.0;
+  y += 2.0;
+
+  double floor_x = std::floor(x);
+  double floor_y = std::floor(y);
+
+  double frac_x = x - (floor_x - 3);
+  double frac_y = y - (floor_y - 3);
+
+  Eigen::Vector3d gridInterpolationWindow[4][4];
+  for(int i = 0; i < 4; i++){
+    for(int j = 0; j < 4; j++){
+      gridInterpolationWindow[i][j] = grid_[floor_y - 3 + i][floor_x - 3 + j];
+    }
+  }
+
+  CentralGenericBSpline_Unproject_ComputeResidualAndJacobian(frac_x, frac_y, gridInterpolationWindow, out_point_3d, out_jacobian_pixel);
+
+  (*out_jacobian_pixel)(0,0) = pixelScaleToGridScaleX((*out_jacobian_pixel)(0,0));
+  (*out_jacobian_pixel)(0,1) = pixelScaleToGridScaleY((*out_jacobian_pixel)(0,1));
+  (*out_jacobian_pixel)(1,0) = pixelScaleToGridScaleX((*out_jacobian_pixel)(1,0));
+  (*out_jacobian_pixel)(1,1) = pixelScaleToGridScaleY((*out_jacobian_pixel)(1,1));
+  (*out_jacobian_pixel)(2,0) = pixelScaleToGridScaleX((*out_jacobian_pixel)(2,0));
+  (*out_jacobian_pixel)(2,1) = pixelScaleToGridScaleY((*out_jacobian_pixel)(2,1));
+
+  return true;
+}
+
 
 // TODO(beni) implement
 const ProjectionResult GenericCamera::project3Functional(
@@ -76,98 +118,117 @@ const ProjectionResult GenericCamera::project3Functional(
     Eigen::Matrix<double, 2, 3>* out_jacobian_point,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const {
+    CHECK_NOTNULL(out_keypoint);
+
+    if(intrinsics_external){
+      LOG(ERROR) << "External intrinsics provided for projection with generic model. Generic models can only use interal intrinsics, external intrinsics set to nullptr";
+      intrinsics_external = nullptr;
+    }
+    if(distortion_coefficients_external){
+      LOG(ERROR) << "External distortion coefficients provided for projection with generic model. Generic models have distortion " 
+      << "already included in the model, external distortion coefficients set to nullptr";
+      distortion_coefficients_external = nullptr;
+    }
+    if(out_jacobian_intrinsics){
+      LOG(ERROR) << "No out jacobian for intrinsics calculated, since generic models intrinsics are fixed";
+      out_jacobian_intrinsics = nullptr;
+    }
+    if(out_jacobian_distortion){
+      LOG(ERROR) << "No out jacobian for distortion calculated, since generic models have distortion already included in the model";
+      out_jacobian_distortion = nullptr;
+    }
+
+  return project3Functional(point_3d, out_keypoint, out_jacobian_point);
+}
+
+const ProjectionResult GenericCamera::project3Functional(
+    const Eigen::Ref<const Eigen::Vector3d>& point_3d,
+    Eigen::Vector2d* out_keypoint,
+    Eigen::Matrix<double, 2, 3>* out_jacobian_point) const {
   CHECK_NOTNULL(out_keypoint);
 
-  // Determine the parameter source. (if nullptr, use internal)
-  const Eigen::VectorXd* intrinsics;
-  if (!intrinsics_external)
-    intrinsics = &getParameters();
-  else
-    intrinsics = intrinsics_external;
-  CHECK_EQ(intrinsics->size(), kNumOfParams) << "intrinsics: invalid size!";
+  // initialize the projected position in the center of the calibrated area
+  *out_keypoint = centerOfCalibratedArea();
+  
+  // optimize projected position using the Levenberg-Marquardt method
+  double epsilon = 1e-12;
+  int maxIterations = 100;
+  Eigen::Vector3d pointDirection = point_3d.normalized();
 
-  const Eigen::VectorXd* distortion_coefficients;
-  if(!distortion_coefficients_external) {
-    distortion_coefficients = &getDistortion().getParameters();
-  } else {
-    distortion_coefficients = distortion_coefficients_external;
+  double lambda = -1.0;
+  for(int i = 0; i < maxIterations; i++){
+    Eigen::Matrix<double, 3, 2> ddxy_dxy;
+
+    Eigen::Vector3d bearingVector;
+    // unproject with jacobian
+    backProject3WithJacobian(*out_keypoint, &bearingVector, &ddxy_dxy);
+
+    Eigen::Vector3d diff = bearingVector - pointDirection;
+    double cost = diff.squaredNorm();
+
+    double H_0_0 = ddxy_dxy(0, 0) * ddxy_dxy(0, 0) + ddxy_dxy(1, 0) * ddxy_dxy(1, 0) + ddxy_dxy(2, 0) * ddxy_dxy(2, 0);
+    double H_0_1_and_1_0 = ddxy_dxy(0, 0) * ddxy_dxy(0, 1) + ddxy_dxy(1, 0) * ddxy_dxy(1, 1) + ddxy_dxy(2, 0) * ddxy_dxy(2, 1);
+    double H_1_1 = ddxy_dxy(0, 1) * ddxy_dxy(0, 1) + ddxy_dxy(1, 1) * ddxy_dxy(1, 1) + ddxy_dxy(2, 1) * ddxy_dxy(2, 1);
+    double b_0 = diff.x() * ddxy_dxy(0, 0) + diff.y() * ddxy_dxy(1, 0) + diff.z() * ddxy_dxy(2, 0);
+    double b_1 = diff.x() * ddxy_dxy(0, 1) + diff.y() * ddxy_dxy(1, 1) + diff.z() * ddxy_dxy(2, 1);
+  
+    // change to if i == 0
+    if(lambda < 0){
+      constexpr double initialLambdaFactor = 0.01;
+      lambda = initialLambdaFactor * 0.5 * (H_0_0 + H_1_1);
+    }
+
+    bool updateAccepted = false;
+    for(int lmIteration = 0; lmIteration < 10; lmIteration++){
+      double H_0_0_lm = H_0_0 + lambda;
+      double H_1_1_lm = H_1_1 + lambda;
+
+      // Solve the linear system
+      double x_1 = (b_1 - H_0_1_and_1_0 / H_0_0_lm * b_0) /
+                    (H_1_1_lm - H_0_1_and_1_0 * H_0_1_and_1_0 / H_0_0_lm);
+      double x_0 = (b_0 - H_0_1_and_1_0 * x_1) / H_0_0_lm;
+
+      Eigen::Vector2d testResult(
+        std::max(calibrationMinX(), std::min(calibrationMaxX() + 0.999, out_keypoint->x() - x_0)),
+        std::max(calibrationMinY(), std::min(calibrationMaxY() + 0.999, out_keypoint->y() - x_1))
+      );
+
+      double testCost = std::numeric_limits<double>::infinity();
+
+      Eigen::Vector3d testDirection;
+      if(backProject3(testResult, &testDirection)){
+        Eigen::Vector3d testDiff = testDirection - pointDirection;
+        testCost = testDiff.squaredNorm();
+      }
+
+      if(testCost < cost){
+        lambda *= 0.5;
+        *out_keypoint = testResult;
+        updateAccepted = true;
+        break;
+      } else {
+        lambda *= 2.;
+      }
+    }
+
+    
+    if(!updateAccepted){
+      // original: return cost < epsilon 
+      return evaluateProjectionResult(*out_keypoint, point_3d);
+    }
+    
+    // cost smaller that defined epsilon tolerance, bearing vector found
+    if(cost < epsilon){
+      // original: return true
+      return evaluateProjectionResult(*out_keypoint, point_3d);
+    }
   }
-
-  const double& fu = (*intrinsics)[0];
-  const double& fv = (*intrinsics)[1];
-  const double& cu = (*intrinsics)[2];
-  const double& cv = (*intrinsics)[3];
-
-  // Project the point.
-  const double& x = point_3d[0];
-  const double& y = point_3d[1];
-  const double& z = point_3d[2];
-
-  const double rz = 1.0 / z;
-  (*out_keypoint)[0] = x * rz;
-  (*out_keypoint)[1] = y * rz;
-
-  // Distort the point and get the Jacobian wrt. keypoint.
-  Eigen::Matrix2d J_distortion = Eigen::Matrix2d::Identity();
-  if(out_jacobian_distortion) {
-    // Calculate the Jacobian w.r.t to the distortion parameters,
-    // if requested (and distortion set).
-    distortion_->distortParameterJacobian(distortion_coefficients,
-                                          *out_keypoint,
-                                          out_jacobian_distortion);
-    out_jacobian_distortion->row(0) *= fu;
-    out_jacobian_distortion->row(1) *= fv;
-  }
-
-  if(out_jacobian_point) {
-    // Distortion active and we want the Jacobian.
-    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                  out_keypoint,
-                                                  &J_distortion);
-  } else {
-    // Distortion active but Jacobian NOT wanted.
-    distortion_->distortUsingExternalCoefficients(distortion_coefficients,
-                                                  out_keypoint,
-                                                  nullptr);
-  }
-
-  if(out_jacobian_point) {
-    // Jacobian including distortion
-    const double rz2 = rz * rz;
-
-    const double duf_dx =  fu * J_distortion(0, 0) * rz;
-    const double duf_dy =  fu * J_distortion(0, 1) * rz;
-    const double duf_dz = -fu * (x * J_distortion(0, 0) + y * J_distortion(0, 1)) * rz2;
-    const double dvf_dx =  fv * J_distortion(1, 0) * rz;
-    const double dvf_dy =  fv * J_distortion(1, 1) * rz;
-    const double dvf_dz = -fv * (x * J_distortion(1, 0) + y * J_distortion(1, 1)) * rz2;
-
-    (*out_jacobian_point) << duf_dx, duf_dy, duf_dz,
-                             dvf_dx, dvf_dy, dvf_dz;
-  }
-
-  // Calculate the Jacobian w.r.t to the intrinsic parameters, if requested.
-  if(out_jacobian_intrinsics) {
-    out_jacobian_intrinsics->resize(2, kNumOfParams);
-    const double duf_dfu = (*out_keypoint)[0];
-    const double duf_dfv = 0.0;
-    const double duf_dcu = 1.0;
-    const double duf_dcv = 0.0;
-    const double dvf_dfu = 0.0;
-    const double dvf_dfv = (*out_keypoint)[1];
-    const double dvf_dcu = 0.0;
-    const double dvf_dcv = 1.0;
-
-    (*out_jacobian_intrinsics) << duf_dfu, duf_dfv, duf_dcu, duf_dcv,
-                                  dvf_dfu, dvf_dfv, dvf_dcu, dvf_dcv;
-  }
-
-  // Normalized image plane to camera plane.
-  (*out_keypoint)[0] = fu * (*out_keypoint)[0] + cu;
-  (*out_keypoint)[1] = fv * (*out_keypoint)[1] + cv;
-
+  // original: return false
+  // not found in maxinterations -> bearing vector not found
   return evaluateProjectionResult(*out_keypoint, point_3d);
 }
+
+
 
 Eigen::Vector2d GenericCamera::createRandomKeypoint() const {
   Eigen::Vector2d out;
@@ -290,6 +351,14 @@ Eigen::Vector2d GenericCamera::transformGridPointToImagePixel(const Eigen::Vecto
   );
 }
 
+double GenericCamera::pixelScaleToGridScaleX(double length) const {
+  return length *((gridWidth() - 3.) / (calibrationMaxX() - calibrationMinX() + 1.));
+}
+
+double GenericCamera::pixelScaleToGridScaleY(double length) const {
+  return length *((gridHeight() - 3.) / (calibrationMaxY() - calibrationMinY() + 1.));
+}
+
 Eigen::Vector3d GenericCamera::valueAtGridpoint(const Eigen::Vector2d gridpoint) const {
   return grid_[gridpoint.y()][gridpoint.x()];
 }
@@ -301,8 +370,8 @@ void GenericCamera::interpolateCubicBSplineSurface(Eigen::Vector2d keypoint, Eig
   double y = keypoint.y();
 
   // start at bottom right corner of used 4x4 grid
-  x+=2;
-  y+=2;
+  x+=2.0;
+  y+=2.0;
 
   double floor_x = std::floor(x);
   double floor_y = std::floor(y);
@@ -448,5 +517,140 @@ void GenericCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
   node["intrinsics"] = getParameters();
   // TODO(beni) save grid
  
+}
+
+void GenericCamera::CentralGenericBSpline_Unproject_ComputeResidualAndJacobian(double frac_x, double frac_y, Eigen::Matrix<double, 3, 1> p[4][4], Eigen::Matrix<double, 3, 1>* result, Eigen::Matrix<double, 3, 2>* dresult_dxy) const {
+  const double term0 = 0.166666666666667*frac_y;
+  const double term1 = -term0 + 0.666666666666667;
+  const double term2 = (frac_y - 4) * (frac_y - 4);
+  const double term3 = (frac_x - 4) * (frac_x - 4);
+  const double term4 = 0.166666666666667*frac_x;
+  const double term5 = -term4 + 0.666666666666667;
+  const double term6 = p[0][0].x()*term5;
+  const double term7 = (frac_x - 3) * (frac_x - 3);
+  const double term8 = term4 - 0.5;
+  const double term9 = p[0][3].x()*term8;
+  const double term10 = frac_x * frac_x;
+  const double term11 = 0.5*frac_x*term10;
+  const double term12 = 19.5*frac_x - 5.5*term10 + term11 - 21.8333333333333;
+  const double term13 = -16*frac_x + 5*term10 - term11 + 16.6666666666667;
+  const double term14 = p[0][1].x()*term12 + p[0][2].x()*term13 + term3*term6 + term7*term9;
+  const double term15 = term14*term2;
+  const double term16 = term1*term15;
+  const double term17 = term0 - 0.5;
+  const double term18 = (frac_y - 3) * (frac_y - 3);
+  const double term19 = p[3][0].x()*term5;
+  const double term20 = p[3][3].x()*term8;
+  const double term21 = p[3][1].x()*term12 + p[3][2].x()*term13 + term19*term3 + term20*term7;
+  const double term22 = term18*term21;
+  const double term23 = term17*term22;
+  const double term24 = frac_y * frac_y;
+  const double term25 = 0.5*frac_y*term24;
+  const double term26 = -16*frac_y + 5*term24 - term25 + 16.6666666666667;
+  const double term27 = p[2][0].x()*term5;
+  const double term28 = p[2][3].x()*term8;
+  const double term29 = p[2][1].x()*term12 + p[2][2].x()*term13 + term27*term3 + term28*term7;
+  const double term30 = term26*term29;
+  const double term31 = 19.5*frac_y - 5.5*term24 + term25 - 21.8333333333333;
+  const double term32 = p[1][0].x()*term5;
+  const double term33 = p[1][3].x()*term8;
+  const double term34 = p[1][1].x()*term12 + p[1][2].x()*term13 + term3*term32 + term33*term7;
+  const double term35 = term31*term34;
+  const double term36 = term16 + term23 + term30 + term35;
+  const double term37 = p[0][0].y()*term5;
+  const double term38 = p[0][3].y()*term8;
+  const double term39 = p[0][1].y()*term12 + p[0][2].y()*term13 + term3*term37 + term38*term7;
+  const double term40 = term2*term39;
+  const double term41 = term1*term40;
+  const double term42 = p[3][0].y()*term5;
+  const double term43 = p[3][3].y()*term8;
+  const double term44 = p[3][1].y()*term12 + p[3][2].y()*term13 + term3*term42 + term43*term7;
+  const double term45 = term18*term44;
+  const double term46 = term17*term45;
+  const double term47 = p[2][0].y()*term5;
+  const double term48 = p[2][3].y()*term8;
+  const double term49 = p[2][1].y()*term12 + p[2][2].y()*term13 + term3*term47 + term48*term7;
+  const double term50 = term26*term49;
+  const double term51 = p[1][0].y()*term5;
+  const double term52 = p[1][3].y()*term8;
+  const double term53 = p[1][1].y()*term12 + p[1][2].y()*term13 + term3*term51 + term52*term7;
+  const double term54 = term31*term53;
+  const double term55 = term41 + term46 + term50 + term54;
+  const double term56 = p[0][0].z()*term5;
+  const double term57 = p[0][3].z()*term8;
+  const double term58 = p[0][1].z()*term12 + p[0][2].z()*term13 + term3*term56 + term57*term7;
+  const double term59 = term2*term58;
+  const double term60 = term1*term59;
+  const double term61 = p[3][0].z()*term5;
+  const double term62 = p[3][3].z()*term8;
+  const double term63 = p[3][1].z()*term12 + p[3][2].z()*term13 + term3*term61 + term62*term7;
+  const double term64 = term18*term63;
+  const double term65 = term17*term64;
+  const double term66 = p[2][0].z()*term5;
+  const double term67 = p[2][3].z()*term8;
+  const double term68 = p[2][1].z()*term12 + p[2][2].z()*term13 + term3*term66 + term67*term7;
+  const double term69 = term26*term68;
+  const double term70 = p[1][0].z()*term5;
+  const double term71 = p[1][3].z()*term8;
+  const double term72 = p[1][1].z()*term12 + p[1][2].z()*term13 + term3*term70 + term7*term71;
+  const double term73 = term31*term72;
+  const double term74 = term60 + term65 + term69 + term73;
+  const double term75 = (term36 * term36) + (term55 * term55) + (term74 * term74);
+  const double term76 = 1. / sqrt(term75);
+  const double term77 = term1*term2;
+  const double term78 = 0.166666666666667*term3;
+  const double term79 = 0.166666666666667*term7;
+  const double term80 = 1.5*term10;
+  const double term81 = -11.0*frac_x + term80 + 19.5;
+  const double term82 = 10*frac_x - term80 - 16;
+  const double term83 = 2*frac_x;
+  const double term84 = term83 - 8;
+  const double term85 = term83 - 6;
+  const double term86 = term17*term18;
+  const double term87 = term26*(-p[2][0].x()*term78 + p[2][1].x()*term81 + p[2][2].x()*term82 + p[2][3].x()*term79 + term27*term84 + term28*term85) + term31*(-p[1][0].x()*term78 + p[1][1].x()*term81 + p[1][2].x()*term82 + p[1][3].x()*term79 + term32*term84 + term33*term85) + term77*(-p[0][0].x()*term78 + p[0][1].x()*term81 + p[0][2].x()*term82 + p[0][3].x()*term79 + term6*term84 + term85*term9) + term86*(-p[3][0].x()*term78 + p[3][1].x()*term81 + p[3][2].x()*term82 + p[3][3].x()*term79 + term19*term84 + term20*term85);
+  const double term88b = 1. / sqrt(term75);
+  const double term88 = term88b * term88b * term88b;
+  const double term89 = (1.0L/2.0L)*term16 + (1.0L/2.0L)*term23 + (1.0L/2.0L)*term30 + (1.0L/2.0L)*term35;
+  const double term90 = (1.0L/2.0L)*term41 + (1.0L/2.0L)*term46 + (1.0L/2.0L)*term50 + (1.0L/2.0L)*term54;
+  const double term91 = term26*(-p[2][0].y()*term78 + p[2][1].y()*term81 + p[2][2].y()*term82 + p[2][3].y()*term79 + term47*term84 + term48*term85) + term31*(-p[1][0].y()*term78 + p[1][1].y()*term81 + p[1][2].y()*term82 + p[1][3].y()*term79 + term51*term84 + term52*term85) + term77*(-p[0][0].y()*term78 + p[0][1].y()*term81 + p[0][2].y()*term82 + p[0][3].y()*term79 + term37*term84 + term38*term85) + term86*(-p[3][0].y()*term78 + p[3][1].y()*term81 + p[3][2].y()*term82 + p[3][3].y()*term79 + term42*term84 + term43*term85);
+  const double term92 = (1.0L/2.0L)*term60 + (1.0L/2.0L)*term65 + (1.0L/2.0L)*term69 + (1.0L/2.0L)*term73;
+  const double term93 = term26*(-p[2][0].z()*term78 + p[2][1].z()*term81 + p[2][2].z()*term82 + p[2][3].z()*term79 + term66*term84 + term67*term85) + term31*(-p[1][0].z()*term78 + p[1][1].z()*term81 + p[1][2].z()*term82 + p[1][3].z()*term79 + term70*term84 + term71*term85) + term77*(-p[0][0].z()*term78 + p[0][1].z()*term81 + p[0][2].z()*term82 + p[0][3].z()*term79 + term56*term84 + term57*term85) + term86*(-p[3][0].z()*term78 + p[3][1].z()*term81 + p[3][2].z()*term82 + p[3][3].z()*term79 + term61*term84 + term62*term85);
+  const double term94 = 2*term88*(term87*term89 + term90*term91 + term92*term93);
+  const double term95 = 1.5*term24;
+  const double term96 = 10*frac_y - term95 - 16;
+  const double term97 = term29*term96;
+  const double term98 = -11.0*frac_y + term95 + 19.5;
+  const double term99 = term34*term98;
+  const double term100 = 2*frac_y;
+  const double term101 = term1*(term100 - 8);
+  const double term102 = term101*term14;
+  const double term103 = term17*(term100 - 6);
+  const double term104 = term103*term21;
+  const double term105 = term49*term96;
+  const double term106 = term53*term98;
+  const double term107 = term101*term39;
+  const double term108 = term103*term44;
+  const double term109 = term68*term96;
+  const double term110 = term72*term98;
+  const double term111 = term101*term58;
+  const double term112 = term103*term63;
+  const double term113 = term88*(term89*(2*term102 + 2*term104 - 0.333333333333333*term15 + 0.333333333333333*term22 + 2*term97 + 2*term99) + term90*(2*term105 + 2*term106 + 2*term107 + 2*term108 - 0.333333333333333*term40 + 0.333333333333333*term45) + term92*(2*term109 + 2*term110 + 2*term111 + 2*term112 - 0.333333333333333*term59 + 0.333333333333333*term64));
+  /*
+  LOG(ERROR) << "Term16: " << term16;
+  LOG(ERROR) << "Tern23: " << term23;
+  LOG(ERROR) << "Term30: " << term30;
+  LOG(ERROR) << "Tern35: " << term35;
+  LOG(ERROR) << "term16 + term23 + term30 + term35: " << term16 + term23 + term30 + term35;
+  */
+  (*result)[0] = term36*term76;
+  (*result)[1] = term55*term76;
+  (*result)[2] = term74*term76;
+
+  (*dresult_dxy)(0, 0) = -term36*term94 + term76*term87;
+  (*dresult_dxy)(0, 1) = -term113*term36 + term76*(term102 + term104 - 0.166666666666667*term15 + 0.166666666666667*term22 + term97 + term99);
+  (*dresult_dxy)(1, 0) = -term55*term94 + term76*term91;
+  (*dresult_dxy)(1, 1) = -term113*term55 + term76*(term105 + term106 + term107 + term108 - 0.166666666666667*term40 + 0.166666666666667*term45);
+  (*dresult_dxy)(2, 0) = -term74*term94 + term76*term93;
+  (*dresult_dxy)(2, 1) = -term113*term74 + term76*(term109 + term110 + term111 + term112 - 0.166666666666667*term59 + 0.166666666666667*term64);
 }
 }  // namespace aslam
