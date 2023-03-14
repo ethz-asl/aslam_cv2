@@ -212,20 +212,23 @@ const ProjectionResult GenericCamera::project3Functional(
     }
 
     
+    // TODO(beni) refactor this
     if(!updateAccepted){
-      // original: return cost < epsilon 
-      return evaluateProjectionResult(*out_keypoint, point_3d);
+      if(cost < epsilon){
+        return evaluateProjectionResult(*out_keypoint, point_3d);
+      }
+      else{
+        return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
+      }
     }
     
     // cost smaller that defined epsilon tolerance, bearing vector found
     if(cost < epsilon){
-      // original: return true
       return evaluateProjectionResult(*out_keypoint, point_3d);
     }
   }
-  // original: return false
   // not found in maxinterations -> bearing vector not found
-  return evaluateProjectionResult(*out_keypoint, point_3d);
+  return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
 }
 
 
@@ -635,13 +638,7 @@ void GenericCamera::CentralGenericBSpline_Unproject_ComputeResidualAndJacobian(d
   const double term111 = term101*term58;
   const double term112 = term103*term63;
   const double term113 = term88*(term89*(2*term102 + 2*term104 - 0.333333333333333*term15 + 0.333333333333333*term22 + 2*term97 + 2*term99) + term90*(2*term105 + 2*term106 + 2*term107 + 2*term108 - 0.333333333333333*term40 + 0.333333333333333*term45) + term92*(2*term109 + 2*term110 + 2*term111 + 2*term112 - 0.333333333333333*term59 + 0.333333333333333*term64));
-  /*
-  LOG(ERROR) << "Term16: " << term16;
-  LOG(ERROR) << "Tern23: " << term23;
-  LOG(ERROR) << "Term30: " << term30;
-  LOG(ERROR) << "Tern35: " << term35;
-  LOG(ERROR) << "term16 + term23 + term30 + term35: " << term16 + term23 + term30 + term35;
-  */
+  
   (*result)[0] = term36*term76;
   (*result)[1] = term55*term76;
   (*result)[2] = term74*term76;
