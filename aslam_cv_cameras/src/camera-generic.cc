@@ -92,7 +92,7 @@ bool GenericCamera::backProject3WithJacobian(const Eigen::Ref<const Eigen::Vecto
   Eigen::Vector3d gridInterpolationWindow[4][4];
   for(int i = 0; i < 4; i++){
     for(int j = 0; j < 4; j++){
-      gridInterpolationWindow[i][j] = grid_[floor_y - 3 + i][floor_x - 3 + j];
+      gridInterpolationWindow[i][j] = gridAccess(floor_y - 3 + i, floor_x - 3 + j);
     }
   }
 
@@ -362,9 +362,25 @@ double GenericCamera::pixelScaleToGridScaleY(double length) const {
   return length *((gridHeight() - 3.) / (calibrationMaxY() - calibrationMinY() + 1.));
 }
 
-Eigen::Vector3d GenericCamera::valueAtGridpoint(const Eigen::Vector2d gridpoint) const {
-  return grid_[gridpoint.y()][gridpoint.x()];
+
+/*Eigen::Vector3d GenericCamera::valueAtGridpoint(const int x, const int y) const {
+  //Eigen::Matrix<double, Eigen::Dynamic, 3> grid = Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, 3>>(const_cast<double*>(intrinsics_.data() + 6), gridWidth() * gridHeight(), 3);
+  //return grid.row(y * gridWidth() + x);
+  return intrinsics_.segment<3>(6 + 3*(y*gridWidth() + x));
 }
+*/
+Eigen::Vector3d GenericCamera::gridAccess(const int row, const int col) const {
+  //Eigen::Matrix<double, Eigen::Dynamic, 3> grid = Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, 3>>(const_cast<double*>(intrinsics_.data() + 6), gridWidth() * gridHeight(), 3);
+  //return grid.row(y * gridWidth() + x);
+  return intrinsics_.segment<3>(6 + 3*(row*gridWidth() + col));
+}
+
+Eigen::Vector3d GenericCamera::gridAccess(const Eigen::Vector2d gridpoint) const {
+  //Eigen::Matrix<double, Eigen::Dynamic, 3> grid = Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, 3>>(const_cast<double*>(intrinsics_.data() + 6), gridWidth() * gridHeight(), 3);
+  //return grid.row(y * gridWidth() + x);
+  return intrinsics_.segment<3>(6 + 3*(gridpoint.y()*gridWidth() + gridpoint.x()));
+}
+
 
 void GenericCamera::interpolateCubicBSplineSurface(Eigen::Vector2d keypoint, Eigen::Vector3d* out_point_3d) const {
   CHECK_NOTNULL(out_point_3d);
@@ -396,19 +412,17 @@ void GenericCamera::interpolateCubicBSplineSurface(Eigen::Vector2d keypoint, Eig
 
 
   int row0 = floor_y - 3;
-  Eigen::Matrix<double, 3, 1> a = a_coeff * grid_[row0][floor_x - 3] + b_coeff * grid_[row0][floor_x - 2] 
-                              + c_coeff * grid_[row0][floor_x - 1] + d_coeff * grid_[row0][floor_x];
-
+  Eigen::Matrix<double, 3, 1> a = a_coeff * gridAccess(row0, floor_x - 3) + b_coeff * gridAccess(row0, floor_x - 2) 
+                              + c_coeff * gridAccess(row0, floor_x - 1) + d_coeff * gridAccess(row0, floor_x);
   int row1 = floor_y - 2;
-  Eigen::Matrix<double, 3, 1> b = a_coeff * grid_[row1][floor_x - 3] + b_coeff * grid_[row1][floor_x - 2] 
-                              + c_coeff * grid_[row1][floor_x - 1] + d_coeff * grid_[row1][floor_x];
+  Eigen::Matrix<double, 3, 1> b = a_coeff * gridAccess(row1, floor_x - 3) + b_coeff * gridAccess(row1, floor_x - 2) 
+                              + c_coeff * gridAccess(row1, floor_x - 1) + d_coeff * gridAccess(row1, floor_x);
   int row2 = floor_y - 1;
-  Eigen::Matrix<double, 3, 1> c = a_coeff * grid_[row2][floor_x - 3] + b_coeff * grid_[row2][floor_x - 2] 
-                              + c_coeff * grid_[row2][floor_x - 1] + d_coeff * grid_[row2][floor_x];
+  Eigen::Matrix<double, 3, 1> c = a_coeff * gridAccess(row2, floor_x - 3) + b_coeff * gridAccess(row2, floor_x - 2) 
+                              + c_coeff * gridAccess(row2, floor_x - 1) + d_coeff * gridAccess(row2, floor_x);
   int row3 = floor_y;
-  Eigen::Matrix<double, 3, 1> d = a_coeff * grid_[row3][floor_x - 3] + b_coeff * grid_[row3][floor_x - 2] 
-                              + c_coeff * grid_[row3][floor_x - 1] + d_coeff * grid_[row3][floor_x];
-
+  Eigen::Matrix<double, 3, 1> d = a_coeff * gridAccess(row3, floor_x - 3) + b_coeff * gridAccess(row3, floor_x - 2) 
+                              + c_coeff * gridAccess(row3, floor_x - 1) + d_coeff * gridAccess(row3, floor_x);
   interpolateCubicBSpline(a, b, c, d, frac_y, out_point_3d);
 }
 
@@ -461,32 +475,27 @@ bool GenericCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   camera_type_ = Type::kGeneric;
 
   // Get the camera intrinsics
-  if (!YAML::safeGet(yaml_node, "intrinsics", &intrinsics_)) {
+  Eigen::VectorXd tempIntrinsics;
+  if (!YAML::safeGet(yaml_node, "intrinsics", &tempIntrinsics)) {
     LOG(ERROR) << "Unable to get intrinsics";
     return false;
   }
 
-  if (!intrinsicsValid(intrinsics_)) {
+  if (!intrinsicsValid(tempIntrinsics)) {
     LOG(ERROR) << "Invalid intrinsics parameters for the " << camera_type
-               << " camera model" << intrinsics_.transpose() << std::endl;
+               << " camera model" << tempIntrinsics.transpose() << std::endl;
     return false;
   }
 
   // Get the grid for the generic model
-  Eigen::Matrix<double, Eigen::Dynamic, 3> tempGrid;
+  Eigen::VectorXd tempGrid;
   if (!YAML::safeGet(yaml_node, "grid", &tempGrid)) {
     LOG(ERROR) << "Unable to get grid";
     return false;
   }
-
-  // Move the grid into the 2 dimensional std::vector
-  grid_.resize(gridHeight(), std::vector<Eigen::Vector3d>(gridWidth()));
-  for (int i = 0; i < this->gridHeight(); i++ ){
-    for (int j = 0; j < this->gridWidth(); j++){
-      grid_[i][j] = tempGrid.row(i*this->gridWidth() + j);
-    }
-  }
-
+  // Concatonate tempIntrinsics and tempGrid into one intrinsics_ vector
+  intrinsics_.resize(6 + tempGrid.size());
+  intrinsics_ << tempIntrinsics, Eigen::Map<Eigen::VectorXd>(tempGrid.data(), tempGrid.size()); 
   // Get the optional linedelay in nanoseconds or set the default
   if (!YAML::safeGet(
           yaml_node, "line-delay-nanoseconds", &line_delay_nanoseconds_)) {
@@ -503,7 +512,7 @@ bool GenericCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
       is_compressed_ = false;
     }
   }
-  
+
   return true;
 }
 

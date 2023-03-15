@@ -36,6 +36,7 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
     kCalibrationMaxY = 3,
     kGridWidth = 4,
     kGridHeight = 5,
+    kGrid = 6,
   };
 
   // TODO(slynen) Enable commented out PropertyTree support
@@ -271,9 +272,9 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   static GenericCamera::Ptr createTestCamera();
 
   /// \brief return the first value of the grid for unit testing.
-  Eigen::Matrix<double, 3, 1> firstGridValue() const { return grid_[0][0]; };
+  Eigen::Matrix<double, 3, 1> firstGridValue() const { return gridAccess(0,0); };
   /// \brief return the last value of the grid for unit testing.
-  Eigen::Matrix<double, 3, 1> lastGridValue() const { return grid_[gridHeight()-1][gridWidth()-1]; };
+  Eigen::Matrix<double, 3, 1> lastGridValue() const { return gridAccess(gridHeight()-1, gridWidth()-1); };
 
   // position of the pixel expressed in gridpoints
   Eigen::Vector2d transformImagePixelToGridPoint(const Eigen::Ref<const Eigen::Vector2d>& keypoint) const;
@@ -282,8 +283,8 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   double pixelScaleToGridScaleX(double length) const;
   double pixelScaleToGridScaleY(double length) const;
 
-  // mainly for testing
-  Eigen::Vector3d valueAtGridpoint(const Eigen::Vector2d gridpoint) const;
+  Eigen::Vector3d gridAccess(const int y, const int x) const;
+  Eigen::Vector3d gridAccess(const Eigen::Vector2d gridpoint) const;
 
  private:
   /// \brief Minimal depth for a valid projection.
@@ -303,9 +304,6 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   void saveToYamlNodeImpl(YAML::Node*) const override;
 
   void CentralGenericBSpline_Unproject_ComputeResidualAndJacobian(double frac_x, double frac_y, Eigen::Matrix<double, 3, 1> p[4][4], Eigen::Matrix<double, 3, 1>* result, Eigen::Matrix<double, 3, 2>* dresult_dxy) const;
-
-    /// Vector containing the grid of the model.
-  std::vector<std::vector<Eigen::Matrix<double, 3, 1>>> grid_; // TODO(beni) double to template?
 };
 
 }  // namespace aslam
