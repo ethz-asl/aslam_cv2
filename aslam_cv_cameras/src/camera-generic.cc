@@ -525,10 +525,16 @@ void GenericCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
   node["image_height"] = imageHeight();
   node["image_width"] = imageWidth();
   node["type"] = "generic";
+  node["intrinsics"] = getIntrinsics();
+  node["grid"] = getGrid();
+}
 
-  node["intrinsics"] = getParameters();
-  // TODO(beni) save grid
- 
+Eigen::VectorXd GenericCamera::getIntrinsics() const{
+  return intrinsics_.head(6);
+}
+
+Eigen::VectorXd GenericCamera::getGrid() const {
+  return intrinsics_.tail(intrinsics_.size() - 6);
 }
 
 void GenericCamera::CentralGenericBSpline_Unproject_ComputeResidualAndJacobian(double frac_x, double frac_y, Eigen::Matrix<double, 3, 1> p[4][4], Eigen::Matrix<double, 3, 1>* result, Eigen::Matrix<double, 3, 2>* dresult_dxy) const {
