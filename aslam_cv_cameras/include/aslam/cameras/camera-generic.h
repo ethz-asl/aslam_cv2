@@ -21,7 +21,7 @@ class NCamera;
 class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   friend class NCamera;
 
-  enum { kNumOfParams = 6 };
+  int kNumOfParams;
 
  public:
   ASLAM_POINTER_TYPEDEFS(GenericCamera);
@@ -68,36 +68,6 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   /// @param[in] image_width  Image width in pixels.
   /// @param[in] image_height Image height in pixels.
   GenericCamera(const Eigen::VectorXd& intrinsics, uint32_t image_width, uint32_t image_height);
-
-  /// \brief Construct a GenericCamera while supplying distortion. Distortion is removed.
-  /// @param[in] calibration_min_x
-  /// @param[in] calibration_min_y
-  /// @param[in] calibration_max_x
-  /// @param[in] calibration_max_y
-  /// @param[in] grid_width
-  /// @param[in] grid_height
-  /// @param[in] image_width      Image width in pixels.
-  /// @param[in] image_height     Image height in pixels.
-  /// @param[in] distortion       Pointer to the distortion model.
-  GenericCamera(double calibration_min_x, double calibration_min_y,
-                double calibration_max_x, double calibration_max_y,
-                double grid_width, double grid_height,
-                uint32_t image_width, uint32_t image_height,
-                aslam::Distortion::UniquePtr& distortion);
-
-  /// \brief Construct a GenericCamera without distortion.
-  /// @param[in] calibration_min_x
-  /// @param[in] calibration_min_y
-  /// @param[in] calibration_max_x
-  /// @param[in] calibration_max_y
-  /// @param[in] grid_width
-  /// @param[in] grid_height
-  /// @param[in] image_width      Image width in pixels.
-  /// @param[in] image_height     Image height in pixels.
-  GenericCamera(double calibration_min_x, double calibration_min_y,
-                double calibration_max_x, double calibration_max_y,
-                double grid_width, double grid_height,
-                uint32_t image_width, uint32_t image_height);
 
   virtual ~GenericCamera() {};
 
@@ -226,7 +196,7 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   };
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
-  inline static constexpr int parameterCount() {
+  inline int parameterCount() const {
       return kNumOfParams;
   }
 
@@ -260,8 +230,10 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   template <typename DistortionType>
   static GenericCamera::UniquePtr createTestCameraUnique() {
     Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
+    Eigen::Matrix< double, 22, 1 > intrinsics;
+    for(int i = 0; i < 22; i++) intrinsics(i) = (i+1)*(i+2);
     GenericCamera::UniquePtr camera(
-        new GenericCamera(15, 15, 736, 464, 16, 11, 640, 480, distortion));
+        new GenericCamera(intrinsics, 640, 480, distortion));
     CameraId id;
     generateId(&id);
     camera->setId(id);

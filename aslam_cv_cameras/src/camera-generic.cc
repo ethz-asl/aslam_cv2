@@ -15,7 +15,7 @@ std::ostream& operator<<(std::ostream& out, const GenericCamera& camera) {
 }
 
 GenericCamera::GenericCamera()
-    : Base(Eigen::Matrix<double, 6, 1>::Zero(), 0, 0, Camera::Type::kGeneric) {}
+    : Base(Eigen::Matrix<double, 1, 1>::Zero(), 0, 0, Camera::Type::kGeneric) {}
 
 GenericCamera::GenericCamera(const Eigen::VectorXd& intrinsics,
                              uint32_t image_width, uint32_t image_height,
@@ -30,29 +30,8 @@ GenericCamera::GenericCamera(const Eigen::VectorXd& intrinsics, uint32_t image_w
                              uint32_t image_height)
     : Base(intrinsics, image_width, image_height, Camera::Type::kGeneric) {
   CHECK(intrinsicsValid(intrinsics));
+  kNumOfParams = intrinsics.size();
 }
-
-GenericCamera::GenericCamera(double calibration_min_x, double calibration_min_y,
-                            double calibration_max_x, double calibration_max_y,
-                            double grid_width, double grid_height, uint32_t image_width,
-                             uint32_t image_height, aslam::Distortion::UniquePtr& distortion)
-   : GenericCamera(
-        // The use of std::vector is only a workaround to get the values into an eigen vector
-        Eigen::Matrix<double, 6, 1>(std::vector<double>{calibration_min_x, calibration_min_y, calibration_max_x, 
-        calibration_max_y, grid_width, grid_height}.data()),
-        image_width, image_height, distortion) {} 
-
-
-GenericCamera::GenericCamera(double calibration_min_x, double calibration_min_y,
-                            double calibration_max_x, double calibration_max_y,
-                            double grid_width, double grid_height,
-                            uint32_t image_width, uint32_t image_height)
-    : GenericCamera(
-      // The use of std::vector is only a workaround to get the values into an eigen vector
-        Eigen::Matrix<double, 6, 1>(std::vector<double>{calibration_min_x, calibration_min_y,
-                calibration_max_x, calibration_max_y,
-                grid_width, grid_height}.data()),
-        image_width, image_height) {}
 
 bool GenericCamera::backProject3(const Eigen::Ref<const Eigen::Vector2d>& keypoint,
                                  Eigen::Vector3d* out_point_3d) const {
@@ -320,7 +299,9 @@ bool GenericCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
 
 // TODO(beni) add grid
 GenericCamera::Ptr GenericCamera::createTestCamera() {
-  GenericCamera::Ptr camera(new GenericCamera(15, 15, 736, 464, 16, 11, 640, 480));
+  Eigen::Matrix< double, 22, 1 > intrinsics;
+  for(int i = 0; i < 22; i++) intrinsics(i) = (i+1)*(i+2);
+  GenericCamera::Ptr camera(new GenericCamera(intrinsics, 640, 480));
   CameraId id;
   generateId(&id);
   camera->setId(id);
@@ -503,6 +484,8 @@ bool GenericCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   // Concatonate tempIntrinsics and tempGrid into one intrinsics_ vector
   intrinsics_.resize(6 + tempGrid.size());
   intrinsics_ << tempIntrinsics, Eigen::Map<Eigen::VectorXd>(tempGrid.data(), tempGrid.size()); 
+  kNumOfParams = intrinsics_.size();
+
   // Get the optional linedelay in nanoseconds or set the default
   if (!YAML::safeGet(
           yaml_node, "line-delay-nanoseconds", &line_delay_nanoseconds_)) {
