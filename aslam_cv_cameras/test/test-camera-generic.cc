@@ -53,8 +53,9 @@ TEST(TestGenericCamera, ReadFromYAML) {
 
 TEST(TestGenericCamera, Constructors) {
   aslam::Distortion::UniquePtr distortion;
-  Eigen::Matrix< double, 22, 1 > intrinsics;
-  for(int i = 0; i < 22; i++) intrinsics(i) = (i+1)*(i+2);
+  Eigen::Matrix< double, 6+3*4*4, 1 > intrinsics;
+  intrinsics << 1, 1, 299, 199, 4, 4;
+  for(int i = 6; i < 6+3*4*4; i++) intrinsics(i) = (i)*(i);
 
   aslam::GenericCamera g();
 

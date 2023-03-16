@@ -232,13 +232,15 @@ Eigen::Vector3d GenericCamera::createRandomVisiblePoint(double depth) const {
 }
 
 bool GenericCamera::areParametersValid(const Eigen::VectorXd& parameters) {
-  // TODO(beni) -> check other repo for valid constraints
-  /*return (parameters.size() == parameterCount()) &&
-         (parameters[0] > 0.0)  && //fu
-         (parameters[1] > 0.0)  && //fv
-         (parameters[2] > 0.0)  && //cu
-         (parameters[3] > 0.0);    //cv*/
-         return true; 
+  return (parameters[0] >= 0.0) &&
+        (parameters[1] >= 0.0) &&
+        (parameters[2] >= 0.0) &&
+        (parameters[3] >= 0.0) &&
+        (parameters[0] < parameters[2]) &&
+        (parameters[1] < parameters[3]) &&
+        (parameters[4] >= 4.0) &&
+        (parameters[5] >= 4.0) &&
+        (parameters.size() - 6 == parameters[4]*parameters[5]*3);;
 }
 
 bool GenericCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) const {
@@ -248,13 +250,14 @@ bool GenericCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) const {
 // TODO(beni)
 void GenericCamera::printParameters(std::ostream& out, const std::string& text) const {
   Camera::printParameters(out, text);
-  /*out << "  focal length (cols,rows): "
-      << fu() << ", " << fv() << std::endl;
-  out << "  optical center (cols,rows): "
-      << cu() << ", " << cv() << std::endl;*/
-
-  out << "  distortion: ";
-  distortion_->printParameters(out, text);
+  out << "  minCalibration (x,y): "
+      << calibrationMinX() << ", " << calibrationMinY() << std::endl;
+  out << "  maxCalibration (x,y): "
+      << calibrationMaxX() << ", " << calibrationMaxY() << std::endl;
+  out << "  gridWidth, gridHeight (x,y): "
+      << gridWidth() << ", " << gridHeight() << std::endl;
+  out << "  gridvector at gridpoint (0,0), (x,y,z): "
+      << firstGridValue().transpose() << std::endl;
 }
 const double GenericCamera::kMinimumDepth = 1e-10;
 
@@ -469,12 +472,6 @@ bool GenericCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     return false;
   }
 
-  if (!intrinsicsValid(tempIntrinsics)) {
-    LOG(ERROR) << "Invalid intrinsics parameters for the " << camera_type
-               << " camera model" << tempIntrinsics.transpose() << std::endl;
-    return false;
-  }
-
   // Get the grid for the generic model
   Eigen::VectorXd tempGrid;
   if (!YAML::safeGet(yaml_node, "grid", &tempGrid)) {
@@ -485,6 +482,12 @@ bool GenericCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   intrinsics_.resize(6 + tempGrid.size());
   intrinsics_ << tempIntrinsics, Eigen::Map<Eigen::VectorXd>(tempGrid.data(), tempGrid.size()); 
   kNumOfParams = intrinsics_.size();
+
+  if (!intrinsicsValid(intrinsics_)) {
+    LOG(ERROR) << "Invalid intrinsics parameters for the " << camera_type
+               << " camera model" << tempIntrinsics.transpose() << std::endl;
+    return false;
+  }
 
   // Get the optional linedelay in nanoseconds or set the default
   if (!YAML::safeGet(
