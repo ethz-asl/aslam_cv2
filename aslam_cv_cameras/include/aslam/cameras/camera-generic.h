@@ -273,7 +273,8 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
 
   bool backProject3WithJacobian(const Eigen::Ref<const Eigen::Vector2d>& keypoint, const Eigen::Ref<const Eigen::VectorXd>& intrinsics,
                                  Eigen::Vector3d* out_point_3d, Eigen::Matrix<double, 3, 2>* out_jacobian_pixel) const;
-  
+  const ProjectionResult project3WithInitialEstimate(const Eigen::Ref<const Eigen::Vector3d>& point_3d, const Eigen::VectorXd* intrinsics,
+                                  Eigen::Vector2d* out_keypoint) const;
   void CentralGenericBSpline_Unproject_ComputeResidualAndJacobian(double frac_x, double frac_y, Eigen::Matrix<double, 3, 1> p[4][4], Eigen::Matrix<double, 3, 1>* result, Eigen::Matrix<double, 3, 2>* dresult_dxy) const;
 };
 

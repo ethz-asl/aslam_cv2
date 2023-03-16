@@ -134,37 +134,11 @@ bool GenericCamera::backProject3WithJacobian(const Eigen::Ref<const Eigen::Vecto
   return true;
 }
 
-// TODO(beni) implement
-const ProjectionResult GenericCamera::project3Functional(
+const ProjectionResult GenericCamera::project3WithInitialEstimate(
     const Eigen::Ref<const Eigen::Vector3d>& point_3d,
-    const Eigen::VectorXd* intrinsics_external,
-    const Eigen::VectorXd* distortion_coefficients_external,
-    Eigen::Vector2d* out_keypoint,
-    Eigen::Matrix<double, 2, 3>* out_jacobian_point,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
-    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const {
-  CHECK_NOTNULL(out_keypoint);
+    const Eigen::VectorXd* intrinsics,
+    Eigen::Vector2d* out_keypoint) const {
 
-  if(distortion_coefficients_external){
-    LOG(FATAL) << "External distortion coefficients provided for projection with generic model. Generic models have distortion " 
-    << "already included in the model, abort";
-  }
-  if(out_jacobian_intrinsics){
-    LOG(FATAL) << "Jacobian for intrinsics can't be calculated for generic models, abort";
-  }
-  if(out_jacobian_distortion){
-    LOG(FATAL) << "Jacobian for distortion can't be calculated for generic models, distortion is included in model, abort";
-  }
-
-  const Eigen::VectorXd* intrinsics;
-  if (!intrinsics_external)
-    intrinsics = &getParameters();
-  else
-    intrinsics = intrinsics_external;
-
-  // initialize the projected position in the center of the calibrated area
-  *out_keypoint = centerOfCalibratedArea();
-  
   // optimize projected position using the Levenberg-Marquardt method
   double epsilon = 1e-12;
   int maxIterations = 100;
@@ -176,7 +150,9 @@ const ProjectionResult GenericCamera::project3Functional(
 
     Eigen::Vector3d bearingVector;
     // unproject with jacobian
-    backProject3WithJacobian(*out_keypoint, *intrinsics, &bearingVector, &ddxy_dxy);
+    if(!backProject3WithJacobian(*out_keypoint, *intrinsics, &bearingVector, &ddxy_dxy)){
+      return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
+    }
 
     Eigen::Vector3d diff = bearingVector - pointDirection;
     double cost = diff.squaredNorm();
@@ -244,6 +220,57 @@ const ProjectionResult GenericCamera::project3Functional(
   }
   // not found in maxinterations -> bearing vector not found
   return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
+}
+
+
+const ProjectionResult GenericCamera::project3Functional(
+    const Eigen::Ref<const Eigen::Vector3d>& point_3d,
+    const Eigen::VectorXd* intrinsics_external,
+    const Eigen::VectorXd* distortion_coefficients_external,
+    Eigen::Vector2d* out_keypoint,
+    Eigen::Matrix<double, 2, 3>* out_jacobian_point,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
+    Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const {
+  CHECK_NOTNULL(out_keypoint);
+
+  if(distortion_coefficients_external){
+    LOG(FATAL) << "External distortion coefficients provided for projection with generic model. Generic models have distortion " 
+    << "already included in the model, abort";
+  }
+  if(out_jacobian_intrinsics){
+    LOG(FATAL) << "Jacobian for intrinsics can't be calculated for generic models, abort";
+  }
+  if(out_jacobian_distortion){
+    LOG(FATAL) << "Jacobian for distortion can't be calculated for generic models, distortion is included in model, abort";
+  }
+
+  const Eigen::VectorXd* intrinsics;
+  if (!intrinsics_external)
+    intrinsics = &getParameters();
+  else
+    intrinsics = intrinsics_external;
+
+  // initialize the projected position in the center of the calibrated area
+  *out_keypoint = centerOfCalibratedArea();
+
+  ProjectionResult result = project3WithInitialEstimate(point_3d, intrinsics, out_keypoint);
+
+  if(out_jacobian_point != nullptr && !(result == ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID))){
+
+    const double numericalDiffDelta = 1e-4;
+    for( int dimension = 0; dimension < 3; dimension++){
+
+      Eigen::Vector3d offsetPoint = point_3d;
+      offsetPoint(dimension) += numericalDiffDelta;
+      Eigen::Vector2d offsetPixel = *out_keypoint;
+      if(project3WithInitialEstimate(offsetPoint, intrinsics, &offsetPixel) == ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID)){
+        return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
+      }
+      (*out_jacobian_point)(0, dimension) = (offsetPixel.x() - out_keypoint->x()) / numericalDiffDelta;
+      (*out_jacobian_point)(1, dimension) = (offsetPixel.y() - out_keypoint->y()) / numericalDiffDelta;
+    }
+  }
+  return result;
 }
 
 Eigen::Vector2d GenericCamera::createRandomKeypoint() const {
