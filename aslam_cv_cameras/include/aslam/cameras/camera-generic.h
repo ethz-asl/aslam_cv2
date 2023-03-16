@@ -147,12 +147,6 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
       Eigen::Matrix<double, 2, 3>* out_jacobian_point,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
       Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const;
-
-  const ProjectionResult project3Functional(
-    const Eigen::Ref<const Eigen::Vector3d>& point_3d,
-    Eigen::Vector2d* out_keypoint,
-    Eigen::Matrix<double, 2, 3>* out_jacobian_point) const;
-
   /// @}
 
   //////////////////////////////////////////////////////////////
@@ -276,6 +270,9 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   void saveToYamlNodeImpl(YAML::Node*) const override;
   Eigen::VectorXd getIntrinsics() const;
   Eigen::VectorXd getGrid() const;
+
+  bool backProject3WithJacobian(const Eigen::Ref<const Eigen::Vector2d>& keypoint, const Eigen::Ref<const Eigen::VectorXd>& intrinsics,
+                                 Eigen::Vector3d* out_point_3d, Eigen::Matrix<double, 3, 2>* out_jacobian_pixel) const;
   
   void CentralGenericBSpline_Unproject_ComputeResidualAndJacobian(double frac_x, double frac_y, Eigen::Matrix<double, 3, 1> p[4][4], Eigen::Matrix<double, 3, 1>* result, Eigen::Matrix<double, 3, 2>* dresult_dxy) const;
 };

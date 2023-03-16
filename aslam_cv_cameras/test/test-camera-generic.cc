@@ -128,7 +128,7 @@ TEST(TestGenericCamera, BackProjectAndProject) {
 
       Eigen::Vector2d out_keypoint;
       Eigen::Matrix<double, 2, 3>* out_jacobian_point = nullptr;
-      gencam->project3Functional(direction, &out_keypoint, out_jacobian_point);
+      gencam->project3(direction, &out_keypoint, out_jacobian_point);
 
       // TODO(beni) check output of gencam->project3Functional
 

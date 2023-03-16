@@ -87,6 +87,52 @@ bool GenericCamera::backProject3WithJacobian(const Eigen::Ref<const Eigen::Vecto
   return true;
 }
 
+bool GenericCamera::backProject3WithJacobian(const Eigen::Ref<const Eigen::Vector2d>& keypoint, const Eigen::Ref<const Eigen::VectorXd>& intrinsics,
+                                 Eigen::Vector3d* out_point_3d, Eigen::Matrix<double, 3, 2>* out_jacobian_pixel) const {
+  CHECK_NOTNULL(out_point_3d);
+  CHECK_NOTNULL(out_jacobian_pixel);
+  if(!isInCalibratedArea(keypoint)){
+    return false;
+  }
+
+  // Eigen::Vector2d grid_point = transformImagePixelToGridPoint(keypoint); 
+  Eigen::Vector2d grid_point = Eigen::Vector2d(
+    1. + (intrinsics(4) - 3.) * (keypoint.x() - intrinsics(0)) / (intrinsics(2) - intrinsics(0) + 1.),
+    1. + (intrinsics(5) - 3.) * (keypoint.y() - intrinsics(1)) / (intrinsics(3) - intrinsics(1) + 1.)
+  );
+
+  double x = grid_point.x();
+  double y = grid_point.y();
+
+  // start at bottom right grid corner
+  x += 2.0;
+  y += 2.0;
+
+  double floor_x = std::floor(x);
+  double floor_y = std::floor(y);
+
+  double frac_x = x - (floor_x - 3);
+  double frac_y = y - (floor_y - 3);
+
+  Eigen::Vector3d gridInterpolationWindow[4][4];
+  for(int i = 0; i < 4; i++){
+    for(int j = 0; j < 4; j++){
+      // gridInterpolationWindow[i][j] = gridAccess(floor_y - 3 + i, floor_x - 3 + j);
+      gridInterpolationWindow[i][j] = intrinsics.segment<3>(6 + 3*((floor_y - 3 + i)*intrinsics[4] + (floor_x - 3 + j)));
+    }
+  }
+
+  CentralGenericBSpline_Unproject_ComputeResidualAndJacobian(frac_x, frac_y, gridInterpolationWindow, out_point_3d, out_jacobian_pixel);
+
+  (*out_jacobian_pixel)(0,0) = pixelScaleToGridScaleX((*out_jacobian_pixel)(0,0));
+  (*out_jacobian_pixel)(0,1) = pixelScaleToGridScaleY((*out_jacobian_pixel)(0,1));
+  (*out_jacobian_pixel)(1,0) = pixelScaleToGridScaleX((*out_jacobian_pixel)(1,0));
+  (*out_jacobian_pixel)(1,1) = pixelScaleToGridScaleY((*out_jacobian_pixel)(1,1));
+  (*out_jacobian_pixel)(2,0) = pixelScaleToGridScaleX((*out_jacobian_pixel)(2,0));
+  (*out_jacobian_pixel)(2,1) = pixelScaleToGridScaleY((*out_jacobian_pixel)(2,1));
+
+  return true;
+}
 
 // TODO(beni) implement
 const ProjectionResult GenericCamera::project3Functional(
@@ -97,28 +143,24 @@ const ProjectionResult GenericCamera::project3Functional(
     Eigen::Matrix<double, 2, 3>* out_jacobian_point,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_intrinsics,
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const {
-    CHECK_NOTNULL(out_keypoint);
-
-    if(distortion_coefficients_external){
-      LOG(FATAL) << "External distortion coefficients provided for projection with generic model. Generic models have distortion " 
-      << "already included in the model, abort";
-    }
-    if(out_jacobian_intrinsics){
-      LOG(FATAL) << "Jacobian for intrinsics can't be calculated for generic models, abort";
-    }
-    if(out_jacobian_distortion){
-      LOG(FATAL) << "Jacobian for distortion can't be calculated for generic models, distortion is included in model, abort";
-    }
-
-  // TODO(beni): work with external intrinsics
-  return project3Functional(point_3d, out_keypoint, out_jacobian_point);
-}
-
-const ProjectionResult GenericCamera::project3Functional(
-    const Eigen::Ref<const Eigen::Vector3d>& point_3d,
-    Eigen::Vector2d* out_keypoint,
-    Eigen::Matrix<double, 2, 3>* out_jacobian_point) const {
   CHECK_NOTNULL(out_keypoint);
+
+  if(distortion_coefficients_external){
+    LOG(FATAL) << "External distortion coefficients provided for projection with generic model. Generic models have distortion " 
+    << "already included in the model, abort";
+  }
+  if(out_jacobian_intrinsics){
+    LOG(FATAL) << "Jacobian for intrinsics can't be calculated for generic models, abort";
+  }
+  if(out_jacobian_distortion){
+    LOG(FATAL) << "Jacobian for distortion can't be calculated for generic models, distortion is included in model, abort";
+  }
+
+  const Eigen::VectorXd* intrinsics;
+  if (!intrinsics_external)
+    intrinsics = &getParameters();
+  else
+    intrinsics = intrinsics_external;
 
   // initialize the projected position in the center of the calibrated area
   *out_keypoint = centerOfCalibratedArea();
@@ -134,7 +176,7 @@ const ProjectionResult GenericCamera::project3Functional(
 
     Eigen::Vector3d bearingVector;
     // unproject with jacobian
-    backProject3WithJacobian(*out_keypoint, &bearingVector, &ddxy_dxy);
+    backProject3WithJacobian(*out_keypoint, *intrinsics, &bearingVector, &ddxy_dxy);
 
     Eigen::Vector3d diff = bearingVector - pointDirection;
     double cost = diff.squaredNorm();
@@ -203,8 +245,6 @@ const ProjectionResult GenericCamera::project3Functional(
   // not found in maxinterations -> bearing vector not found
   return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
 }
-
-
 
 Eigen::Vector2d GenericCamera::createRandomKeypoint() const {
   Eigen::Vector2d out;
