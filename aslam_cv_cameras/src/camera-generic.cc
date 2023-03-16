@@ -120,24 +120,18 @@ const ProjectionResult GenericCamera::project3Functional(
     Eigen::Matrix<double, 2, Eigen::Dynamic>* out_jacobian_distortion) const {
     CHECK_NOTNULL(out_keypoint);
 
-    if(intrinsics_external){
-      LOG(ERROR) << "External intrinsics provided for projection with generic model. Generic models can only use interal intrinsics, external intrinsics set to nullptr";
-      intrinsics_external = nullptr;
-    }
     if(distortion_coefficients_external){
-      LOG(ERROR) << "External distortion coefficients provided for projection with generic model. Generic models have distortion " 
-      << "already included in the model, external distortion coefficients set to nullptr";
-      distortion_coefficients_external = nullptr;
+      LOG(FATAL) << "External distortion coefficients provided for projection with generic model. Generic models have distortion " 
+      << "already included in the model, abort";
     }
     if(out_jacobian_intrinsics){
-      LOG(ERROR) << "No out jacobian for intrinsics calculated, since generic models intrinsics are fixed";
-      out_jacobian_intrinsics = nullptr;
+      LOG(FATAL) << "Jacobian for intrinsics can't be calculated for generic models, abort";
     }
     if(out_jacobian_distortion){
-      LOG(ERROR) << "No out jacobian for distortion calculated, since generic models have distortion already included in the model";
-      out_jacobian_distortion = nullptr;
+      LOG(FATAL) << "Jacobian for distortion can't be calculated for generic models, distortion is included in model, abort";
     }
 
+  // TODO(beni): work with external intrinsics
   return project3Functional(point_3d, out_keypoint, out_jacobian_point);
 }
 
@@ -304,7 +298,6 @@ void GenericCamera::setRandomImpl() {
   }
 }
 
-// TODO(beni) check that grids are equal
 bool GenericCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   const GenericCamera* other_camera =
       dynamic_cast<const GenericCamera*>(&other);
@@ -451,8 +444,22 @@ bool GenericCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     return false;
   }
 
-  // TODO(beni) warn if distortion is supplied
-  // Distortion is included into Generic Camera Model
+  // Distortion is directly included in the generic camera model
+  const YAML::Node& distortion_config = yaml_node["distortion"];
+  if(distortion_config.IsDefined() && !distortion_config.IsNull()) {
+    if(!distortion_config.IsMap()) {
+      LOG(ERROR) << "Unable to parse the camera because the distortion node is "
+                    "not a map.";
+      return false;
+    }
+    std::string distortion_type;
+    if(YAML::safeGet(distortion_config, "type", &distortion_type)){
+      if(distortion_type != "none"){
+        LOG(ERROR) << "Distortion is provided for generic model, which have the distortion " 
+        << "included in the model. Distortion set to NullDistortion.";
+      }
+    }
+  }
   distortion_.reset(new aslam::NullDistortion());
 
   // Get the image width and height
