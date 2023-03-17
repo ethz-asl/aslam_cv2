@@ -70,6 +70,8 @@ TEST(TestGenericCamera, Constructors) {
 
   aslam::GenericCamera g3(intrinsics, 200, 300);
 
+  aslam::GenericCamera g4(g3);
+
 }
 
 TEST(TestGenericCamera, BackProject3) {
@@ -84,7 +86,7 @@ TEST(TestGenericCamera, BackProject3) {
   Eigen::Vector2d gridpoint = Eigen::Vector2d(5,3);
   Eigen::Vector2d keypoint = gencam->transformGridPointToImagePixel(gridpoint);
   backProjectWorked = gencam->backProject3(keypoint, &direction);
-  EXPECT_EQ(backProjectWorked, true);
+  EXPECT_TRUE(backProjectWorked);
 
   Eigen::Vector3d solution = gencam->gridAccess(gridpoint);
   EXPECT_NEAR(direction.x(), solution.x(), 1e-3);
@@ -105,7 +107,7 @@ TEST(TestGenericCamera, BackProject3WithJacobian) {
   Eigen::Vector2d gridpoint = Eigen::Vector2d(5,3);
   Eigen::Vector2d keypoint = gencam->transformGridPointToImagePixel(gridpoint);
   backProjectWorked = gencam->backProject3WithJacobian(keypoint, &direction, &jacobian);
-  EXPECT_EQ(backProjectWorked, true);
+  EXPECT_TRUE(backProjectWorked);
 
   Eigen::Vector3d solution = gencam->gridAccess(gridpoint);
   EXPECT_NEAR(direction.x(), solution.x(), 1e-3);
@@ -123,7 +125,7 @@ TEST(TestGenericCamera, BackProjectAndProject) {
       Eigen::Vector3d direction;
       Eigen::Vector2d keypoint = Eigen::Vector2d(i, j);
       bool backProjectWorked = gencam->backProject3(keypoint, &direction);
-      EXPECT_EQ(backProjectWorked, true);
+      EXPECT_TRUE(backProjectWorked);
 
       Eigen::Vector2d out_keypoint;
       aslam::ProjectionResult projectionWorked = gencam->project3(direction, &out_keypoint);
@@ -172,7 +174,7 @@ TEST(TestGenericCamera, compareWithOriginalImplementation) {
 
   Eigen::Vector3d direction;
   bool backProjectWorked = gencam->backProject3(pixel, &direction);
-  EXPECT_EQ(backProjectWorked, true);
+  EXPECT_TRUE(backProjectWorked);
   EXPECT_EQ(direction.x(), -0.62911016602490222);
   EXPECT_EQ(direction.y(), -0.31968318994319406);
   EXPECT_EQ(direction.z(), 0.70853585447164469);
@@ -180,7 +182,7 @@ TEST(TestGenericCamera, compareWithOriginalImplementation) {
   Eigen::Matrix<double, 3, 2> jacobian_pixel;
   Eigen::Vector3d directionWithJacobian;
   backProjectWorked = gencam->backProject3WithJacobian(pixel, &directionWithJacobian, &jacobian_pixel);
-  EXPECT_EQ(backProjectWorked, true);
+  EXPECT_TRUE(backProjectWorked);
   EXPECT_EQ(directionWithJacobian.x(), -0.62911016602490211);
   EXPECT_EQ(directionWithJacobian.y(), -0.3196831899431985);
   EXPECT_EQ(directionWithJacobian.z(), 0.70853585447164269);
