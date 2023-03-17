@@ -540,14 +540,20 @@ bool GenericCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   }
 
   // Get the grid for the generic model
-  Eigen::VectorXd tempGrid;
+  Eigen::Matrix<double, Eigen::Dynamic, 3> tempGrid;
   if (!YAML::safeGet(yaml_node, "grid", &tempGrid)) {
     LOG(ERROR) << "Unable to get grid";
     return false;
   }
   // Concatonate tempIntrinsics and tempGrid into one intrinsics_ vector
   intrinsics_.resize(6 + tempGrid.size());
-  intrinsics_ << tempIntrinsics, Eigen::Map<Eigen::VectorXd>(tempGrid.data(), tempGrid.size()); 
+  intrinsics_ << tempIntrinsics; 
+  for (int i = 0; i < tempGrid.rows(); i++){
+    Eigen::Vector3d tempVec = tempGrid.row(i).normalized();
+    for(int dim = 0; dim < 3; dim++){
+      intrinsics_(6 + 3*i + dim) = tempVec(dim);
+    }
+  }
   kNumOfParams = intrinsics_.size();
 
   if (!intrinsicsValid(intrinsics_)) {
