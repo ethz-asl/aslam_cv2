@@ -202,20 +202,11 @@ const ProjectionResult GenericCamera::project3WithInitialEstimate(
       }
     }
 
-    
-    // TODO(beni) refactor this
-    if(!updateAccepted){
-      if(cost < epsilon){
-        return evaluateProjectionResult(*out_keypoint, point_3d);
-      }
-      else{
-        return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
-      }
-    }
-    
-    // cost smaller that defined epsilon tolerance, bearing vector found
     if(cost < epsilon){
       return evaluateProjectionResult(*out_keypoint, point_3d);
+    }
+    if(!updateAccepted){
+      return ProjectionResult(ProjectionResult::Status::PROJECTION_INVALID);
     }
   }
   // not found in maxinterations -> bearing vector not found
@@ -314,7 +305,6 @@ bool GenericCamera::intrinsicsValid(const Eigen::VectorXd& intrinsics) const {
   return areParametersValid(intrinsics);
 }
 
-// TODO(beni)
 void GenericCamera::printParameters(std::ostream& out, const std::string& text) const {
   Camera::printParameters(out, text);
   out << "  minCalibration (x,y): "
@@ -332,7 +322,6 @@ bool GenericCamera::isValidImpl() const {
   return intrinsicsValid(intrinsics_);
 }
 
-// TODO(beni) add random grid
 void GenericCamera::setRandomImpl() {
   GenericCamera::Ptr test_camera = GenericCamera::createTestCamera();
   CHECK(test_camera);
@@ -367,10 +356,15 @@ bool GenericCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   return true;
 }
 
-// TODO(beni) add grid
 GenericCamera::Ptr GenericCamera::createTestCamera() {
-  Eigen::Matrix< double, 22, 1 > intrinsics;
-  for(int i = 0; i < 22; i++) intrinsics(i) = (i+1)*(i+2);
+  Eigen::Matrix< double, 6+4*4*3, 1 > intrinsics;
+  intrinsics << 1, 1, 299, 199, 4, 4;
+  for(int i = 0; i < 4*4; i++){
+    Eigen::Vector3d tempVec = Eigen::Vector3d(i+1, i+2, i+3).normalized();
+    for(int dim = 0; dim < 3; dim++){
+      intrinsics(6 + 3*i + dim) = tempVec(dim);
+    }
+  } 
   GenericCamera::Ptr camera(new GenericCamera(intrinsics, 640, 480));
   CameraId id;
   generateId(&id);
