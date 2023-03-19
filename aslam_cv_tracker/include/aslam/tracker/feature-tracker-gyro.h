@@ -71,7 +71,7 @@ class GyroTracker : public FeatureTracker{
   virtual void track(const Quaternion& q_Ckp1_Ck,
                      const VisualFrame& frame_k,
                      VisualFrame* frame_kp1,
-                     FrameToFrameMatchesWithScore* matches_kp1_k) override;
+                     FrameToFrameMatches* matches_kp1_k) override;
 
  private:
   enum class FeatureStatus {
@@ -94,12 +94,12 @@ class GyroTracker : public FeatureTracker{
       const std::vector<int>& lk_candidate_indices_k,
       const VisualFrame& frame_k,
       VisualFrame* frame_kp1,
-      FrameToFrameMatchesWithScore* matches_kp1_k);
+      FrameToFrameMatches* matches_kp1_k);
 
   /// In general, not all unmatched features will be tracked with the optical
   /// flow algorithm. This function computes the candidates that will be tracked.
   virtual void computeLKCandidates(
-      const FrameToFrameMatchesWithScore& matches_kp1_k,
+      const FrameToFrameMatches& matches_kp1_k,
       const FrameStatusTrackLength& status_track_length_k,
       const VisualFrame& frame_k,
       const VisualFrame& frame_kp1,
@@ -113,7 +113,7 @@ class GyroTracker : public FeatureTracker{
   /// The matcher is not able to match all features from frame k to (k+1).
   /// This function computes the indices of unmatched features in frame k.
   virtual void computeUnmatchedIndicesOfFrameK(
-      const FrameToFrameMatchesWithScore& matches_kp1_k,
+      const FrameToFrameMatches& matches_kp1_k,
       std::vector<int>* unmatched_indices_k) const;
 
   /// Status track length is defined as the track length since the status

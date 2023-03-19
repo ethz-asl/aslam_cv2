@@ -40,14 +40,10 @@ typedef std::vector<ImagePositionOffset> Offsets;
 void visualizeKeypoints(const std::shared_ptr<const aslam::VisualNFrame>& nframe, cv::Mat* image);
 
 /// Takes two frames and list of matches between them and draws the raw images and the matches.
-template<typename MatchesWithScore>
 void visualizeMatches(const aslam::VisualFrame& frame_kp1,
                       const aslam::VisualFrame& frame_k,
-                      const MatchesWithScore& matches,
+                      const aslam::FrameToFrameMatches& matches,
                       cv::Mat* image);
-void visualizeMatchesWithoutScore(
-    const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
-    const aslam::Matches& matches, cv::Mat* image);
 
 ////////////////////////////////////////////////
 /// Low-Level functions - They only draw some visualization onto an image.
@@ -60,7 +56,7 @@ void drawKeypoints(const aslam::VisualFrame& frame, cv::Mat* image);
 /// Does not draw the raw image!
 void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
                          const aslam::VisualFrame& frame_k,
-                         const aslam::Matches& matches_kp1_k,
+                         const aslam::FrameToFrameMatches& matches_kp1_k,
                          cv::Scalar color_keypoint_kp1, cv::Scalar line_color,
                          cv::Mat* image);
 

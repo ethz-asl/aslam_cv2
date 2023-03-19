@@ -57,7 +57,7 @@ class GyroTwoFrameMatcher {
                       const uint32_t image_height,
                       const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
                       const std::vector<unsigned char>& prediction_success,
-                      FrameToFrameMatchesWithScore* matches_kp1_k);
+                      FrameToFrameMatches* matches_kp1_k);
   virtual ~GyroTwoFrameMatcher() {};
 
   void match();
@@ -72,7 +72,7 @@ class GyroTwoFrameMatcher {
   };
 
   typedef typename Aligned<std::vector, KeypointData>::const_iterator KeyPointIterator;
-  typedef typename FrameToFrameMatchesWithScore::iterator MatchesIterator;
+  typedef typename FrameToFrameMatches::iterator MatchesIterator;
 
   struct MatchData {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -150,10 +150,9 @@ class GyroTwoFrameMatcher {
   const int kNumPointsK;
   const uint32_t kImageHeight;
 
-  // Matches with scores with indices corresponding
-  // to the ordering of the keypoint/descriptors in
-  // the respective channels.
-  FrameToFrameMatchesWithScore* const matches_kp1_k_;
+  // Matches with indices corresponding to the ordering of
+  // the keypoint/descriptors in the respective channels.
+  FrameToFrameMatches* const matches_kp1_k_;
   // Descriptors of frame (k+1).
   std::vector<common::FeatureDescriptorConstRef> descriptors_kp1_wrapped_;
   // Descriptors of frame k.
@@ -168,6 +167,7 @@ class GyroTwoFrameMatcher {
   // Map from keypoint indices of frame (k+1) to
   // the corresponding match iterator.
   std::unordered_map<int, MatchesIterator> kp1_idx_to_matches_iterator_map_;
+  std::unordered_map<int, double> kp1_idx_to_matches_score_map_;
   // Keep track of processed keypoints s.t. we don't process them again in the
   // large window. Set every element to false for each keypoint (of frame k) iteration!
   std::vector<bool> iteration_processed_keypoints_kp1_;
