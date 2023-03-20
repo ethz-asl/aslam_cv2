@@ -222,7 +222,8 @@ void getBearingVectorsFromMatches(
 void predictKeypointsByRotation(const VisualFrame& frame_k,
                                 const aslam::Quaternion& q_Ckp1_Ck,
                                 Eigen::Matrix2Xd* predicted_keypoints_kp1,
-                                std::vector<unsigned char>* prediction_success) {
+                                std::vector<unsigned char>* prediction_success,
+                                int descriptor_type) {
   CHECK_NOTNULL(predicted_keypoints_kp1);
   CHECK_NOTNULL(prediction_success)->clear();
   CHECK(frame_k.hasKeypointMeasurements());
@@ -230,7 +231,7 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
   const aslam::Camera& camera =
       *CHECK_NOTNULL(frame_k.getCameraGeometry().get());
 
-  predictKeypointsByRotation(camera, frame_k.getKeypointMeasurements(),
+  predictKeypointsByRotation(camera, frame_k.getKeypointMeasurementsOfType(descriptor_type),
                              q_Ckp1_Ck, predicted_keypoints_kp1,
                              prediction_success);
 }

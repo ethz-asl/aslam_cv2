@@ -80,7 +80,7 @@ void insertCvKeypointsAndDescriptorsIntoEmptyVisualFrame(
 
   frame->setDescriptors(
       // Switch cols/rows as Eigen is col-major and cv::Mat is row-major.
-      Eigen::Map<aslam::VisualFrame::DescriptorsT>(
+      Eigen::Map<const aslam::VisualFrame::DescriptorsT>(
           new_cv_descriptors.data, new_cv_descriptors.cols, new_cv_descriptors.rows));
 }
 

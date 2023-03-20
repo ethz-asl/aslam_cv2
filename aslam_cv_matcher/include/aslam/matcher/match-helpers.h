@@ -80,7 +80,8 @@ void getBearingVectorsFromMatches(
 void predictKeypointsByRotation(const VisualFrame& frame_k,
                                 const aslam::Quaternion& q_Ckp1_Ck,
                                 Eigen::Matrix2Xd* predicted_keypoints_kp1,
-                                std::vector<unsigned char>* prediction_success);
+                                std::vector<unsigned char>* prediction_success,
+                                int descriptor_type = 0);
 void predictKeypointsByRotation(const aslam::Camera& camera,
                                 const Eigen::Matrix2Xd keypoints_k,
                                 const aslam::Quaternion& q_Ckp1_Ck,

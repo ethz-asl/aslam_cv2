@@ -15,16 +15,18 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
     const Quaternion& q_Ckp1_Ck,
     const VisualFrame& frame_kp1,
     const VisualFrame& frame_k,
+    const int descriptor_type,
     const uint32_t image_height,
     const Eigen::Matrix2Xd& predicted_keypoint_positions_kp1,
     const std::vector<unsigned char>& prediction_success,
     FrameToFrameMatchesWithScore* matches_with_score_kp1_k)
   : frame_kp1_(frame_kp1), frame_k_(frame_k), q_Ckp1_Ck_(q_Ckp1_Ck),
+    descriptor_type_(descriptor_type),
     predicted_keypoint_positions_kp1_(predicted_keypoint_positions_kp1),
     prediction_success_(prediction_success),
-    kDescriptorSizeBytes(frame_kp1.getDescriptorSizeBytes()),
-    kNumPointsKp1(frame_kp1.getKeypointMeasurements().cols()),
-    kNumPointsK(frame_k.getKeypointMeasurements().cols()),
+    kDescriptorSizeBytes(frame_kp1.getDescriptorTypeSizeBytes(descriptor_type)),
+    kNumPointsKp1(frame_kp1.getNumKeypointMeasurementsOfType(descriptor_type)),
+    kNumPointsK(frame_k.getNumKeypointMeasurementsOfType(descriptor_type)),
     kImageHeight(image_height),
     matches_kp1_k_(matches_with_score_kp1_k),
     is_keypoint_kp1_matched_(kNumPointsKp1, false),
@@ -39,9 +41,9 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
   CHECK(frame_k.hasKeypointMeasurements());
   CHECK_GT(frame_kp1.getTimestampNanoseconds(), frame_k.getTimestampNanoseconds());
   CHECK_NOTNULL(matches_kp1_k_)->clear();
-  CHECK_EQ(kNumPointsKp1, frame_kp1.getDescriptors().cols()) <<
+  CHECK_EQ(kNumPointsKp1, frame_kp1.getDescriptorsOfType(descriptor_type).cols()) <<
       "Number of keypoints and descriptors in frame k+1 is not the same.";
-  CHECK_EQ(kNumPointsK, frame_k.getDescriptors().cols()) <<
+  CHECK_EQ(kNumPointsK, frame_k.getDescriptorsOfType(descriptor_type).cols()) <<
       "Number of keypoints and descriptors in frame k is not the same.";
   CHECK_LE(kDescriptorSizeBytes*8, 512u) << "Usually binary descriptors' size "
       "is less or equal to 512 bits. Adapt the following check if this "
@@ -64,9 +66,9 @@ GyroTwoFrameMatcher::GyroTwoFrameMatcher(
 void GyroTwoFrameMatcher::initialize() {
   // Prepare descriptors for efficient matching.
   const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& descriptors_kp1 =
-      frame_kp1_.getDescriptors();
+      frame_kp1_.getDescriptorsOfType(descriptor_type_);
   const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& descriptors_k =
-      frame_k_.getDescriptors();
+      frame_k_.getDescriptorsOfType(descriptor_type_);
 
   for (int descriptor_kp1_idx = 0; descriptor_kp1_idx < kNumPointsKp1;
       ++descriptor_kp1_idx) {
@@ -81,8 +83,11 @@ void GyroTwoFrameMatcher::initialize() {
   }
 
   // Sort keypoints of frame (k+1) from small to large y coordinates.
+  const Eigen::Block<const Eigen::Matrix2Xd> keypoints_kp1 =
+      frame_kp1_.getKeypointMeasurementsOfType(descriptor_type_);
+  CHECK_EQ(keypoints_kp1.cols(), kNumPointsKp1);
   for (int i = 0; i < kNumPointsKp1; ++i) {
-    keypoints_kp1_sorted_by_y_.emplace_back(frame_kp1_.getKeypointMeasurement(i), i);
+    keypoints_kp1_sorted_by_y_.emplace_back(keypoints_kp1.block<2, 1>(0, i), i);
   }
 
   std::sort(keypoints_kp1_sorted_by_y_.begin(), keypoints_kp1_sorted_by_y_.end(),

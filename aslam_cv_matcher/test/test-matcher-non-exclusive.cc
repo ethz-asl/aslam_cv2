@@ -53,9 +53,9 @@ TEST_F(MatcherTest, MatchIdentity) {
   Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Ones(2, 1);
   Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Ones(2, 1);
 
-  Eigen::Matrix<unsigned char, 48, 1> apple_descriptors =
+  aslam::VisualFrame::DescriptorsT apple_descriptors =
       Eigen::Matrix<unsigned char, 48, 1>::Zero();
-  Eigen::Matrix<unsigned char, 48, 1> banana_descriptors =
+  aslam::VisualFrame::DescriptorsT banana_descriptors =
       Eigen::Matrix<unsigned char, 48, 1>::Zero();
 
   apple_frame_->setKeypointMeasurements(apple_keypoints);
@@ -107,9 +107,9 @@ TEST_F(MatcherTest, MatchRotation) {
   Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Zero(2, 1);
   banana_keypoints.col(0) = banana_keypoint;
 
-  Eigen::Matrix<unsigned char, 48, 1> apple_descriptors =
+  aslam::VisualFrame::DescriptorsT apple_descriptors =
       Eigen::Matrix<unsigned char, 48, 1>::Zero();
-  Eigen::Matrix<unsigned char, 48, 1> banana_descriptors =
+  aslam::VisualFrame::DescriptorsT banana_descriptors =
       Eigen::Matrix<unsigned char, 48, 1>::Zero();
 
   apple_frame_->setKeypointMeasurements(apple_keypoints);
@@ -138,9 +138,9 @@ TEST_F(MatcherTest, TestImageSpaceBorderOut) {
   Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Constant(2, 1, 20.0);
   banana_keypoints(0, 0) = 20.0 + image_space_distance_threshold_;
 
-  Eigen::Matrix<unsigned char, 48, 1> apple_descriptors =
+  aslam::VisualFrame::DescriptorsT apple_descriptors =
       Eigen::Matrix<unsigned char, 48, 1>::Zero();
-  Eigen::Matrix<unsigned char, 48, 1> banana_descriptors =
+  aslam::VisualFrame::DescriptorsT banana_descriptors =
       Eigen::Matrix<unsigned char, 48, 1>::Zero();
 
   apple_frame_->setKeypointMeasurements(apple_keypoints);
@@ -167,9 +167,9 @@ TEST_F(MatcherTest, TestImageSpaceBorderIn) {
   Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Constant(2, 1, 20.0);
   banana_keypoints(0, 0) = 20.0 + image_space_distance_threshold_ - 1e-12;
 
-  Eigen::Matrix<unsigned char, 48, 1> apple_descriptors =
+  aslam::VisualFrame::DescriptorsT apple_descriptors =
       Eigen::Matrix<unsigned char, 48, 1>::Zero();
-  Eigen::Matrix<unsigned char, 48, 1> banana_descriptors =
+  aslam::VisualFrame::DescriptorsT banana_descriptors =
       Eigen::Matrix<unsigned char, 48, 1>::Zero();
 
   apple_frame_->setKeypointMeasurements(apple_keypoints);
@@ -240,11 +240,11 @@ TEST_F(MatcherTest, TestComplex) {
   }
   CHECK_EQ(banana_idx, 5u);
 
-  Eigen::Matrix<unsigned char, 48, 5> apple_descriptors =
+  aslam::VisualFrame::DescriptorsT apple_descriptors =
       Eigen::Matrix<unsigned char, 48, 5>::Zero();
   apple_descriptors(0, 1) = 1;
 
-  Eigen::Matrix<unsigned char, 48, 5> banana_descriptors =
+  aslam::VisualFrame::DescriptorsT banana_descriptors =
       Eigen::Matrix<unsigned char, 48, 5>::Zero();
 
   apple_frame_->setKeypointMeasurements(apple_keypoints);
