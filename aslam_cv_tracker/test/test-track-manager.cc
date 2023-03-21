@@ -11,92 +11,92 @@ TEST(TrackManagerTests, TestApplyMatcher) {
   aslam::TrackManager::resetIdProvider();
 
   aslam::Camera::Ptr camera = aslam::PinholeCamera::createTestCamera();
-  aslam::VisualFrame::Ptr banana_frame =
+  aslam::VisualFrame::Ptr B_frame =
       aslam::VisualFrame::createEmptyTestVisualFrame(camera, 0);
-  aslam::VisualFrame::Ptr apple_frame =
+  aslam::VisualFrame::Ptr A_frame =
       aslam::VisualFrame::createEmptyTestVisualFrame(camera, 1);
 
-  Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Zero(2, 5);
-  Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Zero(2, 5);
+  Eigen::Matrix2Xd B_keypoints = Eigen::Matrix2Xd::Zero(2, 5);
+  Eigen::Matrix2Xd A_keypoints = Eigen::Matrix2Xd::Zero(2, 5);
 
-  // banana frame: -1, -1, 0, 1, -1
-  // apple frame:  -1, 2, -1, -1, -1
-  Eigen::VectorXi banana_tracks(5);
-  banana_tracks << -1, -1, 0, 1, -1;
+  // B frame: -1, -1, 0, 1, -1
+  // A frame:  -1, 2, -1, -1, -1
+  Eigen::VectorXi B_tracks(5);
+  B_tracks << -1, -1, 0, 1, -1;
 
-  Eigen::VectorXi apple_tracks(5);
-  apple_tracks << -1, 2, -1, -1, -1;
+  Eigen::VectorXi A_tracks(5);
+  A_tracks << -1, 2, -1, -1, -1;
 
-  banana_frame->swapKeypointMeasurements(&banana_keypoints);
-  apple_frame->swapKeypointMeasurements(&apple_keypoints);
+  B_frame->swapKeypointMeasurements(&B_keypoints);
+  A_frame->swapKeypointMeasurements(&A_keypoints);
 
-  banana_frame->swapTrackIds(&banana_tracks);
-  apple_frame->swapTrackIds(&apple_tracks);
+  B_frame->swapTrackIds(&B_tracks);
+  A_frame->swapTrackIds(&A_tracks);
 
   // matches_A_B: {(0,0), (1,1), (2,2), (3,3), (4,4)}
   aslam::FrameToFrameMatches matches_A_B;
   matches_A_B.reserve(5);
 
-  matches_A_B.emplace_back(0, 0, 0.1);
-  matches_A_B.emplace_back(1, 1, 0.2);
-  matches_A_B.emplace_back(2, 2, 0.3);
-  matches_A_B.emplace_back(3, 3, 0.4);
-  matches_A_B.emplace_back(4, 4, 0.5);
+  matches_A_B.emplace_back(0, 0);
+  matches_A_B.emplace_back(1, 1);
+  matches_A_B.emplace_back(2, 2);
+  matches_A_B.emplace_back(3, 3);
+  matches_A_B.emplace_back(4, 4);
 
   aslam::SimpleTrackManager track_manager;
-  track_manager.applyMatchesToFrames(matches_A_B, apple_frame.get(), banana_frame.get());
+  track_manager.applyMatchesToFrames(matches_A_B, A_frame.get(), B_frame.get());
 
   // Expected output:
-  // banana frame: 3, 2, 0, 1, 4
-  // apple frame:  3, 2, 0, 1, 4
-  Eigen::VectorXi expected_banana_tracks(5);
-  expected_banana_tracks << 0, 2, 0, 1, 1;
+  // B frame: 3, 2, 0, 1, 4
+  // A frame:  3, 2, 0, 1, 4
+  Eigen::VectorXi expected_B_tracks(5);
+  expected_B_tracks << 0, 2, 0, 1, 1;
 
-  Eigen::VectorXi expected_apple_tracks(5);
-  expected_apple_tracks << 0, 2, 0, 1, 1;
+  Eigen::VectorXi expected_A_tracks(5);
+  expected_A_tracks << 0, 2, 0, 1, 1;
 
-  banana_tracks = banana_frame->getTrackIds();
-  apple_tracks = apple_frame->getTrackIds();
+  B_tracks = B_frame->getTrackIds();
+  A_tracks = A_frame->getTrackIds();
 
-  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(expected_banana_tracks, banana_tracks));
-  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(expected_apple_tracks, apple_tracks));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(expected_B_tracks, B_tracks));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(expected_A_tracks, A_tracks));
 }
 
 TEST(TrackManagerTests, TestApplyMatchesEmpty) {
   aslam::TrackManager::resetIdProvider();
 
   aslam::Camera::Ptr camera = aslam::PinholeCamera::createTestCamera();
-  aslam::VisualFrame::Ptr banana_frame =
+  aslam::VisualFrame::Ptr B_frame =
       aslam::VisualFrame::createEmptyTestVisualFrame(camera, 0);
-  aslam::VisualFrame::Ptr apple_frame =
+  aslam::VisualFrame::Ptr A_frame =
       aslam::VisualFrame::createEmptyTestVisualFrame(camera, 1);
 
-  Eigen::Matrix2Xd banana_keypoints = Eigen::Matrix2Xd::Zero(2, 5);
-  Eigen::Matrix2Xd apple_keypoints = Eigen::Matrix2Xd::Zero(2, 5);
+  Eigen::Matrix2Xd B_keypoints = Eigen::Matrix2Xd::Zero(2, 5);
+  Eigen::Matrix2Xd A_keypoints = Eigen::Matrix2Xd::Zero(2, 5);
 
-  Eigen::VectorXi banana_tracks = Eigen::VectorXi::Constant(5, -1);
-  Eigen::VectorXi apple_tracks = Eigen::VectorXi::Constant(5, -1);
+  Eigen::VectorXi B_tracks = Eigen::VectorXi::Constant(5, -1);
+  Eigen::VectorXi A_tracks = Eigen::VectorXi::Constant(5, -1);
 
-  banana_frame->swapKeypointMeasurements(&banana_keypoints);
-  apple_frame->swapKeypointMeasurements(&apple_keypoints);
+  B_frame->swapKeypointMeasurements(&B_keypoints);
+  A_frame->swapKeypointMeasurements(&A_keypoints);
 
-  banana_frame->swapTrackIds(&banana_tracks);
-  apple_frame->swapTrackIds(&apple_tracks);
+  B_frame->swapTrackIds(&B_tracks);
+  A_frame->swapTrackIds(&A_tracks);
 
   aslam::FrameToFrameMatches matches_A_B;
 
   aslam::SimpleTrackManager track_manager;
-  track_manager.applyMatchesToFrames(matches_A_B, apple_frame.get(), banana_frame.get());
+  track_manager.applyMatchesToFrames(matches_A_B, A_frame.get(), B_frame.get());
 
   // Expected output:
-  Eigen::VectorXi expected_banana_tracks = Eigen::VectorXi::Constant(5, -1);
-  Eigen::VectorXi expected_apple_tracks = Eigen::VectorXi::Constant(5, -1);
+  Eigen::VectorXi expected_B_tracks = Eigen::VectorXi::Constant(5, -1);
+  Eigen::VectorXi expected_A_tracks = Eigen::VectorXi::Constant(5, -1);
 
-  banana_tracks = banana_frame->getTrackIds();
-  apple_tracks = apple_frame->getTrackIds();
+  B_tracks = B_frame->getTrackIds();
+  A_tracks = A_frame->getTrackIds();
 
-  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(expected_banana_tracks, banana_tracks));
-  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(expected_apple_tracks, apple_tracks));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(expected_B_tracks, B_tracks));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(expected_A_tracks, A_tracks));
 }
 
 ASLAM_UNITTEST_ENTRYPOINT
