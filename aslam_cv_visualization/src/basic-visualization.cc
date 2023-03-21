@@ -55,12 +55,12 @@ void visualizeKeypoints(const aslam::VisualNFrame::ConstPtr& nframe, cv::Mat* im
 
 void drawKeypointMatches(const aslam::VisualFrame& frame_kp1,
                          const aslam::VisualFrame& frame_k,
-                         const aslam::Matches& matches_kp1_k,
+                         const aslam::FrameToFrameMatches& matches_kp1_k,
                          cv::Scalar color_keypoint_kp1, cv::Scalar line_color,
                          cv::Mat* image) {
   CHECK_NOTNULL(image);
 
-  for (const aslam::Match& match_kp1_k : matches_kp1_k) {
+  for (const aslam::FrameToFrameMatch& match_kp1_k : matches_kp1_k) {
     Eigen::Vector2d keypoint_k;
     Eigen::Vector2d keypoint_kp1;
     CHECK_LT(match_kp1_k.second, frame_k.getNumKeypointMeasurements());

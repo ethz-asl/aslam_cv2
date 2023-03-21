@@ -6,20 +6,9 @@
 
 namespace aslam_cv_visualization {
 
-template<typename MatchesWithScore>
-void visualizeMatches(const aslam::VisualFrame& frame_kp1,
-                      const aslam::VisualFrame& frame_k,
-                      const MatchesWithScore& matches_with_score,
-                      cv::Mat* image) {
-  aslam::Matches matches;
-  aslam::convertMatchesWithScoreToMatches<MatchesWithScore>(
-      matches_with_score, &matches);
-  visualizeMatchesWithoutScore(frame_kp1, frame_k, matches, image);
-}
-
-inline void visualizeMatchesWithoutScore(
+inline void visualizeMatches(
     const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
-    const aslam::Matches& matches, cv::Mat* image) {
+    const aslam::FrameToFrameMatches& matches, cv::Mat* image) {
   CHECK_NOTNULL(image);
 
   cv::cvtColor(frame_kp1.getRawImage(), *image, CV_GRAY2BGR);

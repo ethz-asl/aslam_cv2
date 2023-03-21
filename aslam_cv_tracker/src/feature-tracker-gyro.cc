@@ -76,7 +76,7 @@ GyroTracker::GyroTracker(const Camera& camera,
 void GyroTracker::track(const Quaternion& q_Ckp1_Ck,
                         const VisualFrame& frame_k,
                         VisualFrame* frame_kp1,
-                        FrameToFrameMatchesWithScore* matches_kp1_k) {
+                        FrameToFrameMatches* matches_kp1_k) {
   CHECK(frame_k.isValid());
   CHECK(frame_k.hasKeypointMeasurements());
   CHECK(frame_k.hasKeypointOrientations());
@@ -157,7 +157,7 @@ void GyroTracker::lkTracking(
       const std::vector<int>& lk_candidate_indices_k,
       const VisualFrame& frame_k,
       VisualFrame* frame_kp1,
-      FrameToFrameMatchesWithScore* matches_kp1_k) {
+      FrameToFrameMatches* matches_kp1_k) {
   CHECK_NOTNULL(frame_kp1);
   CHECK_NOTNULL(matches_kp1_k);
   CHECK_EQ(
@@ -266,8 +266,7 @@ void GyroTracker::lkTracking(
 
   for (int i = 0; i < static_cast<int>(kNumPointsAfterExtraction); ++i) {
     matches_kp1_k->emplace_back(
-        kInitialSizeKp1 + i, lk_definite_indices_k[lk_cv_keypoints_kp1[i].class_id],
-        0.0 /* We don't have scores for lk tracking */);
+        kInitialSizeKp1 + i, lk_definite_indices_k[lk_cv_keypoints_kp1[i].class_id]);
   }
 
   // Update feature status for next iteration.
@@ -331,7 +330,7 @@ void GyroTracker::computeTrackedMatches(
 }
 
 void GyroTracker::computeLKCandidates(
-    const FrameToFrameMatchesWithScore& matches_kp1_k,
+    const FrameToFrameMatches& matches_kp1_k,
     const FrameStatusTrackLength& status_track_length_k,
     const VisualFrame& /*frame_k*/,
     const VisualFrame& frame_kp1,
@@ -423,7 +422,7 @@ void GyroTracker::computeLKCandidates(
 }
 
 void GyroTracker::computeUnmatchedIndicesOfFrameK(
-    const FrameToFrameMatchesWithScore& matches_kp1_k,
+    const FrameToFrameMatches& matches_kp1_k,
     std::vector<int>* unmatched_indices_k) const {
   CHECK_GT(track_ids_k_km1_.size(), 0u);
   CHECK_GE(track_ids_k_km1_[0].size(), static_cast<int>(matches_kp1_k.size()));
@@ -436,8 +435,8 @@ void GyroTracker::computeUnmatchedIndicesOfFrameK(
   unmatched_indices_k->reserve(kNumUnmatchedK);
   std::vector<bool> is_unmatched(kNumPointsK, true);
 
-  for (const FrameToFrameMatchWithScore& match: matches_kp1_k) {
-    is_unmatched[match.getKeypointIndexBananaFrame()] = false;
+  for (const FrameToFrameMatch& match: matches_kp1_k) {
+    is_unmatched[match.getKeypointIndexInFrameB()] = false;
   }
 
   for (int i = 0; i < static_cast<int>(kNumPointsK); ++i) {

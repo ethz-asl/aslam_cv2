@@ -17,19 +17,14 @@ namespace geometric_vision {
 bool rejectOutlierFeatureMatchesTranslationRotationSAC(
     const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
     const aslam::Quaternion& q_Ckp1_Ck,
-    const aslam::FrameToFrameMatchesWithScore& matches_kp1_k,
+    const aslam::FrameToFrameMatches& matches_kp1_k,
     bool fix_random_seed, double ransac_threshold, size_t ransac_max_iterations,
-    aslam::FrameToFrameMatchesWithScore* inlier_matches_kp1_k,
-    aslam::FrameToFrameMatchesWithScore* outlier_matches_kp1_k) {
+    aslam::FrameToFrameMatches* inlier_matches_kp1_k,
+    aslam::FrameToFrameMatches* outlier_matches_kp1_k) {
 
   BearingVectors bearing_vectors_kp1;
   BearingVectors bearing_vectors_k;
-
-  aslam::FrameToFrameMatches matches_without_score_kp1_k;
-  aslam::convertMatchesWithScoreToMatches<aslam::FrameToFrameMatchWithScore,
-      aslam::FrameToFrameMatch>(matches_kp1_k, &matches_without_score_kp1_k);
-  aslam::getBearingVectorsFromMatches(frame_kp1, frame_k,
-                                      matches_without_score_kp1_k,
+  aslam::getBearingVectorsFromMatches(frame_kp1, frame_k, matches_kp1_k,
                                       &bearing_vectors_kp1, &bearing_vectors_k);
 
   std::unordered_set<int> inlier_indices;
@@ -39,7 +34,7 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
 
   // Remove the outliers from the matches list.
   int match_index = 0;
-  for (const aslam::FrameToFrameMatchWithScore& match : matches_kp1_k) {
+  for (const aslam::FrameToFrameMatch& match : matches_kp1_k) {
     if (inlier_indices.count(match_index)) {
       inlier_matches_kp1_k->emplace_back(match);
     } else {

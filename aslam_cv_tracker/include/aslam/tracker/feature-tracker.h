@@ -33,7 +33,7 @@ class FeatureTracker {
   /// filtering).
   virtual void track(
       const Quaternion& q_Ckp1_Ck, const VisualFrame& frame_k, aslam::VisualFrame* frame_kp1,
-      FrameToFrameMatchesWithScore* matches_with_score_kp1_k) = 0;
+      FrameToFrameMatches* matches_with_score_kp1_k) = 0;
 
   /// Set a list of keypoint indices that should be aborted during the next call to track.
   /// The vector is swapped and invalidates the source vector.
