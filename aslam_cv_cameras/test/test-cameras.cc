@@ -7,7 +7,7 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/cameras/camera-pinhole.h>
-#include <aslam/cameras/camera-generic.h>
+#include <aslam/cameras/camera-generic-noncentral.h>
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/distortion.h>
 #include <aslam/cameras/distortion-fisheye.h>
