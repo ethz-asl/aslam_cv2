@@ -12,6 +12,7 @@ set(SOURCES
   src/camera-factory.cc
   src/camera-pinhole.cc
   src/camera-generic.cc
+  src/camera-generic-noncentral.cc
   src/camera-unified-projection.cc
   src/camera.cc
   src/distortion-equidistant.cc
@@ -43,6 +44,10 @@ target_link_libraries(test_ncamera ${PROJECT_NAME})
 
 catkin_add_gtest(test_camera_generic test/test-camera-generic.cc)
 target_link_libraries(test_camera_generic ${PROJECT_NAME})
+
+catkin_add_gtest(test_camera_generic_noncentral test/test-camera-generic-noncentral.cc)
+target_link_libraries(test_camera_generic_noncentral ${PROJECT_NAME})
+
 
 ##########
 # EXPORT #

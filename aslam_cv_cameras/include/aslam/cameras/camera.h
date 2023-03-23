@@ -126,6 +126,7 @@ class Camera : public Sensor {
     kUnifiedProjection = 1,
     kLidar3D = 2,
     kGeneric = 3,
+    kGenericNoncentral = 4,
   };
 
   //////////////////////////////////////////////////////////////

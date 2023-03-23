@@ -5,6 +5,7 @@
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-generic.h>
+#include <aslam/cameras/camera-generic-noncentral.h>
 #include <aslam/cameras/camera-3d-lidar.h>
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/cameras/distortion-equidistant.h>
@@ -59,6 +60,10 @@ Camera::Ptr createCamera(aslam::CameraId id, const Eigen::VectorXd& intrinsics,
       camera.reset(new GenericCamera(intrinsics, image_width, image_height,
                                      distortion));
       break;   
+    case Camera::Type::kGenericNoncentral:
+      camera.reset(new GenericNoncentralCamera(intrinsics, image_width, image_height,
+                                     distortion));
+      break;
     default:
       LOG(FATAL) << "Unknown camera model: "
         << static_cast<std::underlying_type<Camera::Type>::type>(camera_type);
@@ -97,9 +102,11 @@ Camera::Ptr createCamera(const YAML::Node& yaml_node) {
     camera = std::dynamic_pointer_cast<Camera>(aligned_shared<Camera3DLidar>());
   } else if (camera_type == "generic") {
     camera = std::dynamic_pointer_cast<Camera>(aligned_shared<GenericCamera>());
+  } else if (camera_type == "generic_noncentral") {
+    camera = std::dynamic_pointer_cast<Camera>(aligned_shared<GenericNoncentralCamera>());
   } else {
     LOG(ERROR) << "Unknown camera model: \"" << camera_type << "\". "
-               << "Valid values are {pinhole, unified-projection, camera-3d-lidar, generic}.";
+               << "Valid values are {pinhole, unified-projection, camera-3d-lidar, generic, generic_noncentral}.";
     return nullptr;
   }
 
