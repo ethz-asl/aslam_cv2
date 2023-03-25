@@ -18,7 +18,7 @@ using BearingVectors =
 // RANSAC threshold can be defined as:  1 - cos(max_ray_disparity_angle).
 bool rejectOutlierFeatureMatchesTranslationRotationSAC(
     const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
-    const aslam::Quaternion& q_Ckp1_Ck,
+    const aslam::Quaternion& q_Ckp1_Ck, int descriptor_type,
     const aslam::FrameToFrameMatches& matches_kp1_k,
     bool fix_random_seed, double ransac_threshold, size_t ransac_max_iterations,
     aslam::FrameToFrameMatches* inlier_matches_kp1_k,

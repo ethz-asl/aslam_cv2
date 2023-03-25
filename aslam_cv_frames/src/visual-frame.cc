@@ -525,7 +525,7 @@ size_t VisualFrame::getDescriptorSizeBytes(size_t index) const {
 }
 
 Eigen::Matrix3Xd VisualFrame::getNormalizedBearingVectors(
-    const std::vector<size_t>& keypoint_indices,
+    const std::vector<size_t>& keypoint_indices, int descriptor_type,
     std::vector<unsigned char>* backprojection_success) const {
   CHECK_NOTNULL(backprojection_success);
   if (keypoint_indices.empty()) {
@@ -534,8 +534,8 @@ Eigen::Matrix3Xd VisualFrame::getNormalizedBearingVectors(
   }
 
   const aslam::Camera& camera = *CHECK_NOTNULL(getCameraGeometry().get());
-  const Eigen::Matrix2Xd& keypoints = getKeypointMeasurements();
-  const size_t num_keypoints = getNumKeypointMeasurements();
+  const Eigen::Matrix2Xd& keypoints = getKeypointMeasurementsOfType(descriptor_type);
+  const size_t num_keypoints = getNumKeypointMeasurementsOfType(descriptor_type);
 
   Eigen::Matrix2Xd keypoints_reduced;
   keypoints_reduced.resize(Eigen::NoChange, keypoint_indices.size());

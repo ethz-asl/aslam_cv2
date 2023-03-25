@@ -349,7 +349,7 @@ class VisualFrame  {
 
   /// Return a list of normalized bearing vectors for the specified keypoint indices.
   Eigen::Matrix3Xd getNormalizedBearingVectors(
-      const std::vector<size_t>& keypoint_indices,
+      const std::vector<size_t>& keypoint_indices, int descriptor_type,
       std::vector<unsigned char>* backprojection_success) const;
 
   /// Get the frame id.

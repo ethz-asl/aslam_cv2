@@ -10,7 +10,7 @@ namespace aslam {
 /// Return the normalized bearing vectors for a list of single camera matches.
 void getBearingVectorsFromMatches(
     const VisualFrame& frame_kp1, const VisualFrame& frame_k,
-    const FrameToFrameMatches& matches_kp1_k,
+    const FrameToFrameMatches& matches_kp1_k, int descriptor_type,
     Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_kp1,
     Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_k) {
   CHECK_NOTNULL(bearing_vectors_kp1);
@@ -31,9 +31,9 @@ void getBearingVectorsFromMatches(
 
   std::vector<unsigned char> success;
   aslam::common::convertEigenToStlVector(frame_kp1.getNormalizedBearingVectors(
-      keypoint_indices_kp1, &success), bearing_vectors_kp1);
+      keypoint_indices_kp1, descriptor_type, &success), bearing_vectors_kp1);
   aslam::common::convertEigenToStlVector(frame_k.getNormalizedBearingVectors(
-            keypoint_indices_k, &success), bearing_vectors_k);
+      keypoint_indices_k, descriptor_type, &success), bearing_vectors_k);
 }
 
 
