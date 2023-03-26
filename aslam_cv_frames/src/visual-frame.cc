@@ -846,6 +846,10 @@ size_t VisualFrame::getDescriptorTypeBlock(int descriptor_type) const {
 }
 
 size_t VisualFrame::getNumKeypointMeasurementsOfType(int descriptor_type) const {
+  if (!hasKeypointMeasurements()) {
+    return 0u;
+  }
+
   const std::vector<VisualFrame::DescriptorsT>& descriptors =
       aslam::channels::get_DESCRIPTORS_Data(channels_);
   if (!hasDescriptorType(descriptor_type)) {
