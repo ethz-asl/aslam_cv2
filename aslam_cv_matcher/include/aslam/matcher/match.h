@@ -11,21 +11,21 @@ namespace aslam {
 
 /// \brief A struct to encapsulate a match between two lists.
 ///        The matches are indices into these lists.
-struct FrameToFrameMatch : std::pair<size_t, size_t> {
+struct FrameToFrameMatch : std::pair<int, int> {
   FrameToFrameMatch() = default;
-  FrameToFrameMatch(size_t first_, size_t second_)
-      : std::pair<size_t, size_t>(first_, second_) {}
+  FrameToFrameMatch(int first_, int second_)
+      : std::pair<int, int>(first_, second_) {}
   virtual ~FrameToFrameMatch() = default;
-  size_t getKeypointIndexInFrameA() const {
+  int getKeypointIndexInFrameA() const {
     return first;
   }
-  void setKeypointIndexInFrameA(size_t first_) {
+  void setKeypointIndexInFrameA(int first_) {
     first = first_;
   }
-  size_t getKeypointIndexInFrameB() const {
+  int getKeypointIndexInFrameB() const {
     return second;
   }
-  void setKeypointIndexInFrameB(size_t second_) {
+  void setKeypointIndexInFrameB(int second_) {
     second = second_;
   }
 };
