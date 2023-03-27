@@ -953,6 +953,16 @@ const Eigen::VectorBlock<const Eigen::VectorXi> VisualFrame::getTrackIdsOfType(
   return data.segment(start, size);
 }
 
+Eigen::VectorBlock<Eigen::VectorXi> VisualFrame::getTrackIdsOfTypeMutable(
+    int descriptor_type) {
+  size_t start, size;
+  getDescriptorBlockTypeStartAndSize(descriptor_type, &start, &size);
+  Eigen::VectorXi& data =
+      aslam::channels::get_TRACK_IDS_Data(channels_);
+  CHECK_LE(start + size, static_cast<size_t>(data.size()));
+  return data.segment(start, size);
+}
+
 const Eigen::Block<const Eigen::Matrix2Xd, 2, 1> VisualFrame::getKeypointMeasurementOfType(
     size_t index, int descriptor_type) const {
   size_t start, size;
