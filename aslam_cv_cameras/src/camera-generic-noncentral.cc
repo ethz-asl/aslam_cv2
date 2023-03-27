@@ -47,7 +47,6 @@ bool GenericNoncentralCamera::backProject6(const Eigen::Ref<const Eigen::Vector2
   Eigen::Vector2d keypointGrid = transformImagePixelToGridPoint(keypoint);
 
   interpolateTwoCubicBSplineSurfaces(keypointGrid, out_line_3d);
-  //*out_point_3d = (*out_point_3d).normalized();
   return true;
 }
 
