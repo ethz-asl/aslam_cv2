@@ -9,11 +9,9 @@ catkin_simple(ALL_DEPS_REQUIRED)
 #############
 set(HEADERS
   include/aslam/visualization/basic-visualization.h
-  include/aslam/visualization/feature-track-visualizer.h
 )
 
 set(SOURCES
-  src/feature-track-visualizer.cc
   src/basic-visualization.cc
 )
 

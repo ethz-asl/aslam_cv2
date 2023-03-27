@@ -611,6 +611,12 @@ TEST(Frame, getNormalizedBearingVectors) {
   keypoints.col(kNumKeypoints - 1) = Eigen::Vector2d(1e8, 1e8); // Add one invalid keypoint.
   frame->setKeypointMeasurements(keypoints);
 
+  // Some descriptors are necessary in the frame since the keypoint
+  // number for a certain type is defined through the descriptors
+  aslam::VisualFrame::DescriptorsT desc(8, 10);
+  desc.setRandom();
+  frame->setDescriptors(desc);
+
   // Get bearing vectors.
   std::vector<size_t> keypoint_indices;
   keypoint_indices.emplace_back(1);
@@ -619,9 +625,10 @@ TEST(Frame, getNormalizedBearingVectors) {
   keypoint_indices.emplace_back(4);
   keypoint_indices.emplace_back(kNumKeypoints - 1);  // This is the invalid keypoint.
 
+  const int descriptor_type = 0;
   std::vector<unsigned char> projection_success;
-  Eigen::Matrix3Xd bearing_vectors = frame->getNormalizedBearingVectors(keypoint_indices,
-                                                                        &projection_success);
+  Eigen::Matrix3Xd bearing_vectors = frame->getNormalizedBearingVectors(
+      keypoint_indices, descriptor_type, &projection_success);
 
   // Check by manually calculating the normalized bearing vectors.
   const size_t num_bearing_vectors = static_cast<size_t>(bearing_vectors.cols());
