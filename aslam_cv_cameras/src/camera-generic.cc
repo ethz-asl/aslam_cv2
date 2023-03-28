@@ -98,8 +98,8 @@ bool GenericCamera::backProject3WithJacobian(const Eigen::Ref<const Eigen::Vecto
   // Eigen::Vector2d grid_point = transformImagePixelToGridPoint(keypoint); 
   // TODO(beni) change intrinsics(n) to intrinsics(parameters::kMinCalibrationX), etc
   Eigen::Vector2d grid_point = Eigen::Vector2d(
-    1. + (intrinsics(4) - 3.) * (keypoint.x() - intrinsics(0)) / (intrinsics(2) - intrinsics(0) + 1.),
-    1. + (intrinsics(5) - 3.) * (keypoint.y() - intrinsics(1)) / (intrinsics(3) - intrinsics(1) + 1.)
+    1. + (intrinsics(Parameters::kGridWidth) - 3.) * (keypoint.x() - intrinsics(Parameters::kCalibrationMinX)) / (intrinsics(Parameters::kCalibrationMaxX) - intrinsics(Parameters::kCalibrationMinX) + 1.),
+    1. + (intrinsics(Parameters::kGridHeight) - 3.) * (keypoint.y() - intrinsics(Parameters::kCalibrationMinY)) / (intrinsics(Parameters::kCalibrationMaxY) - intrinsics(Parameters::kCalibrationMinY) + 1.)
   );
 
   double x = grid_point.x();
