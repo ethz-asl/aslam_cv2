@@ -15,7 +15,7 @@ void drawKeypoints(
   cv::cvtColor(frame.getRawImage(), *image, cv::COLOR_GRAY2BGR);
   CHECK_NOTNULL(image->data);
 
-  const Eigen::Matrix2Xd& keypoints =
+  const Eigen::Block<const Eigen::Matrix2Xd> keypoints =
       frame.getKeypointMeasurementsOfType(descriptor_type);
   for (int i = 0; i < keypoints.cols(); ++i) {
     cv::circle(
@@ -37,9 +37,9 @@ void drawKeypointMatches(
   const cv::Scalar line_color = cv::Scalar(255, 0, 255);
   const cv::Scalar keypoint_color = cv::Scalar(255, 255, 0);
 
-  const Eigen::Matrix2Xd& keypoints_k =
+  const Eigen::Block<const Eigen::Matrix2Xd> keypoints_k =
       frame_k.getKeypointMeasurementsOfType(descriptor_type);
-  const Eigen::Matrix2Xd& keypoints_kp1 =
+  const Eigen::Block<const Eigen::Matrix2Xd> keypoints_kp1 =
       frame_kp1.getKeypointMeasurementsOfType(descriptor_type);
 
   for (const aslam::FrameToFrameMatch& match_kp1_k : matches_kp1_k) {

@@ -45,22 +45,14 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
   CHECK_NOTNULL(predicted_keypoints_kp1);
   CHECK_NOTNULL(prediction_success)->clear();
   CHECK(frame_k.hasKeypointMeasurements());
+  CHECK(frame_k.hasDescriptorType(descriptor_type));
 
   const aslam::Camera& camera =
       *CHECK_NOTNULL(frame_k.getCameraGeometry().get());
 
-  predictKeypointsByRotation(camera, frame_k.getKeypointMeasurementsOfType(descriptor_type),
-                             q_Ckp1_Ck, predicted_keypoints_kp1,
-                             prediction_success);
-}
+  const Eigen::Block<const Eigen::Matrix2Xd> keypoints_k = 
+      frame_k.getKeypointMeasurementsOfType(descriptor_type);
 
-void predictKeypointsByRotation(
-    const aslam::Camera& camera, const Eigen::Matrix2Xd keypoints_k,
-    const aslam::Quaternion& q_Ckp1_Ck,
-    Eigen::Matrix2Xd* predicted_keypoints_kp1,
-    std::vector<unsigned char>* prediction_success) {
-  CHECK_NOTNULL(predicted_keypoints_kp1);
-  CHECK_NOTNULL(prediction_success)->clear();
   if (keypoints_k.cols() == 0u) {
     return;
   }

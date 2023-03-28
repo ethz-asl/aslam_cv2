@@ -534,7 +534,8 @@ Eigen::Matrix3Xd VisualFrame::getNormalizedBearingVectors(
   }
 
   const aslam::Camera& camera = *CHECK_NOTNULL(getCameraGeometry().get());
-  const Eigen::Matrix2Xd& keypoints = getKeypointMeasurementsOfType(descriptor_type);
+  const Eigen::Block<const Eigen::Matrix2Xd> keypoints = 
+      getKeypointMeasurementsOfType(descriptor_type);
   const size_t num_keypoints = getNumKeypointMeasurementsOfType(descriptor_type);
 
   Eigen::Matrix2Xd keypoints_reduced;
@@ -791,6 +792,10 @@ void VisualFrame::deserializeDescriptorsFromString(const std::string& descriptor
 }
 
 bool VisualFrame::hasDescriptorType(int descriptor_type) const {
+  if (!hasDescriptors()) {
+    return false;
+  }
+
   const Eigen::VectorXi& descriptor_types =
       aslam::channels::get_DESCRIPTOR_TYPES_Data(channels_);
   for (int block = 0; block < descriptor_types.size(); ++block) {

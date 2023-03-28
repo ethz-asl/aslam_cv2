@@ -497,7 +497,8 @@ void GyroTracker::updateFeatureStatusDeque(
 
 void GyroTracker::updateTrackIdDeque(
     const VisualFrame& new_frame_k) {
-  const Eigen::VectorXi& track_ids_k = new_frame_k.getTrackIdsOfType(descriptor_type_);
+  const Eigen::VectorBlock<const Eigen::VectorXi> track_ids_k =
+      new_frame_k.getTrackIdsOfType(descriptor_type_);
 
   track_ids_k_km1_.push_front(track_ids_k);
   if (track_ids_k_km1_.size() == 3u) {
