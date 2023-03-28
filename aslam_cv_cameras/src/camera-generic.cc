@@ -96,6 +96,7 @@ bool GenericCamera::backProject3WithJacobian(const Eigen::Ref<const Eigen::Vecto
   }
 
   // Eigen::Vector2d grid_point = transformImagePixelToGridPoint(keypoint); 
+  // TODO(beni) change intrinsics(n) to intrinsics(parameters::kMinCalibrationX), etc
   Eigen::Vector2d grid_point = Eigen::Vector2d(
     1. + (intrinsics(4) - 3.) * (keypoint.x() - intrinsics(0)) / (intrinsics(2) - intrinsics(0) + 1.),
     1. + (intrinsics(5) - 3.) * (keypoint.y() - intrinsics(1)) / (intrinsics(3) - intrinsics(1) + 1.)
@@ -539,7 +540,7 @@ bool GenericCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
     LOG(ERROR) << "Unable to get grid";
     return false;
   }
-  // Concatonate tempIntrinsics and tempGrid into one intrinsics_ vector
+  // Concatenate tempIntrinsics and tempGrid into one intrinsics_ vector
   intrinsics_.resize(6 + tempGrid.size());
   intrinsics_ << tempIntrinsics; 
   for (int i = 0; i < tempGrid.rows(); i++){

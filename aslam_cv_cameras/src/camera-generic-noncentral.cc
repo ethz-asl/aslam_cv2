@@ -22,7 +22,7 @@ GenericNoncentralCamera::GenericNoncentralCamera(const Eigen::VectorXd& intrinsi
                              aslam::Distortion::UniquePtr& distortion)
   : GenericNoncentralCamera(intrinsics, image_width, image_height){
   if(distortion->getType() != Distortion::Type::kNoDistortion){
-    LOG(ERROR) << "Constructed Generic Camera with Distortion, distortion set to kNoDistortion";
+    LOG(ERROR) << "Constructed Generic Noncentral Camera with Distortion, distortion set to kNoDistortion";
   }
 }
 
