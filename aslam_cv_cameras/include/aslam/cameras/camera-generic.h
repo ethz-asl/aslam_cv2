@@ -21,8 +21,6 @@ class NCamera;
 class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   friend class NCamera;
 
-  int kNumOfParams;
-
  public:
   ASLAM_POINTER_TYPEDEFS(GenericCamera);
 
@@ -190,13 +188,15 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
   };
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
-  inline int parameterCount() const {
-      return kNumOfParams;
+  inline static constexpr int parameterCount() {
+      //TODO(beni)
+      return 534;
   }
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
   inline virtual int getParameterSize() const {
-      return kNumOfParams;
+      //TODO(beni)
+      return 534;
   }
 
   /// Static function that checks whether the given intrinsic parameters are valid for this model.
