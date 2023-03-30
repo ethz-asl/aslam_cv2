@@ -16,7 +16,7 @@ namespace geometric_vision {
 
 bool rejectOutlierFeatureMatchesTranslationRotationSAC(
     const aslam::VisualFrame& frame_kp1, const aslam::VisualFrame& frame_k,
-    const aslam::Quaternion& q_Ckp1_Ck,
+    const aslam::Quaternion& q_Ckp1_Ck, int descriptor_type,
     const aslam::FrameToFrameMatches& matches_kp1_k,
     bool fix_random_seed, double ransac_threshold, size_t ransac_max_iterations,
     aslam::FrameToFrameMatches* inlier_matches_kp1_k,
@@ -24,8 +24,9 @@ bool rejectOutlierFeatureMatchesTranslationRotationSAC(
 
   BearingVectors bearing_vectors_kp1;
   BearingVectors bearing_vectors_k;
-  aslam::getBearingVectorsFromMatches(frame_kp1, frame_k, matches_kp1_k,
-                                      &bearing_vectors_kp1, &bearing_vectors_k);
+  aslam::getBearingVectorsFromMatches(
+      frame_kp1, frame_k, matches_kp1_k, descriptor_type,
+      &bearing_vectors_kp1, &bearing_vectors_k);
 
   std::unordered_set<int> inlier_indices;
   const bool success = rejectOutlierFeatureMatchesTranslationRotationSAC(

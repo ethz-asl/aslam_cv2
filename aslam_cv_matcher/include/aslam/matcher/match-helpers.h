@@ -12,7 +12,7 @@ namespace aslam {
 /// Return the normalized bearing vectors for a list of single camera matches.
 void getBearingVectorsFromMatches(
     const VisualFrame& frame_kp1, const VisualFrame& frame_k,
-    const FrameToFrameMatches& matches_kp1_k,
+    const FrameToFrameMatches& matches_kp1_k, int descriptor_type,
     Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_kp1,
     Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_k);
 
@@ -24,11 +24,6 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
                                 Eigen::Matrix2Xd* predicted_keypoints_kp1,
                                 std::vector<unsigned char>* prediction_success,
                                 int descriptor_type = 0);
-void predictKeypointsByRotation(const aslam::Camera& camera,
-                                const Eigen::Matrix2Xd keypoints_k,
-                                const aslam::Quaternion& q_Ckp1_Ck,
-                                Eigen::Matrix2Xd* predicted_keypoints_kp1,
-                                std::vector<unsigned char>* prediction_success);
 
 }  // namespace aslam
 

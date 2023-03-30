@@ -10,7 +10,7 @@ namespace aslam {
 /// Return the normalized bearing vectors for a list of single camera matches.
 void getBearingVectorsFromMatches(
     const VisualFrame& frame_kp1, const VisualFrame& frame_k,
-    const FrameToFrameMatches& matches_kp1_k,
+    const FrameToFrameMatches& matches_kp1_k, int descriptor_type,
     Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_kp1,
     Aligned<std::vector, Eigen::Vector3d>* bearing_vectors_k) {
   CHECK_NOTNULL(bearing_vectors_kp1);
@@ -31,9 +31,9 @@ void getBearingVectorsFromMatches(
 
   std::vector<unsigned char> success;
   aslam::common::convertEigenToStlVector(frame_kp1.getNormalizedBearingVectors(
-      keypoint_indices_kp1, &success), bearing_vectors_kp1);
+      keypoint_indices_kp1, descriptor_type, &success), bearing_vectors_kp1);
   aslam::common::convertEigenToStlVector(frame_k.getNormalizedBearingVectors(
-            keypoint_indices_k, &success), bearing_vectors_k);
+      keypoint_indices_k, descriptor_type, &success), bearing_vectors_k);
 }
 
 
@@ -45,22 +45,14 @@ void predictKeypointsByRotation(const VisualFrame& frame_k,
   CHECK_NOTNULL(predicted_keypoints_kp1);
   CHECK_NOTNULL(prediction_success)->clear();
   CHECK(frame_k.hasKeypointMeasurements());
+  CHECK(frame_k.hasDescriptorType(descriptor_type));
 
   const aslam::Camera& camera =
       *CHECK_NOTNULL(frame_k.getCameraGeometry().get());
 
-  predictKeypointsByRotation(camera, frame_k.getKeypointMeasurementsOfType(descriptor_type),
-                             q_Ckp1_Ck, predicted_keypoints_kp1,
-                             prediction_success);
-}
+  const Eigen::Block<const Eigen::Matrix2Xd> keypoints_k = 
+      frame_k.getKeypointMeasurementsOfType(descriptor_type);
 
-void predictKeypointsByRotation(
-    const aslam::Camera& camera, const Eigen::Matrix2Xd keypoints_k,
-    const aslam::Quaternion& q_Ckp1_Ck,
-    Eigen::Matrix2Xd* predicted_keypoints_kp1,
-    std::vector<unsigned char>* prediction_success) {
-  CHECK_NOTNULL(predicted_keypoints_kp1);
-  CHECK_NOTNULL(prediction_success)->clear();
   if (keypoints_k.cols() == 0u) {
     return;
   }

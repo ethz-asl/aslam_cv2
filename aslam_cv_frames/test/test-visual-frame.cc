@@ -54,7 +54,7 @@ TEST(Frame, SetGetDescriptors) {
   {
     const aslam::VisualFrame::DescriptorsT& data_2 =
         frame.getDescriptors();
-    EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 0));
+    EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data, data_2));
     EXPECT_EQ(&data_2, frame.getDescriptorsMutable());
     for (int i = 0; i < data.cols(); ++i) {
       const unsigned char* data_ptr = frame.getDescriptor(i);
@@ -71,8 +71,8 @@ TEST(Frame, SetGetDescriptors) {
         frame.getDescriptors(0);
     const aslam::VisualFrame::DescriptorsT& data_3 =
         frame.getDescriptors(1);
-    EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 0));
-    EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3, 0));
+    EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data, data_2));
+    EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data_ext, data_3));
     EXPECT_EQ(&data_2, frame.getDescriptorsMutable(0));
     EXPECT_EQ(&data_3, frame.getDescriptorsMutable(1));
     for (int i = 0; i < data.cols(); ++i) {
@@ -215,9 +215,9 @@ TEST(Frame, SetGetKeypointMeasurementUncertainties) {
   }
 
   // Check memory addresses again and that no copy operations happened
-  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0)));
 }
 
 TEST(Frame, SetGetKeypointOrientations) {
@@ -289,9 +289,9 @@ TEST(Frame, SetGetKeypointOrientations) {
   }
 
   // Check memory addresses again and that no copy operations happened
-  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0)));
 }
 
 TEST(Frame, SetGetKeypointScales) {
@@ -364,9 +364,9 @@ TEST(Frame, SetGetKeypointScales) {
   }
 
   // Check memory addresses again and that no copy operations happened
-  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0)));
 }
 
 TEST(Frame, SetGetKeypointScores) {
@@ -439,9 +439,9 @@ TEST(Frame, SetGetKeypointScores) {
   }
 
   // Check memory addresses again and that no copy operations happened
-  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0)));
 }
 
 TEST(Frame, SetGetTrackIds) {
@@ -451,7 +451,7 @@ TEST(Frame, SetGetTrackIds) {
   data.setRandom();
   frame.setTrackIds(data);
   const Eigen::VectorXi& data_2 = frame.getTrackIds();
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_2, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data, data_2));
   EXPECT_EQ(&data_2, frame.getTrackIdsMutable());
   for (int i = 0; i < data.cols(); ++i) {
     int ref = frame.getTrackId(i);
@@ -471,9 +471,9 @@ TEST(Frame, SetGetTrackIds) {
 
   Eigen::VectorXi data_zero(10);
   data_zero.setConstant(-1);
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_3.segment(0, 10), 1e-6));
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_3.segment(10, 10), 1e-6));
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_3.segment(20, 20), 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data, data_3.segment(0, 10)));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data_zero, data_3.segment(10, 10)));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data_ext, data_3.segment(20, 20)));
 
   // Some descriptors are necessary in the frame since the keypoint type
   // is defined by the descriptor type
@@ -494,9 +494,9 @@ TEST(Frame, SetGetTrackIds) {
   const Eigen::VectorBlock<const Eigen::VectorXi> data_subset_3 =
       frame.getTrackIdsOfType(2);
 
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data, data_subset_1, 1e-6));
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_zero, data_subset_2, 1e-6));
-  EXPECT_TRUE(EIGEN_MATRIX_NEAR(data_ext, data_subset_3, 1e-6));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data, data_subset_1));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data_zero, data_subset_2));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data_ext, data_subset_3));
 
   for (int i = 0; i < 10; i++) {
     const int ref = frame.getTrackIdOfType(i, 0);
@@ -514,9 +514,30 @@ TEST(Frame, SetGetTrackIds) {
   }
 
   // Check memory addresses again and that no copy operations happened
-  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0,0)));
-  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0,0)));
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3.coeff(0)));
+
+  // Check getting mutable blocks for a certain feature type
+  Eigen::VectorBlock<Eigen::VectorXi> data_subset_1_mutable = 
+      frame.getTrackIdsOfTypeMutable(0);
+  Eigen::VectorBlock<Eigen::VectorXi> data_subset_2_mutable = 
+      frame.getTrackIdsOfTypeMutable(1);
+  Eigen::VectorBlock<Eigen::VectorXi> data_subset_3_mutable = 
+      frame.getTrackIdsOfTypeMutable(2);
+
+  // Try modifying in place and check that the modifications happened
+  Eigen::VectorXi data_new(40);
+  data_new.setRandom();
+  data_subset_1_mutable = data_new.segment(0, 10);
+  data_subset_2_mutable = data_new.segment(10, 20);
+  data_subset_3_mutable = data_new.segment(20, 40);
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL(data_3, data_new));
+
+  // Check memory addresses again and that no copy operations happened
+  CHECK_EQ(&(data_3.coeff(0)), &(data_subset_1_mutable.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(10)), &(data_subset_2_mutable.coeff(0)));
+  CHECK_EQ(&(data_3.coeff(20)), &(data_subset_3_mutable.coeff(0)));
 }
 
 TEST(Frame, NamedChannel) {
@@ -611,6 +632,12 @@ TEST(Frame, getNormalizedBearingVectors) {
   keypoints.col(kNumKeypoints - 1) = Eigen::Vector2d(1e8, 1e8); // Add one invalid keypoint.
   frame->setKeypointMeasurements(keypoints);
 
+  // Some descriptors are necessary in the frame since the keypoint
+  // number for a certain type is defined through the descriptors
+  aslam::VisualFrame::DescriptorsT desc(8, 10);
+  desc.setRandom();
+  frame->setDescriptors(desc);
+
   // Get bearing vectors.
   std::vector<size_t> keypoint_indices;
   keypoint_indices.emplace_back(1);
@@ -619,9 +646,10 @@ TEST(Frame, getNormalizedBearingVectors) {
   keypoint_indices.emplace_back(4);
   keypoint_indices.emplace_back(kNumKeypoints - 1);  // This is the invalid keypoint.
 
+  const int descriptor_type = 0;
   std::vector<unsigned char> projection_success;
-  Eigen::Matrix3Xd bearing_vectors = frame->getNormalizedBearingVectors(keypoint_indices,
-                                                                        &projection_success);
+  Eigen::Matrix3Xd bearing_vectors = frame->getNormalizedBearingVectors(
+      keypoint_indices, descriptor_type, &projection_success);
 
   // Check by manually calculating the normalized bearing vectors.
   const size_t num_bearing_vectors = static_cast<size_t>(bearing_vectors.cols());

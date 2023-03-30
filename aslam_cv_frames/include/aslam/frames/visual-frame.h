@@ -349,7 +349,7 @@ class VisualFrame  {
 
   /// Return a list of normalized bearing vectors for the specified keypoint indices.
   Eigen::Matrix3Xd getNormalizedBearingVectors(
-      const std::vector<size_t>& keypoint_indices,
+      const std::vector<size_t>& keypoint_indices, int descriptor_type,
       std::vector<unsigned char>* backprojection_success) const;
 
   /// Get the frame id.
@@ -396,8 +396,17 @@ class VisualFrame  {
 
   void discardUntrackedObservations(std::vector<size_t>* discarded_indices);
 
-  /* Experimental functions for dealing with multiple types of different
-     features in the same channel, including different feature sizes */
+  /* Additional functions for dealing with multiple different types of
+     feature in the same channel, including different descriptor sizes */
+
+  // Will add a new block of features that is separate from the previous one.
+  //
+  // The feature types are then defined only when adding descriptors, so for
+  // measurements each new feature type a minimum requirement is to have  
+  // keypoint and descriptors added. Other properties are optional.
+  // 
+  // The default value is used to pad the array for the previously added
+  // feature type, if it didn't have that value defined.
   void extendKeypointMeasurements(const Eigen::Matrix2Xd& keypoints_new);
   void extendKeypointMeasurementUncertainties(
       const Eigen::VectorXd& uncertainties_new, double default_value = 0.0);
@@ -415,20 +424,45 @@ class VisualFrame  {
   void extendDescriptors(const Derived& descriptors_new, int descriptor_type = 0);
   void extendTrackIds(const Eigen::VectorXi& track_ids_new, int default_value = -1);
 
+  // Will serialize the multi-descriptor blocks into a single string
   void serializeDescriptorsToString(std::string* descriptors_string) const;
   void deserializeDescriptorsFromString(const std::string& descriptors_string);
 
+  /* Descriptors are stored in a vector of Eigen "blocks". Each block has an
+     index as well as a corresponding feature type for the entire block. */
+
+  // Check if the frame has a certain feature type
   bool hasDescriptorType(int descriptor_type) const;
+  // This function is for overwriting the internal feature type vector, which
+  // is automatically managed. Currently used only when deserializing data into
+  // and empty frame. Use with care!
   void setDescriptorTypes(const Eigen::VectorXi& descriptor_types);
+  // Get the feature type of each descriptor block that is stored.
   const Eigen::VectorXi& getDescriptorTypes() const;
+  // Get the feature type for a keypoint at a specific keypoint index
   int getDescriptorType(size_t index) const;
+  // Get the type of a descriptor stored at the specified block index
   int getDescriptorBlockType(size_t block) const;
+  // Get the size and keypoint index at which a descriptor block starts
   void getDescriptorBlockTypeStartAndSize(
       int descriptor_type, size_t *start, size_t *size) const;
+  // Get the block index which contains the descriptor of a certain type
   size_t getDescriptorTypeBlock(int descriptor_type) const;
+  // Get the size in bytes of a descriptor for a certain feature type
   size_t getDescriptorTypeSizeBytes(int descriptor_type) const;
-
+  
+  // Number of features that have a certain feature type. Will return 0
+  // if the frame does not have features of that type or a feature channel.
   size_t getNumKeypointMeasurementsOfType(int descriptor_type) const;
+
+  // Get the Eigen block only for a certain feature type.
+  // WARNING! When using these functions pay attention to the return type
+  // to avoid unnecessary copies:
+  //   - BAD (will create copy):
+  //   const Eigen::Matrix2Xd& keypoints = getKeypointMeasurementsOfType(0);
+  //   - GOOD (will point to memory block in the aslam frame):
+  //   const Eigen::Block<const Eigen::Matrix2Xd> = 
+  //       getKeypointMeasurementsOfType(0);
   const Eigen::Block<const Eigen::Matrix2Xd> getKeypointMeasurementsOfType(
       int descriptor_type) const;
   const Eigen::VectorBlock<const Eigen::VectorXd> getKeypointMeasurementUncertaintiesOfType(
@@ -447,6 +481,15 @@ class VisualFrame  {
   const Eigen::VectorBlock<const Eigen::VectorXi> getTrackIdsOfType(
       int descriptor_type) const;
 
+  // Get mutable Eigen block for a certain feature type
+  // WARNING! Same warning on return types as in the previous comment, even
+  // more so here to ensure the editable memory block is not a temp copy.
+  Eigen::VectorBlock<Eigen::VectorXi> getTrackIdsOfTypeMutable(
+      int descriptor_type);
+
+  // Get individual keypoint indices for a certain feature type.
+  // WARNING: repeated calls are inefficient. In that case try to use the above
+  // functions that get const refs to an entire block.
   const Eigen::Block<const Eigen::Matrix2Xd, 2, 1> getKeypointMeasurementOfType(
       size_t index, int descriptor_type) const;
   double getKeypointMeasurementUncertaintyOfType(size_t index, int descriptor_type) const;
