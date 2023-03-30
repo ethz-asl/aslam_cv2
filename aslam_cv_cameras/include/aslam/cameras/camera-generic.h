@@ -195,8 +195,7 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
   inline virtual int getParameterSize() const {
-      //TODO(beni)
-      return 534;
+      return intrinsics_.size();
   }
 
   /// Static function that checks whether the given intrinsic parameters are valid for this model.
