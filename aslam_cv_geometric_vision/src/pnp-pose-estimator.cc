@@ -1,6 +1,7 @@
 #include <memory>
 
 #include <aslam/cameras/camera-pinhole.h>
+#include <aslam/cameras/camera-generic.h>
 #include <aslam/cameras/camera-unified-projection.h>
 #include <aslam/common/memory.h>
 #include <opengv/absolute_pose/CentralAbsoluteAdapter.hpp>
@@ -112,6 +113,11 @@ bool PnpPoseEstimator::absoluteMultiPoseRansacPinholeCam(
             UnifiedProjectionCamera::Parameters::kFv);
 
         focal_length += (fu + fv);
+        break;
+      }
+      case aslam::Camera::Type::kGeneric: {       
+        aslam::GenericCamera::ConstPtr generic_camera_ptr = std::dynamic_pointer_cast<const aslam::GenericCamera>(camera_ptr);
+        focal_length += generic_camera_ptr->getFocalLengthApproximation();
         break;
       }
       default:

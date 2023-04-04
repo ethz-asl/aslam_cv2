@@ -419,6 +419,58 @@ Eigen::Vector3d GenericCamera::gridAccess(const Eigen::Vector2d gridpoint) const
   return intrinsics_.segment<3>(6 + 3*(gridpoint.y()*gridWidth() + gridpoint.x()));
 }
 
+double GenericCamera::getFocalLengthApproximation() const {
+  return focallengthApproximation;
+}
+
+void GenericCamera::setFocalLengthApproximation(){
+
+
+  const int stepsize = 1;
+  const int numCalibratedPixels = (1 + (calibrationMaxX() - calibrationMinX()) / stepsize) * (1 + (calibrationMaxY() - calibrationMinY()) / stepsize);
+
+  // set A and b s.t. Ax = b solves fu * direction[0] + cu = keypoint[0] for x = [fu, cu]
+  Eigen::Matrix<double, Eigen::Dynamic, 2> A_u;
+  A_u.resize(numCalibratedPixels, 2);
+  Eigen::VectorXd b_u;
+  b_u.resize(numCalibratedPixels);
+
+  // set A and b s.t. Ax = b solves fv * direction[1] + cv = keypoint[1] for x = [fv, cv]
+  Eigen::Matrix<double, Eigen::Dynamic, 2> A_v;
+  A_v.resize(numCalibratedPixels, 2);
+  Eigen::VectorXd b_v;
+  b_v.resize(numCalibratedPixels);
+
+  int counter = 0;
+  for(int i = calibrationMinX(); i < calibrationMaxX(); i += stepsize){
+    for(int j = calibrationMinY(); j < calibrationMaxY(); j += stepsize){
+
+      Eigen::Vector3d direction;
+      Eigen::Vector2d keypoint = Eigen::Vector2d(i, j);
+      bool backProjectWorked = backProject3(keypoint, &direction);
+      if(!backProjectWorked){
+        LOG(FATAL) << "backProject3 didn't work for keypoint: " << i << ", " << j;
+      }
+
+      // z-value has to be = 1, like in pinhole model
+      direction = direction / direction(2);
+
+      A_u.row(counter) = Eigen::Vector2d(direction(0), 1.0);
+      b_u(counter) = keypoint(0);
+      A_v.row(counter) = Eigen::Vector2d(direction(1), 1.0);
+      b_v(counter) = keypoint(1);
+
+      counter++;
+    }
+  }
+
+  // solve least squares Ax = b using QR decomposition
+  Eigen::Vector2d fu_cu = A_u.colPivHouseholderQr().solve(b_u);
+  Eigen::Vector2d fv_cv = A_v.colPivHouseholderQr().solve(b_v);
+
+  focallengthApproximation = fu_cu(0)+ fv_cv(0);
+}
+
 
 void GenericCamera::interpolateCubicBSplineSurface(Eigen::Vector2d keypoint, Eigen::Vector3d* out_point_3d) const {
   CHECK_NOTNULL(out_point_3d);
@@ -551,6 +603,9 @@ bool GenericCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
                << " camera model" << tempIntrinsics.transpose() << std::endl;
     return false;
   }
+
+  // calculate approx. focal length only once
+  setFocalLengthApproximation();
 
   // Get the optional linedelay in nanoseconds or set the default
   if (!YAML::safeGet(
