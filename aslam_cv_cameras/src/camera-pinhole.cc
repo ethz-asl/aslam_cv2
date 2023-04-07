@@ -1,12 +1,14 @@
 #include <memory>
 #include <utility>
 
-#include <aslam/cameras/camera-pinhole.h>
-
-#include <aslam/cameras/camera-factory.h>
 #include <aslam/common/types.h>
 
-#include "aslam/cameras/random-camera-generator.h"
+#include "aslam/cameras/camera-pinhole.h"
+#include "aslam/cameras/camera-factory.h"
+#include "aslam/cameras/distortion-null.h"
+#include "aslam/cameras/distortion-radtan.h"
+#include "aslam/cameras/distortion-equidistant.h"
+#include "aslam/cameras/distortion-fisheye.h"
 
 namespace aslam {
 std::ostream& operator<<(std::ostream& out, const PinholeCamera& camera) {
@@ -237,20 +239,6 @@ bool PinholeCamera::isValidImpl() const {
   return intrinsicsValid(intrinsics_);
 }
 
-void PinholeCamera::setRandomImpl() {
-  PinholeCamera::Ptr test_camera = PinholeCamera::createTestCamera();
-  CHECK(test_camera);
-  line_delay_nanoseconds_ = test_camera->line_delay_nanoseconds_;
-  image_width_ = test_camera->image_width_;
-  image_height_ = test_camera->image_height_;
-  mask_= test_camera->mask_;
-  intrinsics_ = test_camera->intrinsics_;
-  camera_type_ = test_camera->camera_type_;
-  if (test_camera->distortion_) {
-    distortion_ = std::move(test_camera->distortion_);
-  }
-}
-
 bool PinholeCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   const PinholeCamera* other_camera =
       dynamic_cast<const PinholeCamera*>(&other);
@@ -271,12 +259,21 @@ bool PinholeCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   return true;
 }
 
+template <typename DistortionType>
 PinholeCamera::Ptr PinholeCamera::createTestCamera() {
-  PinholeCamera::Ptr camera(new PinholeCamera(400, 300, 320, 240, 640, 480));
+  Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
+  PinholeCamera::Ptr camera(
+      new PinholeCamera(400, 300, 320, 240, 640, 480, distortion));
   CameraId id;
   generateId(&id);
   camera->setId(id);
   return camera;
 }
+
+// Instantiate templates here to simplify compilation of tests
+template PinholeCamera::Ptr PinholeCamera::createTestCamera<NullDistortion>();
+template PinholeCamera::Ptr PinholeCamera::createTestCamera<RadTanDistortion>();
+template PinholeCamera::Ptr PinholeCamera::createTestCamera<EquidistantDistortion>();
+template PinholeCamera::Ptr PinholeCamera::createTestCamera<FisheyeDistortion>();
 
 }  // namespace aslam

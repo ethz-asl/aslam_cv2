@@ -17,9 +17,7 @@ set(SOURCES
   src/distortion-fisheye.cc
   src/distortion-radtan.cc
   src/distortion.cc
-  src/ncamera.cc
-  src/random-camera-generator.cc
-)
+  src/ncamera.cc)
 
 cs_add_library(${PROJECT_NAME} ${SOURCES})
 

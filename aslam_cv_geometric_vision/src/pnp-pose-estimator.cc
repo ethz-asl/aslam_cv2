@@ -217,9 +217,8 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac(
   cam_translations.resize(num_cameras);
 
   for (int camera_index = 0; camera_index < num_cameras; ++camera_index) {
-    const aslam::Transformation& T_C_B = ncamera_ptr->get_T_C_B(camera_index);
     // OpenGV requires body frame -> camera transformation.
-    aslam::Transformation T_B_C = T_C_B.inverse();
+    const aslam::Transformation& T_B_C = ncamera_ptr->get_T_B_C(camera_index);
     cam_rotations[camera_index] = T_B_C.getRotationMatrix();
     cam_translations[camera_index] = T_B_C.getPosition();
   }
@@ -300,8 +299,7 @@ bool PnpPoseEstimator::absoluteMultiPoseRansac3DFeatures(
     return false;
   }
 
-  const aslam::Transformation& T_C_B = ncamera_ptr->get_T_C_B(0);
-  const aslam::Transformation T_B_C = T_C_B.inverse();
+  const aslam::Transformation T_B_C = ncamera_ptr->get_T_B_C(0);
   const Eigen::Matrix3d& R_B_C = T_B_C.getRotationMatrix();
   const Eigen::Vector3d& p_B_C = T_B_C.getPosition();
 

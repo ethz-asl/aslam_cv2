@@ -10,22 +10,15 @@
 #include <Eigen/Dense>
 #include <glog/logging.h>
 
-#include <aslam/cameras/distortion-null.h>
-#include <aslam/cameras/distortion.h>
 #include <aslam/common/macros.h>
 #include <aslam/common/sensor.h>
 #include <aslam/common/types.h>
 #include <aslam/common/unique-id.h>
 
-// TODO(slynen) Enable commented out PropertyTree support
-// namespace sm {
-// class PropertyTree;
-//}
+#include "aslam/cameras/distortion.h"
+#include "aslam/cameras/distortion-null.h"
 
 namespace aslam {
-
-// Forward declarations
-class MappedUndistorter;
 
 /// \struct ProjectionResult
 /// \brief This struct is returned by the camera projection methods and holds
@@ -131,8 +124,6 @@ class Camera : public Sensor {
   /// \name Constructors/destructors and operators
   /// @{
 
-  // TODO(slynen) Enable commented out PropertyTree support
-  // explicit Camera(const sm::PropertyTree& property_tree);
  protected:
   Camera() = delete;
 
@@ -655,7 +646,6 @@ class Camera : public Sensor {
 
  private:
   bool isValidImpl() const = 0;
-  void setRandomImpl() = 0;
   bool isEqualImpl(const Sensor& other, const bool verbose) const = 0;
 
   bool loadFromYamlNodeImpl(const YAML::Node&) override;

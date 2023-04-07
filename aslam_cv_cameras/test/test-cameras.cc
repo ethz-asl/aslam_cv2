@@ -386,7 +386,7 @@ TYPED_TEST(TestCameras, YamlSerialization){
 
 TEST(TestCameraPinhole, ManualProjectionWithoutDistortion) {
   //Create camera without distortion
-  aslam::PinholeCamera::Ptr camera = aslam::PinholeCamera::createTestCamera();
+  aslam::PinholeCamera::Ptr camera = aslam::PinholeCamera::createTestCamera<aslam::NullDistortion>();
 
   double kx =  1.0,
          ky =  1.2,
@@ -426,7 +426,8 @@ TEST(TestCameraPinhole, ManualProjectionWithoutDistortion) {
 
 TEST(TestCameraUnifiedProjection, ManualProjectionWithoutDistortion) {
   //Create camera without distortion
-  aslam::UnifiedProjectionCamera::Ptr camera = aslam::UnifiedProjectionCamera::createTestCamera();
+  aslam::UnifiedProjectionCamera::Ptr camera = 
+      aslam::UnifiedProjectionCamera::createTestCamera<aslam::NullDistortion>();
 
   double kx =  1.0,
          ky =  1.2,
@@ -467,7 +468,8 @@ TEST(TestCameraUnifiedProjection, ManualProjectionWithoutDistortion) {
 
 TEST(TestCameraUnifiedProjection, ProjectionResult) {
   // Create camera without distortion.
-  aslam::UnifiedProjectionCamera::Ptr cam = aslam::UnifiedProjectionCamera::createTestCamera();
+  aslam::UnifiedProjectionCamera::Ptr cam = 
+      aslam::UnifiedProjectionCamera::createTestCamera<aslam::NullDistortion>();
 
   Eigen::Vector2d keypoint;
   aslam::ProjectionResult ret;
@@ -490,7 +492,8 @@ TEST(TestCameraUnifiedProjection, ProjectionResult) {
 
 TEST(TestCameraPinhole, ProjectionResult) {
   // Create camera without distortion.
-  aslam::PinholeCamera::Ptr cam = aslam::PinholeCamera::createTestCamera();
+  aslam::PinholeCamera::Ptr cam =
+      aslam::PinholeCamera::createTestCamera<aslam::NullDistortion>();
 
   Eigen::Vector2d keypoint;
   aslam::ProjectionResult ret;
@@ -520,7 +523,7 @@ TEST(TestCameraPinhole, ProjectionResult) {
 }
 
 TEST(CameraComparison, TestEquality) {
-  aslam::Camera::Ptr pinhole_nodist = aslam::PinholeCamera::createTestCamera();
+  aslam::Camera::Ptr pinhole_nodist = aslam::PinholeCamera::createTestCamera<aslam::NullDistortion>();
   aslam::Camera::Ptr pinhole_radtan = aslam::PinholeCamera::createTestCamera<aslam::RadTanDistortion>();
   aslam::Camera::Ptr pinhole_equi = aslam::PinholeCamera::createTestCamera<aslam::EquidistantDistortion>();
 
@@ -528,7 +531,7 @@ TEST(CameraComparison, TestEquality) {
   EXPECT_FALSE(*pinhole_radtan == *pinhole_nodist); // Different distortion model.
   EXPECT_FALSE(*pinhole_radtan == *pinhole_equi);   // Different distortion model.
 
-  aslam::Camera::Ptr udc_nodist = aslam::UnifiedProjectionCamera::createTestCamera();
+  aslam::Camera::Ptr udc_nodist = aslam::UnifiedProjectionCamera::createTestCamera<aslam::NullDistortion>();
   aslam::Camera::Ptr udc_radtan = aslam::UnifiedProjectionCamera::createTestCamera<aslam::RadTanDistortion>();
   aslam::Camera::Ptr udc_fisheye = aslam::UnifiedProjectionCamera::createTestCamera<aslam::FisheyeDistortion>();
 

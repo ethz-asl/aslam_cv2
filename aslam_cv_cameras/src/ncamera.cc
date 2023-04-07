@@ -1,19 +1,21 @@
-#include <string>
-#include <utility>
-
-#include <glog/logging.h>
-
-#include <aslam/cameras/camera-factory.h>
-#include <aslam/cameras/camera-pinhole.h>
-#include <aslam/cameras/camera-unified-projection.h>
-#include <aslam/cameras/camera.h>
-#include <aslam/cameras/distortion-radtan.h>
-#include <aslam/cameras/ncamera.h>
-#include <aslam/cameras/random-camera-generator.h>
 #include <aslam/common/pose-types.h>
 #include <aslam/common/predicates.h>
 #include <aslam/common/unique-id.h>
 #include <aslam/common/yaml-serialization.h>
+#include <chrono>
+#include <glog/logging.h>
+#include <random>
+#include <string>
+#include <utility>
+
+#include "aslam/cameras/camera-factory.h"
+#include "aslam/cameras/camera-pinhole.h"
+#include "aslam/cameras/camera-unified-projection.h"
+#include "aslam/cameras/camera.h"
+#include "aslam/cameras/distortion-equidistant.h"
+#include "aslam/cameras/distortion-fisheye.h"
+#include "aslam/cameras/distortion-radtan.h"
+#include "aslam/cameras/ncamera.h"
 
 namespace aslam {
 
@@ -29,11 +31,11 @@ NCamera* NCamera::cloneWithNewIds() const {
   new_ncamera->setId(ncamera_id);
 
   // Recurse into cameras and change the cloned camera ids
-  for (size_t camera_idx = 0u; camera_idx < new_ncamera->numCameras();
-       ++camera_idx) {
+  for (size_t camera_index = 0u; camera_index < new_ncamera->numCameras();
+       ++camera_index) {
     SensorId camera_id;
     generateId(&camera_id);
-    aslam::Camera::Ptr camera = new_ncamera->getCameraShared(camera_idx);
+    aslam::Camera::Ptr camera = new_ncamera->getCameraShared(camera_index);
     camera->setId(camera_id);
   }
 
@@ -42,47 +44,17 @@ NCamera* NCamera::cloneWithNewIds() const {
   return new_ncamera;
 }
 
-NCamera::NCamera()
-    : T_G_B_fixed_localization_covariance_(TransformationCovariance::Zero()),
-      has_T_G_B_fixed_localization_covariance_(false) {}
+NCamera::NCamera() {}
 
 NCamera::NCamera(
-    const NCameraId& id, const TransformationVector& T_C_B,
-    const std::vector<Camera::Ptr>& cameras, const std::string& description)
-    : Sensor(id, std::string(), description),
-      T_C_B_(T_C_B),
-      cameras_(cameras),
-      T_G_B_fixed_localization_covariance_(TransformationCovariance::Zero()),
-      has_T_G_B_fixed_localization_covariance_(false) {
+    const NCameraId& id, const std::string& description,
+    const std::vector<Camera::Ptr>& cameras)
+    : Sensor(id, std::string(), description), cameras_(cameras) {
   CHECK(id.isValid());
   initInternal();
 }
 
-NCamera::NCamera(
-    const NCameraId& id, const TransformationVector& T_C_B,
-    const aslam::TransformationCovariance& T_G_B_fixed_localization_covariance,
-    const std::vector<Camera::Ptr>& cameras, const std::string& description)
-    : Sensor(id, std::string(), description),
-      T_C_B_(T_C_B),
-      cameras_(cameras),
-      T_G_B_fixed_localization_covariance_(T_G_B_fixed_localization_covariance),
-      has_T_G_B_fixed_localization_covariance_(true) {
-  CHECK(id.isValid());
-  initInternal();
-}
-
-NCamera::NCamera(const sm::PropertyTree& /* propertyTree */) {
-  // TODO(PTF): fill in
-  CHECK(false) << "Not implemented";
-}
-
-NCamera::NCamera(const NCamera& other)
-    : Sensor(other),
-      T_C_B_(other.T_C_B_),
-      T_G_B_fixed_localization_covariance_(
-          other.T_G_B_fixed_localization_covariance_),
-      has_T_G_B_fixed_localization_covariance_(
-          other.has_T_G_B_fixed_localization_covariance_) {
+NCamera::NCamera(const NCamera& other) : Sensor(other) {
   // Clone all contained cameras.
   for (size_t idx = 0u; idx < other.getNumCameras(); ++idx) {
     cameras_.emplace_back(other.getCamera(idx).clone());
@@ -95,13 +67,6 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
   if (!yaml_node.IsMap()) {
     LOG(ERROR) << "Unable to parse the NCamera because the node is not a map.";
     return false;
-  }
-
-  if (yaml_node["T_G_B_fixed_covariance"]) {
-    CHECK(YAML::safeGet(
-        yaml_node, "T_G_B_fixed_covariance",
-        &T_G_B_fixed_localization_covariance_));
-    has_T_G_B_fixed_localization_covariance_ = true;
   }
 
   // Parse the cameras.
@@ -139,6 +104,14 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
       return false;
     }
 
+    // Warn against old yaml format
+    if (camera_node["T_B_C"] || camera_node["T_C_B"]) {
+      LOG(ERROR) << "Old sensor format! Please use T_B_S or T_S_B instead of "
+                 << "T_B_C and T_C_B, and add it as a property of the cameras "
+                 << "(i.e. indent by one). Otherwise assumes unity transform.";
+      return false;
+    }
+
     // Retrieve the type of the camera
     const YAML::Node& intrinsics_node = camera_node["camera"];
     Camera::Ptr camera = createCamera(intrinsics_node);
@@ -147,26 +120,7 @@ bool NCamera::loadFromYamlNodeImpl(const YAML::Node& yaml_node) {
       return false;
     }
 
-    // Get the transformation matrix T_B_C (takes points from the frame C to
-    // frame B).
-    Eigen::Matrix4d input_matrix;
-    aslam::Transformation T_B_C;
-    if (camera_node["T_B_C"]) {
-      CHECK(YAML::safeGet(camera_node, "T_B_C", &input_matrix));
-      T_B_C = aslam::Transformation(input_matrix);
-    } else if (camera_node["T_C_B"]) {
-      CHECK(YAML::safeGet(camera_node, "T_C_B", &input_matrix));
-      T_B_C = aslam::Transformation(input_matrix).inverse();
-    } else {
-      LOG(ERROR)
-          << "Unable to get extrinsic transformation T_B_C or T_C_B for camera "
-          << camera_index;
-      return false;
-    }
-
-    // Fill in the data in the ncamera.
     cameras_.emplace_back(camera);
-    T_C_B_.emplace_back(T_B_C.inverse());
   }
 
   initInternal();
@@ -180,10 +134,6 @@ void NCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
 
   YAML::Node cameras_node;
 
-  if (has_T_G_B_fixed_localization_covariance_) {
-    node["T_G_B_fixed_covariance"] = T_G_B_fixed_localization_covariance_;
-  }
-
   size_t num_cameras = numCameras();
   for (size_t camera_index = 0u; camera_index < num_cameras; ++camera_index) {
     YAML::Node intrinsics_node;
@@ -191,8 +141,6 @@ void NCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
 
     YAML::Node camera_node;
     camera_node["camera"] = intrinsics_node;
-    camera_node["T_B_C"] =
-        get_T_C_B(camera_index).inverse().getTransformationMatrix();
     cameras_node.push_back(camera_node);
   }
 
@@ -200,7 +148,6 @@ void NCamera::saveToYamlNodeImpl(YAML::Node* yaml_node) const {
 }
 
 void NCamera::initInternal() {
-  CHECK_EQ(cameras_.size(), T_C_B_.size());
   id_to_index_.clear();
   for (size_t i = 0; i < cameras_.size(); ++i) {
     CHECK_NOTNULL(cameras_[i].get());
@@ -213,39 +160,22 @@ size_t NCamera::getNumCameras() const {
   return cameras_.size();
 }
 
-const Transformation& NCamera::get_T_C_B(size_t camera_index) const {
+const Transformation& NCamera::get_T_B_C(size_t camera_index) const {
   CHECK_LT(camera_index, cameras_.size());
-  return T_C_B_[camera_index];
+  return cameras_[camera_index]->get_T_B_S();
 }
 
-Transformation& NCamera::get_T_C_B_Mutable(size_t camera_index) {
+const Transformation& NCamera::get_T_B_C(const CameraId& camera_id) const {
+  CHECK(camera_id.isValid());
+  int camera_index = getCameraIndex(camera_id);
+  CHECK_GE(camera_index, 0)
+      << "Camera with ID " << camera_id << " not in NCamera container!";
+  return cameras_[camera_index]->get_T_B_S();
+}
+
+void NCamera::set_T_B_C(size_t camera_index, const Transformation& T_B_Ci) {
   CHECK_LT(camera_index, cameras_.size());
-  return T_C_B_[camera_index];
-}
-
-const Transformation& NCamera::get_T_C_B(const CameraId& camera_id) const {
-  CHECK(camera_id.isValid());
-  int camera_idx = getCameraIndex(camera_id);
-  CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
-                          << " not in NCamera container!";
-  return get_T_C_B(camera_idx);
-}
-
-Transformation& NCamera::get_T_C_B_Mutable(const CameraId& camera_id) {
-  CHECK(camera_id.isValid());
-  int camera_idx = getCameraIndex(camera_id);
-  CHECK_GE(camera_idx, 0) << "Camera with ID " << camera_id
-                          << " not in NCamera! container";
-  return get_T_C_B_Mutable(camera_idx);
-}
-
-void NCamera::set_T_C_B(size_t camera_index, const Transformation& T_Ci_B) {
-  CHECK_LT(camera_index, T_C_B_.size());
-  T_C_B_[camera_index] = T_Ci_B;
-}
-
-const TransformationVector& NCamera::getTransformationVector() const {
-  return T_C_B_;
+  cameras_[camera_index]->set_T_B_S(T_B_Ci);
 }
 
 const Camera& NCamera::getCamera(size_t camera_index) const {
@@ -296,26 +226,6 @@ bool NCamera::hasCameraWithId(const CameraId& id) const {
   return id_to_index_.find(id) != id_to_index_.end();
 }
 
-bool NCamera::has_T_G_B_fixed_localization_covariance() const {
-  return has_T_G_B_fixed_localization_covariance_;
-}
-
-bool NCamera::get_T_G_B_fixed_localization_covariance(
-    aslam::TransformationCovariance* covariance) const {
-  if (has_T_G_B_fixed_localization_covariance_) {
-    CHECK(covariance);
-    *covariance = T_G_B_fixed_localization_covariance_;
-    return true;
-  }
-  return false;
-}
-
-void NCamera::set_T_G_B_fixed_localization_covariance(
-    const aslam::TransformationCovariance& covariance) {
-  T_G_B_fixed_localization_covariance_ = covariance;
-  has_T_G_B_fixed_localization_covariance_ = true;
-}
-
 int NCamera::getCameraIndex(const CameraId& id) const {
   CHECK(id.isValid());
   std::unordered_map<CameraId, size_t>::const_iterator it =
@@ -327,24 +237,6 @@ int NCamera::getCameraIndex(const CameraId& id) const {
   }
 }
 
-aslam::NCamera::Ptr NCamera::cloneRigWithoutDistortion() const {
-  aslam::NCamera::Ptr rig_without_distortion(this->clone());
-  CHECK(rig_without_distortion);
-
-  // Remove distortion and assign new IDs to the rig and all cameras.
-  for (Camera::Ptr& camera : rig_without_distortion->cameras_) {
-    camera->removeDistortion();
-    aslam::CameraId cam_id;
-    generateId(&cam_id);
-    camera->setId(cam_id);
-  }
-
-  aslam::NCameraId ncam_id;
-  generateId(&ncam_id);
-  rig_without_distortion->setId(ncam_id);
-  return rig_without_distortion;
-}
-
 bool NCamera::isValidImpl() const {
   for (const aslam::Camera::Ptr& camera : cameras_) {
     CHECK(camera);
@@ -353,43 +245,6 @@ bool NCamera::isValidImpl() const {
     }
   }
   return true;
-}
-
-void NCamera::setRandomImpl() {
-  id_to_index_.clear();
-  T_C_B_.clear();
-  cameras_.clear();
-
-  // TODO(all): use inified random number generator with fixable seed.
-  Eigen::Vector2f random_numbers;
-  random_numbers.setRandom();  // range is [-1, 1]
-  TransformationVector T_C_B_vector;
-
-  std::vector<aslam::Camera::Ptr> cameras;
-  const size_t num_cameras = (random_numbers(0) + 1.f) * 7.f + 1.f;  // [1, 15]
-  CHECK_LE(num_cameras, 15u);
-  CHECK_GE(num_cameras, 1u);
-  for (size_t camera_idx = 0u; camera_idx < num_cameras; ++camera_idx) {
-    aslam::Camera::Ptr random_camera;
-    if (random_numbers(1) > 0.f) {
-      random_camera.reset(new aslam::PinholeCamera());
-      random_camera->setRandom();
-      cameras.emplace_back(random_camera);
-    } else {
-      random_camera.reset(new aslam::UnifiedProjectionCamera());
-      random_camera->setRandom();
-      cameras.emplace_back(random_camera);
-    }
-
-    // Offset each camera 0.1 m in x direction and rotate it to face forward.
-    Eigen::Vector3d position(0.1 * (camera_idx + 1), 0.0, 0.0);
-    aslam::Quaternion q_C_B(0.5, 0.5, -0.5, 0.5);
-    aslam::Transformation T_C_B(q_C_B, position);
-    T_C_B_vector.emplace_back(T_C_B);
-    id_to_index_[random_camera->getId()] = camera_idx;
-  }
-  T_C_B_ = T_C_B_vector;
-  cameras_ = cameras;
 }
 
 bool NCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
@@ -410,24 +265,73 @@ bool NCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
     }
     return false;
   }
+
   bool is_equal = true;
   for (size_t i = 0u; i < num_cameras && is_equal; ++i) {
     const bool is_same_camera =
         aslam::checkSharedEqual(cameras_[i], other_ncamera->cameras_[i]);
-    const bool has_same_camera_extrinsics =
-        ((T_C_B_[i].getTransformationMatrix() -
-          other_ncamera->T_C_B_[i].getTransformationMatrix())
-             .cwiseAbs()
-             .maxCoeff() < common::macros::kEpsilon);
-    is_equal &= is_same_camera && has_same_camera_extrinsics;
+    is_equal &= is_same_camera;
 
-    if (verbose && !is_equal) {
-      LOG(ERROR) << "Camera at idx " << i << " is not the same:"
-                 << "\n\tsame camera object: " << is_same_camera
-                 << "\n\tsame extrinsics:    " << has_same_camera_extrinsics;
+    if (verbose && !is_same_camera) {
+      LOG(ERROR) << "Camera at idx " << i << " with id " << cameras_[i]->getId()
+                 << " is not the same.";
     }
   }
+
   return is_equal;
+}
+
+NCamera::Ptr NCamera::createTestNCamera(
+    size_t num_cameras, const SensorId& base_sensor_id) {
+  return aligned_shared<aslam::NCamera>(
+      *createUniqueTestNCamera(num_cameras, base_sensor_id));
+}
+
+NCamera::UniquePtr NCamera::createUniqueTestNCamera(
+    size_t num_cameras, const SensorId& base_sensor_id) {
+  CHECK(base_sensor_id.isValid());
+  CHECK_GE(num_cameras, 1u);
+
+  const unsigned kSeed =
+      std::chrono::system_clock::now().time_since_epoch().count();
+  std::default_random_engine random_number_engine(kSeed);
+
+  std::vector<Camera::Ptr> cameras;
+  for (size_t camera_index = 0u; camera_index < num_cameras; ++camera_index) {
+    Camera::Ptr camera;
+    const unsigned random_type = random_number_engine() % 4;
+    switch (random_type) {
+      case 0:
+        camera = PinholeCamera::createTestCamera<RadTanDistortion>();
+        break;
+      case 1:
+        camera = PinholeCamera::createTestCamera<EquidistantDistortion>();
+        break;
+      case 2:
+        camera = UnifiedProjectionCamera::createTestCamera<RadTanDistortion>();
+        break;
+      case 3:
+        camera = UnifiedProjectionCamera::createTestCamera<FisheyeDistortion>();
+        break;
+      default:
+        LOG(FATAL) << "Undefined random camera type.";
+    }
+
+    // Offset each camera 0.1 m in x direction and rotate it to face forward.
+    Eigen::Vector3d position(0.1 * (camera_index + 1), 0.0, 0.0);
+    aslam::Quaternion q_S_B(0.5, 0.5, -0.5, 0.5);
+    aslam::Transformation T_S_B(q_S_B, position);
+    camera->set_T_B_S(T_S_B.inverse(), base_sensor_id);
+
+    cameras.emplace_back(camera);
+  }
+
+  NCameraId ncamera_id;
+  generateId(&ncamera_id);
+  NCamera::UniquePtr ncamera(
+      new NCamera(ncamera_id, "Unit test ncamera", cameras));
+
+  return std::move(ncamera);
 }
 
 }  // namespace aslam

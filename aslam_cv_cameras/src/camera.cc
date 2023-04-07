@@ -2,15 +2,13 @@
 
 #include <glog/logging.h>
 
-#include <aslam/cameras/camera.h>
-#include <aslam/cameras/distortion-equidistant.h>
-#include <aslam/cameras/distortion-fisheye.h>
-#include <aslam/cameras/distortion-null.h>
-#include <aslam/cameras/distortion-radtan.h>
 #include <aslam/common/yaml-serialization.h>
 
-// TODO(slynen) Enable commented out PropertyTree support
-//#include <sm/PropertyTree.hpp>
+#include "aslam/cameras/camera.h"
+#include "aslam/cameras/distortion-radtan.h"
+#include "aslam/cameras/distortion-equidistant.h"
+#include "aslam/cameras/distortion-fisheye.h"
+
 namespace aslam {
 
 std::ostream& operator<<(std::ostream& out, const ProjectionResult& state) {

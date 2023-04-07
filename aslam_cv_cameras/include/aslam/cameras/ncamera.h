@@ -12,9 +12,6 @@
 #include <aslam/common/unique-id.h>
 #include <gtest/gtest_prod.h>
 
-namespace sm {
-class PropertyTree;
-}
 namespace aslam {
 class Camera;
 }
@@ -45,36 +42,11 @@ class NCamera : public Sensor {
   /// at T_C_B[i] corresponds to the camera at cameras[i].
   ///
   /// @param id unique id for this camera rig
-  /// @param T_C_B a list of transformations that take points from B to Ci
-  /// @param cameras a list cameras
   /// @param description a human-readable description of this camera rig
-  NCamera(
-      const NCameraId& id, const TransformationVector& T_C_B,
-      const std::vector<std::shared_ptr<Camera>>& cameras,
-      const std::string& description);
-
-  // public:
-  /// \brief initialize from a list of transformations and a list of cameras
-  ///
-  /// The two lists must be parallel arrays (same size). The transformation
-  /// at T_C_B[i] corresponds to the camera at cameras[i].
-  ///
-  /// @param id unique id for this camera rig
-  /// @param T_C_B a list of transformations that take points from B to Ci
-  /// @param T_G_B_fixed_localization_covariance a fixed covariance used for
-  ///        result of visual localizations of a vertex.
   /// @param cameras a list cameras
-  /// @param description a human-readable description of this camera rig
   NCamera(
-      const NCameraId& id, const TransformationVector& T_C_B,
-      const aslam::TransformationCovariance&
-          T_G_B_fixed_localization_covariance,
-      const std::vector<std::shared_ptr<Camera>>& cameras,
-      const std::string& description);
-
-  /// Initialize from a property tree.
-  NCamera(const sm::PropertyTree& propertyTree);
-  virtual ~NCamera() = default;
+      const NCameraId& id,const std::string& description,
+      const std::vector<std::shared_ptr<Camera>>& cameras);
 
   /// Copy constructor for clone.
   NCamera(const NCamera&);
@@ -105,24 +77,14 @@ class NCamera : public Sensor {
   size_t getNumCameras() const;
 
   /// Get the pose of body frame with respect to the camera i.
-  const Transformation& get_T_C_B(size_t camera_index) const;
-
-  /// Get the pose of body frame with respect to the camera i.
-  Transformation& get_T_C_B_Mutable(size_t camera_index);
+  const Transformation& get_T_B_C(size_t camera_index) const;
 
   /// Get the pose of body frame with respect to the camera with a camera id.
   /// The method will assert that the camera is not in the rig!
-  const Transformation& get_T_C_B(const CameraId& camera_id) const;
-
-  /// Get the pose of body frame with respect to the camera with a camera id.
-  /// The method will assert that the camera is not in the rig!
-  Transformation& get_T_C_B_Mutable(const CameraId& camera_id);
+  const Transformation& get_T_B_C(const CameraId& camera_id) const;
 
   /// Set the pose of body frame with respect to the camera i.
-  void set_T_C_B(size_t camera_index, const Transformation& T_Ci_B);
-
-  /// Get all transformations.
-  const TransformationVector& getTransformationVector() const;
+  void set_T_B_C(size_t camera_index, const Transformation& T_B_Ci);
 
   /// Get the geometry object for camera i.
   const Camera& getCamera(size_t camera_index) const;
@@ -151,30 +113,18 @@ class NCamera : public Sensor {
   /// Does this rig have a camera with this id.
   bool hasCameraWithId(const CameraId& id) const;
 
-  /// Whether the covariance matrix for visual localization has been set
-  bool has_T_G_B_fixed_localization_covariance() const;
-
-  // Get the 6DoF localization covariance matrix
-  bool get_T_G_B_fixed_localization_covariance(
-      aslam::TransformationCovariance* covariance) const;
-
-  // Set the 6Dof localization covariance matrix
-  void set_T_G_B_fixed_localization_covariance(
-      const aslam::TransformationCovariance& covariance);
-
   /// \brief Get the index of the camera with the id.
   /// @returns -1 if the rig doesn't have a camera with this id.
   int getCameraIndex(const CameraId& id) const;
 
-  /// Create a copy of this NCamera with all distortion models removed. All
-  /// internal cameras get cloned and new IDs will be assigned to the cloned
-  /// NCamera and all contained cameras.
-  aslam::NCamera::Ptr cloneRigWithoutDistortion() const;
+  /// \brief Create a test ncamera object for unit testing.
+  static NCamera::Ptr createTestNCamera(
+    size_t num_cameras, const SensorId& base_sensor_id);
+  static NCamera::UniquePtr createUniqueTestNCamera(
+    size_t num_cameras, const SensorId& base_sensor_id);
 
  private:
   bool isValidImpl() const override;
-
-  void setRandomImpl() override;
 
   bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 
@@ -184,20 +134,11 @@ class NCamera : public Sensor {
   /// Internal consistency checks and initialization.
   void initInternal();
 
-  /// The mounting transformations.
-  TransformationVector T_C_B_;
-
   /// The camera geometries.
   std::vector<std::shared_ptr<Camera>> cameras_;
 
   /// Map from camera id to index.
   std::unordered_map<CameraId, size_t> id_to_index_;
-
-  /// This is a fixed parameter that can be passed in along with the camera
-  /// calibration and it represents the covariance of a visual localization based
-  /// on this camera.
-  TransformationCovariance T_G_B_fixed_localization_covariance_;
-  bool has_T_G_B_fixed_localization_covariance_;
 };
 
 }  // namespace aslam

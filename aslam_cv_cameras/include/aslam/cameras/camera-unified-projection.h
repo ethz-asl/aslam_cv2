@@ -1,16 +1,16 @@
 #ifndef ASLAM_UNIFIED_PROJECTION_CAMERA_H_
 #define ASLAM_UNIFIED_PROJECTION_CAMERA_H_
 
-#include <aslam/cameras/camera.h>
-#include <aslam/cameras/distortion.h>
 #include <aslam/common/crtp-clone.h>
 #include <aslam/common/macros.h>
 #include <aslam/common/types.h>
 
+#include "aslam/cameras/camera.h"
+#include "aslam/cameras/distortion.h"
+
 namespace aslam {
 
 // Forward declarations.
-class MappedUndistorter;
 class NCamera;
 
 /// \class UnifiedProjectionCamera
@@ -43,9 +43,6 @@ class UnifiedProjectionCamera
     kCu = 3,
     kCv = 4
   };
-
-  // TODO(slynen) Enable commented out PropertyTree support
-  // UnifiedProjectionCamera(const sm::PropertyTree& config);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -244,23 +241,6 @@ class UnifiedProjectionCamera
 
   /// \brief Create a test camera object for unit testing.
   template <typename DistortionType>
-  static UnifiedProjectionCamera::Ptr createTestCamera() {
-    return UnifiedProjectionCamera::Ptr(std::move(createTestCameraUnique<DistortionType>()));
-  }
-
-  /// \brief Create a test camera object for unit testing.
-  template <typename DistortionType>
-  static UnifiedProjectionCamera::UniquePtr createTestCameraUnique() {
-    Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
-    UnifiedProjectionCamera::UniquePtr camera(new UnifiedProjectionCamera(
-        0.9, 400, 300, 320, 240, 640, 480, distortion));
-    CameraId id;
-    generateId(&id);
-    camera->setId(id);
-    return std::move(camera);
-  }
-
-  /// \brief Create a test camera object for unit testing. (without distortion)
   static UnifiedProjectionCamera::Ptr createTestCamera();
 
  private:
@@ -268,7 +248,6 @@ class UnifiedProjectionCamera
   static constexpr double kMinimumDepth = 1e-10;
 
   bool isValidImpl() const override;
-  void setRandomImpl() override;
   bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 };
 

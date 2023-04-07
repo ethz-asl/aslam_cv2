@@ -274,7 +274,7 @@ TriangulationResult triangulateFeatureTrack(
 
   const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
   CHECK(camera);
-  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverse();
+  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_B_C();
 
   // Get the normalized measurements for all observations on the track.
   Aligned<std::vector, Eigen::Vector2d> normalized_measurements;
@@ -323,7 +323,7 @@ TriangulationResult fastTriangulateFeatureTrack(
 
   const aslam::Camera::ConstPtr& camera = track.getFirstKeypointIdentifier().getCamera();
   CHECK(camera);
-  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_C_B().inverse();
+  aslam::Transformation T_B_C = track.getFirstKeypointIdentifier().get_T_B_C();
 
   Eigen::Matrix3Xd G_bearing_vectors;
   Eigen::Matrix3Xd p_G_C_vector;
@@ -342,7 +342,7 @@ TriangulationResult fastTriangulateFeatureTrack(
     Eigen::Vector3d C_ray;
     camera->backProject3(keypoint_measurement, &C_ray);
 
-    aslam::Transformation T_W_C = T_W_Bs[index] * keypoint_on_track.get_T_C_B().inverse();
+    aslam::Transformation T_W_C = T_W_Bs[index] * keypoint_on_track.get_T_B_C();
 
     G_bearing_vectors.col(index) = T_W_C.getRotationMatrix() * C_ray;
     p_G_C_vector.col(index) = T_W_C.getPosition();

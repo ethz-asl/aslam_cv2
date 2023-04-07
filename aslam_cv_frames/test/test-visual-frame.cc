@@ -3,6 +3,7 @@
 
 #include <aslam/cameras/camera-pinhole.h>
 #include <aslam/cameras/camera-unified-projection.h>
+#include <aslam/cameras/distortion-null.h>
 #include <aslam/common/channel-declaration.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/opencv-predicates.h>
@@ -568,7 +569,8 @@ TEST(Frame, SetGetImage) {
 }
 
 TEST(Frame, CopyConstructor) {
-  aslam::Camera::Ptr camera = aslam::PinholeCamera::createTestCamera();
+  aslam::Camera::Ptr camera = 
+      aslam::PinholeCamera::createTestCamera<aslam::NullDistortion>();
   aslam::VisualFrame frame;
   frame.setCameraGeometry(camera);
 
@@ -620,7 +622,8 @@ TEST(Frame, CopyConstructor) {
 
 TEST(Frame, getNormalizedBearingVectors) {
   // Create a test nframe with some keypoints.
-  aslam::UnifiedProjectionCamera::Ptr camera = aslam::UnifiedProjectionCamera::createTestCamera();
+  aslam::UnifiedProjectionCamera::Ptr camera = 
+      aslam::UnifiedProjectionCamera::createTestCamera<aslam::NullDistortion>();
   aslam::VisualFrame::Ptr frame = aslam::VisualFrame::createEmptyTestVisualFrame(camera, 0);
 
   const size_t kNumKeypoints = 10;

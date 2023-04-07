@@ -2,7 +2,6 @@
 
 #include <aslam/cameras/camera.h>
 #include <aslam/cameras/ncamera.h>
-#include <aslam/cameras/random-camera-generator.h>
 #include <aslam/common/memory.h>
 #include <aslam/common/thread-pool.h>
 #include <aslam/common/time.h>

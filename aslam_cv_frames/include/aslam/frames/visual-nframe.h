@@ -123,7 +123,7 @@ class VisualNFrame {
   size_t getNumCameras() const;
 
   /// \brief Get the pose of body frame with respect to the camera i.
-  const Transformation& get_T_C_B(size_t camera_index) const;
+  const Transformation& get_T_B_C(size_t camera_index) const;
 
   /// \brief Get the geometry object for camera i.
   const Camera& getCamera(size_t camera_index) const;

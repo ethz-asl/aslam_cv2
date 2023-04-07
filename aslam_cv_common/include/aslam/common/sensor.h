@@ -3,10 +3,11 @@
 
 #include <string>
 
-#include <aslam/common/macros.h>
-#include <aslam/common/unique-id.h>
-#include <aslam/common/yaml-file-serialization.h>
-#include <aslam/common/yaml-serialization.h>
+#include "aslam/common/macros.h"
+#include "aslam/common/pose-types.h"
+#include "aslam/common/unique-id.h"
+#include "aslam/common/yaml-file-serialization.h"
+#include "aslam/common/yaml-serialization.h"
 
 namespace aslam {
 
@@ -19,10 +20,12 @@ constexpr const char kYamlFieldNameId[] = "id";
 constexpr const char kYamlFieldNameSensorType[] = "sensor_type";
 constexpr const char kYamlFieldNameTopic[] = "topic";
 constexpr const char kYamlFieldNameDescription[] = "description";
+constexpr const char kYamlFieldNameBaseSensorId[] = "base_sensor_id";
 
 class Sensor : public YamlFileSerializable {
  public:
   ASLAM_POINTER_TYPEDEFS(Sensor);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   Sensor();
   explicit Sensor(const SensorId& id);
@@ -36,11 +39,15 @@ class Sensor : public YamlFileSerializable {
   Sensor(const Sensor& other)
       : id_(other.id_),
         topic_(other.topic_),
-        description_(other.description_) {}
+        description_(other.description_),
+        base_sensor_id_(other.base_sensor_id_),
+        T_B_S_(other.T_B_S_) {}
   void operator=(const Sensor& other) {
     id_ = other.id_;
     topic_ = other.topic_;
     description_ = other.description_;
+    base_sensor_id_ = other.base_sensor_id_;
+    T_B_S_ = other.T_B_S_;
   }
 
   bool operator==(const Sensor& other) const;
@@ -75,6 +82,26 @@ class Sensor : public YamlFileSerializable {
     return description_;
   }
 
+  // Set and get the transformation to the base sensor
+  void set_T_B_S(const Transformation& T_B_S) {
+    T_B_S_ = T_B_S;
+  }
+  const Transformation& get_T_B_S() const {
+    return T_B_S_;
+  }
+
+  void setBaseSensorId(const SensorId& base_sensor_id) {
+    base_sensor_id_ = base_sensor_id;
+  }
+  const aslam::SensorId& getBaseSensorId() const {
+    return base_sensor_id_;
+  }
+
+  void set_T_B_S(const Transformation& T_B_S, const SensorId& base_sensor_id) {
+    T_B_S_ = T_B_S;
+    base_sensor_id_ = base_sensor_id;
+  }
+
   // Virtual
   virtual uint8_t getSensorType() const = 0;
   virtual std::string getSensorTypeString() const = 0;
@@ -84,11 +111,8 @@ class Sensor : public YamlFileSerializable {
   bool deserialize(const YAML::Node& sensor_node) override;
   void serialize(YAML::Node* sensor_node_ptr) const override;
 
-  void setRandom();
-
  private:
   virtual bool isValidImpl() const = 0;
-  virtual void setRandomImpl() = 0;
   virtual bool isEqualImpl(const Sensor& other, const bool verbose) const = 0;
 
   virtual bool loadFromYamlNodeImpl(const YAML::Node& sensor_node) = 0;
@@ -99,6 +123,8 @@ class Sensor : public YamlFileSerializable {
   SensorId id_;
   std::string topic_;
   std::string description_;
+  SensorId base_sensor_id_;
+  Transformation T_B_S_;
 };
 
 }  // namespace aslam

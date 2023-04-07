@@ -156,8 +156,8 @@ TEST_P(VariableCameraAngle, MultiPinholeCameraP3pInterface) {
         ncameras->getCamera(cam_index).createRandomVisiblePoint(i + 50);
     Eigen::Vector2d keypoint_measurement;
     ncameras->getCamera(cam_index).project3(p_C_fi, &keypoint_measurement);
-    const aslam::Transformation& T_C_B = ncameras->get_T_C_B(cam_index);
-    aslam::Transformation T_G_C = T_G_B * T_C_B.inverse();
+    const aslam::Transformation& T_B_C = ncameras->get_T_B_C(cam_index);
+    aslam::Transformation T_G_C = T_G_B * T_B_C;
 
     measurement_camera_indices[i] = cam_index;
     measurements.col(i) = keypoint_measurement;

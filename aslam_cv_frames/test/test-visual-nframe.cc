@@ -3,7 +3,6 @@
 #include <opencv2/core/core.hpp>
 
 #include <aslam/cameras/ncamera.h>
-#include <aslam/cameras/random-camera-generator.h>
 #include <aslam/common/entrypoint.h>
 #include <aslam/common/opencv-predicates.h>
 #include <aslam/common/unique-id.h>
@@ -11,7 +10,8 @@
 #include <aslam/frames/visual-nframe.h>
 
 TEST(NFrame, MinTimestamp) {
-  aslam::NCamera::Ptr ncamera = aslam::createSurroundViewTestNCamera();
+  const size_t kNumCameras = 4;
+  aslam::NCamera::Ptr ncamera = aslam::createUniqueTestNCamera(kNumCameras);
   CHECK(ncamera);
   aslam::VisualFrame::Ptr frame_0(new aslam::VisualFrame);
   frame_0->setCameraGeometry(ncamera->getCameraShared(0));

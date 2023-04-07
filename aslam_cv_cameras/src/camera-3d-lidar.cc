@@ -6,8 +6,6 @@
 #include <aslam/cameras/camera-factory.h>
 #include <aslam/common/types.h>
 
-#include "aslam/cameras/random-camera-generator.h"
-
 namespace aslam {
 std::ostream& operator<<(std::ostream& out, const Camera3DLidar& camera) {
   camera.printParameters(out, std::string(""));
@@ -143,20 +141,6 @@ const double Camera3DLidar::kSquaredMinimumDepth = 0.0001;
 
 bool Camera3DLidar::isValidImpl() const {
   return intrinsicsValid(intrinsics_);
-}
-
-void Camera3DLidar::setRandomImpl() {
-  Camera3DLidar::Ptr test_camera = Camera3DLidar::createTestCamera();
-  CHECK(test_camera);
-  line_delay_nanoseconds_ = test_camera->line_delay_nanoseconds_;
-  image_width_ = test_camera->image_width_;
-  image_height_ = test_camera->image_height_;
-  mask_ = test_camera->mask_;
-  intrinsics_ = test_camera->intrinsics_;
-  camera_type_ = test_camera->camera_type_;
-  if (test_camera->distortion_) {
-    distortion_ = std::move(test_camera->distortion_);
-  }
 }
 
 bool Camera3DLidar::isEqualImpl(const Sensor& other, const bool verbose) const {

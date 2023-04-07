@@ -1,16 +1,16 @@
 #ifndef ASLAM_CAMERAS_PINHOLE_CAMERA_H_
 #define ASLAM_CAMERAS_PINHOLE_CAMERA_H_
 
-#include <aslam/cameras/camera.h>
-#include <aslam/cameras/distortion.h>
 #include <aslam/common/crtp-clone.h>
 #include <aslam/common/macros.h>
 #include <aslam/common/types.h>
 
+#include "aslam/cameras/camera.h"
+#include "aslam/cameras/distortion.h"
+
 namespace aslam {
 
 // Forward declarations.
-class MappedUndistorter;
 class NCamera;
 
 /// \class PinholeCamera
@@ -41,9 +41,6 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
     kCu = 2,
     kCv = 3
   };
-
-  // TODO(slynen) Enable commented out PropertyTree support
-  // PinholeCamera(const sm::PropertyTree& config);
 
   //////////////////////////////////////////////////////////////
   /// \name Constructors/destructors and operators
@@ -238,24 +235,6 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
 
   /// \brief Create a test camera object for unit testing.
   template <typename DistortionType>
-  static PinholeCamera::Ptr createTestCamera() {
-    return PinholeCamera::Ptr(
-        std::move(createTestCameraUnique<DistortionType>()));
-  }
-
-  /// \brief Create a test camera object for unit testing.
-  template <typename DistortionType>
-  static PinholeCamera::UniquePtr createTestCameraUnique() {
-    Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
-    PinholeCamera::UniquePtr camera(
-        new PinholeCamera(400, 300, 320, 240, 640, 480, distortion));
-    CameraId id;
-    generateId(&id);
-    camera->setId(id);
-    return std::move(camera);
-  }
-
-  /// \brief Create a test camera object for unit testing. (without distortion)
   static PinholeCamera::Ptr createTestCamera();
 
  private:
@@ -263,7 +242,6 @@ class PinholeCamera : public aslam::Cloneable<Camera, PinholeCamera> {
   static const double kMinimumDepth;
 
   bool isValidImpl() const override;
-  void setRandomImpl() override;
   bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 };
 

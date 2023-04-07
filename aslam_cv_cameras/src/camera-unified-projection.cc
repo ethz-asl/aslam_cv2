@@ -1,12 +1,13 @@
 #include <memory>
 
-#include <aslam/cameras/camera-unified-projection.h>
-
-#include <aslam/cameras/camera-factory.h>
-#include <aslam/cameras/camera-pinhole.h>
 #include <aslam/common/types.h>
 
-#include "aslam/cameras/random-camera-generator.h"
+#include "aslam/cameras/camera-factory.h"
+#include "aslam/cameras/camera-unified-projection.h"
+#include "aslam/cameras/distortion-null.h"
+#include "aslam/cameras/distortion-radtan.h"
+#include "aslam/cameras/distortion-equidistant.h"
+#include "aslam/cameras/distortion-fisheye.h"
 
 namespace aslam {
 std::ostream& operator<<(std::ostream& out,
@@ -322,21 +323,6 @@ bool UnifiedProjectionCamera::isValidImpl() const {
   return intrinsicsValid(intrinsics_);
 }
 
-void UnifiedProjectionCamera::setRandomImpl() {
-  UnifiedProjectionCamera::Ptr test_camera =
-      UnifiedProjectionCamera::createTestCamera();
-  CHECK(test_camera);
-  line_delay_nanoseconds_ = test_camera->line_delay_nanoseconds_;
-  image_width_ = test_camera->image_width_;
-  image_height_ = test_camera->image_height_;
-  mask_= test_camera->mask_;
-  intrinsics_ = test_camera->intrinsics_;
-  camera_type_ = test_camera->camera_type_;
-  if (test_camera->distortion_) {
-    distortion_ = std::move(test_camera->distortion_);
-  }
-}
-
 bool UnifiedProjectionCamera::isEqualImpl(const Sensor& other, const bool verbose) const {
   const UnifiedProjectionCamera* other_camera =
       dynamic_cast<const UnifiedProjectionCamera*>(&other);
@@ -357,12 +343,21 @@ bool UnifiedProjectionCamera::isEqualImpl(const Sensor& other, const bool verbos
   return true;
 }
 
+
+template <typename DistortionType>
 UnifiedProjectionCamera::Ptr UnifiedProjectionCamera::createTestCamera() {
-  UnifiedProjectionCamera::Ptr camera(
-      new UnifiedProjectionCamera(0.9, 400, 300, 320, 240, 640, 480));
+  Distortion::UniquePtr distortion = DistortionType::createTestDistortion();
+  UnifiedProjectionCamera::Ptr camera(new UnifiedProjectionCamera(
+      0.9, 400, 300, 320, 240, 640, 480, distortion));
   CameraId id;
   generateId(&id);
   camera->setId(id);
   return camera;
 }
+
+template UnifiedProjectionCamera::Ptr UnifiedProjectionCamera::createTestCamera<NullDistortion>();
+template UnifiedProjectionCamera::Ptr UnifiedProjectionCamera::createTestCamera<RadTanDistortion>();
+template UnifiedProjectionCamera::Ptr UnifiedProjectionCamera::createTestCamera<EquidistantDistortion>();
+template UnifiedProjectionCamera::Ptr UnifiedProjectionCamera::createTestCamera<FisheyeDistortion>();
+
 }  // namespace aslam

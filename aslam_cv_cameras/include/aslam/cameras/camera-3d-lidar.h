@@ -10,7 +10,6 @@
 namespace aslam {
 
 // Forward declarations.
-class MappedUndistorter;
 class NCamera;
 
 /// \class Camera3DLidar
@@ -286,7 +285,6 @@ class Camera3DLidar : public aslam::Cloneable<Camera, Camera3DLidar> {
   static const double kSquaredMinimumDepth;
 
   bool isValidImpl() const override;
-  void setRandomImpl() override;
   bool isEqualImpl(const Sensor& other, const bool verbose) const override;
 };
 

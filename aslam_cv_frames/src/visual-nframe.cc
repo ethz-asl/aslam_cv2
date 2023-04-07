@@ -106,9 +106,9 @@ size_t VisualNFrame::getNumCameras() const {
   return camera_rig_->getNumCameras();
 }
 
-const Transformation& VisualNFrame::get_T_C_B(size_t camera_index) const {
+const Transformation& VisualNFrame::get_T_B_C(size_t camera_index) const {
   CHECK_NOTNULL(camera_rig_.get());
-  return camera_rig_->get_T_C_B(camera_index);
+  return camera_rig_->get_T_B_C(camera_index);
 }
 
 const Camera& VisualNFrame::getCamera(size_t camera_index) const {
