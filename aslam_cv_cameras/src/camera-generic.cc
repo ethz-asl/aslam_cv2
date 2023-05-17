@@ -427,7 +427,7 @@ void GenericCamera::setFocalLengthApproximation(){
 
 
   const int stepsize = 1;
-  const int numCalibratedPixels = (1 + (calibrationMaxX() - calibrationMinX()) / stepsize) * (1 + (calibrationMaxY() - calibrationMinY()) / stepsize);
+  const int numCalibratedPixels = ((calibrationMaxX() - calibrationMinX()) / stepsize) * ((calibrationMaxY() - calibrationMinY()) / stepsize);
 
   // set A and b s.t. Ax = b solves fu * direction[0] + cu = keypoint[0] for x = [fu, cu]
   Eigen::Matrix<double, Eigen::Dynamic, 2> A_u;
