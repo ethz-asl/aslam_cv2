@@ -187,10 +187,10 @@ class GenericCamera : public aslam::Cloneable<Camera, GenericCamera> {
     );
   };
 
-  /// \brief Returns the number of intrinsic parameters used in this camera model.
+  /// \brief Returns the number of intrinsic parameters this camera model over which can be optimized.
+  /// Since in the generic model the intrinsics are fixed, this is 0.
   inline static constexpr int parameterCount() {
-      //TODO(beni)
-      return 534;
+      return 0;
   }
 
   /// \brief Returns the number of intrinsic parameters used in this camera model.
