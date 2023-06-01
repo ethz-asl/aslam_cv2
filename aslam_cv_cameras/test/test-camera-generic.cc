@@ -96,17 +96,18 @@ TEST(TestGenericCamera, BackProject3) {
 
 TEST(TestGenericCamera, BackProject3WithJacobian) {
   aslam::GenericCamera::Ptr gencam = setupTestCamera();
+  Eigen::VectorXd intrinsics = gencam->getParameters();
 
   Eigen::Vector3d direction;
   Eigen::Matrix<double, 3, 2> jacobian;
   Eigen::Vector2d notInCalibratedArea = Eigen::Vector2d(9, 14);
-  bool backProjectWorked = gencam->backProject3WithJacobian(notInCalibratedArea, &direction, &jacobian);
+  bool backProjectWorked = gencam->backProject3WithJacobian(notInCalibratedArea, intrinsics, &direction, &jacobian);
   EXPECT_EQ(backProjectWorked, false);
   
   // Test that projection at gridpoints is equal to vector at gridpoint
   Eigen::Vector2d gridpoint = Eigen::Vector2d(5,3);
   Eigen::Vector2d keypoint = gencam->transformGridPointToImagePixel(gridpoint);
-  backProjectWorked = gencam->backProject3WithJacobian(keypoint, &direction, &jacobian);
+  backProjectWorked = gencam->backProject3WithJacobian(keypoint, intrinsics, &direction, &jacobian);
   EXPECT_TRUE(backProjectWorked);
 
   Eigen::Vector3d solution = gencam->gridAccess(gridpoint);
@@ -169,6 +170,7 @@ TEST(TestGenericCamera, gridPixelTransformation) {
 // solution computed with original generic camera calibration with same calibration file
 TEST(TestGenericCamera, compareWithOriginalImplementation) {
   aslam::GenericCamera::Ptr gencam = setupTestCamera();
+  Eigen::VectorXd intrinsics = gencam->getParameters();
 
   const Eigen::Vector2d pixel = Eigen::Vector2d(50, 70);
 
@@ -181,7 +183,7 @@ TEST(TestGenericCamera, compareWithOriginalImplementation) {
 
   Eigen::Matrix<double, 3, 2> jacobian_pixel;
   Eigen::Vector3d directionWithJacobian;
-  backProjectWorked = gencam->backProject3WithJacobian(pixel, &directionWithJacobian, &jacobian_pixel);
+  backProjectWorked = gencam->backProject3WithJacobian(pixel, intrinsics, &directionWithJacobian, &jacobian_pixel);
   EXPECT_TRUE(backProjectWorked);
   EXPECT_EQ(directionWithJacobian.x(), -0.62911016602490211);
   EXPECT_EQ(directionWithJacobian.y(), -0.3196831899431985);
@@ -194,9 +196,9 @@ TEST(TestGenericCamera, compareWithOriginalImplementation) {
   EXPECT_NEAR(jacobian_pixel(2,1), 0.00068832687471955629, 1e-10);
 
   // compare implementation with and without calculation of jacobian
-  EXPECT_NEAR(direction.x(), directionWithJacobian.x(), 1e-10);
-  EXPECT_NEAR(direction.y(), directionWithJacobian.y(), 1e-10);
-  EXPECT_NEAR(direction.z(), directionWithJacobian.z(), 1e-10);
+  EXPECT_NEAR(direction.x(), directionWithJacobian.x(), 1e-12);
+  EXPECT_NEAR(direction.y(), directionWithJacobian.y(), 1e-12);
+  EXPECT_NEAR(direction.z(), directionWithJacobian.z(), 1e-12);
 
   Eigen::Vector2d out_keypoint;
   aslam::ProjectionResult projectionWorked = gencam->project3(direction, &out_keypoint);
